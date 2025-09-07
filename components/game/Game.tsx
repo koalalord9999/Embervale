@@ -1,8 +1,7 @@
-
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { QUESTS, REGIONS, SHOPS } from '../../constants';
 import { POIS } from '../../data/pois';
-import { CombatStance, PlayerSlayerTask, ShopStates, SkillName } from '../../types';
+import { CombatStance, PlayerSlayerTask, ShopStates, SkillName, POIActivity } from '../../types';
 import { useActivityLog } from '../../hooks/useActivityLog';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useInventory } from '../../hooks/useInventory';
@@ -37,6 +36,7 @@ import MainViewController from '../game/MainViewController';
 import QuestDetailView from '../views/overlays/QuestDetailView';
 import AtlasView from '../views/AtlasView';
 import ExpandedMapView from '../views/ExpandedMapView';
+import DevConsole from '../common/DevConsole';
 
 interface GameProps {
     initialState: any; // Type is managed by the game state manager hook
@@ -54,6 +54,14 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
 
     const [clearedSkillObstacles, setClearedSkillObstacles] = useState(initialState.clearedSkillObstacles);
     const [monsterRespawnTimers, setMonsterRespawnTimers] = useState(initialState.monsterRespawnTimers);
+    
+    // Dev Console State
+    const [isDevConsoleOpen, setIsDevConsoleOpen] = useState(false);
+    const [combatSpeedMultiplier, setCombatSpeedMultiplier] = useState(1);
+    const [isInstantRespawnOn, setIsInstantRespawnOn] = useState(false);
+    const [instantRespawnCounter, setInstantRespawnCounter] = useState<number | null>(null);
+    const [devAggroIds, setDevAggroIds] = useState<string[]>([]);
+
 
     const [xpDrops, setXpDrops] = useState<XpDrop[]>([]);
     const handleXpGain = useCallback((skillName: SkillName, amount: number) => {
@@ -65,7 +73,7 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
         setXpDrops(prev => prev.filter(drop => drop.id !== id));
     }, []);
 
-    const char = useCharacter({ skills: initialState.skills, combatStance: initialState.combatStance, currentHp: initialState.currentHp }, { addLog, onXpGain: handleXpGain }, isInCombat);
+    const char = useCharacter({ skills: initialState.skills, combatStance: initialState.combatStance, currentHp: initialState.currentHp }, { addLog, onXpGain: handleXpGain }, isInCombat, combatSpeedMultiplier);
     const inv = useInventory({ inventory: initialState.inventory, coins: initialState.coins, equipment: initialState.equipment }, addLog);
     const quests = useQuests({ playerQuests: initialState.playerQuests, lockedPois: initialState.lockedPois });
     
@@ -122,13 +130,117 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
         interactQuest
     });
     
-    const { handlePlayerDeath } = usePlayerDeath({
+    const handleCombatFinish = useCallback(() => {
+        if (isInstantRespawnOn && instantRespawnCounter !== null) {
+            const newCount = instantRespawnCounter - 1;
+            if (newCount <= 0) {
+                setIsInstantRespawnOn(false);
+                setInstantRespawnCounter(null);
+                addLog('[DEV] Instant respawn counter finished. Feature disabled.');
+            } else {
+                setInstantRespawnCounter(newCount);
+                addLog(`[DEV] Instant respawn encounters remaining: ${newCount}.`);
+            }
+        }
+    }, [isInstantRespawnOn, instantRespawnCounter, addLog]);
+
+    const { handlePlayerDeath: baseHandlePlayerDeath } = usePlayerDeath({
         skilling, interactQuest, ui, session, char, inv, addLog
     });
     
+    const handlePlayerDeath = useCallback(() => {
+        baseHandlePlayerDeath();
+        handleCombatFinish();
+    }, [baseHandlePlayerDeath, handleCombatFinish]);
+    
     const { handleKill } = useKillHandler({
-        questLogic, repeatableQuests, slayer, setMonsterRespawnTimers
+        questLogic, repeatableQuests, slayer, setMonsterRespawnTimers, isInstantRespawnOn
     });
+    
+    // Dev Console Logic
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.altKey && e.key === '`') {
+                e.preventDefault();
+                setIsDevConsoleOpen(prev => !prev);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
+    const handleDevCommand = useCallback((command: string) => {
+        const parts = command.toLowerCase().split(' ');
+        const cmd = parts[0];
+        const arg1 = parts[1];
+        const arg2 = parts[2];
+
+        if (cmd === 'devcombatspeed') {
+            const speed = parseInt(arg1, 10);
+            if (!isNaN(speed) && speed >= 1 && speed <= 3) {
+                setCombatSpeedMultiplier(speed);
+                addLog(`[DEV] Combat speed set to ${speed}x.`);
+            } else {
+                addLog(`[DEV] Invalid speed. Use a value between 1 and 3.`);
+            }
+            return;
+        }
+
+        if (cmd === 'devcombatrespawn') {
+            if (arg1 !== 'true' && arg1 !== 'false') {
+                addLog(`[DEV] Invalid argument for devcombatrespawn. Use 'true' or 'false'.`);
+                return;
+            }
+            const toggle = arg1 === 'true';
+            let count: number | null = null;
+            if (arg2) {
+                const parsedCount = parseInt(arg2, 10);
+                if (!isNaN(parsedCount) && parsedCount > 0) {
+                    count = parsedCount;
+                }
+            }
+
+            setIsInstantRespawnOn(toggle);
+            setInstantRespawnCounter(toggle ? count : null);
+
+            if (toggle) {
+                if (count) {
+                    addLog(`[DEV] Instant respawn enabled for ${count} combat encounters.`);
+                } else {
+                    addLog(`[DEV] Instant respawn enabled indefinitely.`);
+                }
+            } else {
+                addLog(`[DEV] Instant respawn disabled.`);
+            }
+            return;
+        }
+        
+        if (cmd === 'devagro') {
+            if (ui.combatQueue.length === 0) {
+                addLog(`[DEV] 'devagro' can only be used while in combat.`);
+                return;
+            }
+
+            if (arg1 !== 'true' && arg1 !== 'false') {
+                addLog(`[DEV] Invalid argument for devagro. Use 'true' or 'false'.`);
+                return;
+            }
+
+            const toggle = arg1 === 'true';
+            const monsterIdsInCombat = ui.combatQueue;
+
+            if (toggle) {
+                setDevAggroIds(prev => [...new Set([...prev, ...monsterIdsInCombat])]);
+                addLog(`[DEV] Monster(s) in this combat are now permanently aggressive.`);
+            } else {
+                setDevAggroIds(prev => prev.filter(id => !monsterIdsInCombat.includes(id)));
+                addLog(`[DEV] Monster(s) in this combat are no longer permanently aggressive.`);
+            }
+            return;
+        }
+
+        addLog(`[DEV] Unknown command: ${cmd}`);
+    }, [addLog, ui.combatQueue]);
 
     const gameState = useMemo(() => {
         const activeMonsterRespawnTimers: Record<string, number> = {};
@@ -170,14 +282,29 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
                 return slimQuest;
             });
         }
-    
+        
+        const optimizedResourceNodeStates = Object.entries(skilling.resourceNodeStates)
+            .reduce<Record<string, any>>((acc, [nodeId, state]) => {
+                const activity = Object.values(POIS)
+                    .flatMap(poi => poi.activities)
+                    .find(act => act.type === 'skilling' && act.id === nodeId) as Extract<POIActivity, {type: 'skilling'}> | undefined;
+
+                if (activity) {
+                    const maxResources = activity.resourceCount.max;
+                    if (state.resources < maxResources || state.respawnTimer > 0) {
+                        acc[nodeId] = state;
+                    }
+                }
+                return acc;
+            }, {});
+
         return {
             skills: char.skills.map(({ name, level, xp }) => ({ name, level, xp })),
             inventory: inv.inventory, coins: inv.coins, equipment: inv.equipment, combatStance: char.combatStance,
             bank: bankLogic.bank,
             currentHp: char.currentHp, currentPoiId: session.currentPoiId, playerQuests: quests.playerQuests, lockedPois: quests.lockedPois,
             clearedSkillObstacles,
-            resourceNodeStates: skilling.resourceNodeStates,
+            resourceNodeStates: optimizedResourceNodeStates,
             monsterRespawnTimers: activeMonsterRespawnTimers,
             shopStates: optimizedShopStates, 
             repeatableQuestsState: {
@@ -205,7 +332,8 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
         char.combatLevel,
         startCombat,
         addLog,
-        monsterRespawnTimers
+        monsterRespawnTimers,
+        devAggroIds
     );
 
     const activeMapRegionId = useMemo(() => {
@@ -216,6 +344,12 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
         }
         return 'world';
     }, [session.currentPoiId]);
+
+    const onCombatEnd = useCallback(() => {
+        ui.setCombatQueue([]);
+        ui.setIsMandatoryCombat(false);
+        handleCombatFinish();
+    }, [ui, handleCombatFinish]);
 
     return (
         <>
@@ -242,6 +376,7 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
                         monsterRespawnTimers={monsterRespawnTimers}
                         handlePlayerDeath={handlePlayerDeath}
                         handleKill={handleKill}
+                        combatSpeedMultiplier={combatSpeedMultiplier}
                     />
                 </div>
                 <ActivityLog logs={activityLog} />
@@ -285,6 +420,7 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
                 onClose={() => ui.setIsExpandedMapViewOpen(false)}
                 setTooltip={ui.setTooltip}
             />}
+            {isDevConsoleOpen && <DevConsole onCommand={handleDevCommand} onClose={() => setIsDevConsoleOpen(false)} />}
         </>
     );
 };

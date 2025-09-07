@@ -31,7 +31,7 @@ export interface ActiveBuff {
     style?: 'melee' | 'ranged' | 'all';
 }
 
-export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance: CombatStance, currentHp: number }, callbacks: CharacterCallbacks, isInCombat: boolean) => {
+export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance: CombatStance, currentHp: number }, callbacks: CharacterCallbacks, isInCombat: boolean, combatSpeedMultiplier: number) => {
     const { addLog, onXpGain } = callbacks;
     const [skills, setSkills] = useState<PlayerSkill[]>(initialData.skills);
     const [combatStance, setCombatStance] = useState<CombatStance>(initialData.combatStance);
@@ -69,12 +69,12 @@ export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance:
         if (currentHp >= maxHp) {
             return;
         }
-        const regenerationInterval = isInCombat ? 30000 : 10000;
+        const regenerationInterval = isInCombat ? (30000 / combatSpeedMultiplier) : 10000;
         const timer = setInterval(() => {
             setCurrentHp(prev => Math.min(maxHp, prev + 1));
         }, regenerationInterval);
         return () => clearInterval(timer);
-    }, [currentHp, maxHp, isInCombat]);
+    }, [currentHp, maxHp, isInCombat, combatSpeedMultiplier]);
 
     useEffect(() => {
         const interval = setInterval(() => {

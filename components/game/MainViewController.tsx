@@ -1,4 +1,5 @@
 
+
 import React, { useCallback } from 'react';
 import { useUIState } from '../../hooks/useUIState';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -56,11 +57,12 @@ interface MainViewControllerProps {
     monsterRespawnTimers: Record<string, number>;
     handlePlayerDeath: () => void;
     handleKill: (uniqueInstanceId: string) => void;
+    combatSpeedMultiplier: number;
 }
 
 const MainViewController: React.FC<MainViewControllerProps> = (props) => {
     const {
-        ui, addLog, char, inv, quests, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill
+        ui, addLog, char, inv, quests, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, combatSpeedMultiplier
     } = props;
 
     const handleCustomDialogueAction = useCallback((actionId: string | undefined) => {
@@ -123,6 +125,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
             onPlayerDeath={handlePlayerDeath} 
             onKill={handleKill} 
             activeBuffs={char.activeBuffs}
+            combatSpeedMultiplier={combatSpeedMultiplier}
         />;
     }
     if (ui.activeTeleportBoardId) {

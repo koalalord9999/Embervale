@@ -35,6 +35,9 @@ const ShopSlot: React.FC<{
     }
 
     const item = ITEMS[slot.itemId];
+    if (!item) {
+        return <div className="w-full aspect-square bg-gray-900 border border-gray-700 rounded-md" />;
+    }
 
     const handleMouseEnter = (e: React.MouseEvent) => {
         const { equipment } = item;
@@ -132,6 +135,7 @@ const ShopView: React.FC<ShopViewProps> = ({ shopId, playerInventory, playerCoin
     const createSellContextMenu = (e: React.MouseEvent, slot: InventorySlot) => {
         e.preventDefault();
         const item = ITEMS[slot.itemId];
+        if (!item) return; // Guard against non-existent items
         const sellPrice = Math.floor(item.value * 0.2);
         
         let sellableQuantity = 0;
@@ -180,6 +184,7 @@ const ShopView: React.FC<ShopViewProps> = ({ shopId, playerInventory, playerCoin
                     <div className="flex-grow overflow-y-auto pr-1 grid grid-cols-5 gap-2 content-start">
                         {shop.inventory.map(({ itemId, priceModifier }) => {
                             const item = ITEMS[itemId];
+                            if (!item) return null; // Gracefully handle items in shop list that might not exist in ITEMS
                             const itemState = currentShopState[itemId];
                             const buyPrice = Math.ceil(item.value * priceModifier);
                             return (
@@ -206,6 +211,10 @@ const ShopView: React.FC<ShopViewProps> = ({ shopId, playerInventory, playerCoin
                             if (!slot) return <ShopSlot key={index} slot={null} price={0} type="sell" onClick={()=>{}} onContextMenu={()=>{}} setTooltip={setTooltip} />;
                             
                             const item = ITEMS[slot.itemId];
+                            if (!item) {
+                                // This can happen if an item is removed from the game but still exists in a player's save.
+                                return <ShopSlot key={index} slot={null} price={0} type="sell" onClick={()=>{}} onContextMenu={()=>{}} setTooltip={setTooltip} />;
+                            }
                             const sellPrice = Math.floor(item.value * 0.2);
                             return (
                                  <ShopSlot

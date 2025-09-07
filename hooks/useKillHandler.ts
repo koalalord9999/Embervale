@@ -1,3 +1,4 @@
+
 import React, { useCallback } from 'react';
 import { useQuestLogic } from './useQuestLogic';
 import { useRepeatableQuests } from './useRepeatableQuests';
@@ -9,10 +10,11 @@ interface KillHandlerDependencies {
     repeatableQuests: ReturnType<typeof useRepeatableQuests>;
     slayer: ReturnType<typeof useSlayer>;
     setMonsterRespawnTimers: React.Dispatch<React.SetStateAction<Record<string, number>>>;
+    isInstantRespawnOn: boolean;
 }
 
 export const useKillHandler = (deps: KillHandlerDependencies) => {
-    const { questLogic, repeatableQuests, slayer, setMonsterRespawnTimers } = deps;
+    const { questLogic, repeatableQuests, slayer, setMonsterRespawnTimers, isInstantRespawnOn } = deps;
 
     const handleKill = useCallback((uniqueInstanceId: string) => {
         const parts = uniqueInstanceId.split(':');
@@ -24,12 +26,13 @@ export const useKillHandler = (deps: KillHandlerDependencies) => {
 
         const monsterData = MONSTERS[monsterId];
         if (monsterData && monsterData.respawnTime) {
+            const respawnTimestamp = isInstantRespawnOn ? Date.now() : Date.now() + monsterData.respawnTime;
             setMonsterRespawnTimers(prev => ({
                 ...prev,
-                [uniqueInstanceId]: Date.now() + monsterData.respawnTime,
+                [uniqueInstanceId]: respawnTimestamp,
             }));
         }
-    }, [questLogic, repeatableQuests, slayer, setMonsterRespawnTimers]);
+    }, [questLogic, repeatableQuests, slayer, setMonsterRespawnTimers, isInstantRespawnOn]);
 
     return { handleKill };
 };

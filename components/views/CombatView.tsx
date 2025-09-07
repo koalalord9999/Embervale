@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Monster, PlayerSkill, SkillName, Equipment, CombatStance, WeaponType, MonsterType } from '../../types';
 import { MONSTERS, ITEMS, rollOnLootTable } from '../../constants';
@@ -23,9 +24,8 @@ interface CombatViewProps {
     onKill: (uniqueInstanceId: string) => void;
     onConsumeAmmo: () => void;
     activeBuffs: ActiveBuff[];
+    combatSpeedMultiplier: number;
 }
-
-const GAME_TICK_MS = 600;
 
 interface MonsterStatusEffect {
     type: 'poison';
@@ -59,9 +59,9 @@ const HitSplat: React.FC<{ damage: number | 'miss', isPoison?: boolean }> = ({ d
     );
 };
 
-const SmoothCombatCooldownBar: React.FC<{ label: string, nextAttackTime: number, attackSpeedTicks: number }> = ({ label, nextAttackTime, attackSpeedTicks }) => {
+const SmoothCombatCooldownBar: React.FC<{ label: string, nextAttackTime: number, attackSpeedTicks: number, combatSpeedMultiplier: number }> = ({ label, nextAttackTime, attackSpeedTicks, combatSpeedMultiplier }) => {
     const [progress, setProgress] = useState(0);
-    const attackSpeedMs = attackSpeedTicks * GAME_TICK_MS;
+    const attackSpeedMs = (attackSpeedTicks * 600) / combatSpeedMultiplier;
 
     useEffect(() => {
         let animationFrameId: number;
@@ -91,7 +91,7 @@ const SmoothCombatCooldownBar: React.FC<{ label: string, nextAttackTime: number,
 };
 
 
-const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, playerSkills, playerHp, equipment, combatStance, setCombatStance, setPlayerHp, onCombatEnd, addXp, addLoot, addLog, onPlayerDeath, onKill, onConsumeAmmo, activeBuffs }) => {
+const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, playerSkills, playerHp, equipment, combatStance, setCombatStance, setPlayerHp, onCombatEnd, addXp, addLoot, addLog, onPlayerDeath, onKill, onConsumeAmmo, activeBuffs, combatSpeedMultiplier }) => {
     const [currentMonsterIndex, setCurrentMonsterIndex] = useState(0);
     const currentInstanceId = monsterQueue[currentMonsterIndex];
     const monsterId = currentInstanceId.split(':')[1];
@@ -105,6 +105,8 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
     const [nextPlayerAttackTime, setNextPlayerAttackTime] = useState(0);
     const [nextMonsterAttackTime, setNextMonsterAttackTime] = useState(0);
     const [isPreparing, setIsPreparing] = useState(true);
+
+    const gameTickMs = 600 / combatSpeedMultiplier;
 
     const playerWeapon = useMemo(() => {
         const weaponSlot = equipment.weapon;
@@ -127,14 +129,14 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
 
             const preparationTimer = setTimeout(() => {
                 const now = Date.now();
-                setNextPlayerAttackTime(now + playerWeapon.speed * GAME_TICK_MS);
-                setNextMonsterAttackTime(now + monsterData.attackSpeed * GAME_TICK_MS);
+                setNextPlayerAttackTime(now + playerWeapon.speed * gameTickMs);
+                setNextMonsterAttackTime(now + monsterData.attackSpeed * gameTickMs);
                 setIsPreparing(false);
             }, 500);
 
             return () => clearTimeout(preparationTimer);
         }
-    }, [currentInstanceId, playerWeapon.speed, addLog, isMandatory, monsterQueue.length, currentMonsterIndex]);
+    }, [currentInstanceId, playerWeapon.speed, addLog, isMandatory, monsterQueue.length, currentMonsterIndex, gameTickMs]);
 
     const playerStats = useMemo(() => {
         const totals = {
@@ -200,7 +202,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                 if (speedBuff) effectiveSpeed = Math.max(1, effectiveSpeed + speedBuff.value);
         
                 if (isRangedWeapon) {
-                    if (!equipment.ammo) { addLog("You have no arrows equipped."); setNextPlayerAttackTime(now + effectiveSpeed * GAME_TICK_MS); } 
+                    if (!equipment.ammo) { addLog("You have no arrows equipped."); setNextPlayerAttackTime(now + effectiveSpeed * gameTickMs); } 
                     else {
                         let effectiveRanged = playerSkills.find(s => s.name === SkillName.Ranged)?.currentLevel ?? 1;
                         if (combatStance === CombatStance.RangedAccurate) effectiveRanged += 3;
@@ -275,7 +277,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                     setMonsterStatus(prev => {
                         if (prev.some(e => e.type === 'poison')) return prev; // Don't stack poison
                         addLog(`You envenom the ${monster.name}!`);
-                        return [...prev, { type: 'poison', damagePerTick: poisonBuff.value, ticksLeft: poisonBuff.duration / GAME_TICK_MS }];
+                        return [...prev, { type: 'poison', damagePerTick: poisonBuff.value, ticksLeft: poisonBuff.duration / gameTickMs }];
                     });
                 }
 
@@ -316,7 +318,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                     if (currentMonsterIndex + 1 < monsterQueue.length) setCurrentMonsterIndex(prev => prev + 1);
                     else { if(monsterQueue.length > 1) addLog("You have cleared the area!"); onCombatEnd(); }
                 }
-                setNextPlayerAttackTime(now + effectiveSpeed * GAME_TICK_MS);
+                setNextPlayerAttackTime(now + effectiveSpeed * gameTickMs);
             }
 
             if (now >= nextMonsterAttackTime && monsterHp > 0) {
@@ -403,7 +405,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                     }
                 } else { addLog(`The ${monster.name} misses you.`); }
                 if (newPlayerHp <= 0) onPlayerDeath();
-                setNextMonsterAttackTime(now + monster.attackSpeed * GAME_TICK_MS);
+                setNextMonsterAttackTime(now + monster.attackSpeed * gameTickMs);
             }
 
             // Apply monster status effects
@@ -442,7 +444,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
 
         combatFrameId = requestAnimationFrame(combatLoop);
         return () => cancelAnimationFrame(combatFrameId);
-    }, [isPreparing, monster, playerHp, monsterHp, equipment, combatStance, playerSkills, addXp, addLog, onCombatEnd, onKill, onConsumeAmmo, isRangedWeapon, playerWeapon.speed, playerStats, monsterQueue, currentMonsterIndex, nextPlayerAttackTime, nextMonsterAttackTime, activeBuffs, monsterStatus]);
+    }, [isPreparing, monster, playerHp, monsterHp, equipment, combatStance, playerSkills, addXp, addLog, onCombatEnd, onKill, onConsumeAmmo, isRangedWeapon, playerWeapon.speed, playerStats, monsterQueue, currentMonsterIndex, nextPlayerAttackTime, nextMonsterAttackTime, activeBuffs, monsterStatus, gameTickMs]);
 
     if (!monster) return <div>Loading combat...</div>;
 
@@ -490,8 +492,8 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
             </div>
 
             <div className="w-full max-w-md bg-black/50 p-3 rounded-lg space-y-3">
-                <SmoothCombatCooldownBar label="Your Next Attack" nextAttackTime={nextPlayerAttackTime} attackSpeedTicks={playerWeapon.speed} />
-                <SmoothCombatCooldownBar label="Monster Next Attack" nextAttackTime={nextMonsterAttackTime} attackSpeedTicks={monster.attackSpeed} />
+                <SmoothCombatCooldownBar label="Your Next Attack" nextAttackTime={nextPlayerAttackTime} attackSpeedTicks={playerWeapon.speed} combatSpeedMultiplier={combatSpeedMultiplier} />
+                <SmoothCombatCooldownBar label="Monster Next Attack" nextAttackTime={nextMonsterAttackTime} attackSpeedTicks={monster.attackSpeed} combatSpeedMultiplier={combatSpeedMultiplier} />
             </div>
             
             <div className="flex flex-col items-center gap-4">

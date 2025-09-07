@@ -6,6 +6,7 @@ import { foodAndPotions } from './foodAndPotions';
 import { misc } from './misc';
 import { resources } from './resources';
 import { weaponsAndTools } from './weaponsAndTools';
+import { herbloreItems } from './herbloreItems';
 
 const allItemsUnsorted: Item[] = [
     ...armor,
@@ -13,6 +14,7 @@ const allItemsUnsorted: Item[] = [
     ...misc,
     ...resources,
     ...weaponsAndTools,
+    ...herbloreItems,
 ];
 
 // Sort the array alphabetically by item name for deterministic order if needed elsewhere

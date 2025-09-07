@@ -51,11 +51,12 @@ export interface Item {
         poison_damage?: number;
         style?: 'melee' | 'ranged' | 'all';
     }[]; 
+    // FIX: Moved potionEffect into the consumable object, as it describes a consumable's effect.
+    potionEffect?: { description: string };
   };
   buryable?: { prayerXp: number };
   tool?: { type: ToolType; power: number };
   cleanable?: { cleanItemId: string; xp: number };
-  potionEffect?: { description: string };
   material?: 'bronze' | 'iron' | 'steel' | 'mithril' | 'adamantite' | 'runic' | 'aquatite' | 'copper' | 'tin' | 'iron-ore' | 'mithril-ore' | 'adamantite-ore' | 'titanium-ore' | 'silver' | 'coal' | 'raw-fish' | 'raw-meat' | 'cooked-fish' | 'cooked-meat' | 'burnt' | 'sapphire' | 'uncut-sapphire' | 'emerald' | 'uncut-emerald' | 'ruby' | 'uncut-ruby' | 'leather' | 'gold' | 'grimy-herb' | 'clean-herb' | 'unfinished-potion' | 'potion';
 }
 

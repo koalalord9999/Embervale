@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { InventorySlot } from '../../../types';
 import { ITEMS, getIconClassName } from '../../../constants';
@@ -40,7 +39,7 @@ const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose,
 
     const totalValue = checkedItems.reduce((acc, slot) => {
         const item = ITEMS[slot.itemId];
-        return acc + (item.value * slot.quantity);
+        return acc + ((item?.value ?? 0) * slot.quantity);
     }, 0);
 
     const inventoryGrid: (InventorySlot | null)[] = new Array(35).fill(null);
@@ -55,6 +54,7 @@ const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose,
 
     const handleMouseEnter = (e: React.MouseEvent, item: InventorySlot) => {
         const itemData = ITEMS[item.itemId];
+        if (!itemData) return;
         const tooltipContent = (
             <div>
                 <p className="font-bold text-yellow-300">{itemData.name}</p>
@@ -81,7 +81,7 @@ const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose,
                          <div className="flex-grow grid grid-cols-4 gap-2 bg-black/40 p-2 rounded-lg border border-gray-600">
                            {checkerGrid.map((slot, index) => (
                                 <div key={index} className="w-full aspect-square bg-gray-900 border border-gray-700 rounded-md p-1 relative cursor-pointer" onClick={() => slot && removeFromChecker(index)} onMouseEnter={(e) => slot && handleMouseEnter(e, slot)} onMouseLeave={() => setTooltip(null)}>
-                                     {slot && (
+                                     {slot && ITEMS[slot.itemId] && (
                                         <>
                                             <img src={ITEMS[slot.itemId].iconUrl} alt={ITEMS[slot.itemId].name} className={`w-full h-full ${getIconClassName(ITEMS[slot.itemId])}`} />
                                             {slot.quantity > 1 && (
@@ -103,7 +103,7 @@ const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose,
                         <div className="flex-grow grid grid-cols-5 gap-2 bg-black/40 p-2 rounded-lg border border-gray-600">
                             {inventoryGrid.map((slot, index) => (
                                 <div key={index} className="w-full aspect-square bg-gray-900 border border-gray-700 rounded-md p-1 relative cursor-pointer" onClick={() => slot && addToChecker(slot, index)} onMouseEnter={(e) => slot && handleMouseEnter(e, slot)} onMouseLeave={() => setTooltip(null)}>
-                                     {slot && (
+                                     {slot && ITEMS[slot.itemId] && (
                                         <>
                                             <img src={ITEMS[slot.itemId].iconUrl} alt={ITEMS[slot.itemId].name} className={`w-full h-full ${getIconClassName(ITEMS[slot.itemId])}`} />
                                             {slot.quantity > 1 && (

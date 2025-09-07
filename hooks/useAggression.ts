@@ -10,7 +10,8 @@ export const useAggression = (
     playerCombatLevel: number,
     startCombat: (monsterIds: string[]) => void,
     addLog: (message: string) => void,
-    monsterRespawnTimers: Record<string, number>
+    monsterRespawnTimers: Record<string, number>,
+    devAggroIds: string[]
 ) => {
     useEffect(() => {
         if (!isGameLoaded || isBusy) return;
@@ -30,12 +31,17 @@ export const useAggression = (
                 return { monster, uniqueInstanceId };
             })
             .filter(({ monster, uniqueInstanceId }) => {
-                if (!monster?.aggressive) return false;
-
                 const respawnTime = monsterRespawnTimers[uniqueInstanceId];
                 if (respawnTime && respawnTime > Date.now()) {
                     return false; // Monster is respawning
                 }
+
+                // Dev aggro overrides normal behavior
+                if (devAggroIds.includes(uniqueInstanceId)) {
+                    return true;
+                }
+
+                if (!monster?.aggressive) return false;
 
                 if (monster.alwaysAggressive) return true;
                 return playerCombatLevel < monster.level * 2;
@@ -46,5 +52,5 @@ export const useAggression = (
             addLog("You've been spotted by aggressive creatures! Prepare for battle!");
             startCombat(aggressiveMonsterInstances);
         }
-    }, [currentPoiId, isGameLoaded, isBusy, playerCombatLevel, startCombat, addLog, monsterRespawnTimers]);
+    }, [currentPoiId, isGameLoaded, isBusy, playerCombatLevel, startCombat, addLog, monsterRespawnTimers, devAggroIds]);
 };
