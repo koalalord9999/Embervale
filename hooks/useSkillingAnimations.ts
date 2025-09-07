@@ -6,7 +6,6 @@ type SkillingActivity = Extract<POI['activities'][number], { type: 'skilling' }>
 
 export const useSkillingAnimations = (resourceNodeStates: Record<string, ResourceNodeState>, activities: POI['activities']) => {
     const [depletedNodesAnimating, setDepletedNodesAnimating] = useState<Record<string, SkillName>>({});
-    // FIX: Initialize useRef with an explicit undefined value to satisfy linter rule.
     const prevResourceNodeStates = useRef<Record<string, ResourceNodeState> | undefined>(undefined);
 
     useEffect(() => {

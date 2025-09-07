@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-// FIX: POIS is not exported from constants.ts. It is exported from data/pois/index.ts.
 import { MONSTERS } from '../constants';
 import { POIS } from '../data/pois';
 import { POIActivity } from '../types';
