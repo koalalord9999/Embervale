@@ -1,10 +1,11 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { InventorySlot, PlayerSkill } from '../../types';
 import { ITEMS, INVENTORY_CAPACITY, getIconClassName } from '../../constants';
 import { ContextMenuOption } from '../common/ContextMenu';
 
 interface InventoryPanelProps {
-    inventory: InventorySlot[];
+    inventory: (InventorySlot | null)[];
     coins: number;
     skills: PlayerSkill[];
     onEquip: (itemSlot: InventorySlot, index: number) => void;
@@ -20,43 +21,156 @@ interface InventoryPanelProps {
     itemToUse: { item: InventorySlot, index: number } | null;
     setItemToUse: (item: { item: InventorySlot, index: number } | null) => void;
     onUseItemOn: (used: { item: InventorySlot, index: number }, target: { item: InventorySlot, index: number }) => void;
+    onMoveItem: (from: number, to: number) => void;
     isBusy?: boolean;
 }
 
 const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
-    const { inventory, coins, skills, onEquip, onConsume, onDrop, onBury, onEmpty, setTooltip, setContextMenu, addLog, isBankOpen = false, onDeposit = () => {}, itemToUse, setItemToUse, onUseItemOn, isBusy = false } = props;
-
-    const totalSlots = INVENTORY_CAPACITY;
-    const inventoryGrid: (InventorySlot | null)[] = new Array(totalSlots).fill(null);
-    inventory.forEach((item, index) => {
-        if (index < totalSlots) inventoryGrid[index] = item;
-    });
+    const { inventory, coins, skills, onEquip, onConsume, onDrop, onBury, onEmpty, setTooltip, setContextMenu, addLog, isBankOpen = false, onDeposit = () => {}, itemToUse, setItemToUse, onUseItemOn, onMoveItem, isBusy = false } = props;
+    const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+    const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
     const performAction = (action: () => void) => {
         action();
         setTooltip(null);
     };
 
+    const handleDragStart = (e: React.DragEvent, index: number) => {
+        if (isBusy || itemToUse) {
+            e.preventDefault();
+            return;
+        }
+        setTooltip(null); // Explicitly hide tooltip on drag start
+        e.dataTransfer.setData('application/x-inventory-slot-index', index.toString());
+        e.dataTransfer.effectAllowed = 'move';
+        // Timeout helps the browser capture the ghost image before we change the source item's opacity
+        setTimeout(() => {
+          setDraggingIndex(index);
+        }, 0);
+    };
+
+    const handleDragOver = (e: React.DragEvent, index: number) => {
+        e.preventDefault();
+        if (draggingIndex !== null) {
+          setDragOverIndex(index);
+        }
+    };
+
+    const handleDragLeave = () => {
+        setDragOverIndex(null);
+    };
+
+    const handleDrop = (e: React.DragEvent, toIndex: number) => {
+        e.preventDefault();
+        setTooltip(null); // Ensure tooltip is hidden on drop
+        const fromIndexStr = e.dataTransfer.getData('application/x-inventory-slot-index');
+        if (fromIndexStr === null) return;
+        
+        const fromIndex = parseInt(fromIndexStr, 10);
+        if (!isNaN(fromIndex) && fromIndex !== toIndex) {
+            onMoveItem(fromIndex, toIndex);
+        }
+        setDraggingIndex(null);
+        setDragOverIndex(null);
+    };
+
+    const handleDragEnd = () => {
+        setDraggingIndex(null);
+        setDragOverIndex(null);
+        setTooltip(null); // Final cleanup for tooltip
+    };
+
+    const handleClick = (index: number) => {
+        const slot = inventory[index];
+        
+        if (itemToUse) {
+            if (!slot) { setItemToUse(null); return; }
+            if (itemToUse.index !== index) {
+                onUseItemOn(itemToUse, { item: slot, index: index });
+            } else {
+                setItemToUse(null);
+            }
+            return;
+        }
+        
+        if (!slot) return;
+        const item = ITEMS[slot.itemId];
+        if (!item) return;
+
+        if (isBusy) {
+            addLog("You are busy and cannot do that right now.");
+            return;
+        }
+
+        if (isBankOpen) {
+            performAction(() => onDeposit(index, 'all'));
+            return;
+        }
+
+        const isEquippable = !!item.equipment;
+        const isBuryable = !!item.buryable;
+        const isConsumable = !!item.consumable;
+
+        if (isEquippable) performAction(() => onEquip(slot, index));
+        else if (isBuryable) performAction(() => onBury(item.id, index));
+        else if (item.cleanable) performAction(() => onConsume(item.id, index));
+        else if (isConsumable) performAction(() => onConsume(item.id, index));
+        else setItemToUse({ item: slot, index: index });
+    };
+
+    const handleContextMenu = (e: React.MouseEvent, index: number) => {
+        e.preventDefault();
+        const slot = inventory[index];
+        if (!slot) return;
+        const item = ITEMS[slot.itemId];
+        if (!item) return;
+
+        const options: ContextMenuOption[] = [];
+        
+        if (isBankOpen) {
+            options.push({ label: 'Deposit 1', onClick: () => performAction(() => onDeposit(index, 1)), disabled: slot.quantity < 1 });
+            if (slot.quantity > 1) {
+                options.push({ label: 'Deposit 5', onClick: () => performAction(() => onDeposit(index, 5)), disabled: slot.quantity < 5 });
+                options.push({ label: 'Deposit 10', onClick: () => performAction(() => onDeposit(index, 10)), disabled: slot.quantity < 10 });
+            }
+            options.push({ label: 'Deposit All', onClick: () => performAction(() => onDeposit(index, 'all')) });
+        } else {
+            if (item.equipment) options.push({ label: 'Equip', onClick: () => performAction(() => onEquip(slot, index)), disabled: isBusy });
+            if (item.buryable) options.push({ label: 'Bury', onClick: () => performAction(() => onBury(item.id, index)), disabled: isBusy });
+            if (item.cleanable) options.push({ label: 'Clean', onClick: () => performAction(() => onConsume(item.id, index)), disabled: isBusy });
+            if (item.consumable) {
+                let actionText = 'Consume';
+                if (item.consumable.givesCoins) actionText = 'Open';
+                else if (item.emptyable) actionText = 'Drink';
+                else if (item.consumable.healAmount) actionText = 'Eat';
+                options.push({ label: actionText, onClick: () => performAction(() => onConsume(item.id, index)), disabled: isBusy });
+            }
+
+            options.push({ label: 'Use', onClick: () => { setItemToUse({ item: slot, index }); }, disabled: isBusy });
+            
+            if (item.emptyable) options.push({ label: 'Empty', onClick: () => performAction(() => onEmpty(item.id, index)), disabled: isBusy });
+            options.push({ label: 'Drop', onClick: () => performAction(() => onDrop(index)), disabled: isBusy });
+        }
+
+        options.push({ label: 'Examine', onClick: () => addLog(`[Examine: ${item.name}] ${item.description}`) });
+        setContextMenu({ options, position: { x: e.clientX, y: e.clientY } });
+    };
+
     return (
         <div className={`flex flex-col h-full text-gray-300 ${itemToUse ? 'cursor-crosshair' : ''}`}>
             <h3 className="text-lg font-bold text-center mb-2 text-yellow-400">Inventory</h3>
             <div className="grid grid-cols-5 gap-2 flex-grow">
-                {inventoryGrid.map((slot, index) => {
-                    if (!slot) {
-                        return <div key={index} className="w-full aspect-square bg-gray-900 border border-gray-600 rounded-md" />;
-                    }
-
-                    const item = ITEMS[slot.itemId];
-                    const isEquippable = !!item?.equipment;
-                    const isConsumable = !!item?.consumable;
-                    const isBuryable = !!item?.buryable;
+                {inventory.map((slot, index) => {
+                    const item = slot ? ITEMS[slot.itemId] : null;
                     
-                    const originalIndex = inventory.findIndex(invItem => invItem === slot);
-
-                    let slotClasses = 'cursor-pointer hover:border-yellow-400';
-                    if (itemToUse) {
-                        slotClasses = 'cursor-crosshair hover:border-green-400';
-                        if (itemToUse.index === originalIndex) {
+                    let slotClasses = 'hover:border-yellow-400';
+                    if (draggingIndex === index) {
+                        slotClasses = 'opacity-25'; // Item being dragged
+                    } else if (dragOverIndex === index) {
+                        slotClasses = 'border-green-400 scale-105 bg-green-900/50'; // Drop target
+                    } else if (itemToUse) {
+                        slotClasses = 'hover:border-green-400';
+                        if (itemToUse.index === index) {
                             slotClasses += ' border-blue-400 animate-pulse';
                         }
                     }
@@ -64,87 +178,15 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
                     return (
                         <div
                             key={index}
-                            className={`w-full aspect-square bg-gray-900 border-2 border-gray-600 rounded-md flex items-center justify-center p-1 relative transition-colors ${slotClasses}`}
-                            onClick={() => {
-                                if (!slot || !item || originalIndex === -1) return;
-                                
-                                if (isBusy) {
-                                    addLog("You are busy and cannot do that right now.");
-                                    return;
-                                }
-
-                                if (itemToUse) {
-                                    if (itemToUse.index !== originalIndex) {
-                                        onUseItemOn(itemToUse, { item: slot, index: originalIndex });
-                                    } else {
-                                        setItemToUse(null); // Cancel use
-                                    }
-                                    return;
-                                }
-
-                                if (isBankOpen) {
-                                    performAction(() => onDeposit(originalIndex, 'all'));
-                                    return;
-                                }
-                                
-                                // Primary action logic
-                                if (isEquippable) {
-                                    performAction(() => onEquip(slot, originalIndex));
-                                } else if (isBuryable) {
-                                    performAction(() => onBury(item.id, originalIndex));
-                                } else if (item.cleanable) {
-                                    performAction(() => onConsume(item.id, originalIndex));
-                                } else if (isConsumable) {
-                                    performAction(() => onConsume(item.id, originalIndex));
-                                } else {
-                                    // Default action is 'Use' for all other items
-                                    setItemToUse({ item: slot, index: originalIndex });
-                                }
-                            }}
-                            onContextMenu={(e) => {
-                                e.preventDefault();
-                                if (!slot || !item || originalIndex === -1) return;
-                                
-                                const options: ContextMenuOption[] = [];
-                                
-                                if (isBankOpen) {
-                                    options.push({ label: 'Deposit 1', onClick: () => performAction(() => onDeposit(originalIndex, 1)), disabled: slot.quantity < 1 });
-                                    if (slot.quantity > 1) {
-                                        options.push({ label: 'Deposit 5', onClick: () => performAction(() => onDeposit(originalIndex, 5)), disabled: slot.quantity < 5 });
-                                        options.push({ label: 'Deposit 10', onClick: () => performAction(() => onDeposit(originalIndex, 10)), disabled: slot.quantity < 10 });
-                                    }
-                                    options.push({ label: 'Deposit All', onClick: () => performAction(() => onDeposit(originalIndex, 'all')) });
-                                } else {
-                                    if (isEquippable) {
-                                        options.push({ label: 'Equip', onClick: () => performAction(() => onEquip(slot, originalIndex)), disabled: isBusy });
-                                    }
-                                    if (isBuryable) {
-                                        options.push({ label: 'Bury', onClick: () => performAction(() => onBury(item.id, originalIndex)), disabled: isBusy });
-                                    }
-                                    if (item.cleanable) {
-                                        options.push({ label: 'Clean', onClick: () => performAction(() => onConsume(item.id, originalIndex)), disabled: isBusy });
-                                    }
-                                    if (isConsumable) {
-                                        let actionText = 'Consume';
-                                        if (item.consumable?.givesCoins) actionText = 'Open';
-                                        else if (item.emptyable) actionText = 'Drink';
-                                        else if (item.consumable?.healAmount) actionText = 'Eat';
-                                        options.push({ label: actionText, onClick: () => performAction(() => onConsume(item.id, originalIndex)), disabled: isBusy });
-                                    }
-
-                                    options.push({ label: 'Use', onClick: () => setItemToUse({ item: slot, index: originalIndex }), disabled: isBusy });
-                                    
-                                    if (item.emptyable) {
-                                        options.push({ label: 'Empty', onClick: () => performAction(() => onEmpty(item.id, originalIndex)), disabled: isBusy });
-                                    }
-                    
-                                    options.push({ label: 'Drop', onClick: () => performAction(() => onDrop(originalIndex)), disabled: isBusy });
-                                }
-
-                                options.push({ label: 'Examine', onClick: () => addLog(`[Examine: ${item.name}] ${item.description}`) });
-                                
-                                setContextMenu({ options, position: { x: e.clientX, y: e.clientY } });
-                            }}
+                            draggable={!!slot && !isBusy && !itemToUse}
+                            onDragStart={(e) => handleDragStart(e, index)}
+                            onDragOver={(e) => handleDragOver(e, index)}
+                            onDragLeave={handleDragLeave}
+                            onDrop={(e) => handleDrop(e, index)}
+                            onDragEnd={handleDragEnd}
+                            className={`w-full aspect-square bg-gray-900 border-2 border-gray-600 rounded-md flex items-center justify-center p-1 relative transition-all duration-150 ${slot ? 'cursor-grab' : ''} ${slotClasses}`}
+                            onClick={() => handleClick(index)}
+                            onContextMenu={(e) => handleContextMenu(e, index)}
                             onMouseEnter={(e) => {
                                 if (!item) return;
                                 const tooltipContent = (
@@ -202,7 +244,7 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
                                 setTooltip(null);
                             }}
                         >
-                            {item && (
+                            {item && slot && (
                                 <>
                                     <img src={item.iconUrl} alt={item.name} className={`w-full h-full ${getIconClassName(item)}`} />
                                     {slot.quantity > 1 && (

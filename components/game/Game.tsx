@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { QUESTS, REGIONS, SHOPS } from '../../constants';
 import { POIS } from '../../data/pois';
@@ -258,7 +259,8 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
 
         return {
             skills: char.skills.map(({ name, level, xp }) => ({ name, level, xp })),
-            inventory: inv.inventory, coins: inv.coins, equipment: inv.equipment, combatStance: char.combatStance,
+            inventory: inv.inventory, // Save sparse array with nulls to preserve slot positions
+            coins: inv.coins, equipment: inv.equipment, combatStance: char.combatStance,
             bank: bankLogic.bank,
             currentHp: char.currentHp, currentPoiId: session.currentPoiId, playerQuests: quests.playerQuests, lockedPois: quests.lockedPois,
             clearedSkillObstacles,
@@ -357,7 +359,7 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
                     onToggleDevConsole={toggleDevConsole}
                 />
                 <div className="bg-black/70 border-2 border-gray-600 rounded-lg flex-grow p-2 min-h-0">
-                    {(ui.activePanel === 'inventory' || ui.activePanel === 'bank') && <InventoryPanel inventory={inv.inventory} coins={inv.coins} skills={char.skills} onEquip={(item, idx) => inv.handleEquip(item, idx, char.skills, char.combatStance, char.setCombatStance)} onConsume={itemActions.handleConsume} onDrop={inv.handleDropItem} onBury={itemActions.handleBuryBones} onEmpty={itemActions.handleEmptyItem} setTooltip={ui.setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} isBankOpen={ui.activePanel === 'bank'} onDeposit={bankLogic.handleDeposit} itemToUse={ui.itemToUse} setItemToUse={ui.setItemToUse} onUseItemOn={itemActions.handleUseItemOn} isBusy={isBusy} />}
+                    {(ui.activePanel === 'inventory' || ui.activePanel === 'bank') && <InventoryPanel inventory={inv.inventory} coins={inv.coins} skills={char.skills} onEquip={(item, idx) => inv.handleEquip(item, idx, char.skills, char.combatStance, char.setCombatStance)} onConsume={itemActions.handleConsume} onDrop={inv.handleDropItem} onBury={itemActions.handleBuryBones} onEmpty={itemActions.handleEmptyItem} setTooltip={ui.setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} isBankOpen={ui.activePanel === 'bank'} onDeposit={bankLogic.handleDeposit} itemToUse={ui.itemToUse} setItemToUse={ui.setItemToUse} onUseItemOn={itemActions.handleUseItemOn} isBusy={isBusy} onMoveItem={inv.moveItem} />}
                     {ui.activePanel === 'skills' && <SkillsPanel skills={char.skills} setTooltip={ui.setTooltip} onOpenGuide={ui.setActiveSkillGuide} />}
                     {ui.activePanel === 'quests' && <QuestsPanel playerQuests={quests.playerQuests} activeRepeatableQuest={repeatableQuests.activePlayerQuest} inventory={inv.inventory} slayerTask={slayer.slayerTask} onSelectQuest={ui.setActiveQuestDetailId} />}
                     {ui.activePanel === 'equipment' && <EquipmentPanel equipment={inv.equipment} onUnequip={(slot) => inv.handleUnequip(slot, char.setCombatStance)} setTooltip={ui.setTooltip} ui={ui} />}

@@ -1,11 +1,22 @@
 
 
 import { useState, useCallback } from 'react';
-import { InventorySlot, Equipment, CombatStance, WeaponType, PlayerSkill, SkillName } from '../types';
+import { InventorySlot, Equipment, CombatStance, WeaponType, PlayerSkill } from '../types';
 import { ITEMS, INVENTORY_CAPACITY } from '../constants';
 
+// Helper to ensure inventory is always a fixed-size sparse array
+const padInventory = (inv: (InventorySlot | null)[]): (InventorySlot | null)[] => {
+    const padded = new Array(INVENTORY_CAPACITY).fill(null);
+    inv.forEach((item, index) => {
+        if (item && index < INVENTORY_CAPACITY) {
+            padded[index] = item;
+        }
+    });
+    return padded;
+};
+
 export const useInventory = (initialData: { inventory: InventorySlot[], coins: number, equipment: Equipment }, addLog: (message: string) => void) => {
-    const [inventory, setInventory] = useState<InventorySlot[]>(initialData.inventory);
+    const [inventory, setInventory] = useState<(InventorySlot | null)[]>(padInventory(initialData.inventory));
     const [coins, setCoins] = useState<number>(initialData.coins);
     const [equipment, setEquipment] = useState<Equipment>(initialData.equipment);
 
@@ -24,32 +35,34 @@ export const useInventory = (initialData: { inventory: InventorySlot[], coins: n
                 const newInv = [...prevInv];
                 
                 if (itemData.stackable) {
-                    const existingStack = newInv.find(i => i.itemId === itemId);
+                    const existingStack = newInv.find(i => i?.itemId === itemId);
                     if (existingStack) {
                         existingStack.quantity += quantity;
                         if (!quiet) addLog(`Gained ${quantity}x ${itemData.name}.`);
                         return newInv;
                     } else {
-                        if (newInv.length >= INVENTORY_CAPACITY) {
+                        const emptySlotIndex = newInv.findIndex(slot => slot === null);
+                        if (emptySlotIndex === -1) {
                             if (!quiet) addLog(`Your inventory is full. Could not pick up ${itemData.name}.`);
                             return prevInv;
                         }
-                        newInv.push({ itemId, quantity });
+                        newInv[emptySlotIndex] = { itemId, quantity };
                         if (!quiet) addLog(`Gained ${quantity}x ${itemData.name}.`);
                         return newInv;
                     }
                 } else { // NOT STACKABLE
                     let added = 0;
                     for (let i = 0; i < quantity; i++) {
-                        if (newInv.length >= INVENTORY_CAPACITY) {
+                        const emptySlotIndex = newInv.findIndex(slot => slot === null);
+                        if (emptySlotIndex === -1) {
                             if (!quiet) {
                                 if (added > 0) addLog(`Gained ${added}x ${itemData.name}.`);
                                 const remaining = quantity - added;
                                 addLog(`Inventory is full. You left ${remaining}x ${itemData.name} behind.`);
                             }
-                            return newInv;
+                            break; // Stop adding
                         }
-                        newInv.push({ itemId, quantity: 1 });
+                        newInv[emptySlotIndex] = { itemId, quantity: 1 };
                         added++;
                     }
                     if (added > 0 && !quiet) {
@@ -65,21 +78,23 @@ export const useInventory = (initialData: { inventory: InventorySlot[], coins: n
                 const amountToRemove = Math.abs(quantity);
 
                 if (itemData.stackable) {
-                    const stackIndex = newInv.findIndex(i => i.itemId === itemId);
+                    const stackIndex = newInv.findIndex(i => i?.itemId === itemId);
                     if (stackIndex > -1) {
                         const stack = newInv[stackIndex];
-                        const amountCanRemove = Math.min(amountToRemove, stack.quantity);
-                        stack.quantity -= amountCanRemove;
-                        removedCount = amountCanRemove;
-                        if (stack.quantity <= 0) {
-                            newInv.splice(stackIndex, 1);
+                        if (stack) {
+                            const amountCanRemove = Math.min(amountToRemove, stack.quantity);
+                            stack.quantity -= amountCanRemove;
+                            removedCount = amountCanRemove;
+                            if (stack.quantity <= 0) {
+                                newInv[stackIndex] = null;
+                            }
                         }
                     }
                 } else {
                     for (let i = 0; i < amountToRemove; i++) {
-                        const itemIndex = newInv.findIndex(i => i.itemId === itemId);
+                        const itemIndex = newInv.findIndex(i => i?.itemId === itemId);
                         if (itemIndex > -1) {
-                            newInv.splice(itemIndex, 1);
+                            newInv[itemIndex] = null;
                             removedCount++;
                         } else {
                             break; // No more items of this type to remove
@@ -97,7 +112,7 @@ export const useInventory = (initialData: { inventory: InventorySlot[], coins: n
 
     const hasItems = useCallback((requirements: { itemId: string, quantity: number }[]): boolean => {
       return requirements.every(req => {
-        const totalQuantity = inventory.reduce((acc, slot) => slot.itemId === req.itemId ? acc + slot.quantity : acc, 0);
+        const totalQuantity = inventory.reduce((acc, slot) => (slot && slot.itemId === req.itemId) ? acc + slot.quantity : acc, 0);
         return totalQuantity >= req.quantity;
       });
     }, [inventory]);
@@ -125,14 +140,31 @@ export const useInventory = (initialData: { inventory: InventorySlot[], coins: n
             if (isRanged && !currentIsRanged) setCombatStance(CombatStance.RangedAccurate);
             else if (!isRanged && currentIsRanged) setCombatStance(CombatStance.Accurate);
         }
-        setEquipment(prev => ({ ...prev, [slotKey]: itemToEquip }));
+
+        setEquipment(prev => ({ ...prev, [slotKey]: { itemId: itemToEquip.itemId, quantity: 1 } }));
+
         setInventory(prevInv => {
             const newInventory = [...prevInv];
-            newInventory.splice(inventoryIndex, 1);
+            const sourceSlot = newInventory[inventoryIndex];
+            if (sourceSlot) {
+                if (itemData.stackable && sourceSlot.quantity > 1) {
+                    sourceSlot.quantity -= 1;
+                } else {
+                    newInventory[inventoryIndex] = null;
+                }
+            }
+
             if (currentlyEquipped) {
-                 const existingStackIndex = newInventory.findIndex(i => i.itemId === currentlyEquipped.itemId && ITEMS[i.itemId].stackable);
-                if (existingStackIndex > -1) newInventory[existingStackIndex].quantity += currentlyEquipped.quantity;
-                else newInventory.push(currentlyEquipped);
+                 const equippedItemData = ITEMS[currentlyEquipped.itemId];
+                 const existingStackIndex = newInventory.findIndex(i => i?.itemId === currentlyEquipped.itemId && equippedItemData.stackable);
+                if (existingStackIndex > -1) {
+                    newInventory[existingStackIndex]!.quantity += currentlyEquipped.quantity;
+                } else {
+                    const emptySlotIndex = newInventory.findIndex(slot => slot === null);
+                    if (emptySlotIndex > -1) {
+                        newInventory[emptySlotIndex] = currentlyEquipped;
+                    }
+                }
             }
             return newInventory;
         });
@@ -144,9 +176,9 @@ export const useInventory = (initialData: { inventory: InventorySlot[], coins: n
         if (!itemToUnequip) return;
 
         const itemData = ITEMS[itemToUnequip.itemId];
-        const needsNewSlot = !itemData.stackable || !inventory.some(i => i.itemId === itemToUnequip.itemId);
+        const needsNewSlot = !itemData.stackable || !inventory.some(i => i?.itemId === itemToUnequip.itemId);
 
-        if (needsNewSlot && inventory.length >= INVENTORY_CAPACITY) {
+        if (needsNewSlot && inventory.every(slot => slot !== null)) {
             addLog("Your inventory is full. Cannot unequip.");
             return;
         }
@@ -166,8 +198,11 @@ export const useInventory = (initialData: { inventory: InventorySlot[], coins: n
             if (!itemSlot) return newInv;
             const itemData = ITEMS[itemSlot.itemId];
             addLog(`You drop the ${itemData.name}.`);
-            if (itemData.stackable && itemSlot.quantity > 1) newInv[inventoryIndex] = { ...itemSlot, quantity: itemSlot.quantity - 1 };
-            else newInv.splice(inventoryIndex, 1);
+            if (itemData.stackable && itemSlot.quantity > 1) {
+                newInv[inventoryIndex] = { ...itemSlot, quantity: itemSlot.quantity - 1 };
+            } else {
+                newInv[inventoryIndex] = null;
+            }
             return newInv;
         });
     }, [addLog]);
@@ -178,13 +213,14 @@ export const useInventory = (initialData: { inventory: InventorySlot[], coins: n
 
         const sellPrice = Math.floor(itemData.value * 0.2);
         let quantityToSell = 0;
+        let currentQuantity = 0;
 
         if (itemData.stackable) {
-            const itemSlot = inventory.find(s => s.itemId === itemId);
-            const currentQuantity = itemSlot ? itemSlot.quantity : 0;
+            const itemSlot = inventory.find(s => s?.itemId === itemId);
+            currentQuantity = itemSlot ? itemSlot.quantity : 0;
             quantityToSell = quantity === 'all' ? currentQuantity : Math.min(quantity, currentQuantity);
         } else {
-            const currentQuantity = inventory.filter(s => s.itemId === itemId).length;
+            currentQuantity = inventory.filter(s => s?.itemId === itemId).length;
             quantityToSell = quantity === 'all' ? currentQuantity : Math.min(quantity, currentQuantity);
         }
 
@@ -211,8 +247,19 @@ export const useInventory = (initialData: { inventory: InventorySlot[], coins: n
         });
     }, [addLog]);
 
+    const moveItem = useCallback((fromIndex: number, toIndex: number) => {
+        setInventory(prevInv => {
+            const newInv = [...prevInv];
+            const itemFrom = newInv[fromIndex];
+            const itemTo = newInv[toIndex];
+            newInv[fromIndex] = itemTo;
+            newInv[toIndex] = itemFrom;
+            return newInv;
+        });
+    }, []);
+
     return {
         inventory, setInventory, coins, setCoins, equipment, setEquipment,
-        modifyItem, hasItems, handleEquip, handleUnequip, handleDropItem, handleSell, handleConsumeAmmo
+        modifyItem, hasItems, handleEquip, handleUnequip, handleDropItem, handleSell, handleConsumeAmmo, moveItem
     };
 };
