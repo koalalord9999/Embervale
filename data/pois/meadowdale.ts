@@ -97,13 +97,7 @@ export const meadowdalePois: Record<string, POI> = {
                 icon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
                 dialogue: ["Hmph. Another adventurer. Don't go stirring up trouble, now."]
             },
-            { type: 'quest_start', questId: 'goblin_menace'},
-            {
-                type: 'npc',
-                name: 'Altar of the Depths (Test)',
-                icon: '/assets/npcChatHeads/altar_of_depths.png',
-                dialogue: ["You feel a strange, ancient energy emanating from the stone."]
-            }
+            { type: 'quest_start', questId: 'goblin_menace'}
         ],
         regionId: 'meadowdale',
         x: 250, y: 250,
