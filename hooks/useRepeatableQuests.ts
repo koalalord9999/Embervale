@@ -1,0 +1,215 @@
+
+
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { PlayerRepeatableQuest, GeneratedRepeatableQuest, RepeatableQuestsState, SkillName, PlayerSkill } from '../types';
+import { REPEATABLE_QUEST_POOL, MONSTERS, ITEMS, XP_TABLE, TELEPORT_UNLOCK_THRESHOLD } from '../constants';
+import { POIS } from '../data/pois';
+
+const BOARD_IDS = ['the_rusty_flagon', 'the_carved_mug'];
+const BOARD_RESET_INTERVAL = 30 * 60 * 1000; // 30 minutes
+
+const getTownForBoard = (boardId: string): 'meadowdale' | 'oakhaven' => {
+    if (boardId === 'the_rusty_flagon') return 'meadowdale';
+    if (boardId === 'the_carved_mug') return 'oakhaven';
+    return 'meadowdale';
+};
+
+const generateNewQuestsForBoard = (boardId: string, playerSkills: (PlayerSkill & { currentLevel: number; })[]): GeneratedRepeatableQuest[] => {
+    const town = getTownForBoard(boardId);
+    const availableQuests = REPEATABLE_QUEST_POOL.filter(
+        q => q.location === town || q.location === 'general'
+    );
+    const shuffled = [...availableQuests].sort(() => 0.5 - Math.random());
+    const selectedQuests = shuffled.slice(0, 4);
+
+    return selectedQuests.map(quest => {
+        if (quest.type === 'gather') {
+            const requiredQuantity = Math.floor(Math.random() * 11) + 5; // 5-15
+            const itemValue = ITEMS[quest.target.itemId!]?.value ?? 1;
+            const finalCoinReward = Math.ceil(requiredQuantity * itemValue * 0.4);
+            const finalXpAmount = requiredQuantity * quest.xpReward.amount;
+            return { ...quest, requiredQuantity, finalCoinReward, xpReward: { ...quest.xpReward, amount: finalXpAmount } };
+        } else if (quest.type === 'kill') {
+            const requiredQuantity = Math.floor(Math.random() * 6) + 3; // 3-8 kills
+            const finalCoinReward = quest.baseCoinReward * requiredQuantity;
+            
+            const monster = MONSTERS[quest.target.monsterId!];
+            const finalXpAmount = monster
+                ? monster.maxHp * requiredQuantity
+                : quest.xpReward.amount * requiredQuantity;
+
+            return { ...quest, requiredQuantity, finalCoinReward, xpReward: { ...quest.xpReward, amount: finalXpAmount } };
+        } else { // interact
+            const skillName = quest.xpReward.skill;
+            const playerSkill = playerSkills.find(s => s.name === skillName);
+            let finalXpAmount = quest.xpReward.amount;
+
+            if (playerSkill) {
+                const currentLevel = playerSkill.level;
+                const xpForNextLevelBracket = (XP_TABLE[currentLevel] || XP_TABLE[99]) - (XP_TABLE[currentLevel - 1] || 0);
+                const option1 = Math.floor(xpForNextLevelBracket * 0.1);
+                const option2 = Math.floor((quest.xpReward.amount / 4) * currentLevel);
+                finalXpAmount = Math.max(1, Math.min(option1, option2));
+            }
+
+            return { ...quest, requiredQuantity: 1, finalCoinReward: quest.baseCoinReward, xpReward: { ...quest.xpReward, amount: finalXpAmount } };
+        }
+    });
+};
+
+export const useRepeatableQuests = (
+    initialState: RepeatableQuestsState, 
+    addLog: (message: string) => void,
+    inv: { hasItems: (items: { itemId: string; quantity: number }[]) => boolean; modifyItem: (itemId: string, quantity: number, quiet?: boolean) => void },
+    char: { addXp: (skill: SkillName, amount: number) => void; skills: (PlayerSkill & { currentLevel: number; })[] }
+) => {
+    const [boards, setBoards] = useState<Record<string, GeneratedRepeatableQuest[]>>(initialState.boards);
+    const [activePlayerQuest, setActivePlayerQuest] = useState<PlayerRepeatableQuest | null>(initialState.activePlayerQuest);
+    const [nextResetTimestamp, setNextResetTimestamp] = useState<number>(initialState.nextResetTimestamp);
+    const [completedQuestIds, setCompletedQuestIds] = useState<string[]>(initialState.completedQuestIds);
+    const [boardCompletions, setBoardCompletions] = useState<Record<string, number>>(initialState.boardCompletions);
+    const charRef = useRef(char);
+    useEffect(() => {
+        charRef.current = char;
+    });
+    
+    const resetBoards = useCallback(() => {
+        addLog("The adventurer's guild boards have been updated with new tasks.");
+        const newBoards: Record<string, GeneratedRepeatableQuest[]> = {};
+        BOARD_IDS.forEach(id => {
+            newBoards[id] = generateNewQuestsForBoard(id, charRef.current.skills);
+        });
+        setBoards(newBoards);
+        setCompletedQuestIds([]);
+        setNextResetTimestamp(Date.now() + BOARD_RESET_INTERVAL);
+
+        if (activePlayerQuest) {
+            setActivePlayerQuest(null);
+            addLog("The task you were on is no longer available and has been removed from your journal.");
+        }
+
+    }, [activePlayerQuest, addLog]);
+
+    useEffect(() => {
+        const checkAndReset = () => {
+            if (Date.now() >= nextResetTimestamp) {
+                resetBoards();
+            }
+        };
+
+        checkAndReset();
+        
+        const needsInitialGeneration = BOARD_IDS.some(id => !boards[id] || boards[id].length === 0);
+        if (needsInitialGeneration) {
+            resetBoards();
+        }
+
+        const interval = setInterval(checkAndReset, 10000);
+        return () => clearInterval(interval);
+    }, [nextResetTimestamp, resetBoards, boards]);
+
+    const acceptQuest = useCallback((quest: GeneratedRepeatableQuest, boardId: string) => {
+        if (activePlayerQuest) {
+            addLog("You already have an active task. Complete or abandon it first.");
+            return;
+        }
+        setActivePlayerQuest({
+            questId: quest.id,
+            boardId,
+            generatedQuest: quest,
+            progress: 0,
+        });
+        addLog(`New task accepted: ${quest.title}`);
+    }, [addLog, activePlayerQuest]);
+    
+    const completeQuest = useCallback(() => {
+        if (!activePlayerQuest) return;
+        setCompletedQuestIds(prev => [...prev, activePlayerQuest.generatedQuest.id]);
+        setActivePlayerQuest(null);
+    }, [activePlayerQuest]);
+
+    const handleTurnInRepeatableQuest = useCallback(() => {
+        const quest = activePlayerQuest;
+        if (!quest) return;
+        
+        const { generatedQuest } = quest;
+        if (generatedQuest.type === 'gather') {
+            const required = { itemId: generatedQuest.target.itemId!, quantity: generatedQuest.requiredQuantity };
+            if (!inv.hasItems([required])) {
+                addLog("You don't have all the required items yet.");
+                return;
+            }
+            inv.modifyItem(required.itemId, -required.quantity);
+        } else if (generatedQuest.type === 'kill') {
+            if (quest.progress < generatedQuest.requiredQuantity) {
+                addLog("You haven't defeated enough monsters yet.");
+                return;
+            }
+        }
+        
+        const finalXpAmount = generatedQuest.xpReward.amount;
+
+        inv.modifyItem('coins', generatedQuest.finalCoinReward);
+        char.addXp(generatedQuest.xpReward.skill, finalXpAmount);
+        addLog(`Task complete! You earned ${generatedQuest.finalCoinReward} coins and ${finalXpAmount.toLocaleString()} ${generatedQuest.xpReward.skill} XP.`);
+        
+        const boardId = quest.boardId;
+        setBoardCompletions(prev => {
+            const newCount = (prev[boardId] || 0) + 1;
+            if (newCount === TELEPORT_UNLOCK_THRESHOLD) {
+                addLog(`You have mastered the ${POIS[boardId].name} quest board and can now teleport to it!`);
+            }
+            return { ...prev, [boardId]: newCount };
+        });
+
+        completeQuest();
+    }, [activePlayerQuest, inv, char, addLog, completeQuest]);
+
+    const checkProgressOnKill = useCallback((monsterId: string) => {
+        setActivePlayerQuest(currentQuest => {
+            if (!currentQuest) return currentQuest;
+    
+            const quest = currentQuest.generatedQuest;
+    
+            if (quest.type === 'kill' && quest.target.monsterId === monsterId) {
+                if (currentQuest.progress >= quest.requiredQuantity) return currentQuest;
+    
+                const newProgress = currentQuest.progress + 1;
+                const monsterName = MONSTERS[monsterId]?.name || 'monster';
+                
+                if (newProgress >= quest.requiredQuantity) {
+                    addLog(`You have defeated enough ${monsterName}s for the task '${quest.title}'!`);
+                } else {
+                    addLog(`Task progress: ${newProgress}/${quest.requiredQuantity} ${monsterName}s defeated.`);
+                }
+                return { ...currentQuest, progress: newProgress };
+            }
+            
+            if (quest.type === 'gather') {
+                const monster = MONSTERS[monsterId];
+                if (!monster) return currentQuest;
+                const targetDrop = monster.drops.find(d => d.itemId === quest.target.itemId);
+                if (targetDrop) {
+                     const newProgress = currentQuest.progress + 1;
+                     if (newProgress >= quest.requiredQuantity) {
+                         addLog(`You have collected all the required items for '${quest.title}'!`);
+                     }
+                     return { ...currentQuest, progress: newProgress };
+                }
+            }
+    
+            return currentQuest;
+        });
+    }, [addLog]);
+
+    return {
+        boards,
+        activePlayerQuest,
+        nextResetTimestamp,
+        completedQuestIds,
+        boardCompletions,
+        acceptQuest,
+        checkProgressOnKill,
+        handleTurnInRepeatableQuest,
+    };
+};

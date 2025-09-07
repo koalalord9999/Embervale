@@ -1,0 +1,5 @@
+{
+  "name": "Embervale",
+  "description": "A RuneScape-inspired 2D adventure game built with React. Explore, train skills, fight monsters, and complete quests in a modular and expandable world. The game features a scene-based exploration system, 18 unique skills to master, a resource-driven economy, and an intuitive UI for managing your journey.",
+  "requestFramePermissions": []
+}
