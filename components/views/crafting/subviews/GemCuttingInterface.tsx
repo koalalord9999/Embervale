@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SkillName } from '../../../../types';
 import { GEM_CUTTING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
@@ -7,8 +8,8 @@ import { CraftingViewProps } from '../CraftingView';
 const GemCuttingInterface: React.FC<CraftingViewProps> = ({ inventory, skills, onCut, setContextMenu, setMakeXPrompt }) => {
     const craftingLevel = skills.find(s => s.name === SkillName.Crafting)?.level ?? 1;
 
-    const getItemCount = (itemId: string) => inventory.filter(slot => slot.itemId === itemId).length;
-    const hasChisel = inventory.some(slot => slot.itemId === 'chisel');
+    const getItemCount = (itemId: string) => inventory.filter(slot => slot && slot.itemId === itemId).length;
+    const hasChisel = inventory.some(slot => slot && slot.itemId === 'chisel');
 
     const createContextMenu = (e: React.MouseEvent, recipe: typeof GEM_CUTTING_RECIPES[0]) => {
         e.preventDefault();

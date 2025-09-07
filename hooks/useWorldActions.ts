@@ -1,10 +1,11 @@
+
 import React, { useCallback } from 'react';
-import { POIActivity, SkillName, InventorySlot, PlayerSkill, SkillRequirement, PlayerQuestState } from '../types';
+import { POIActivity, SkillName, InventorySlot, PlayerSkill, SkillRequirement, PlayerQuestState } from '../../types';
 import { ITEMS, INVENTORY_CAPACITY } from '../../constants';
 import { MakeXPrompt } from './useUIState';
 
 interface UseWorldActionsProps {
-    hasItems: (items: { itemId: string, quantity: number }[]) => boolean;
+    hasItems: (items: { itemId: string; quantity: number }[]) => boolean;
     inventory: (InventorySlot | null)[];
     modifyItem: (itemId: string, quantity: number, quiet?: boolean) => void;
     addLog: (message: string) => void;

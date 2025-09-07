@@ -10,7 +10,7 @@ interface UseCraftingProps {
     addLog: (message: string) => void;
     activeCraftingAction: ActiveCraftingAction | null;
     setActiveCraftingAction: (action: ActiveCraftingAction | null) => void;
-    inventory: InventorySlot[];
+    inventory: (InventorySlot | null)[];
     modifyItem: (itemId: string, quantity: number, quiet?: boolean) => void;
     addXp: (skill: SkillName, amount: number) => void;
     checkQuestProgressOnSpin: (itemId: string, quantity: number) => void;
@@ -66,7 +66,7 @@ export const useCrafting = (props: UseCraftingProps) => {
         if (!recipe) { addLog("You don't know how to cut that gem."); return; }
         const craftingLevel = skills.find(s => s.name === SkillName.Crafting)?.level ?? 1;
         if (craftingLevel < recipe.level) { addLog(`You need a Crafting level of ${recipe.level} to do this.`); return; }
-        if (!inventory.some(i => i.itemId === 'chisel')) { addLog("You need a chisel to cut gems."); return; }
+        if (!inventory.some(i => i && i.itemId === 'chisel')) { addLog("You need a chisel to cut gems."); return; }
         if (!hasItems([{ itemId: recipe.uncutId, quantity: 1}])) { addLog("You don't have any uncut gems of that type."); return; }
         
         addLog("You begin to carefully cut the gem...");
@@ -237,7 +237,7 @@ export const useCrafting = (props: UseCraftingProps) => {
             case 'gem-cutting':
                 recipe = GEM_CUTTING_RECIPES.find(r => r.cutId === action.recipeId);
                 if(recipe) {
-                    if (!inventory.some(i => i.itemId === 'chisel')) {
+                    if (!inventory.some(i => i && i.itemId === 'chisel')) {
                         return { success: false, logMessage: "You need a chisel to continue." };
                     }
                     ingredients = [{itemId: recipe.uncutId, quantity: 1}];
@@ -283,7 +283,7 @@ export const useCrafting = (props: UseCraftingProps) => {
                 for (const ing of recipe.ingredients) {
                     const itemData = ITEMS[ing.itemId];
                     if (itemData.stackable) {
-                        const invSlot = inventory.find(s => s.itemId === ing.itemId);
+                        const invSlot = inventory.find(s => s && s.itemId === ing.itemId);
                         // If the stack is fully consumed, a slot is freed
                         if (invSlot && invSlot.quantity <= ing.quantity) {
                             slotsFreed++;
@@ -298,7 +298,7 @@ export const useCrafting = (props: UseCraftingProps) => {
                 // It will take one new slot.
                 const slotsGained = 1;
 
-                const finalSlotCount = inventory.length - slotsFreed + slotsGained;
+                const finalSlotCount = inventory.filter(Boolean).length - slotsFreed + slotsGained;
                 
                 if (finalSlotCount > INVENTORY_CAPACITY) {
                     return { success: false, logMessage: "You don't have enough inventory space for the finished product." };
@@ -331,7 +331,7 @@ export const useCrafting = (props: UseCraftingProps) => {
             if (ing.quantity === 0) continue; // Skip presence-only checks
             const itemData = ITEMS[ing.itemId];
             if (itemData.stackable) {
-                const invSlot = inventory.find(s => s.itemId === ing.itemId);
+                const invSlot = inventory.find(s => s && s.itemId === ing.itemId);
                 if (invSlot && invSlot.quantity <= ing.quantity) {
                     slotsFreed++;
                 }
@@ -343,14 +343,14 @@ export const useCrafting = (props: UseCraftingProps) => {
         let slotsGained = 0;
         const productData = ITEMS[product.itemId];
         if (productData.stackable) {
-            if (!inventory.some(s => s.itemId === product.itemId)) {
+            if (!inventory.some(s => s && s.itemId === product.itemId)) {
                 slotsGained = 1;
             }
         } else {
             slotsGained = product.quantity;
         }
 
-        const finalSlotCount = inventory.length - slotsFreed + slotsGained;
+        const finalSlotCount = inventory.filter(Boolean).length - slotsFreed + slotsGained;
 
         if (finalSlotCount > INVENTORY_CAPACITY) {
             return { success: false, logMessage: "You don't have enough inventory space for the finished product." };

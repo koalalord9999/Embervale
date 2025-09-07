@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { SkillName, WeaponType } from '../../../../types';
 import { SMITHING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
@@ -14,9 +15,9 @@ const AnvilInterface: React.FC<CraftingViewProps> = ({ inventory, skills, player
         const item = ITEMS[itemId];
         if (!item) return 0;
         if (item.stackable) {
-            return inventory.find(slot => slot.itemId === itemId)?.quantity ?? 0;
+            return inventory.find(slot => slot && slot.itemId === itemId)?.quantity ?? 0;
         }
-        return inventory.filter(slot => slot.itemId === itemId).length;
+        return inventory.filter(slot => slot && slot.itemId === itemId).length;
     };
 
     const barCounts = {

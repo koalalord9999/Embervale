@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SkillName } from '../../../../types';
 import { ITEMS, getIconClassName } from '../../../../constants';
@@ -13,9 +14,9 @@ const FurnaceInterface: React.FC<CraftingViewProps> = ({ inventory, skills, onSm
         const item = ITEMS[itemId];
         if (!item) return 0;
         if (item.stackable) {
-            return inventory.find(slot => slot.itemId === itemId)?.quantity ?? 0;
+            return inventory.find(slot => slot && slot.itemId === itemId)?.quantity ?? 0;
         }
-        return inventory.filter(slot => slot.itemId === itemId).length;
+        return inventory.filter(slot => slot && slot.itemId === itemId).length;
     };
 
     const smeltingRecipes = [

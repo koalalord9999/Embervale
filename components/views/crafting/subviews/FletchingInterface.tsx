@@ -1,23 +1,33 @@
+
 import React from 'react';
-import { SkillName, CraftingContext } from '../../../../types';
+import { InventorySlot, PlayerSkill, SkillName } from '../../../../types';
 import { FLETCHING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
 import Button from '../../../common/Button';
-import { CraftingViewProps } from '../CraftingView';
+import { MakeXPrompt } from '../../../../hooks/useUIState';
 
-interface FletchingInterfaceProps extends CraftingViewProps {
-    context: Extract<CraftingContext, { type: 'fletching' }>;
+interface FletchingViewProps {
+    logId: string;
+    inventory: (InventorySlot | null)[];
+    skills: PlayerSkill[];
+    onFletch: (action: { type: 'carve'; payload: any }, quantity: number) => void;
+    onExit: () => void;
+    setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
 }
 
-const FletchingInterface: React.FC<FletchingInterfaceProps> = ({ context, inventory, skills, onFletch, setMakeXPrompt }) => {
-    const { logId } = context;
+const FletchingView: React.FC<FletchingViewProps> = ({ logId, inventory, skills, onFletch, onExit, setMakeXPrompt }) => {
     const fletchingLevel = skills.find(s => s.name === SkillName.Fletching)?.level ?? 1;
     const logName = ITEMS[logId].name;
     const recipes = FLETCHING_RECIPES.carving[logId] ?? [];
-    const logCount = inventory.filter(s => s.itemId === logId).length;
+    const logCount = inventory.filter(s => s && s.itemId === logId).length;
 
     return (
-        <>
+        <div className="flex flex-col h-full text-gray-200">
+            <div className="flex justify-between items-center mb-4">
+                <h1 className="text-3xl font-bold text-yellow-400">Fletching - {logName}</h1>
+                <Button onClick={onExit}>Exit</Button>
+            </div>
             <p className="mb-4 text-lg">Your {logName}: <span className="text-yellow-400">{logCount}</span></p>
+
             <div className="flex-grow overflow-y-auto pr-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {recipes.map((recipe) => {
@@ -69,8 +79,8 @@ const FletchingInterface: React.FC<FletchingInterfaceProps> = ({ context, invent
                     })}
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 
-export default FletchingInterface;
+export default FletchingView;

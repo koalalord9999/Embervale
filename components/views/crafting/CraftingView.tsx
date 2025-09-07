@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { InventorySlot, PlayerSkill, PlayerQuestState, CraftingContext } from '../../../types';
 import { MakeXPrompt } from '../../../hooks/useUIState';
@@ -17,7 +18,8 @@ type BarType = 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'silver_bar' | 'mithril
 
 export interface CraftingViewProps {
     context: CraftingContext;
-    inventory: InventorySlot[];
+    // FIX: The inventory array can contain null slots.
+    inventory: (InventorySlot | null)[];
     skills: PlayerSkill[];
     playerQuests: PlayerQuestState[];
     onCook: (recipeId: string, quantity: number) => void;
@@ -56,7 +58,18 @@ const CraftingView: React.FC<CraftingViewProps> = (props) => {
             case 'spinning_wheel': return <SpinningInterface {...props} />;
             case 'leatherworking': return <LeatherworkingInterface {...props} />;
             case 'gem_cutting': return <GemCuttingInterface {...props} />;
-            case 'fletching': return <FletchingInterface {...props} context={context} />;
+            // FIX: FletchingInterface expects different props from CraftingViewProps. Instead of spreading, pass the expected props explicitly.
+            case 'fletching': {
+                const { inventory, skills, onFletch, setMakeXPrompt } = props;
+                return <FletchingInterface
+                    logId={context.logId}
+                    inventory={inventory}
+                    skills={skills}
+                    onFletch={onFletch}
+                    onExit={onExit}
+                    setMakeXPrompt={setMakeXPrompt}
+                />;
+            }
             default: return <p>Unsupported crafting context.</p>;
         }
     };

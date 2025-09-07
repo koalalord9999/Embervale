@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SkillName } from '../../../../types';
 import { SPINNING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
@@ -10,9 +11,9 @@ const SpinningInterface: React.FC<CraftingViewProps> = ({ inventory, skills, onS
     const getIngredientCount = (itemId: string) => {
         const item = ITEMS[itemId];
         if (item.stackable) {
-            return inventory.find(slot => slot.itemId === itemId)?.quantity ?? 0;
+            return inventory.find(slot => slot && slot.itemId === itemId)?.quantity ?? 0;
         }
-        return inventory.filter(slot => slot.itemId === itemId).length;
+        return inventory.filter(slot => slot && slot.itemId === itemId).length;
     };
 
     const createContextMenu = (e: React.MouseEvent, recipe: typeof SPINNING_RECIPES[0]) => {

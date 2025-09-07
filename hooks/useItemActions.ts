@@ -1,3 +1,5 @@
+
+
 import { useCallback } from 'react';
 import { InventorySlot, PlayerSkill, SkillName, ActiveCraftingAction, Item, CraftingContext } from '../types';
 // FIX: Import the HERBS constant.
@@ -102,7 +104,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
                 const emptyItemData = ITEMS[emptyItemId];
     
                 if (emptyItemData.stackable) {
-                    const existingStackIndex = newInv.findIndex(i => i?.itemId === emptyItemId);
+                    const existingStackIndex = newInv.findIndex(i => i && i.itemId === emptyItemId);
                     if (existingStackIndex > -1) {
                         newInv[existingStackIndex]!.quantity += 1;
                     } else {
@@ -149,14 +151,14 @@ export const useItemActions = (props: UseItemActionsProps) => {
 
         setInventory(prev => {
             const newInv = [...prev];
-            if (newInv[inventoryIndex]?.itemId !== itemId) return prev;
+            if (!newInv[inventoryIndex] || newInv[inventoryIndex]?.itemId !== itemId) return prev;
             
             // Empty the slot first
             newInv[inventoryIndex] = null;
             
             // Then add the empty container back, possibly into the same slot
             if (emptyItemData.stackable) {
-                const existingStack = newInv.find(i => i?.itemId === emptyItemId);
+                const existingStack = newInv.find(i => i && i.itemId === emptyItemId);
                 if (existingStack) {
                     existingStack.quantity += 1;
                 } else {
@@ -173,7 +175,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
         });
 
         addLog(`You empty the ${itemData.name}.`);
-    }, [inventory, setInventory, addLog]);
+    }, [setInventory, addLog]);
 
 
     const handleItemCombination = useCallback((used: { item: InventorySlot, index: number }, target: { item: InventorySlot, index: number }) => {
@@ -280,8 +282,8 @@ export const useItemActions = (props: UseItemActionsProps) => {
         const stringRecipe = FLETCHING_RECIPES.stringing.find(r => (usedId === 'bow_string' && r.unstrungId === targetId) || (targetId === 'bow_string' && r.unstrungId === usedId));
         if (stringRecipe) {
             if (fletchingLevel < stringRecipe.level) { addLog(`You need a Fletching level of ${stringRecipe.level} to string this bow.`); return; }
-            const unstrungBows = inventory.filter(i => i?.itemId === stringRecipe.unstrungId).length;
-            const bowStrings = inventory.filter(i => i?.itemId === 'bow_string').length;
+            const unstrungBows = inventory.filter(i => i && i.itemId === stringRecipe.unstrungId).length;
+            const bowStrings = inventory.filter(i => i && i.itemId === 'bow_string').length;
             const quantity = Math.min(unstrungBows, bowStrings);
             startTimedAction(stringRecipe.strungId, 'fletching-string', quantity, 1200, { unstrungId: stringRecipe.unstrungId });
             return;
@@ -291,8 +293,8 @@ export const useItemActions = (props: UseItemActionsProps) => {
         if ((usedId === 'arrow_shaft' && targetId === 'feathers') || (targetId === 'arrow_shaft' && usedId === 'feathers')) {
             const recipe = FLETCHING_RECIPES.headless;
             if (fletchingLevel < recipe.level) { addLog(`You need a Fletching level of ${recipe.level} to make these.`); return; }
-            const shaftQty = inventory.find(i => i?.itemId === 'arrow_shaft')?.quantity ?? 0;
-            const featherQty = inventory.find(i => i?.itemId === 'feathers')?.quantity ?? 0;
+            const shaftQty = inventory.find(i => i && i.itemId === 'arrow_shaft')?.quantity ?? 0;
+            const featherQty = inventory.find(i => i && i.itemId === 'feathers')?.quantity ?? 0;
             const quantity = Math.floor(Math.min(shaftQty, featherQty) / 15);
             if (quantity < 1) { addLog("You need at least 15 shafts and 15 feathers."); return; }
             startTimedAction('headless_arrow', 'fletching-headless', quantity, 600);
@@ -303,8 +305,8 @@ export const useItemActions = (props: UseItemActionsProps) => {
         const tipRecipe = FLETCHING_RECIPES.tipping.find(r => (r.tipId === usedId && targetId === 'headless_arrow') || (r.tipId === targetId && usedId === 'headless_arrow'));
         if (tipRecipe) {
              if (fletchingLevel < tipRecipe.level) { addLog(`You need a Fletching level of ${tipRecipe.level} to attach these.`); return; }
-             const tipQty = inventory.find(i => i?.itemId === tipRecipe.tipId)?.quantity ?? 0;
-             const headlessQty = inventory.find(i => i?.itemId === 'headless_arrow')?.quantity ?? 0;
+             const tipQty = inventory.find(i => i && i.itemId === tipRecipe.tipId)?.quantity ?? 0;
+             const headlessQty = inventory.find(i => i && i.itemId === 'headless_arrow')?.quantity ?? 0;
              const quantity = Math.floor(Math.min(tipQty, headlessQty) / 15);
              if (quantity < 1) { addLog("You need at least 15 tips and 15 headless arrows."); return; }
              startTimedAction(tipRecipe.arrowId, 'fletching-tip', quantity, 600, { tipId: tipRecipe.tipId });
