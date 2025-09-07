@@ -41,7 +41,8 @@ export const oakhavenPois: Record<string, POI> = {
         description: 'The center of the crafting town. A serene-looking wishing well sits in the middle of the square. Roads lead to the gates and various districts.',
         connections: ['oakhaven_north_gate', 'oakhaven_market', 'oakhaven_crafting_district', 'oakhaven_tavern_street', 'oakhaven_bank'],
         activities: [
-            { type: 'wishing_well' }
+            { type: 'wishing_well' },
+            { type: 'water_source', name: 'Fill Vials at Well' }
         ],
         regionId: 'oakhaven',
         x: 250, y: 160,

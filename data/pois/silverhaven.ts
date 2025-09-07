@@ -27,7 +27,8 @@ export const silverhavenPois: Record<string, POI> = {
                     "Hear ye, hear ye! Iron prices are up, due to the troubles in the south!",
                     "Hear ye, hear ye! The ferry to the Isle of Whispers departs daily from the docks! Passage is at your own risk!"
                 ]
-            }
+            },
+            { type: 'water_source', name: 'Fill Vials at Fountain' }
         ],
         regionId: 'silverhaven',
         x: 250, y: 340,

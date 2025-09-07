@@ -1,5 +1,3 @@
-
-
 import React, { useCallback } from 'react';
 import { useUIState } from '../../hooks/useUIState';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -26,12 +24,7 @@ import InteractiveDialogueView from '../views/dialogue/InteractiveDialogueView';
 import NpcDialogueView from '../views/dialogue/NpcDialogueView';
 import BankView from '../views/BankView';
 import ShopView from '../views/ShopView';
-import SmithingView from '../views/crafting/SmithingView';
-import CookingView from '../views/crafting/CookingView';
 import CraftingView from '../views/crafting/CraftingView';
-import SpinningView from '../views/crafting/SpinningView';
-import GemCuttingView from '../views/crafting/GemCuttingView';
-import FletchingView from '../views/crafting/FletchingView';
 import QuestBoardView from '../views/QuestBoardView';
 import SceneView from './SceneView';
 import TeleportView from '../views/TeleportView';
@@ -167,12 +160,24 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
         setTooltip={ui.setTooltip}
     />;
     if (ui.activeShopId) return <ShopView shopId={ui.activeShopId} playerInventory={inv.inventory} playerCoins={inv.coins} shopStates={shops.shopStates} onBuy={shops.handleBuy} onSell={inv.handleSell} addLog={addLog} onExit={() => ui.setActiveShopId(null)} setContextMenu={ui.setContextMenu} setMakeXPrompt={ui.setMakeXPrompt} setTooltip={ui.setTooltip} />;
-    if (ui.activeSmithingType) return <SmithingView smithingType={ui.activeSmithingType} inventory={inv.inventory} skills={char.skills} playerQuests={quests.playerQuests} onSmithBar={crafting.handleSmelting} onSmithItem={crafting.handleSmithItem} onExit={() => ui.setActiveSmithingType(null)} setContextMenu={ui.setContextMenu} setMakeXPrompt={ui.setMakeXPrompt}/>
-    if (ui.isCooking) return <CookingView inventory={inv.inventory} skills={char.skills} playerQuests={quests.playerQuests} onCook={crafting.handleCooking} onExit={() => ui.setIsCooking(false)} setContextMenu={ui.setContextMenu} setMakeXPrompt={ui.setMakeXPrompt}/>
-    if (ui.isCrafting) return <CraftingView inventory={inv.inventory} skills={char.skills} onCraftItem={crafting.handleCrafting} onExit={() => ui.setIsCrafting(false)} setContextMenu={ui.setContextMenu} setMakeXPrompt={ui.setMakeXPrompt}/>
-    if (ui.isSpinning) return <SpinningView inventory={inv.inventory} skills={char.skills} onSpin={crafting.handleSpinning} onExit={() => ui.setIsSpinning(false)} setContextMenu={ui.setContextMenu} setMakeXPrompt={ui.setMakeXPrompt}/>
-    if (ui.isGemCutting) return <GemCuttingView inventory={inv.inventory} skills={char.skills} onCut={crafting.handleGemCutting} onExit={ui.closeGemCuttingModal} setContextMenu={ui.setContextMenu} setMakeXPrompt={ui.setMakeXPrompt}/>
-    if (ui.isFletching) return <FletchingView logId={ui.fletchingLogId!} onFletch={crafting.handleFletching} onExit={ui.closeFletchingModal} skills={char.skills} inventory={inv.inventory} setMakeXPrompt={ui.setMakeXPrompt} />
+    
+    if (ui.activeCraftingContext) return <CraftingView
+        context={ui.activeCraftingContext}
+        inventory={inv.inventory}
+        skills={char.skills}
+        playerQuests={quests.playerQuests}
+        onCook={crafting.handleCooking}
+        onCraftItem={crafting.handleCrafting}
+        onFletch={crafting.handleFletching}
+        onCut={crafting.handleGemCutting}
+        onSmithBar={crafting.handleSmelting}
+        onSmithItem={crafting.handleSmithItem}
+        onSpin={crafting.handleSpinning}
+        onExit={ui.closeCraftingView}
+        setContextMenu={ui.setContextMenu}
+        setMakeXPrompt={ui.setMakeXPrompt}
+    />;
+    
     if (ui.activeQuestBoardId) return <QuestBoardView 
         boardId={ui.activeQuestBoardId}
         boardQuests={(repeatableQuests.boards[ui.activeQuestBoardId] ?? []).filter(q => !repeatableQuests.completedQuestIds.includes(q.id))}
@@ -233,11 +238,12 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                          ui.setActiveNpcDialogue({ name: activity.name, icon: activity.icon, dialogue: activity.dialogue });
                     }
                 }
-                if (activity.type === 'cooking_range') ui.setIsCooking(true);
-                if (activity.type === 'furnace') ui.setActiveSmithingType('furnace');
-                if (activity.type === 'anvil') ui.setActiveSmithingType('anvil');
-                if (activity.type === 'spinning_wheel') ui.setIsSpinning(true);
+                if (activity.type === 'cooking_range') ui.openCraftingView({ type: 'cooking_range' });
+                if (activity.type === 'furnace') ui.openCraftingView({ type: 'furnace' });
+                if (activity.type === 'anvil') ui.openCraftingView({ type: 'anvil' });
+                if (activity.type === 'spinning_wheel') ui.openCraftingView({ type: 'spinning_wheel' });
                 if (activity.type === 'wishing_well') worldActions.handleWishingWell();
+                if (activity.type === 'water_source') worldActions.handleFillVials();
                 if (activity.type === 'quest_board') ui.setActiveQuestBoardId(session.currentPoiId);
                 if (activity.type === 'interactive_dialogue') ui.setActiveInteractiveDialogue({ dialogue: activity.dialogue, startNode: activity.startNode });
             }}

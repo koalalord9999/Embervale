@@ -1,5 +1,3 @@
-
-
 import { Item, EquipmentSlot, WeaponType, ToolType, SkillName } from '../types';
 
 export const weaponsAndTools: Item[] = [
@@ -67,8 +65,9 @@ export const weaponsAndTools: Item[] = [
     { id: 'adamantite_pickaxe', name: 'Adamantite Pickaxe', description: 'A very strong adamantite pickaxe for mining rocks.', stackable: false, value: 1100, iconUrl: 'https://api.iconify.design/game-icons:war-pick.svg', material: 'adamantite', equipment: { slot: EquipmentSlot.Weapon, stabAttack: 9, slashAttack: -2, crushAttack: 4, rangedAttack: 0, magicAttack: 0, stabDefence: 0, slashDefence: 0, crushDefence: 0, rangedDefence: 0, magicDefence: 0, strengthBonus: 12, rangedStrength: 0, magicDamageBonus: 0, weaponType: WeaponType.Unarmed, speed: 5, requiredLevels: [{ skill: SkillName.Attack, level: 30 }], }, tool: { type: ToolType.Pickaxe, power: 50 } },
     { id: 'runic_pickaxe', name: 'Runic Pickaxe', description: 'A powerful runic pickaxe for mining rocks.', stackable: false, value: 2200, iconUrl: 'https://api.iconify.design/game-icons:war-pick.svg', material: 'runic', equipment: { slot: EquipmentSlot.Weapon, stabAttack: 12, slashAttack: -2, crushAttack: 5, rangedAttack: 0, magicAttack: 0, stabDefence: 0, slashDefence: 0, crushDefence: 0, rangedDefence: 0, magicDefence: 0, strengthBonus: 16, rangedStrength: 0, magicDamageBonus: 0, weaponType: WeaponType.Unarmed, speed: 5, requiredLevels: [{ skill: SkillName.Attack, level: 40 }], }, tool: { type: ToolType.Pickaxe, power: 60 } },
     { id: 'shears', name: 'Shears', description: 'Used for shearing sheep.', stackable: false, value: 10, iconUrl: 'https://api.iconify.design/game-icons:shears.svg' },
-    { id: 'knife', name: 'Knife', description: 'A simple knife. Useful for fletching. Can be used as a last-resort weapon.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:bone-knife.svg', equipment: { slot: EquipmentSlot.Weapon, stabAttack: 1, slashAttack: 1, crushAttack: -4, rangedAttack: 0, magicAttack: 0, stabDefence: 0, slashDefence: 0, crushDefence: 0, rangedDefence: 0, magicDefence: 0, strengthBonus: 1, rangedStrength: 0, magicDamageBonus: 0, weaponType: WeaponType.Dagger, speed: 2 } },
+    { id: 'knife', name: 'Knife', description: 'A simple knife. Useful for fletching.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:bone-knife.svg' },
     { id: 'chisel', name: 'Chisel', description: 'A sharp chisel for cutting gems.', stackable: false, value: 10, iconUrl: 'https://api.iconify.design/game-icons:chisel.svg' },
+    { id: 'needle', name: 'Needle', description: 'A small needle for crafting.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:sewing-needle.svg' },
     { id: 'ring_mould', name: 'Ring Mould', description: 'A mould for making rings.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:ring.svg' },
     { id: 'necklace_mould', name: 'Necklace Mould', description: 'A mould for making necklaces.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:necklace.svg' },
     { id: 'amulet_mould', name: 'Amulet Mould', description: 'A mould for making amulets.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:gem-pendant.svg' },

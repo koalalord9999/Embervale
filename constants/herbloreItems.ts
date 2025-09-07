@@ -1,4 +1,3 @@
-
 import { Item, SkillName } from '../types';
 import { HERBS, HERBLORE_RECIPES } from './herblore';
 
@@ -122,7 +121,8 @@ const unfinishedPotions: Item[] = HERBLORE_RECIPES.unfinished.map(recipe => {
         stackable: true,
         value: (cleanHerb?.value ?? 5) + 2,
         iconUrl: 'https://api.iconify.design/game-icons:round-potion.svg',
-        material: 'unfinished-potion'
+        material: 'unfinished-potion',
+        emptyable: { emptyItemId: 'vial' },
     }
 });
 
@@ -144,7 +144,8 @@ const finishedPotions: Item[] = HERBLORE_RECIPES.finished.map(recipe => {
         value: recipe.level * 8,
         iconUrl: 'https://api.iconify.design/game-icons:potion-ball.svg',
         material: 'potion',
-        consumable: effect
+        consumable: effect,
+        emptyable: { emptyItemId: 'vial' },
     }
 });
 

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { InventorySlot } from '../../types';
 import { ITEMS, BANK_CAPACITY, getIconClassName } from '../../constants';
@@ -37,6 +36,7 @@ const BankView: React.FC<BankViewProps> = ({ bank, onClose, onWithdraw, onDeposi
     const createWithdrawContextMenu = (e: React.MouseEvent, slot: InventorySlot) => {
         e.preventDefault();
         const item = ITEMS[slot.itemId];
+        if (!item) return; // Prevent crash on removed items
 
         const options: ContextMenuOption[] = [
             { label: `Withdraw 1`, onClick: () => performWithdrawAction(slot.itemId, 1), disabled: slot.quantity < 1 },
@@ -71,39 +71,42 @@ const BankView: React.FC<BankViewProps> = ({ bank, onClose, onWithdraw, onDeposi
 
             <div className="flex-grow bg-black/40 p-2 rounded-lg border border-gray-600 overflow-y-auto pr-1">
                 <div className="grid grid-cols-8 gap-2 content-start">
-                    {bankGrid.map((slot, index) => (
-                        <div
-                            key={index}
-                            className={`w-full aspect-square bg-gray-900 border border-gray-700 rounded-md flex items-center justify-center p-1 relative transition-colors ${slot ? 'cursor-pointer hover:border-yellow-400' : ''}`}
-                            onClick={() => {
-                                if (slot) performWithdrawAction(slot.itemId, 1);
-                            }}
-                            onContextMenu={(e) => {
-                                if (slot) createWithdrawContextMenu(e, slot);
-                            }}
-                            onMouseEnter={(e) => {
-                                if (!slot) return;
-                                const item = ITEMS[slot.itemId];
-                                const tooltipContent = (
-                                    <div>
-                                        <p className="font-bold text-yellow-300">{item.name}</p>
-                                        <p className="text-sm text-gray-300">{item.description}</p>
-                                    </div>
-                                );
-                                setTooltip({ content: tooltipContent, position: { x: e.clientX, y: e.clientY } });
-                            }}
-                            onMouseLeave={() => setTooltip(null)}
-                        >
-                            {slot && (
-                                <>
-                                    <img src={ITEMS[slot.itemId].iconUrl} alt={ITEMS[slot.itemId].name} className={`w-full h-full ${getIconClassName(ITEMS[slot.itemId])}`} />
-                                    <span className="absolute bottom-0 right-1 text-xs font-bold text-yellow-300" style={{ textShadow: '1px 1px 1px black' }}>
-                                        {formatQuantity(slot.quantity)}
-                                    </span>
-                                </>
-                            )}
-                        </div>
-                    ))}
+                    {bankGrid.map((slot, index) => {
+                        const item = slot ? ITEMS[slot.itemId] : null;
+
+                        return (
+                            <div
+                                key={index}
+                                className={`w-full aspect-square bg-gray-900 border border-gray-700 rounded-md flex items-center justify-center p-1 relative transition-colors ${slot && item ? 'cursor-pointer hover:border-yellow-400' : ''}`}
+                                onClick={() => {
+                                    if (slot && item) performWithdrawAction(slot.itemId, 1);
+                                }}
+                                onContextMenu={(e) => {
+                                    if (slot && item) createWithdrawContextMenu(e, slot);
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (!slot || !item) return;
+                                    const tooltipContent = (
+                                        <div>
+                                            <p className="font-bold text-yellow-300">{item.name}</p>
+                                            <p className="text-sm text-gray-300">{item.description}</p>
+                                        </div>
+                                    );
+                                    setTooltip({ content: tooltipContent, position: { x: e.clientX, y: e.clientY } });
+                                }}
+                                onMouseLeave={() => setTooltip(null)}
+                            >
+                                {slot && item && (
+                                    <>
+                                        <img src={item.iconUrl} alt={item.name} className={`w-full h-full ${getIconClassName(item)}`} />
+                                        <span className="absolute bottom-0 right-1 text-xs font-bold text-yellow-300" style={{ textShadow: '1px 1px 1px black' }}>
+                                            {formatQuantity(slot.quantity)}
+                                        </span>
+                                    </>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
 

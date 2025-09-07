@@ -90,6 +90,7 @@ export const meadowdalePois: Record<string, POI> = {
         connections: ['north_meadow_street', 'east_meadow_street', 'south_meadow_street', 'west_meadow_street', 'meadowdale_bank'],
         activities: [
             { type: 'shop', shopId: 'general_store' },
+            { type: 'water_source', name: 'Fill Vials at Fountain' },
             {
                 type: 'npc',
                 name: 'Old Man Fitzwilliam',

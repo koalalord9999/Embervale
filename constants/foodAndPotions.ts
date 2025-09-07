@@ -1,4 +1,3 @@
-
 import { Item, SkillName } from '../types';
 
 export const foodAndPotions: Item[] = [
@@ -44,9 +43,9 @@ export const foodAndPotions: Item[] = [
     { id: 'serpent_omelet_burnt', name: 'Burnt Serpent Omelet', description: 'You have ruined a perfectly good, and very rare, egg.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:omelette.svg', material: 'burnt' },
     
     // Potions & Drinks
-    { id: 'beer', name: 'Beer', description: 'A frothy mug of ale. Heals a little, but temporarily lowers your Attack level.', stackable: false, value: 2, iconUrl: 'https://api.iconify.design/game-icons:beer-stein.svg', consumable: { healAmount: 1, statModifiers: [ { skill: SkillName.Attack, value: -1, duration: 15000 } ] }, material: 'copper' },
+    { id: 'beer', name: 'Beer', description: 'A frothy mug of ale. Heals a little, but temporarily lowers your Attack level.', stackable: false, value: 2, iconUrl: 'https://api.iconify.design/game-icons:beer-stein.svg', consumable: { healAmount: 1, statModifiers: [ { skill: SkillName.Attack, value: -1, duration: 15000 } ] }, emptyable: { emptyItemId: 'beer_glass' }, material: 'copper' },
     { id: 'bandit_brew', name: 'Bandit\'s Brew', description: 'A rough, potent brew. Temporarily boosts Strength but lowers Defence.', stackable: false, value: 20, iconUrl: 'https://api.iconify.design/game-icons:potion-ball.svg', consumable: { healAmount: 2, statModifiers: [ { skill: SkillName.Strength, value: 2, duration: 30000 }, { skill: SkillName.Defence, value: -2, duration: 30000 } ] }, material: 'ruby' },
     { id: 'vial', name: 'Vial', description: 'An empty glass vial.', stackable: true, value: 2, iconUrl: 'https://api.iconify.design/game-icons:round-potion.svg' },
-    { id: 'vial_of_water', name: 'Vial of Water', description: 'A vial filled with water.', stackable: true, value: 2, iconUrl: 'https://api.iconify.design/game-icons:round-potion.svg', material: 'potion' },
+    { id: 'vial_of_water', name: 'Vial of Water', description: 'A vial filled with water.', stackable: true, value: 2, iconUrl: 'https://api.iconify.design/game-icons:round-potion.svg', emptyable: { emptyItemId: 'vial' }, material: 'potion' },
     // Herblore Potions will be here
 ];

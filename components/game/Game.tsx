@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { QUESTS, REGIONS, SHOPS } from '../../constants';
 import { POIS } from '../../data/pois';
 import { CombatStance, PlayerSlayerTask, ShopStates, SkillName, POIActivity } from '../../types';
@@ -31,12 +31,12 @@ import EquipmentPanel from '../panels/EquipmentPanel';
 import ActivityLog from '../game/ActivityLog';
 import XpTracker, { XpDrop } from '../ui/XpTracker';
 import WorldMapView from '../views/WorldMapView';
-import CraftingView from '../views/crafting/CraftingView';
 import MainViewController from '../game/MainViewController';
 import QuestDetailView from '../views/overlays/QuestDetailView';
 import AtlasView from '../views/AtlasView';
 import ExpandedMapView from '../views/ExpandedMapView';
 import DevConsole from '../common/DevConsole';
+import DevModePanel from '../common/DevModePanel';
 
 interface GameProps {
     initialState: any; // Type is managed by the game state manager hook
@@ -55,13 +55,13 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
     const [clearedSkillObstacles, setClearedSkillObstacles] = useState(initialState.clearedSkillObstacles);
     const [monsterRespawnTimers, setMonsterRespawnTimers] = useState(initialState.monsterRespawnTimers);
     
-    // Dev Console State
-    const [isDevConsoleOpen, setIsDevConsoleOpen] = useState(false);
+    // Config Panel State
+    const [isSystemInputOpen, setIsSystemInputOpen] = useState(false);
+    const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
     const [combatSpeedMultiplier, setCombatSpeedMultiplier] = useState(1);
     const [isInstantRespawnOn, setIsInstantRespawnOn] = useState(false);
     const [instantRespawnCounter, setInstantRespawnCounter] = useState<number | null>(null);
-    const [devAggroIds, setDevAggroIds] = useState<string[]>([]);
-
+    const [configAggroIds, setConfigAggroIds] = useState<string[]>([]);
 
     const [xpDrops, setXpDrops] = useState<XpDrop[]>([]);
     const handleXpGain = useCallback((skillName: SkillName, amount: number) => {
@@ -101,21 +101,22 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
         addLog, currentHp: char.currentHp, maxHp: char.maxHp, setCurrentHp: char.setCurrentHp,
         applyStatModifier: char.applyStatModifier, setInventory: inv.setInventory,
         skills: char.skills, inventory: inv.inventory,
+        activeCraftingAction: ui.activeCraftingAction,
         setActiveCraftingAction: ui.setActiveCraftingAction,
         hasItems: inv.hasItems, modifyItem: inv.modifyItem,
         addXp: char.addXp,
-        openGemCuttingModal: ui.openGemCuttingModal,
-        setIsCrafting: ui.setIsCrafting,
-        openFletchingModal: ui.openFletchingModal,
+        openCraftingView: ui.openCraftingView,
         setItemToUse: ui.setItemToUse,
         addBuff: char.addBuff,
+        setMakeXPrompt: ui.setMakeXPrompt,
     });
 
     const worldActions = useWorldActions({
         hasItems: inv.hasItems, inventory: inv.inventory, modifyItem: inv.modifyItem, addLog,
         coins: inv.coins, skills: char.skills, addXp: char.addXp,
         setClearedSkillObstacles, playerQuests: quests.playerQuests,
-        checkQuestProgressOnShear: questLogic.checkQuestProgressOnShear
+        checkQuestProgressOnShear: questLogic.checkQuestProgressOnShear,
+        setMakeXPrompt: ui.setMakeXPrompt,
     });
     
     const navigation = useNavigation({
@@ -136,10 +137,10 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
             if (newCount <= 0) {
                 setIsInstantRespawnOn(false);
                 setInstantRespawnCounter(null);
-                addLog('[DEV] Instant respawn counter finished. Feature disabled.');
+                addLog('Command System: Instant respawn counter finished. Feature disabled.');
             } else {
                 setInstantRespawnCounter(newCount);
-                addLog(`[DEV] Instant respawn encounters remaining: ${newCount}.`);
+                addLog(`Command System: Instant respawn encounters remaining: ${newCount}.`);
             }
         }
     }, [isInstantRespawnOn, instantRespawnCounter, addLog]);
@@ -157,90 +158,47 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
         questLogic, repeatableQuests, slayer, setMonsterRespawnTimers, isInstantRespawnOn
     });
     
-    // Dev Console Logic
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.altKey && e.key === '`') {
-                e.preventDefault();
-                setIsDevConsoleOpen(prev => !prev);
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+    const toggleDevConsole = useCallback(() => {
+        setIsSystemInputOpen(prev => !prev);
     }, []);
 
-    const handleDevCommand = useCallback((command: string) => {
+    const handleSystemCommand = useCallback((command: string) => {
         const parts = command.toLowerCase().split(' ');
         const cmd = parts[0];
         const arg1 = parts[1];
-        const arg2 = parts[2];
 
-        if (cmd === 'devcombatspeed') {
-            const speed = parseInt(arg1, 10);
-            if (!isNaN(speed) && speed >= 1 && speed <= 3) {
-                setCombatSpeedMultiplier(speed);
-                addLog(`[DEV] Combat speed set to ${speed}x.`);
+        if (cmd === 'devmode') {
+            if (arg1 === 'on') {
+                setIsConfigPanelOpen(true);
+                addLog(`System: Dev mode panel opened.`);
+            } else if (arg1 === 'off') {
+                setIsConfigPanelOpen(false);
+                addLog(`System: Dev mode panel closed.`);
             } else {
-                addLog(`[DEV] Invalid speed. Use a value between 1 and 3.`);
+                addLog(`System: Usage: devmode <on|off>`);
             }
             return;
         }
 
-        if (cmd === 'devcombatrespawn') {
-            if (arg1 !== 'true' && arg1 !== 'false') {
-                addLog(`[DEV] Invalid argument for devcombatrespawn. Use 'true' or 'false'.`);
-                return;
-            }
-            const toggle = arg1 === 'true';
-            let count: number | null = null;
-            if (arg2) {
-                const parsedCount = parseInt(arg2, 10);
-                if (!isNaN(parsedCount) && parsedCount > 0) {
-                    count = parsedCount;
-                }
-            }
+        addLog(`System: Unknown command.`);
+    }, [addLog]);
+    
+    const isCurrentMonsterAggro = useMemo(() => ui.combatQueue.some(id => configAggroIds.includes(id)), [ui.combatQueue, configAggroIds]);
 
-            setIsInstantRespawnOn(toggle);
-            setInstantRespawnCounter(toggle ? count : null);
-
-            if (toggle) {
-                if (count) {
-                    addLog(`[DEV] Instant respawn enabled for ${count} combat encounters.`);
-                } else {
-                    addLog(`[DEV] Instant respawn enabled indefinitely.`);
-                }
-            } else {
-                addLog(`[DEV] Instant respawn disabled.`);
-            }
-            return;
-        }
+    const handleToggleAggro = useCallback(() => {
+        if (ui.combatQueue.length === 0) return;
         
-        if (cmd === 'devagro') {
-            if (ui.combatQueue.length === 0) {
-                addLog(`[DEV] 'devagro' can only be used while in combat.`);
-                return;
-            }
-
-            if (arg1 !== 'true' && arg1 !== 'false') {
-                addLog(`[DEV] Invalid argument for devagro. Use 'true' or 'false'.`);
-                return;
-            }
-
-            const toggle = arg1 === 'true';
-            const monsterIdsInCombat = ui.combatQueue;
-
-            if (toggle) {
-                setDevAggroIds(prev => [...new Set([...prev, ...monsterIdsInCombat])]);
-                addLog(`[DEV] Monster(s) in this combat are now permanently aggressive.`);
-            } else {
-                setDevAggroIds(prev => prev.filter(id => !monsterIdsInCombat.includes(id)));
-                addLog(`[DEV] Monster(s) in this combat are no longer permanently aggressive.`);
-            }
-            return;
+        const monstersInCombat = ui.combatQueue;
+        const areAnyAggro = monstersInCombat.some(id => configAggroIds.includes(id));
+    
+        if (areAnyAggro) {
+            setConfigAggroIds(prev => prev.filter(id => !monstersInCombat.includes(id)));
+            addLog(`System: Permanent aggro REMOVED for current combat.`);
+        } else {
+            setConfigAggroIds(prev => [...new Set([...prev, ...monstersInCombat])]);
+            addLog(`System: Permanent aggro ADDED for current combat.`);
         }
-
-        addLog(`[DEV] Unknown command: ${cmd}`);
-    }, [addLog, ui.combatQueue]);
+    }, [ui.combatQueue, configAggroIds, addLog]);
 
     const gameState = useMemo(() => {
         const activeMonsterRespawnTimers: Record<string, number> = {};
@@ -333,7 +291,7 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
         startCombat,
         addLog,
         monsterRespawnTimers,
-        devAggroIds
+        configAggroIds
     );
 
     const activeMapRegionId = useMemo(() => {
@@ -396,13 +354,13 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
                     isBusy={isBusy}
                     setContextMenu={ui.setContextMenu}
                     onOpenExpandedMap={() => ui.setIsExpandedMapViewOpen(true)}
+                    onToggleDevConsole={toggleDevConsole}
                 />
                 <div className="bg-black/70 border-2 border-gray-600 rounded-lg flex-grow p-2 min-h-0">
-                    {(ui.activePanel === 'inventory' || ui.activePanel === 'bank') && <InventoryPanel inventory={inv.inventory} coins={inv.coins} skills={char.skills} onEquip={(item, idx) => inv.handleEquip(item, idx, char.skills, char.combatStance, char.setCombatStance)} onConsume={itemActions.handleConsume} onDrop={inv.handleDropItem} onBury={itemActions.handleBuryBones} setTooltip={ui.setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} isBankOpen={ui.activePanel === 'bank'} onDeposit={bankLogic.handleDeposit} itemToUse={ui.itemToUse} setItemToUse={ui.setItemToUse} onUseItemOn={itemActions.handleUseItemOn} isBusy={isBusy} />}
+                    {(ui.activePanel === 'inventory' || ui.activePanel === 'bank') && <InventoryPanel inventory={inv.inventory} coins={inv.coins} skills={char.skills} onEquip={(item, idx) => inv.handleEquip(item, idx, char.skills, char.combatStance, char.setCombatStance)} onConsume={itemActions.handleConsume} onDrop={inv.handleDropItem} onBury={itemActions.handleBuryBones} onEmpty={itemActions.handleEmptyItem} setTooltip={ui.setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} isBankOpen={ui.activePanel === 'bank'} onDeposit={bankLogic.handleDeposit} itemToUse={ui.itemToUse} setItemToUse={ui.setItemToUse} onUseItemOn={itemActions.handleUseItemOn} isBusy={isBusy} />}
                     {ui.activePanel === 'skills' && <SkillsPanel skills={char.skills} setTooltip={ui.setTooltip} onOpenGuide={ui.setActiveSkillGuide} />}
                     {ui.activePanel === 'quests' && <QuestsPanel playerQuests={quests.playerQuests} activeRepeatableQuest={repeatableQuests.activePlayerQuest} inventory={inv.inventory} slayerTask={slayer.slayerTask} onSelectQuest={ui.setActiveQuestDetailId} />}
                     {ui.activePanel === 'equipment' && <EquipmentPanel equipment={inv.equipment} onUnequip={(slot) => inv.handleUnequip(slot, char.setCombatStance)} setTooltip={ui.setTooltip} ui={ui} />}
-                    {ui.activePanel === 'crafting' && <CraftingView inventory={inv.inventory} skills={char.skills} onCraftItem={crafting.handleCrafting} onExit={() => ui.setActivePanel('inventory')} setContextMenu={ui.setContextMenu} setMakeXPrompt={ui.setMakeXPrompt}/>}
                     {ui.activePanel === 'map' && <WorldMapView currentPoiId={session.currentPoiId} unlockedPois={navigation.reachablePois} onNavigate={navigation.handleNavigate} setTooltip={ui.setTooltip} activeMapRegionId={activeMapRegionId} />}
                 </div>
             </div>
@@ -420,7 +378,25 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
                 onClose={() => ui.setIsExpandedMapViewOpen(false)}
                 setTooltip={ui.setTooltip}
             />}
-            {isDevConsoleOpen && <DevConsole onCommand={handleDevCommand} onClose={() => setIsDevConsoleOpen(false)} />}
+            {isSystemInputOpen && <DevConsole onCommand={handleSystemCommand} onClose={() => setIsSystemInputOpen(false)} />}
+            {isConfigPanelOpen && <DevModePanel
+                combatSpeedMultiplier={combatSpeedMultiplier}
+                setCombatSpeedMultiplier={(speed) => {
+                    setCombatSpeedMultiplier(speed);
+                    addLog(`System: Combat speed set to ${speed}x.`);
+                }}
+                isInstantRespawnOn={isInstantRespawnOn}
+                setIsInstantRespawnOn={(isOn) => {
+                    setIsInstantRespawnOn(isOn);
+                    addLog(`System: Instant respawn ${isOn ? 'enabled' : 'disabled'}.`);
+                }}
+                instantRespawnCounter={instantRespawnCounter}
+                setInstantRespawnCounter={setInstantRespawnCounter}
+                isInCombat={isInCombat}
+                isCurrentMonsterAggro={isCurrentMonsterAggro}
+                onToggleAggro={handleToggleAggro}
+                onClose={() => setIsConfigPanelOpen(false)}
+            />}
         </>
     );
 };

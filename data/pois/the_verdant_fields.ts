@@ -77,6 +77,7 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         connections: ['verdant_fields_entrance', 'winding_brook_south', 'old_mill_path'],
         activities: [
             { type: 'skilling', id: 'winding_brook_north_fishing', name: 'Net Shrimp', skill: SkillName.Fishing, requiredLevel: 1, loot: [{ itemId: 'raw_shrimp', chance: 1, xp: 10 }, { itemId: 'raw_sardine', chance: 0.4, xp: 20, requiredLevel: 5 }], resourceCount: { min: 4, max: 8 }, respawnTime: 8000, gatherTime: 1800 },
+            { type: 'water_source', name: 'Fill Vials at Stream' }
         ],
         regionId: 'wilderness',
         x: 700, y: 1140
@@ -88,6 +89,7 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         connections: ['winding_brook_north', 'brookside_hamlet', 'clearwater_stream'],
         activities: [
             { type: 'skilling', id: 'winding_brook_south_fishing', name: 'Net Shrimp', skill: SkillName.Fishing, requiredLevel: 1, loot: [{ itemId: 'raw_shrimp', chance: 1, xp: 10 }, { itemId: 'raw_sardine', chance: 0.4, xp: 20, requiredLevel: 5 }], resourceCount: { min: 4, max: 8 }, respawnTime: 8000, gatherTime: 1800 },
+            { type: 'water_source', name: 'Fill Vials at Stream' }
         ],
         regionId: 'wilderness',
         x: 700, y: 1080
@@ -98,7 +100,8 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         description: 'A crystal clear stream flowing down from the mountains. Perfect for trout fishing.',
         connections: ['winding_brook_south'],
         activities: [
-            { type: 'skilling', id: 'clearwater_stream_fishing', name: 'Fish for Trout', skill: SkillName.Fishing, requiredLevel: 20, loot: [{itemId: 'raw_trout', xp: 50, chance: 1}, {itemId: 'raw_pike', xp: 70, chance: 0.3, requiredLevel: 30}], resourceCount: {min: 8, max: 15}, respawnTime: 15000, gatherTime: 2200 }
+            { type: 'skilling', id: 'clearwater_stream_fishing', name: 'Fish for Trout', skill: SkillName.Fishing, requiredLevel: 20, loot: [{itemId: 'raw_trout', xp: 50, chance: 1}, {itemId: 'raw_pike', xp: 70, chance: 0.3, requiredLevel: 30}], resourceCount: {min: 8, max: 15}, respawnTime: 15000, gatherTime: 2200 },
+            { type: 'water_source', name: 'Fill Vials at Stream' }
         ],
         regionId: 'wilderness',
         x: 640, y: 1080

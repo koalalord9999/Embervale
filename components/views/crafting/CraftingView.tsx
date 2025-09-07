@@ -1,109 +1,73 @@
-
 import React from 'react';
-import { InventorySlot, PlayerSkill, SkillName } from '../../../types';
-import { CRAFTING_RECIPES, ITEMS, getIconClassName } from '../../../constants';
-import Button from '../../common/Button';
-import { ContextMenuOption } from '../../common/ContextMenu';
+import { InventorySlot, PlayerSkill, PlayerQuestState, CraftingContext } from '../../../types';
 import { MakeXPrompt } from '../../../hooks/useUIState';
+import { ContextMenuOption } from '../../common/ContextMenu';
+import Button from '../../common/Button';
 
-interface CraftingViewProps {
+// Import sub-components for each crafting type
+import AnvilInterface from './subviews/AnvilInterface';
+import FurnaceInterface from './subviews/FurnaceInterface';
+import CookingInterface from './subviews/CookingInterface';
+import SpinningInterface from './subviews/SpinningInterface';
+import LeatherworkingInterface from './subviews/LeatherworkingInterface';
+import GemCuttingInterface from './subviews/GemCuttingInterface';
+import FletchingInterface from './subviews/FletchingInterface';
+
+type BarType = 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'silver_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar';
+
+export interface CraftingViewProps {
+    context: CraftingContext;
     inventory: InventorySlot[];
     skills: PlayerSkill[];
+    playerQuests: PlayerQuestState[];
+    onCook: (recipeId: string, quantity: number) => void;
     onCraftItem: (itemId: string, quantity: number) => void;
+    onFletch: (action: { type: 'carve'; payload: any }, quantity: number) => void;
+    onCut: (cutId: string, quantity: number) => void;
+    onSmithBar: (barType: BarType, quantity: number) => void;
+    onSmithItem: (itemId: string, quantity: number) => void;
+    onSpin: (itemId: string, quantity: number) => void;
     onExit: () => void;
     setContextMenu: (menu: { options: ContextMenuOption[]; position: { x: number; y: number; } } | null) => void;
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
 }
 
-const CraftingView: React.FC<CraftingViewProps> = ({ inventory, skills, onCraftItem, onExit, setContextMenu, setMakeXPrompt }) => {
-    const craftingLevel = skills.find(s => s.name === SkillName.Crafting)?.level ?? 1;
-    
-    const getIngredientCount = (itemId: string) => {
-        const item = ITEMS[itemId];
-        if (item.stackable) {
-            return inventory.find(slot => slot.itemId === itemId)?.quantity ?? 0;
+const CraftingView: React.FC<CraftingViewProps> = (props) => {
+    const { context, onExit } = props;
+
+    const getTitle = () => {
+        switch (context.type) {
+            case 'anvil': return 'Smithing - Anvil';
+            case 'furnace': return 'Smelting - Furnace';
+            case 'cooking_range': return 'Cooking - Range';
+            case 'spinning_wheel': return 'Spinning';
+            case 'leatherworking': return 'Leatherworking';
+            case 'gem_cutting': return 'Gem Cutting';
+            case 'fletching': return 'Fletching';
+            default: return 'Crafting';
         }
-        return inventory.filter(slot => slot.itemId === itemId).length;
     };
 
-    const createContextMenu = (e: React.MouseEvent, recipe: typeof CRAFTING_RECIPES[0]) => {
-        e.preventDefault();
-        const hasLevel = craftingLevel >= recipe.level;
-        const maxCraftable = Math.min(
-            ...recipe.ingredients.map(ing => Math.floor(getIngredientCount(ing.itemId) / ing.quantity))
-        );
-
-        const options: ContextMenuOption[] = [
-            { label: 'Craft 1', onClick: () => onCraftItem(recipe.itemId, 1), disabled: !hasLevel || maxCraftable < 1 },
-            { label: 'Craft 5', onClick: () => onCraftItem(recipe.itemId, 5), disabled: !hasLevel || maxCraftable < 5 },
-            { label: 'Craft All', onClick: () => onCraftItem(recipe.itemId, maxCraftable), disabled: !hasLevel || maxCraftable < 1 },
-            { 
-                label: 'Craft X...', 
-                onClick: () => setMakeXPrompt({
-                    title: `Craft ${ITEMS[recipe.itemId].name}`,
-                    max: maxCraftable,
-                    onConfirm: (quantity) => onCraftItem(recipe.itemId, quantity)
-                }), 
-                disabled: !hasLevel || maxCraftable < 1 
-            },
-        ];
-        setContextMenu({ options, position: { x: e.clientX, y: e.clientY } });
+    const renderContent = () => {
+        switch (context.type) {
+            case 'anvil': return <AnvilInterface {...props} />;
+            case 'furnace': return <FurnaceInterface {...props} />;
+            case 'cooking_range': return <CookingInterface {...props} />;
+            case 'spinning_wheel': return <SpinningInterface {...props} />;
+            case 'leatherworking': return <LeatherworkingInterface {...props} />;
+            case 'gem_cutting': return <GemCuttingInterface {...props} />;
+            case 'fletching': return <FletchingInterface {...props} context={context} />;
+            default: return <p>Unsupported crafting context.</p>;
+        }
     };
 
     return (
         <div className="flex flex-col h-full text-gray-200">
             <div className="flex justify-between items-center mb-4">
-                <h1 className="text-3xl font-bold text-yellow-400">Crafting - Leatherwork</h1>
+                <h1 className="text-3xl font-bold text-yellow-400">{getTitle()}</h1>
                 <Button onClick={onExit}>Exit</Button>
             </div>
-            <div className="mb-4 text-lg">
-                <p>Leather: <span className="text-yellow-400">{getIngredientCount('leather')}</span></p>
-                <p>Thread: <span className="text-yellow-400">{getIngredientCount('thread')}</span></p>
-            </div>
-
-            <div className="flex-grow overflow-y-auto pr-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {CRAFTING_RECIPES.map((recipe) => {
-                        const item = ITEMS[recipe.itemId];
-                        if (!item) return null;
-
-                        const hasLevel = craftingLevel >= recipe.level;
-                        const hasIngredients = recipe.ingredients.every(ing => getIngredientCount(ing.itemId) >= ing.quantity);
-                        const canCraft = hasLevel && hasIngredients;
-
-                        return (
-                            <div 
-                                key={recipe.itemId} 
-                                className={`bg-gray-900 p-3 rounded-lg border-2 ${canCraft ? 'border-gray-600' : 'border-red-800/50'}`}
-                                onContextMenu={(e) => createContextMenu(e, recipe)}
-                            >
-                                <div className="flex items-center gap-3 mb-2">
-                                    <img src={item.iconUrl} alt={item.name} className={`w-10 h-10 bg-black/30 p-1 rounded ${getIconClassName(item)}`} />
-                                    <h3 className="text-lg font-semibold text-yellow-300">{item.name}</h3>
-                                </div>
-                                <div className="text-sm space-y-1 mb-3">
-                                    <p className={hasLevel ? 'text-gray-400' : 'text-red-400'}>
-                                        Lvl: {recipe.level}
-                                    </p>
-                                    {recipe.ingredients.map(ing => (
-                                        <p key={ing.itemId} className={getIngredientCount(ing.itemId) >= ing.quantity ? 'text-gray-400' : 'text-red-400'}>
-                                            {ITEMS[ing.itemId].name}: {ing.quantity}
-                                        </p>
-                                    ))}
-                                </div>
-                                <Button
-                                    size="sm"
-                                    onClick={() => onCraftItem(recipe.itemId, 1)}
-                                    disabled={!canCraft}
-                                    className="w-full"
-                                >
-                                    Craft 1
-                                </Button>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
+            {renderContent()}
         </div>
     );
 };

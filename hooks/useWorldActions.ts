@@ -1,7 +1,9 @@
 
+
 import React, { useCallback } from 'react';
 import { POIActivity, SkillName, InventorySlot, PlayerSkill, SkillRequirement, PlayerQuestState } from '../types';
-import { ITEMS, INVENTORY_CAPACITY } from '../constants';
+import { ITEMS, INVENTORY_CAPACITY } from '../../constants';
+import { MakeXPrompt } from './useUIState';
 
 interface UseWorldActionsProps {
     hasItems: (items: { itemId: string, quantity: number }[]) => boolean;
@@ -14,10 +16,11 @@ interface UseWorldActionsProps {
     setClearedSkillObstacles: React.Dispatch<React.SetStateAction<string[]>>;
     playerQuests: PlayerQuestState[];
     checkQuestProgressOnShear: () => void;
+    setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
 }
 
 export const useWorldActions = (props: UseWorldActionsProps) => {
-    const { hasItems, inventory, modifyItem, addLog, coins, skills, addXp, setClearedSkillObstacles, playerQuests, checkQuestProgressOnShear } = props;
+    const { hasItems, inventory, modifyItem, addLog, coins, skills, addXp, setClearedSkillObstacles, playerQuests, checkQuestProgressOnShear, setMakeXPrompt } = props;
 
     const handleSimpleSkilling = useCallback((activity: Extract<POIActivity, { type: 'shearing' | 'egg_collecting' }>) => {
         if (activity.type === 'shearing') {
@@ -94,11 +97,35 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
         setClearedSkillObstacles(prev => [...prev, obstacleId]);
 
     }, [skills, addXp, setClearedSkillObstacles, addLog, hasItems, modifyItem]);
+
+    const handleFillVials = useCallback(() => {
+        const emptyVialCount = inventory.reduce((total, slot) => {
+            return slot.itemId === 'vial' ? total + slot.quantity : total;
+        }, 0);
+
+        if (emptyVialCount === 0) {
+            addLog("You don't have any empty vials to fill.");
+            return;
+        }
+
+        setMakeXPrompt({
+            title: 'Fill Vials',
+            max: emptyVialCount,
+            onConfirm: (quantity) => {
+                if (quantity > 0) {
+                    modifyItem('vial', -quantity, true);
+                    modifyItem('vial_of_water', quantity);
+                    addLog(`You fill ${quantity} vial${quantity > 1 ? 's' : ''} with water.`);
+                }
+            }
+        });
+    }, [inventory, addLog, modifyItem, setMakeXPrompt]);
     
     return {
         handleSimpleSkilling,
         handleInstantTanning,
         handleWishingWell,
         handleClearObstacle,
+        handleFillVials,
     };
 };

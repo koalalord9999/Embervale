@@ -36,6 +36,7 @@ export type POIActivity =
   | { type: 'spinning_wheel' }
   | { type: 'blimp_travel'; requiredSlayerLevel: number; }
   | { type: 'slayer_master'; name: string; icon: string; }
+  | { type: 'water_source', name: string }
   | { type: 'interactive_dialogue'; dialogue: Record<string, DialogueNode>; startNode: string; };
 
 export interface POI {

@@ -1,9 +1,8 @@
-
-
 import { useCallback } from 'react';
-import { InventorySlot, PlayerSkill, SkillName, ActiveCraftingAction, Item } from '../types';
+import { InventorySlot, PlayerSkill, SkillName, ActiveCraftingAction, Item, CraftingContext } from '../types';
 // FIX: Import the HERBS constant.
-import { ITEMS, FLETCHING_RECIPES, HERBLORE_RECIPES, HERBS } from '../constants';
+import { ITEMS, FLETCHING_RECIPES, HERBLORE_RECIPES, HERBS, INVENTORY_CAPACITY } from '../constants';
+import { MakeXPrompt } from './useUIState';
 
 interface UseItemActionsProps {
     addLog: (message: string) => void;
@@ -14,19 +13,19 @@ interface UseItemActionsProps {
     setInventory: React.Dispatch<React.SetStateAction<InventorySlot[]>>;
     skills: PlayerSkill[];
     inventory: InventorySlot[];
+    activeCraftingAction: ActiveCraftingAction | null;
     setActiveCraftingAction: (action: ActiveCraftingAction | null) => void;
     hasItems: (items: { itemId: string, quantity: number }[]) => boolean;
     modifyItem: (itemId: string, quantity: number, quiet?: boolean) => void;
     addXp: (skill: SkillName, amount: number) => void;
-    openGemCuttingModal: () => void;
-    setIsCrafting: (isCrafting: boolean) => void;
-    openFletchingModal: (logId: string) => void;
+    openCraftingView: (context: CraftingContext) => void;
     setItemToUse: (item: { item: InventorySlot, index: number } | null) => void;
     addBuff: (buff: Omit<any, 'id' | 'expiresAt'>) => void;
+    setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
 }
 
 export const useItemActions = (props: UseItemActionsProps) => {
-    const { addLog, currentHp, maxHp, setCurrentHp, applyStatModifier, setInventory, skills, inventory, setActiveCraftingAction, hasItems, modifyItem, addXp, openGemCuttingModal, setIsCrafting, openFletchingModal, setItemToUse, addBuff } = props;
+    const { addLog, currentHp, maxHp, setCurrentHp, applyStatModifier, setInventory, skills, inventory, activeCraftingAction, setActiveCraftingAction, hasItems, modifyItem, addXp, openCraftingView, setItemToUse, addBuff, setMakeXPrompt } = props;
 
     const handleConsume = useCallback((itemId: string, inventoryIndex: number) => {
         const itemData = ITEMS[itemId];
@@ -76,7 +75,29 @@ export const useItemActions = (props: UseItemActionsProps) => {
                 addBuff(buff);
             });
         }
-        setInventory(prev => { const newInv = [...prev]; newInv.splice(inventoryIndex, 1); return newInv; });
+        
+        const wasDrinkable = itemData.emptyable;
+        
+        setInventory(prev => {
+            const newInv = [...prev];
+            newInv.splice(inventoryIndex, 1);
+            if (wasDrinkable) {
+                const emptyItemId = wasDrinkable.emptyItemId;
+                const emptyItemData = ITEMS[emptyItemId];
+                if (emptyItemData.stackable) {
+                    const existingStack = newInv.find(i => i.itemId === emptyItemId);
+                    if (existingStack) {
+                        existingStack.quantity += 1;
+                    } else {
+                        newInv.push({ itemId: emptyItemId, quantity: 1 });
+                    }
+                } else {
+                    newInv.push({ itemId: emptyItemId, quantity: 1 });
+                }
+            }
+            return newInv;
+        });
+
     }, [skills, currentHp, maxHp, setCurrentHp, setInventory, addLog, applyStatModifier, modifyItem, addXp, addBuff]);
     
     const handleBuryBones = useCallback((itemId: string, inventoryIndex: number) => {
@@ -87,21 +108,94 @@ export const useItemActions = (props: UseItemActionsProps) => {
         setInventory(prev => { const newInv = [...prev]; newInv.splice(inventoryIndex, 1); return newInv; });
     }, [addXp, setInventory, addLog]);
 
+    const handleEmptyItem = useCallback((itemId: string, inventoryIndex: number) => {
+        const itemData = ITEMS[itemId];
+        if (!itemData?.emptyable) return;
+
+        const emptyItemId = itemData.emptyable.emptyItemId;
+        const emptyItemData = ITEMS[emptyItemId];
+        if (!emptyItemData) return;
+
+        const willNeedNewSlot = !emptyItemData.stackable; // Simplified: assumes no existing empty items, worst-case check
+        if (willNeedNewSlot && inventory.length >= INVENTORY_CAPACITY) {
+            addLog("You don't have enough space to empty that.");
+            return;
+        }
+
+        setInventory(prev => {
+            const newInv = [...prev];
+            if (newInv[inventoryIndex]?.itemId !== itemId) return prev;
+            
+            newInv.splice(inventoryIndex, 1);
+            
+            if (emptyItemData.stackable) {
+                const existingStack = newInv.find(i => i.itemId === emptyItemId);
+                if (existingStack) {
+                    existingStack.quantity += 1;
+                } else {
+                    newInv.push({ itemId: emptyItemId, quantity: 1 });
+                }
+            } else {
+                newInv.push({ itemId: emptyItemId, quantity: 1 });
+            }
+            return newInv;
+        });
+
+        addLog(`You empty the ${itemData.name}.`);
+    }, [inventory, setInventory, addLog]);
+
+
     const handleItemCombination = useCallback((used: { item: InventorySlot, index: number }, target: { item: InventorySlot, index: number }) => {
         const fletchingLevel = skills.find(s => s.name === SkillName.Fletching)?.level ?? 1;
         const herbloreLevel = skills.find(s => s.name === SkillName.Herblore)?.level ?? 1;
         const usedId = used.item.itemId;
         const targetId = target.item.itemId;
 
+        const getItemCount = (itemId: string): number => {
+            return inventory.reduce((total, slot) => {
+                return slot.itemId === itemId ? total + slot.quantity : total;
+            }, 0);
+        };
+
         // Herblore: Making unfinished potions
         const unfRecipe = HERBLORE_RECIPES.unfinished.find(r => (r.cleanHerbId === usedId && targetId === 'vial_of_water') || (r.cleanHerbId === targetId && usedId === 'vial_of_water'));
         if (unfRecipe) {
-            if (herbloreLevel < unfRecipe.level) { addLog(`You need a Herblore level of ${unfRecipe.level} to make this.`); return; }
-            modifyItem(unfRecipe.cleanHerbId, -1, true);
-            modifyItem('vial_of_water', -1, true);
-            modifyItem(unfRecipe.unfinishedPotionId, 1);
-            addXp(SkillName.Herblore, unfRecipe.xp);
-            addLog(`You mix the ${ITEMS[unfRecipe.cleanHerbId].name} into the vial of water.`);
+            if (herbloreLevel < unfRecipe.level) {
+                addLog(`You need a Herblore level of ${unfRecipe.level} to make this.`);
+                return;
+            }
+
+            const cleanHerbCount = getItemCount(unfRecipe.cleanHerbId);
+            const vialOfWaterCount = getItemCount('vial_of_water');
+            const maxCreatable = Math.min(cleanHerbCount, vialOfWaterCount);
+
+            if (maxCreatable < 1) {
+                addLog("You don't have enough ingredients.");
+                return;
+            }
+
+            setMakeXPrompt({
+                title: `Create ${ITEMS[unfRecipe.unfinishedPotionId].name}`,
+                max: maxCreatable,
+                onConfirm: (quantity) => {
+                    if (activeCraftingAction) {
+                        addLog("You are already busy crafting something else.");
+                        return;
+                    }
+                    if (quantity > 0) {
+                        addLog(`You begin mixing the potions...`);
+                        setActiveCraftingAction({
+                            recipeId: unfRecipe.unfinishedPotionId,
+                            recipeType: 'herblore-unfinished',
+                            totalQuantity: quantity,
+                            completedQuantity: 0,
+                            startTime: Date.now(),
+                            duration: 800, // Cooldown per potion
+                            payload: { cleanHerbId: unfRecipe.cleanHerbId }
+                        });
+                    }
+                }
+            });
             return;
         }
 
@@ -187,7 +281,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
         }
 
         addLog("Nothing interesting happens.");
-    }, [skills, inventory, addLog, setActiveCraftingAction, hasItems, modifyItem, addXp]);
+    }, [skills, inventory, addLog, setActiveCraftingAction, hasItems, modifyItem, addXp, setMakeXPrompt, activeCraftingAction]);
 
     const handleUseItemOn = useCallback((used: { item: InventorySlot, index: number }, target: { item: InventorySlot, index: number }) => {
         const usedItem = ITEMS[used.item.itemId];
@@ -200,28 +294,29 @@ export const useItemActions = (props: UseItemActionsProps) => {
         const isLeather = (item: Item) => item.id === 'leather';
 
         if ((isChisel(usedItem) && isUncutGem(targetItem)) || (isUncutGem(usedItem) && isChisel(targetItem))) {
-            openGemCuttingModal();
+            openCraftingView({ type: 'gem_cutting' });
         }
         else if ((isNeedle(usedItem) && isLeather(targetItem)) || (isLeather(usedItem) && isNeedle(usedItem))) {
-            setIsCrafting(true);
+            openCraftingView({ type: 'leatherworking' });
         }
         else if (usedItem.id === 'knife' && isLog(targetItem)) {
-            openFletchingModal(targetItem.id);
+            openCraftingView({ type: 'fletching', logId: targetItem.id });
         }
         else if (targetItem.id === 'knife' && isLog(usedItem)) {
-            openFletchingModal(usedItem.id);
+            openCraftingView({ type: 'fletching', logId: usedItem.id });
         }
         else {
             handleItemCombination(used, target);
         }
     
         setItemToUse(null);
-    }, [openGemCuttingModal, setIsCrafting, openFletchingModal, handleItemCombination, setItemToUse]);
+    }, [openCraftingView, handleItemCombination, setItemToUse]);
 
 
     return {
         handleConsume,
         handleBuryBones,
+        handleEmptyItem,
         handleUseItemOn,
     };
 };

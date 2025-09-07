@@ -22,7 +22,8 @@ export const wildernessPois: Record<string, POI> = {
         description: 'The bank of a slow-moving river. The water is murky, but you can see small fish darting about.',
         connections: ['whispering_woods'],
         activities: [
-            { type: 'skilling', id: 'murky_river_fishing', name: 'Net Shrimp', skill: SkillName.Fishing, requiredLevel: 1, loot: [{ itemId: 'raw_shrimp', chance: 1, xp: 10 }, { itemId: 'raw_sardine', chance: 0.4, xp: 20, requiredLevel: 5 }], resourceCount: { min: 5, max: 10 }, respawnTime: 8000, gatherTime: 1800 }
+            { type: 'skilling', id: 'murky_river_fishing', name: 'Net Shrimp', skill: SkillName.Fishing, requiredLevel: 1, loot: [{ itemId: 'raw_shrimp', chance: 1, xp: 10 }, { itemId: 'raw_sardine', chance: 0.4, xp: 20, requiredLevel: 5 }], resourceCount: { min: 5, max: 10 }, respawnTime: 8000, gatherTime: 1800 },
+            { type: 'water_source', name: 'Fill Vials at River' }
         ],
         unlockRequirement: { type: 'quest', questId: 'goblin_menace', stage: 1 },
         regionId: 'wilderness',

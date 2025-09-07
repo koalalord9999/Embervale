@@ -328,6 +328,7 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
             case 'wishing_well': text = 'Toss a coin in the well'; break;
             case 'quest_board': text = 'Check the Quest Board'; break;
             case 'spinning_wheel': text = 'Use Spinning Wheel'; break;
+            case 'water_source': text = activity.name; break;
             case 'interactive_dialogue': text = `Talk to ${activity.dialogue[activity.startNode].npcName}`; break;
         }
 

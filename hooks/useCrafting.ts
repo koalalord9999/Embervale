@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useRef } from 'react';
 import { PlayerSkill, SkillName, InventorySlot, ActiveCraftingAction } from '../types';
-import { ITEMS, SMITHING_RECIPES, COOKING_RECIPES, INVENTORY_CAPACITY, CRAFTING_RECIPES, FLETCHING_RECIPES, GEM_CUTTING_RECIPES, SPINNING_RECIPES } from '../constants';
+import { ITEMS, SMITHING_RECIPES, COOKING_RECIPES, INVENTORY_CAPACITY, CRAFTING_RECIPES, FLETCHING_RECIPES, GEM_CUTTING_RECIPES, SPINNING_RECIPES, HERBLORE_RECIPES } from '../constants';
 
 interface UseCraftingProps {
     skills: PlayerSkill[];
@@ -259,6 +259,15 @@ export const useCrafting = (props: UseCraftingProps) => {
                     ingredients = recipe.ingredients;
                     xp = { skill: SkillName.Crafting, amount: recipe.xp };
                     levelReq = { skill: SkillName.Crafting, level: recipe.level };
+                }
+                break;
+            case 'herblore-unfinished':
+                recipe = HERBLORE_RECIPES.unfinished.find(r => r.unfinishedPotionId === action.recipeId);
+                if (recipe) {
+                    ingredients = [{itemId: recipe.cleanHerbId, quantity: 1}, {itemId: 'vial_of_water', quantity: 1}];
+                    product = { itemId: recipe.unfinishedPotionId, quantity: 1 };
+                    xp = { skill: SkillName.Herblore, amount: recipe.xp };
+                    levelReq = { skill: SkillName.Herblore, level: recipe.level };
                 }
                 break;
             case 'cooking': {

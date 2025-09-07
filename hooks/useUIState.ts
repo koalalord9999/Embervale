@@ -1,9 +1,5 @@
-
-
-
-
 import React, { useState, useCallback } from 'react';
-import { ActivePanel, SkillName, InventorySlot, ActiveCraftingAction, DialogueNode } from '../types';
+import { ActivePanel, SkillName, InventorySlot, ActiveCraftingAction, DialogueNode, CraftingContext } from '../types';
 import { ContextMenuOption } from '../components/common/ContextMenu';
 
 export interface TooltipState {
@@ -48,13 +44,7 @@ export const useUIState = () => {
     const [combatQueue, setCombatQueue] = useState<string[]>([]);
     const [isMandatoryCombat, setIsMandatoryCombat] = useState<boolean>(false);
     const [activeShopId, setActiveShopId] = useState<string | null>(null);
-    const [activeSmithingType, setActiveSmithingType] = useState<'anvil' | 'furnace' | null>(null);
-    const [isCooking, setIsCooking] = useState<boolean>(false);
-    const [isCrafting, setIsCrafting] = useState<boolean>(false);
-    const [isSpinning, setIsSpinning] = useState<boolean>(false);
-    const [isGemCutting, setIsGemCutting] = useState<boolean>(false);
-    const [isFletching, setIsFletching] = useState<boolean>(false);
-    const [fletchingLogId, setFletchingLogId] = useState<string | null>(null);
+    const [activeCraftingContext, setActiveCraftingContext] = useState<CraftingContext | null>(null);
     const [itemToUse, setItemToUse] = useState<{ item: InventorySlot, index: number } | null>(null);
     const [activeQuestBoardId, setActiveQuestBoardId] = useState<string | null>(null);
     const [activeTeleportBoardId, setActiveTeleportBoardId] = useState<string | null>(null);
@@ -85,31 +75,14 @@ export const useUIState = () => {
     const closeExportModal = useCallback(() => setExportData(null), []);
     const closeImportModal = useCallback(() => setIsImportModalOpen(false), []);
     const closeSkillGuide = useCallback(() => setActiveSkillGuide(null), []);
-
-    const openFletchingModal = useCallback((logId: string) => {
-        setIsFletching(true);
-        setFletchingLogId(logId);
-    }, []);
-
-    const closeFletchingModal = useCallback(() => {
-        setIsFletching(false);
-        setFletchingLogId(null);
-    }, []);
+    const openCraftingView = useCallback((context: CraftingContext) => setActiveCraftingContext(context), []);
+    const closeCraftingView = useCallback(() => setActiveCraftingContext(null), []);
     
-    const openGemCuttingModal = useCallback(() => setIsGemCutting(true), []);
-    const closeGemCuttingModal = useCallback(() => setIsGemCutting(false), []);
-
     const closeAllModals = useCallback(() => {
         setCombatQueue([]);
         setIsMandatoryCombat(false);
         setActiveShopId(null);
-        setActiveSmithingType(null);
-        setIsCooking(false);
-        setIsCrafting(false);
-        setIsSpinning(false);
-        setIsGemCutting(false);
-        setIsFletching(false);
-        setFletchingLogId(null);
+        setActiveCraftingContext(null);
         setItemToUse(null);
         setMakeXPrompt(null);
         setActiveQuestBoardId(null);
@@ -135,13 +108,7 @@ export const useUIState = () => {
         combatQueue, setCombatQueue,
         isMandatoryCombat, setIsMandatoryCombat,
         activeShopId, setActiveShopId,
-        activeSmithingType, setActiveSmithingType,
-        isCooking, setIsCooking,
-        isCrafting, setIsCrafting,
-        isSpinning, setIsSpinning,
-        isGemCutting,
-        isFletching,
-        fletchingLogId,
+        activeCraftingContext,
         itemToUse, setItemToUse,
         activeQuestBoardId, setActiveQuestBoardId,
         activeTeleportBoardId, setActiveTeleportBoardId,
@@ -168,10 +135,8 @@ export const useUIState = () => {
         closeExportModal,
         closeImportModal,
         closeSkillGuide,
-        openFletchingModal,
-        closeFletchingModal,
-        openGemCuttingModal,
-        closeGemCuttingModal,
+        openCraftingView,
+        closeCraftingView,
         closeAllModals,
     };
 };

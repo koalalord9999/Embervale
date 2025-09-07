@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { InventorySlot, PlayerSkill } from '../../types';
 import { ITEMS, INVENTORY_CAPACITY, getIconClassName } from '../../constants';
@@ -12,6 +11,7 @@ interface InventoryPanelProps {
     onConsume: (itemId: string, index: number) => void;
     onDrop: (index: number) => void;
     onBury: (itemId: string, index: number) => void;
+    onEmpty: (itemId: string, index: number) => void;
     setTooltip: (tooltip: { content: React.ReactNode; position: { x: number; y: number; } } | null) => void;
     setContextMenu: (menu: { options: ContextMenuOption[]; position: { x: number; y: number; } } | null) => void;
     addLog: (message: string) => void;
@@ -24,17 +24,13 @@ interface InventoryPanelProps {
 }
 
 const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
-    const { inventory, coins, skills, onEquip, onConsume, onDrop, onBury, setTooltip, setContextMenu, addLog, isBankOpen = false, onDeposit = () => {}, itemToUse, setItemToUse, onUseItemOn, isBusy = false } = props;
+    const { inventory, coins, skills, onEquip, onConsume, onDrop, onBury, onEmpty, setTooltip, setContextMenu, addLog, isBankOpen = false, onDeposit = () => {}, itemToUse, setItemToUse, onUseItemOn, isBusy = false } = props;
 
     const totalSlots = INVENTORY_CAPACITY;
     const inventoryGrid: (InventorySlot | null)[] = new Array(totalSlots).fill(null);
     inventory.forEach((item, index) => {
         if (index < totalSlots) inventoryGrid[index] = item;
     });
-
-    const isUsable = (itemId: string) => {
-        return itemId === 'knife' || itemId.endsWith('_u') || itemId.includes('arrow') || itemId === 'feathers' || itemId === 'bow_string' || itemId === 'rat_tail' || itemId === 'pouch_cleanser' || itemId === 'grimy_coin_pouch' || itemId === 'chisel' || itemId.startsWith('uncut_') || itemId === 'needle' || itemId === 'leather' || itemId.startsWith('grimy_') || itemId === 'vial';
-    }
 
     const performAction = (action: () => void) => {
         action();
@@ -90,10 +86,20 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
                                     performAction(() => onDeposit(originalIndex, 'all'));
                                     return;
                                 }
-                                if (item.cleanable) performAction(() => onConsume(item.id, originalIndex));
-                                else if (isBuryable) performAction(() => onBury(item.id, originalIndex));
-                                else if (isConsumable) performAction(() => onConsume(item.id, originalIndex));
-                                else if (isEquippable) performAction(() => onEquip(slot, originalIndex));
+                                
+                                // Primary action logic
+                                if (isEquippable) {
+                                    performAction(() => onEquip(slot, originalIndex));
+                                } else if (isBuryable) {
+                                    performAction(() => onBury(item.id, originalIndex));
+                                } else if (item.cleanable) {
+                                    performAction(() => onConsume(item.id, originalIndex));
+                                } else if (isConsumable) {
+                                    performAction(() => onConsume(item.id, originalIndex));
+                                } else {
+                                    // Default action is 'Use' for all other items
+                                    setItemToUse({ item: slot, index: originalIndex });
+                                }
                             }}
                             onContextMenu={(e) => {
                                 e.preventDefault();
@@ -109,23 +115,27 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
                                     }
                                     options.push({ label: 'Deposit All', onClick: () => performAction(() => onDeposit(originalIndex, 'all')) });
                                 } else {
-                                    if (isUsable(item.id)) {
-                                        options.push({ label: 'Use', onClick: () => setItemToUse({ item: slot, index: originalIndex }), disabled: isBusy });
-                                    }
-                                    if (item.cleanable) {
-                                        options.push({ label: 'Clean', onClick: () => performAction(() => onConsume(item.id, originalIndex)), disabled: isBusy });
+                                    if (isEquippable) {
+                                        options.push({ label: 'Equip', onClick: () => performAction(() => onEquip(slot, originalIndex)), disabled: isBusy });
                                     }
                                     if (isBuryable) {
                                         options.push({ label: 'Bury', onClick: () => performAction(() => onBury(item.id, originalIndex)), disabled: isBusy });
                                     }
+                                    if (item.cleanable) {
+                                        options.push({ label: 'Clean', onClick: () => performAction(() => onConsume(item.id, originalIndex)), disabled: isBusy });
+                                    }
                                     if (isConsumable) {
-                                        let actionText = 'Use';
+                                        let actionText = 'Consume';
                                         if (item.consumable?.givesCoins) actionText = 'Open';
+                                        else if (item.emptyable) actionText = 'Drink';
                                         else if (item.consumable?.healAmount) actionText = 'Eat';
                                         options.push({ label: actionText, onClick: () => performAction(() => onConsume(item.id, originalIndex)), disabled: isBusy });
                                     }
-                                    if (isEquippable) {
-                                        options.push({ label: 'Equip', onClick: () => performAction(() => onEquip(slot, originalIndex)), disabled: isBusy });
+
+                                    options.push({ label: 'Use', onClick: () => setItemToUse({ item: slot, index: originalIndex }), disabled: isBusy });
+                                    
+                                    if (item.emptyable) {
+                                        options.push({ label: 'Empty', onClick: () => performAction(() => onEmpty(item.id, originalIndex)), disabled: isBusy });
                                     }
                     
                                     options.push({ label: 'Drop', onClick: () => performAction(() => onDrop(originalIndex)), disabled: isBusy });
