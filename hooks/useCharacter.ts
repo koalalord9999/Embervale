@@ -17,8 +17,10 @@ interface CharacterCallbacks {
 interface ActiveStatModifier {
     id: number;
     skill: SkillName;
-    value: number;
-    expiresAt: number;
+    initialValue: number;
+    currentValue: number;
+    durationPerLevel: number;
+    nextDecayAt: number;
 }
 
 export interface ActiveBuff {
@@ -80,14 +82,36 @@ export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance:
         const interval = setInterval(() => {
             const now = Date.now();
             setStatModifiers(prev => {
-                const active = prev.filter(m => m.expiresAt > now);
-                if (active.length < prev.length) {
-                    const expiredSkills = new Set(prev.filter(m => m.expiresAt <= now).map(m => m.skill));
+                const updatedModifiers = prev.map(mod => {
+                    if (now >= mod.nextDecayAt) {
+                        const newValue = mod.currentValue - 1;
+                        if (newValue > 0) {
+                            addLog(`Your ${mod.skill} boost has weakened.`);
+                            return {
+                                ...mod,
+                                currentValue: newValue,
+                                nextDecayAt: now + mod.durationPerLevel,
+                            };
+                        }
+                        return null; // Buff expires
+                    }
+                    return mod;
+                });
+
+                const newModifiersFiltered = updatedModifiers.filter((m): m is ActiveStatModifier => m !== null);
+
+                // Log expiration for any removed modifiers
+                if (newModifiersFiltered.length < prev.length) {
+                    const expiredSkills = prev
+                        .filter(p => !newModifiersFiltered.some(n => n.id === p.id))
+                        .map(m => m.skill);
+                    
                     expiredSkills.forEach(skillName => {
                         addLog(`You feel your ${skillName} level returning to normal.`);
                     });
                 }
-                return active;
+                
+                return newModifiersFiltered;
             });
         }, 1000);
         return () => clearInterval(interval);
@@ -137,15 +161,46 @@ export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance:
         });
     }, [addLog, onXpGain]);
     
-    const applyStatModifier = useCallback((skill: SkillName, value: number, duration: number) => {
-        const newModifier: ActiveStatModifier = {
-            id: Date.now() + Math.random(),
-            skill,
-            value,
-            expiresAt: Date.now() + duration,
-        };
-        setStatModifiers(prev => [...prev, newModifier]);
-    }, []);
+    const applyStatModifier = useCallback((skill: SkillName, value: number, totalDuration: number) => {
+        if (value <= 0 || totalDuration <= 0) return;
+
+        const durationPerLevel = totalDuration / value;
+
+        setStatModifiers(prev => {
+            const existingModifier = prev.find(m => m.skill === skill);
+            const now = Date.now();
+
+            if (existingModifier) {
+                if (value < existingModifier.initialValue) {
+                    addLog(`You already have a stronger ${skill} boost active.`);
+                    return prev;
+                }
+                
+                const newModifiers = prev.filter(m => m.skill !== skill);
+                const newModifier: ActiveStatModifier = {
+                    id: existingModifier.id,
+                    skill,
+                    initialValue: value,
+                    currentValue: value,
+                    durationPerLevel,
+                    nextDecayAt: now + durationPerLevel,
+                };
+                addLog(`You feel a surge of power, refreshing your ${skill} boost.`);
+                return [...newModifiers, newModifier];
+            } else {
+                const newModifier: ActiveStatModifier = {
+                    id: Date.now() + Math.random(),
+                    skill,
+                    initialValue: value,
+                    currentValue: value,
+                    durationPerLevel,
+                    nextDecayAt: now + durationPerLevel,
+                };
+                addLog(`You feel your ${skill} level increase.`);
+                return [...prev, newModifier];
+            }
+        });
+    }, [addLog]);
 
     const addBuff = useCallback((buff: Omit<ActiveBuff, 'id' | 'expiresAt'>) => {
         const newBuff: ActiveBuff = {
@@ -173,7 +228,7 @@ export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance:
         return skills.map(skill => {
             const modifierSum = statModifiers
                 .filter(m => m.skill === skill.name)
-                .reduce((sum, m) => sum + m.value, 0);
+                .reduce((sum, m) => sum + m.currentValue, 0);
             const currentLevel = Math.max(0, skill.level + modifierSum);
             return { ...skill, currentLevel };
         });

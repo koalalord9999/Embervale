@@ -52,14 +52,20 @@ export const useItemActions = (props: UseItemActionsProps) => {
             return;
         }
 
+        const hasNonHealingEffect = !!(itemData.consumable.statModifiers || itemData.consumable.buffs || itemData.consumable.givesCoins);
+
+        if (itemData.consumable.healAmount && currentHp >= maxHp && !hasNonHealingEffect) {
+            addLog("You are already at full health.");
+            return;
+        }
+
         if (itemData.consumable.givesCoins) {
             const { min, max } = itemData.consumable.givesCoins;
             const amount = Math.floor(Math.random() * (max - min + 1)) + min;
             modifyItem('coins', amount, true);
             addLog(`You open the pouch and find ${amount} coins.`);
         }
-        if (itemData.consumable.healAmount) {
-            if (currentHp >= maxHp) { addLog("You are already at full health."); return; }
+        if (itemData.consumable.healAmount && currentHp < maxHp) {
             const healAmount = itemData.consumable.healAmount;
             setCurrentHp(prev => Math.min(maxHp, prev + healAmount));
             addLog(`You consume the ${itemData.name} and heal ${healAmount} HP.`);
@@ -68,7 +74,6 @@ export const useItemActions = (props: UseItemActionsProps) => {
             itemData.consumable.statModifiers.forEach(modifier => {
                 applyStatModifier(modifier.skill, modifier.value, modifier.duration);
             });
-            addLog("You feel the effects of the " + itemData.name + ".");
         }
         if (itemData.consumable.buffs) {
             itemData.consumable.buffs.forEach(buff => {
