@@ -20,7 +20,7 @@ export const wildernessPois: Record<string, POI> = {
         id: 'murky_riverbank',
         name: 'Murky Riverbank',
         description: 'The bank of a slow-moving river. The water is murky, but you can see small fish darting about.',
-        connections: ['whispering_woods'],
+        connections: ['whispering_woods', 'treacherous_ascent'],
         activities: [
             { type: 'skilling', id: 'murky_river_fishing', name: 'Net Shrimp', skill: SkillName.Fishing, requiredLevel: 1, loot: [{ itemId: 'raw_shrimp', chance: 1, xp: 10 }, { itemId: 'raw_sardine', chance: 0.4, xp: 20, requiredLevel: 5 }], resourceCount: { min: 5, max: 10 }, respawnTime: 8000, gatherTime: 1800 },
             { type: 'water_source', name: 'Fill Vials at River' }
@@ -29,26 +29,27 @@ export const wildernessPois: Record<string, POI> = {
         regionId: 'wilderness',
         x: 900, y: 700
     },
+    treacherous_ascent: {
+        id: 'treacherous_ascent',
+        name: 'Treacherous Ascent',
+        description: "A steep, poorly-maintained path leads up into the mountains. A weathered sign warns of dangerous beasts and falling rocks. Only skilled adventurers should proceed.",
+        connections: ['murky_riverbank', 'ancient_pass'],
+        activities: [],
+        unlockRequirement: { type: 'quest', questId: 'goblin_menace', stage: 1 },
+        regionId: 'wilderness',
+        x: 900, y: 600,
+    },
     deep_woods: {
         id: 'deep_woods',
         name: 'Deep Woods',
         description: 'The trees grow thicker here, blotting out the sun. Strange noises echo from the shadows.',
-        connections: ['whispering_woods', 'overgrown_path', 'ancient_clearing', 'ancient_pass'],
+        connections: ['whispering_woods', 'overgrown_path', 'ancient_clearing'],
         activities: [
             { type: 'combat', monsterId: 'giant_rat' },
             { type: 'skilling', id: 'deep_woods_trees_1', name: 'Chop Trees', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 0.8, xp: 25 }], resourceCount: { min: 2, max: 5 }, respawnTime: 12000, gatherTime: 2000 },
             { type: 'skilling', id: 'deep_woods_trees_2', name: 'Chop Trees', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 0.8, xp: 25 }], resourceCount: { min: 2, max: 5 }, respawnTime: 12000, gatherTime: 2000 },
             { type: 'skilling', id: 'deep_woods_trees_3', name: 'Chop Trees', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 0.8, xp: 25 }], resourceCount: { min: 2, max: 5 }, respawnTime: 12000, gatherTime: 2000 },
         ],
-        connectionRequirements: {
-            ancient_pass: {
-                skill: SkillName.Mining,
-                level: 30,
-                xp: 500,
-                description: "A massive rockfall completely blocks a path leading north into the mountains.",
-                actionText: "Clear Rockfall"
-            }
-        },
         regionId: 'wilderness',
         x: 1100, y: 700
     },

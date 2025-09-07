@@ -7,14 +7,14 @@ export const galeSweptPeaksPois: Record<string, POI> = {
         id: 'ancient_pass',
         name: 'Ancient Pass',
         description: 'A narrow pass winding through the lower peaks. The air is thin and cold. The rocks here look rich with minerals.',
-        connections: ['deep_woods', 'goat_trail', 'frozen_creek', 'forgotten_outpost'],
+        connections: ['treacherous_ascent', 'goat_trail', 'frozen_creek', 'forgotten_outpost'],
         activities: [
             { type: 'skilling', id: 'ancient_pass_iron_1', name: 'Mine Iron Rock', skill: SkillName.Mining, requiredLevel: 15, loot: [{ itemId: 'iron_ore', chance: 1, xp: 35 }], resourceCount: { min: 2, max: 4 }, respawnTime: 8000, gatherTime: 3000 },
             { type: 'skilling', id: 'ancient_pass_coal_1', name: 'Mine Coal Rock', skill: SkillName.Mining, requiredLevel: 30, loot: [{ itemId: 'coal', chance: 1, xp: 50 }], resourceCount: { min: 1, max: 2 }, respawnTime: 12000, gatherTime: 3500 },
             { type: 'skilling', id: 'ancient_pass_mithril_1', name: 'Mine Mithril Rock', skill: SkillName.Mining, requiredLevel: 50, loot: [{ itemId: 'mithril_ore', chance: 1, xp: 80 }], resourceCount: { min: 1, max: 2 }, respawnTime: 20000, gatherTime: 4000 },
         ],
         regionId: 'gale_swept_peaks',
-        x: 1100, y: 500
+        x: 900, y: 500
     },
     forgotten_outpost: {
         id: 'forgotten_outpost',
@@ -35,7 +35,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
             }
         ],
         regionId: 'gale_swept_peaks',
-        x: 1160, y: 540
+        x: 960, y: 540
     },
     frozen_creek: {
         id: 'frozen_creek',
@@ -48,7 +48,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
             { type: 'skilling', id: 'frozen_creek_mithril_1', name: 'Mine Mithril Rock', skill: SkillName.Mining, requiredLevel: 50, loot: [{ itemId: 'mithril_ore', chance: 1, xp: 80 }], resourceCount: { min: 2, max: 4 }, respawnTime: 20000, gatherTime: 4000 },
         ],
         regionId: 'gale_swept_peaks',
-        x: 1040, y: 460
+        x: 840, y: 460
     },
     icy_cave_mouth: {
         id: 'icy_cave_mouth',
@@ -57,7 +57,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
         connections: ['frozen_creek', 'glittering_tunnels'],
         activities: [],
         regionId: 'gale_swept_peaks',
-        x: 1000, y: 420
+        x: 800, y: 420
     },
     glittering_tunnels: {
         id: 'glittering_tunnels',
@@ -69,7 +69,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'cave_slime' },
         ],
         regionId: 'gale_swept_peaks',
-        x: 960, y: 380
+        x: 760, y: 380
     },
     goat_trail: {
         id: 'goat_trail',
@@ -81,7 +81,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
             { type: 'skilling', id: 'goat_trail_adamantite_1', name: 'Mine Adamantite Rock', skill: SkillName.Mining, requiredLevel: 65, loot: [{ itemId: 'adamantite_ore', chance: 1, xp: 120 }], resourceCount: { min: 1, max: 1 }, respawnTime: 45000, gatherTime: 5000 },
         ],
         regionId: 'gale_swept_peaks',
-        x: 1160, y: 440
+        x: 960, y: 440
     },
     borins_cave: {
         id: 'borins_cave',
@@ -92,7 +92,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
             { type: 'npc', name: 'Borin Stonehand', icon: '/assets/npcChatHeads/prospector_gudrun.png', dialogue: ["What do you want? Can't you see I'm busy?"] }
         ],
         regionId: 'gale_swept_peaks',
-        x: 1120, y: 400
+        x: 920, y: 400
     },
     high_meadow: {
         id: 'high_meadow',
@@ -104,7 +104,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'mountain_goat' },
         ],
         regionId: 'gale_swept_peaks',
-        x: 1200, y: 500
+        x: 1000, y: 500
     },
     cave_mouth: {
         id: 'cave_mouth',
@@ -115,7 +115,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'cave_slime' }
         ],
         regionId: 'gale_swept_peaks',
-        x: 1220, y: 480
+        x: 1020, y: 480
     },
     inner_caverns: {
         id: 'inner_caverns',
@@ -127,7 +127,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'cave_slime' },
         ],
         regionId: 'gale_swept_peaks',
-        x: 1260, y: 420
+        x: 1060, y: 420
     },
     harpy_roost: {
         id: 'harpy_roost',
@@ -148,7 +148,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
             }
         },
         regionId: 'gale_swept_peaks',
-        x: 1220, y: 380
+        x: 1020, y: 380
     },
     eagles_eyrie: {
         id: 'eagles_eyrie',
@@ -159,7 +159,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
             { type: 'skilling', id: 'eagles_eyrie_yew_1', name: 'Chop Ancient Yew', skill: SkillName.Woodcutting, requiredLevel: 60, loot: [{ itemId: 'yew_logs', chance: 1, xp: 175 }], resourceCount: { min: 2, max: 4 }, respawnTime: 60000, gatherTime: 5000 },
         ],
         regionId: 'gale_swept_peaks',
-        x: 1160, y: 340
+        x: 960, y: 340
     },
     summit_approach: {
         id: 'summit_approach',
@@ -171,7 +171,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'harpy' },
         ],
         regionId: 'gale_swept_peaks',
-        x: 1280, y: 320
+        x: 1080, y: 320
     },
     frozen_lake: {
         id: 'frozen_lake',
@@ -182,7 +182,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
             { type: 'skilling', id: 'frozen_lake_silver_1', name: 'Mine Silver Vein', skill: SkillName.Mining, requiredLevel: 40, loot: [{ itemId: 'silver_ore', chance: 1, xp: 60 }], resourceCount: { min: 2, max: 4 }, respawnTime: 20000, gatherTime: 4000 }
         ],
         regionId: 'gale_swept_peaks',
-        x: 1320, y: 360
+        x: 1120, y: 360
     },
     treacherous_ledge: {
         id: 'treacherous_ledge',
@@ -191,7 +191,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
         connections: ['summit_approach', 'goat_trail'],
         activities: [],
         regionId: 'gale_swept_peaks',
-        x: 1220, y: 280
+        x: 1020, y: 280
     },
     the_summit: {
         id: 'the_summit',
@@ -204,7 +204,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
             { type: 'skilling', id: 'summit_adamantite_2', name: 'Mine Adamantite Rock', skill: SkillName.Mining, requiredLevel: 65, loot: [{ itemId: 'adamantite_ore', chance: 1, xp: 120 }], resourceCount: { min: 2, max: 4 }, respawnTime: 45000, gatherTime: 5000 },
         ],
         regionId: 'gale_swept_peaks',
-        x: 1340, y: 260
+        x: 1140, y: 260
     },
     ancient_ruins_summit: {
         id: 'ancient_ruins_summit',
@@ -216,6 +216,6 @@ export const galeSweptPeaksPois: Record<string, POI> = {
             { type: 'skilling', id: 'ancient_ruins_titanium_1', name: 'Mine Titanium Vein', skill: SkillName.Mining, requiredLevel: 75, loot: [{ itemId: 'titanium_ore', chance: 1, xp: 200 }], resourceCount: { min: 1, max: 1 }, respawnTime: 300000, gatherTime: 6000 },
         ],
         regionId: 'gale_swept_peaks',
-        x: 1380, y: 220
+        x: 1180, y: 220
     },
 };
