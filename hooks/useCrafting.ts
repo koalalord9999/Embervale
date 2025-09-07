@@ -277,7 +277,33 @@ export const useCrafting = (props: UseCraftingProps) => {
                 const cookingLevel = skills.find(s => s.name === SkillName.Cooking)?.level ?? 1;
                 if (cookingLevel < recipe.level) return { success: false, logMessage: `You need a Cooking level of ${recipe.level}.` };
                 if (!hasItems(recipe.ingredients)) return { success: false, logMessage: "You ran out of ingredients." };
-                if (inventory.length >= INVENTORY_CAPACITY) return { success: false, logMessage: "Your inventory is full." };
+                
+                // --- NEW INVENTORY CHECK LOGIC FOR COOKING ---
+                let slotsFreed = 0;
+                for (const ing of recipe.ingredients) {
+                    const itemData = ITEMS[ing.itemId];
+                    if (itemData.stackable) {
+                        const invSlot = inventory.find(s => s.itemId === ing.itemId);
+                        // If the stack is fully consumed, a slot is freed
+                        if (invSlot && invSlot.quantity <= ing.quantity) {
+                            slotsFreed++;
+                        }
+                    } else {
+                        // Unstackable items free up one slot per item
+                        slotsFreed += ing.quantity;
+                    }
+                }
+
+                // Cooking produces one item (cooked or burnt), which is unstackable.
+                // It will take one new slot.
+                const slotsGained = 1;
+
+                const finalSlotCount = inventory.length - slotsFreed + slotsGained;
+                
+                if (finalSlotCount > INVENTORY_CAPACITY) {
+                    return { success: false, logMessage: "You don't have enough inventory space for the finished product." };
+                }
+                // --- END NEW INVENTORY CHECK ---
 
                 // Consume ingredients
                 recipe.ingredients.forEach(ing => modifyItem(ing.itemId, -ing.quantity, true));
