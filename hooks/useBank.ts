@@ -6,83 +6,111 @@ import { ITEMS, BANK_CAPACITY, INVENTORY_CAPACITY } from '../constants';
 
 interface BankDependencies {
     addLog: (message: string) => void;
-    inventory: InventorySlot[];
-    setInventory: React.Dispatch<React.SetStateAction<InventorySlot[]>>;
+    inventory: (InventorySlot | null)[];
+    setInventory: React.Dispatch<React.SetStateAction<(InventorySlot | null)[]>>;
     equipment: Equipment;
     setEquipment: React.Dispatch<React.SetStateAction<Equipment>>;
     modifyItem: (itemId: string, quantity: number, quiet?: boolean) => void;
     setCombatStance: (stance: CombatStance) => void;
 }
 
-export const useBank = (initialBank: InventorySlot[], deps: BankDependencies) => {
+const padBank = (bank: (InventorySlot | null)[]): (InventorySlot | null)[] => {
+    const padded = new Array(BANK_CAPACITY).fill(null);
+    (bank || []).forEach((item, index) => {
+        if (item && index < BANK_CAPACITY) {
+            padded[index] = item;
+        }
+    });
+    return padded;
+};
+
+
+export const useBank = (initialBank: (InventorySlot | null)[], deps: BankDependencies) => {
     const { addLog, inventory, setInventory, equipment, setEquipment, modifyItem, setCombatStance } = deps;
-    const [bank, setBank] = useState<InventorySlot[]>(initialBank);
+    const [bank, setBank] = useState<(InventorySlot | null)[]>(padBank(initialBank));
 
     const handleDeposit = useCallback((inventoryIndex: number, quantity: number | 'all') => {
         const itemSlot = inventory[inventoryIndex];
         if (!itemSlot) return;
         const itemData = ITEMS[itemSlot.itemId];
+        if (!itemData) return;
 
         const isAllUnstackable = quantity === 'all' && !itemData.stackable;
-    
-        const qtyToDeposit = isAllUnstackable
-            ? inventory.filter(s => s.itemId === itemSlot.itemId).length
-            : (quantity === 'all' ? itemSlot.quantity : Math.min(quantity, itemSlot.quantity));
         
-        if (qtyToDeposit <= 0) return;
-    
-        const existingBankSlot = bank.find(s => s.itemId === itemSlot.itemId);
-        if (!existingBankSlot && bank.length >= BANK_CAPACITY) {
-            addLog("Your bank is full. Cannot deposit new item types.");
+        const toDeposit: { index: number, quantity: number }[] = [];
+        let totalQtyToDeposit = 0;
+
+        if (isAllUnstackable) {
+            inventory.forEach((slot, index) => {
+                if (slot?.itemId === itemSlot.itemId) {
+                    toDeposit.push({ index, quantity: 1 });
+                }
+            });
+            totalQtyToDeposit = toDeposit.length;
+        } else {
+            totalQtyToDeposit = quantity === 'all' ? itemSlot.quantity : Math.min(quantity, itemSlot.quantity);
+            if (totalQtyToDeposit > 0) {
+                toDeposit.push({ index: inventoryIndex, quantity: totalQtyToDeposit });
+            }
+        }
+
+        if (totalQtyToDeposit <= 0) return;
+
+        const needsNewSlot = !bank.some(s => s?.itemId === itemSlot.itemId);
+        const emptySlots = bank.filter(s => s === null).length;
+        
+        if (needsNewSlot && emptySlots < 1) {
+            addLog("Your bank does not have enough space.");
             return;
         }
-    
+
         setInventory(prevInv => {
-            if (isAllUnstackable) {
-                return prevInv.filter(s => s.itemId !== itemSlot.itemId);
-            } else {
-                const newInv = [...prevInv];
-                const invSlot = newInv[inventoryIndex];
-                if (!invSlot) return prevInv;
-                invSlot.quantity -= qtyToDeposit;
-                if (invSlot.quantity <= 0) {
-                    return newInv.filter((_, i) => i !== inventoryIndex);
+            const newInv = [...prevInv];
+            toDeposit.forEach(dep => {
+                const slot = newInv[dep.index];
+                if (slot) {
+                    slot.quantity -= dep.quantity;
+                    if (slot.quantity <= 0) {
+                        newInv[dep.index] = null;
+                    }
                 }
-                return newInv;
-            }
+            });
+            return newInv;
         });
     
         setBank(prevBank => {
-            const newBank = JSON.parse(JSON.stringify(prevBank));
-            const existingSlot = newBank.find((s: InventorySlot) => s.itemId === itemSlot.itemId);
-            if (existingSlot) {
-                existingSlot.quantity += qtyToDeposit;
+            const newBank = [...prevBank];
+            const existingSlotIndex = newBank.findIndex(s => s?.itemId === itemSlot.itemId);
+            
+            if (existingSlotIndex > -1) {
+                newBank[existingSlotIndex]!.quantity += totalQtyToDeposit;
             } else {
-                newBank.push({ itemId: itemSlot.itemId, quantity: qtyToDeposit });
+                const emptySlotIndex = newBank.findIndex(s => s === null);
+                if (emptySlotIndex > -1) {
+                    newBank[emptySlotIndex] = { itemId: itemSlot.itemId, quantity: totalQtyToDeposit };
+                }
             }
-            return newBank.sort((a, b) => (ITEMS[a.itemId]?.name || '').localeCompare(ITEMS[b.itemId]?.name || ''));
+            return newBank;
         });
     }, [inventory, setInventory, bank, addLog]);
     
-    const handleWithdraw = useCallback((itemId: string, quantity: number | 'all' | 'all-but-1') => {
-        const bankSlot = bank.find(s => s.itemId === itemId);
+    const handleWithdraw = useCallback((bankIndex: number, quantity: number | 'all' | 'all-but-1') => {
+        const bankSlot = bank[bankIndex];
         if (!bankSlot) return;
+        const itemId = bankSlot.itemId;
+        const itemData = ITEMS[itemId];
     
         let qtyToWithdraw: number;
-        if (quantity === 'all') {
-            qtyToWithdraw = bankSlot.quantity;
-        } else if (quantity === 'all-but-1') {
-            qtyToWithdraw = Math.max(0, bankSlot.quantity - 1);
-        } else {
-            qtyToWithdraw = Math.min(quantity, bankSlot.quantity);
-        }
-    
+        if (quantity === 'all') qtyToWithdraw = bankSlot.quantity;
+        else if (quantity === 'all-but-1') qtyToWithdraw = Math.max(0, bankSlot.quantity - 1);
+        else qtyToWithdraw = Math.min(quantity, bankSlot.quantity);
         if (qtyToWithdraw <= 0) return;
     
-        const itemData = ITEMS[itemId];
-        const slotsNeeded = itemData.stackable ? (inventory.some(s => s.itemId === itemId) ? 0 : 1) : qtyToWithdraw;
+        const emptyInvSlots = inventory.filter(s => s === null).length;
+        const isStackableInInv = inventory.some(s => s?.itemId === itemId);
+        const slotsNeeded = itemData.stackable ? (isStackableInInv ? 0 : 1) : qtyToWithdraw;
         
-        if (inventory.length + slotsNeeded > INVENTORY_CAPACITY) {
+        if (emptyInvSlots < slotsNeeded) {
             addLog("You don't have enough inventory space.");
             return;
         }
@@ -90,12 +118,12 @@ export const useBank = (initialBank: InventorySlot[], deps: BankDependencies) =>
         modifyItem(itemId, qtyToWithdraw, true);
     
         setBank(prevBank => {
-            const newBank = JSON.parse(JSON.stringify(prevBank));
-            const existingSlot = newBank.find((s: InventorySlot) => s.itemId === itemId);
-            if (existingSlot) {
-                existingSlot.quantity -= qtyToWithdraw;
-                if (existingSlot.quantity <= 0) {
-                    return newBank.filter((s: InventorySlot) => s.itemId !== itemId);
+            const newBank = [...prevBank];
+            const slot = newBank[bankIndex];
+            if (slot) {
+                slot.quantity -= qtyToWithdraw;
+                if (slot.quantity <= 0) {
+                    newBank[bankIndex] = null;
                 }
             }
             return newBank;
@@ -103,68 +131,114 @@ export const useBank = (initialBank: InventorySlot[], deps: BankDependencies) =>
     }, [bank, inventory, modifyItem, addLog]);
 
     const handleDepositBackpack = useCallback(() => {
-        let currentBank = JSON.parse(JSON.stringify(bank));
-        let itemsToKeep: InventorySlot[] = [];
+        const itemsToProcess = inventory.map((slot, index) => ({ slot, index })).filter((item): item is { slot: InventorySlot; index: number; } => item.slot !== null);
+        if (itemsToProcess.length === 0) {
+            addLog("Your inventory is empty.");
+            return;
+        }
     
-        for (const itemSlot of inventory) {
-            const existingSlot = currentBank.find((s: InventorySlot) => s.itemId === itemSlot.itemId);
-            if (existingSlot) {
-                existingSlot.quantity += itemSlot.quantity;
-            } else if (currentBank.length < BANK_CAPACITY) {
-                currentBank.push({ ...itemSlot });
+        let finalBank = [...bank];
+        const depositedInventoryIndexes = new Set<number>();
+    
+        const consolidated = itemsToProcess.reduce<Record<string, { total: number; indexes: number[] }>>((acc, { slot, index }) => {
+            if (!acc[slot.itemId]) acc[slot.itemId] = { total: 0, indexes: [] };
+            acc[slot.itemId].total += slot.quantity;
+            acc[slot.itemId].indexes.push(index);
+            return acc;
+        }, {});
+    
+        for (const itemId in consolidated) {
+            const { total, indexes } = consolidated[itemId];
+            const existingBankIndex = finalBank.findIndex(s => s?.itemId === itemId);
+            if (existingBankIndex > -1) {
+                finalBank[existingBankIndex]!.quantity += total;
+                indexes.forEach(i => depositedInventoryIndexes.add(i));
             } else {
-                itemsToKeep.push(itemSlot);
+                const emptySlotIndex = finalBank.findIndex(s => s === null);
+                if (emptySlotIndex > -1) {
+                    finalBank[emptySlotIndex] = { itemId, quantity: total };
+                    indexes.forEach(i => depositedInventoryIndexes.add(i));
+                }
             }
         }
     
-        if (itemsToKeep.length === inventory.length) {
-            addLog("Your bank is full. No items were deposited.");
-        } else {
-            addLog("Deposited items into your bank.");
-            if (itemsToKeep.length > 0) {
-                addLog("Some items could not be deposited as your bank is full.");
-            }
-            setBank(currentBank.sort((a,b) => (ITEMS[a.itemId]?.name || '').localeCompare(ITEMS[b.itemId]?.name || '')));
-            setInventory(itemsToKeep);
+        if (depositedInventoryIndexes.size === 0) {
+            addLog("Your bank did not have space for any of your items.");
+            return;
         }
+    
+        const newInventory = inventory.map((slot, index) => depositedInventoryIndexes.has(index) ? null : slot);
+    
+        setBank(finalBank);
+        setInventory(newInventory);
+        addLog("Deposited items into your bank.");
     }, [inventory, setInventory, bank, addLog]);
 
     const handleDepositEquipment = useCallback(() => {
-        let currentBank = JSON.parse(JSON.stringify(bank));
-        const newEquipment: Equipment = { weapon: null, shield: null, head: null, body: null, legs: null, ammo: null, gloves: null, boots: null, cape: null, necklace: null, ring: null };
-        let didDeposit = false;
+        const itemsToProcess = (Object.keys(equipment) as Array<keyof Equipment>)
+            .map(slotKey => ({ slot: equipment[slotKey], slotKey }))
+            .filter((item): item is { slot: InventorySlot; slotKey: keyof Equipment; } => item.slot !== null);
+            
+        if (itemsToProcess.length === 0) {
+            addLog("You have no equipment to deposit.");
+            return;
+        }
+
+        let finalBank = [...bank];
+        const depositedEquipmentKeys = new Set<keyof Equipment>();
         let weaponUnequipped = false;
-    
-        Object.entries(equipment).forEach(([slot, itemSlot]) => {
-            if (itemSlot) {
-                const existingSlot = currentBank.find((s: InventorySlot) => s.itemId === itemSlot.itemId);
-                if (existingSlot) {
-                    existingSlot.quantity += itemSlot.quantity;
-                    didDeposit = true;
-                } else if (currentBank.length < BANK_CAPACITY) {
-                    currentBank.push({ ...itemSlot });
-                    didDeposit = true;
+
+        // Pass 1: Merge with existing stacks
+        itemsToProcess.forEach(({ slot, slotKey }) => {
+            const existingStackIndex = finalBank.findIndex(s => s?.itemId === slot.itemId);
+            if (existingStackIndex > -1) {
+                finalBank[existingStackIndex]!.quantity += slot.quantity;
+                depositedEquipmentKeys.add(slotKey);
+            }
+        });
+
+        // Pass 2: Handle remaining items
+        itemsToProcess.forEach(({ slot, slotKey }) => {
+            if (!depositedEquipmentKeys.has(slotKey)) {
+                const emptySlotIndex = finalBank.findIndex(s => s === null);
+                if (emptySlotIndex > -1) {
+                    finalBank[emptySlotIndex] = { ...slot };
+                    depositedEquipmentKeys.add(slotKey);
                 } else {
-                    addLog(`Could not deposit ${ITEMS[itemSlot.itemId].name}, bank is full.`);
-                    (newEquipment as any)[slot] = itemSlot;
-                }
-                if (didDeposit && slot === 'weapon') {
-                    weaponUnequipped = true;
+                    addLog(`Could not deposit ${ITEMS[slot.itemId].name}, bank is full.`);
                 }
             }
         });
-    
-        if (didDeposit) {
-            addLog("Deposited your equipment into the bank.");
-            setEquipment(newEquipment);
-            setBank(currentBank.sort((a,b) => (ITEMS[a.itemId]?.name || '').localeCompare(ITEMS[b.itemId]?.name || '')));
-            if (weaponUnequipped) {
-                 setCombatStance(CombatStance.Accurate);
-            }
-        } else if (Object.values(equipment).every(val => val === null)) {
-            addLog("You have no equipment to deposit.");
+
+        if (depositedEquipmentKeys.size === 0) {
+            addLog("Your bank is full. No equipment was deposited.");
+            return;
         }
+
+        const newEquipment = { ...equipment };
+        depositedEquipmentKeys.forEach(slotKey => {
+            if (slotKey === 'weapon') weaponUnequipped = true;
+            (newEquipment as any)[slotKey] = null;
+        });
+
+        setBank(finalBank);
+        setEquipment(newEquipment);
+        if (weaponUnequipped) {
+            setCombatStance(CombatStance.Accurate);
+        }
+        addLog("Deposited your equipment into the bank.");
     }, [equipment, setEquipment, bank, addLog, setCombatStance]);
+
+    const moveBankItem = useCallback((fromIndex: number, toIndex: number) => {
+        setBank(prevBank => {
+            const newBank = [...prevBank];
+            const itemFrom = newBank[fromIndex];
+            const itemTo = newBank[toIndex];
+            newBank[fromIndex] = itemTo;
+            newBank[toIndex] = itemFrom;
+            return newBank;
+        });
+    }, []);
 
     return {
         bank,
@@ -173,5 +247,6 @@ export const useBank = (initialBank: InventorySlot[], deps: BankDependencies) =>
         handleWithdraw,
         handleDepositBackpack,
         handleDepositEquipment,
+        moveBankItem,
     };
 };

@@ -155,6 +155,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
         onWithdraw={bankLogic.handleWithdraw}
         onDepositBackpack={bankLogic.handleDepositBackpack}
         onDepositEquipment={bankLogic.handleDepositEquipment}
+        onMoveItem={bankLogic.moveBankItem}
         setContextMenu={ui.setContextMenu}
         setMakeXPrompt={ui.setMakeXPrompt}
         setTooltip={ui.setTooltip}

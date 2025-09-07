@@ -1,3 +1,3 @@
 export const INVENTORY_CAPACITY = 35;
-export const BANK_CAPACITY = 100;
+export const BANK_CAPACITY = 200;
 export const TELEPORT_UNLOCK_THRESHOLD = 100;

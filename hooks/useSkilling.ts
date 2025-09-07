@@ -9,7 +9,7 @@ interface SkillingDependencies {
     addLog: (message: string) => void;
     skills: (PlayerSkill & { currentLevel: number })[];
     addXp: (skill: SkillName, amount: number) => void;
-    inventory: InventorySlot[];
+    inventory: (InventorySlot | null)[];
     modifyItem: (itemId: string, quantity: number, quiet?: boolean) => void;
     equipment: Equipment;
 }
@@ -29,7 +29,7 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
             const toolType = activity.skill === SkillName.Woodcutting ? ToolType.Axe : ToolType.Pickaxe;
             
             const inventoryTools = inventory
-                .map(slot => ITEMS[slot.itemId])
+                .map(slot => slot ? ITEMS[slot.itemId] : null)
                 .filter((item): item is Item => !!item && item.tool?.type === toolType);
                 
             const equippedToolItem = equipment.weapon ? ITEMS[equipment.weapon.itemId] : null;
@@ -94,7 +94,7 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
             if (activity.skill === SkillName.Mining) requiredToolType = ToolType.Pickaxe;
             
             if (requiredToolType) {
-                const hasTool = inventory.some(slot => ITEMS[slot.itemId]?.tool?.type === requiredToolType) ||
+                const hasTool = inventory.some(slot => slot && ITEMS[slot.itemId]?.tool?.type === requiredToolType) ||
                                (equipment.weapon && ITEMS[equipment.weapon.itemId]?.tool?.type === requiredToolType);
                 if (!hasTool) {
                     addLog(`You need a ${requiredToolType.toLowerCase()} to do this.`);
@@ -102,7 +102,7 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
                 }
             }
 
-            if (inventory.length >= INVENTORY_CAPACITY) {
+            if (inventory.filter(Boolean).length >= INVENTORY_CAPACITY) {
                 addLog("Your inventory is full. You cannot gather resources.");
                 return;
             }
@@ -118,7 +118,7 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
         skillingCallbackRef.current = () => {
             if (!activeSkilling) return;
 
-            if (inventory.length >= INVENTORY_CAPACITY) {
+            if (inventory.filter(Boolean).length >= INVENTORY_CAPACITY) {
                 addLog("Your inventory is full. You stop gathering.");
                 setActiveSkilling(null);
                 return;

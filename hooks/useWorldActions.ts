@@ -1,5 +1,3 @@
-
-
 import React, { useCallback } from 'react';
 import { POIActivity, SkillName, InventorySlot, PlayerSkill, SkillRequirement, PlayerQuestState } from '../types';
 import { ITEMS, INVENTORY_CAPACITY } from '../../constants';
@@ -7,7 +5,7 @@ import { MakeXPrompt } from './useUIState';
 
 interface UseWorldActionsProps {
     hasItems: (items: { itemId: string, quantity: number }[]) => boolean;
-    inventory: InventorySlot[];
+    inventory: (InventorySlot | null)[];
     modifyItem: (itemId: string, quantity: number, quiet?: boolean) => void;
     addLog: (message: string) => void;
     coins: number;
@@ -29,7 +27,7 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
                 return;
             }
         }
-        if (inventory.length >= INVENTORY_CAPACITY) {
+        if (inventory.filter(Boolean).length >= INVENTORY_CAPACITY) {
             addLog("Your inventory is full.");
             return;
         }
@@ -39,7 +37,7 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
                 checkQuestProgressOnShear();
             }
         }
-    }, [inventory.length, modifyItem, addLog, checkQuestProgressOnShear, hasItems]);
+    }, [inventory, modifyItem, addLog, checkQuestProgressOnShear, hasItems]);
 
     const handleInstantTanning = useCallback((quantity: number) => {
         if (quantity <= 0) return;
@@ -100,7 +98,7 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
 
     const handleFillVials = useCallback(() => {
         const emptyVialCount = inventory.reduce((total, slot) => {
-            return slot.itemId === 'vial' ? total + slot.quantity : total;
+            return slot && slot.itemId === 'vial' ? total + slot.quantity : total;
         }, 0);
 
         if (emptyVialCount === 0) {

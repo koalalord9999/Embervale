@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { QUESTS, REGIONS, SHOPS } from '../../constants';
 import { POIS } from '../../data/pois';
@@ -259,7 +260,7 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
 
         return {
             skills: char.skills.map(({ name, level, xp }) => ({ name, level, xp })),
-            inventory: inv.inventory, // Save sparse array with nulls to preserve slot positions
+            inventory: inv.inventory,
             coins: inv.coins, equipment: inv.equipment, combatStance: char.combatStance,
             bank: bankLogic.bank,
             currentHp: char.currentHp, currentPoiId: session.currentPoiId, playerQuests: quests.playerQuests, lockedPois: quests.lockedPois,
