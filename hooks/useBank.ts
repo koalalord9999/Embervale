@@ -1,5 +1,3 @@
-
-
 import { useState, useCallback } from 'react';
 import { InventorySlot, Equipment, CombatStance } from '../types';
 import { ITEMS, BANK_CAPACITY, INVENTORY_CAPACITY } from '../constants';
@@ -14,7 +12,7 @@ interface BankDependencies {
     setCombatStance: (stance: CombatStance) => void;
 }
 
-const padBank = (bank: (InventorySlot | null)[]): (InventorySlot | null)[] => {
+export const padBank = (bank: (InventorySlot | null)[]): (InventorySlot | null)[] => {
     const padded = new Array(BANK_CAPACITY).fill(null);
     (bank || []).forEach((item, index) => {
         if (item && index < BANK_CAPACITY) {
@@ -24,10 +22,14 @@ const padBank = (bank: (InventorySlot | null)[]): (InventorySlot | null)[] => {
     return padded;
 };
 
+interface BankState {
+    bank: (InventorySlot | null)[];
+    setBank: React.Dispatch<React.SetStateAction<(InventorySlot | null)[]>>;
+}
 
-export const useBank = (initialBank: (InventorySlot | null)[], deps: BankDependencies) => {
+export const useBank = (bankState: BankState, deps: BankDependencies) => {
     const { addLog, inventory, setInventory, equipment, setEquipment, modifyItem, setCombatStance } = deps;
-    const [bank, setBank] = useState<(InventorySlot | null)[]>(padBank(initialBank));
+    const { bank, setBank } = bankState;
 
     const handleDeposit = useCallback((inventoryIndex: number, quantity: number | 'all') => {
         const itemSlot = inventory[inventoryIndex];
@@ -92,7 +94,7 @@ export const useBank = (initialBank: (InventorySlot | null)[], deps: BankDepende
             }
             return newBank;
         });
-    }, [inventory, setInventory, bank, addLog]);
+    }, [inventory, setInventory, bank, addLog, setBank]);
     
     const handleWithdraw = useCallback((bankIndex: number, quantity: number | 'all' | 'all-but-1') => {
         const bankSlot = bank[bankIndex];
@@ -100,35 +102,48 @@ export const useBank = (initialBank: (InventorySlot | null)[], deps: BankDepende
         const itemId = bankSlot.itemId;
         const itemData = ITEMS[itemId];
     
-        let qtyToWithdraw: number;
-        if (quantity === 'all') qtyToWithdraw = bankSlot.quantity;
-        else if (quantity === 'all-but-1') qtyToWithdraw = Math.max(0, bankSlot.quantity - 1);
-        else qtyToWithdraw = Math.min(quantity, bankSlot.quantity);
-        if (qtyToWithdraw <= 0) return;
+        let requestedQty: number;
+        if (quantity === 'all') requestedQty = bankSlot.quantity;
+        else if (quantity === 'all-but-1') requestedQty = Math.max(0, bankSlot.quantity - 1);
+        else requestedQty = Math.min(quantity, bankSlot.quantity);
+        if (requestedQty <= 0) return;
     
         const emptyInvSlots = inventory.filter(s => s === null).length;
-        const isStackableInInv = inventory.some(s => s?.itemId === itemId);
-        const slotsNeeded = itemData.stackable ? (isStackableInInv ? 0 : 1) : qtyToWithdraw;
-        
-        if (emptyInvSlots < slotsNeeded) {
+        let actualQtyToWithdraw = requestedQty;
+    
+        if (itemData.stackable) {
+            const hasStack = inventory.some(s => s?.itemId === itemId);
+            if (!hasStack && emptyInvSlots < 1) {
+                addLog("You don't have enough inventory space.");
+                return;
+            }
+        } else { // Not stackable
+            actualQtyToWithdraw = Math.min(requestedQty, emptyInvSlots);
+        }
+    
+        if (actualQtyToWithdraw <= 0) {
             addLog("You don't have enough inventory space.");
             return;
         }
     
-        modifyItem(itemId, qtyToWithdraw, true);
+        if (actualQtyToWithdraw < requestedQty) {
+            addLog("You don't have enough inventory space to withdraw the full amount.");
+        }
+    
+        modifyItem(itemId, actualQtyToWithdraw, true);
     
         setBank(prevBank => {
             const newBank = [...prevBank];
             const slot = newBank[bankIndex];
             if (slot) {
-                slot.quantity -= qtyToWithdraw;
+                slot.quantity -= actualQtyToWithdraw;
                 if (slot.quantity <= 0) {
                     newBank[bankIndex] = null;
                 }
             }
             return newBank;
         });
-    }, [bank, inventory, modifyItem, addLog]);
+    }, [bank, inventory, modifyItem, addLog, setBank]);
 
     const handleDepositBackpack = useCallback(() => {
         const itemsToProcess = inventory.map((slot, index) => ({ slot, index })).filter((item): item is { slot: InventorySlot; index: number; } => item.slot !== null);
@@ -172,7 +187,7 @@ export const useBank = (initialBank: (InventorySlot | null)[], deps: BankDepende
         setBank(finalBank);
         setInventory(newInventory);
         addLog("Deposited items into your bank.");
-    }, [inventory, setInventory, bank, addLog]);
+    }, [inventory, setInventory, bank, addLog, setBank]);
 
     const handleDepositEquipment = useCallback(() => {
         const itemsToProcess = (Object.keys(equipment) as Array<keyof Equipment>)
@@ -227,7 +242,7 @@ export const useBank = (initialBank: (InventorySlot | null)[], deps: BankDepende
             setCombatStance(CombatStance.Accurate);
         }
         addLog("Deposited your equipment into the bank.");
-    }, [equipment, setEquipment, bank, addLog, setCombatStance]);
+    }, [equipment, setEquipment, bank, addLog, setCombatStance, setBank]);
 
     const moveBankItem = useCallback((fromIndex: number, toIndex: number) => {
         setBank(prevBank => {
@@ -238,11 +253,9 @@ export const useBank = (initialBank: (InventorySlot | null)[], deps: BankDepende
             newBank[toIndex] = itemFrom;
             return newBank;
         });
-    }, []);
+    }, [setBank]);
 
     return {
-        bank,
-        setBank,
         handleDeposit,
         handleWithdraw,
         handleDepositBackpack,

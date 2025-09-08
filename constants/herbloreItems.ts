@@ -1,6 +1,28 @@
 import { Item, SkillName } from '../types';
 import { HERBS, HERBLORE_RECIPES } from './herblore';
 
+const getPotionMaterial = (potionId: string): Item['material'] => {
+    // Super potions first to avoid matching the base potion
+    if (potionId.startsWith('super_')) {
+        const base = potionId.replace('super_', '');
+        // e.g. super_attack_potion -> potion-super-attack
+        return `potion-super-${base.replace('_potion', '')}` as Item['material'];
+    }
+    // Handle specific complex names first
+    if (potionId.startsWith('weapon_poison')) return 'potion-poison';
+    if (potionId.includes('antifire')) return 'potion-antifire';
+    if (potionId.includes('stamina')) return 'potion-stamina';
+    if (potionId.includes('combo')) return 'potion-combo';
+    
+    // Generic pattern for simple potions
+    const match = potionId.match(/(\w+)_potion/);
+    if (match && match[1]) {
+        return `potion-${match[1]}` as Item['material'];
+    }
+    
+    return 'potion'; // Default red
+};
+
 // This helper function creates consumable properties for potions
 const getPotionEffect = (potionId: string): Item['consumable'] => {
     switch (potionId) {
@@ -143,7 +165,7 @@ const finishedPotions: Item[] = HERBLORE_RECIPES.finished.map(recipe => {
         stackable: false,
         value: recipe.level * 8,
         iconUrl: 'https://api.iconify.design/game-icons:potion-ball.svg',
-        material: 'potion',
+        material: getPotionMaterial(recipe.finishedPotionId),
         consumable: effect,
         emptyable: { emptyItemId: 'vial' },
     }

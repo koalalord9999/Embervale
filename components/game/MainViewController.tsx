@@ -1,3 +1,5 @@
+
+
 import React, { useCallback } from 'react';
 import { useUIState } from '../../hooks/useUIState';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -14,7 +16,7 @@ import { useQuestLogic } from '../../hooks/useQuestLogic';
 import { useSkilling } from '../../hooks/useSkilling';
 import { useInteractQuest } from '../../hooks/useInteractQuest';
 import { useGameSession } from '../../hooks/useGameSession';
-import { SkillName } from '../../types';
+import { SkillName, InventorySlot } from '../../types';
 import { QUESTS } from '../../constants';
 import { POIS } from '../../data/pois';
 import CraftingProgressView from '../views/crafting/CraftingProgressView';
@@ -35,6 +37,7 @@ interface MainViewControllerProps {
     char: ReturnType<typeof useCharacter>;
     inv: ReturnType<typeof useInventory>;
     quests: ReturnType<typeof useQuests>;
+    bank: (InventorySlot | null)[];
     bankLogic: ReturnType<typeof useBank>;
     shops: ReturnType<typeof useShops>;
     crafting: ReturnType<typeof useCrafting>;
@@ -55,7 +58,7 @@ interface MainViewControllerProps {
 
 const MainViewController: React.FC<MainViewControllerProps> = (props) => {
     const {
-        ui, addLog, char, inv, quests, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, combatSpeedMultiplier
+        ui, addLog, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, combatSpeedMultiplier
     } = props;
 
     const handleCustomDialogueAction = useCallback((actionId: string | undefined) => {
@@ -149,8 +152,9 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
             onClose={() => ui.setActiveNpcDialogue(null)}
         />;
     }
+    // FIX: Pass the `bank` state directly to the `BankView` component instead of trying to access it through `bankLogic`, which only contains handler functions.
     if (ui.activePanel === 'bank') return <BankView 
-        bank={bankLogic.bank}
+        bank={bank}
         onClose={() => ui.setActivePanel(null)}
         onWithdraw={bankLogic.handleWithdraw}
         onDepositBackpack={bankLogic.handleDepositBackpack}
@@ -217,7 +221,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 }
                 if (activity.type === 'npc') {
                     if (activity.name === 'Tanner Sven') {
-                        const cowhideCount = inv.inventory.filter(i => i.itemId === 'cowhide').length;
+                        const cowhideCount = inv.inventory.filter(i => i && i.itemId === 'cowhide').length;
                         const tanningCost = 5;
                         const maxAffordable = Math.floor(inv.coins / tanningCost);
                         const maxTannable = Math.min(cowhideCount, maxAffordable);
@@ -249,8 +253,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 if (activity.type === 'interactive_dialogue') ui.setActiveInteractiveDialogue({ dialogue: activity.dialogue, startNode: activity.startNode });
             }}
             onStartCombat={(uniqueInstanceId) => { ui.setCombatQueue([uniqueInstanceId]); ui.setIsMandatoryCombat(false); }}
-            playerQuests={quests.playerQuests} completeQuestStage={questLogic.completeQuestStage} setContextMenu={ui.setContextMenu} setMakeXPrompt={ui.setMakeXPrompt} addLog={addLog} 
-            onSmelt={(quantity) => crafting.handleSmelting('bronze_bar', quantity)}
+            playerQuests={quests.playerQuests} completeQuestStage={questLogic.completeQuestStage} setContextMenu={ui.setContextMenu} setMakeXPrompt={ui.setMakeXPrompt} addLog={addLog}
             startQuest={quests.startQuest} hasItems={inv.hasItems} 
             resourceNodeStates={skilling.resourceNodeStates} activeSkillingNodeId={skilling.activeSkillingNodeId} onToggleSkilling={skilling.handleToggleSkilling} initializeNodeState={skilling.initializeNodeState}
             skillingTick={skilling.skillingTick}
@@ -266,6 +269,8 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
             setTooltip={ui.setTooltip}
             setActiveQuestDialogue={ui.setActiveQuestDialogue}
             setActiveInteractiveDialogue={ui.setActiveInteractiveDialogue}
+            onDepositBackpack={bankLogic.handleDepositBackpack}
+            ui={ui}
         />
     );
 };

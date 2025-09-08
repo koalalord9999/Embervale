@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { InventorySlot, PlayerSkill } from '../../types';
 import { ITEMS, INVENTORY_CAPACITY, getIconClassName } from '../../constants';
 import { ContextMenuOption } from '../common/ContextMenu';
+import { ConfirmationPrompt } from '../../hooks/useUIState';
 
 interface InventoryPanelProps {
     inventory: (InventorySlot | null)[];
@@ -23,10 +24,11 @@ interface InventoryPanelProps {
     onUseItemOn: (used: { item: InventorySlot, index: number }, target: { item: InventorySlot, index: number }) => void;
     onMoveItem: (from: number, to: number) => void;
     isBusy?: boolean;
+    setConfirmationPrompt: (prompt: ConfirmationPrompt | null) => void;
 }
 
 const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
-    const { inventory, coins, skills, onEquip, onConsume, onDrop, onBury, onEmpty, setTooltip, setContextMenu, addLog, isBankOpen = false, onDeposit = () => {}, itemToUse, setItemToUse, onUseItemOn, onMoveItem, isBusy = false } = props;
+    const { inventory, coins, skills, onEquip, onConsume, onDrop, onBury, onEmpty, setTooltip, setContextMenu, addLog, isBankOpen = false, onDeposit = () => {}, itemToUse, setItemToUse, onUseItemOn, onMoveItem, isBusy = false, setConfirmationPrompt } = props;
     const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -79,12 +81,36 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
         setDragOverIndex(null);
         setTooltip(null); // Final cleanup for tooltip
     };
-
-    const handleClick = (index: number) => {
+    
+    const handleSlotClick = (e: React.MouseEvent, index: number) => {
         const slot = inventory[index];
+        if (!slot) return;
+        const item = ITEMS[slot.itemId];
+        if (!item) return;
         
+        if (e.shiftKey) {
+            if (isBusy) {
+                addLog("You are busy and cannot do that right now.");
+                return;
+            }
+            if (isBankOpen) {
+                addLog("You cannot drop items while the bank is open.");
+                return;
+            }
+            
+            if (item.value > 1000) {
+                setConfirmationPrompt({
+                    message: `Are you sure you want to drop your ${item.name}?`,
+                    onConfirm: () => onDrop(index)
+                });
+            } else {
+                onDrop(index);
+            }
+            return;
+        }
+
+        // Default click action
         if (itemToUse) {
-            if (!slot) { setItemToUse(null); return; }
             if (itemToUse.index !== index) {
                 onUseItemOn(itemToUse, { item: slot, index: index });
             } else {
@@ -93,10 +119,6 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
             return;
         }
         
-        if (!slot) return;
-        const item = ITEMS[slot.itemId];
-        if (!item) return;
-
         if (isBusy) {
             addLog("You are busy and cannot do that right now.");
             return;
@@ -185,14 +207,17 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
                             onDrop={(e) => handleDrop(e, index)}
                             onDragEnd={handleDragEnd}
                             className={`w-full aspect-square bg-gray-900 border-2 border-gray-600 rounded-md flex items-center justify-center p-1 relative transition-all duration-150 ${slot ? 'cursor-grab' : ''} ${slotClasses}`}
-                            onClick={() => handleClick(index)}
+                            onClick={(e) => handleSlotClick(e, index)}
                             onContextMenu={(e) => handleContextMenu(e, index)}
                             onMouseEnter={(e) => {
-                                if (!item) return;
+                                if (!item || !slot) return;
                                 const tooltipContent = (
                                     <div>
                                         <p className="font-bold text-yellow-300">{item.name}</p>
                                         <p className="text-sm text-gray-300">{item.description}</p>
+                                        {item.stackable && slot.quantity > 999 && (
+                                            <p className="text-sm mt-1 text-gray-400">Quantity: {slot.quantity.toLocaleString()}</p>
+                                        )}
                                         {itemToUse && <p className="text-sm mt-1 text-green-300">Use {ITEMS[itemToUse.item.itemId].name} -> {item.name}</p>}
                                         {item.equipment && (
                                             <div className="mt-2 pt-2 border-t border-gray-600 text-xs grid grid-cols-2 gap-x-4">
@@ -250,6 +275,13 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
                                     {slot.quantity > 1 && (
                                         <span className="absolute bottom-0 right-1 text-xs font-bold text-yellow-300" style={{ textShadow: '1px 1px 1px black' }}>
                                             {slot.quantity > 1000 ? `${Math.floor(slot.quantity / 1000)}k` : slot.quantity}
+                                        </span>
+                                    )}
+                                    {(item.id.startsWith('grimy_') || item.id.startsWith('clean_') || item.id.endsWith('_potion_unf')) && (
+                                        <span className="absolute bottom-0.5 left-0 right-0 text-center text-xs font-bold text-yellow-400 pointer-events-none" style={{ textShadow: '1px 1px 2px black', lineHeight: '1' }}>
+                                            {item.id.startsWith('grimy_')
+                                                ? `G${item.name.split(' ')[1]?.substring(0, 3) ?? ''}`
+                                                : item.name.split(' ')[0].substring(0, 4)}
                                         </span>
                                     )}
                                 </>

@@ -9,7 +9,7 @@ import { TooltipState } from '../../hooks/useUIState';
 
 interface ShopViewProps {
     shopId: string;
-    playerInventory: InventorySlot[];
+    playerInventory: (InventorySlot | null)[];
     playerCoins: number;
     shopStates: ShopStates;
     onBuy: (shopId: string, itemId: string, quantity: number) => void;
@@ -41,10 +41,14 @@ const ShopSlot: React.FC<{
 
     const handleMouseEnter = (e: React.MouseEvent) => {
         const { equipment } = item;
+        const quantity = type === 'buy' ? stock : slot?.quantity;
         const tooltipContent = (
             <div>
                 <p className="font-bold text-yellow-300">{item.name}</p>
                 <p className="text-sm text-gray-300">{item.description}</p>
+                {item.stackable && quantity && quantity > 999 && (
+                    <p className="text-sm mt-1 text-gray-400">Quantity: {quantity.toLocaleString()}</p>
+                )}
                  <p className="text-sm mt-2">{type === 'buy' ? 'Buy Price' : 'Sell Price'}: <span className="font-semibold">{price} coins</span></p>
                 {equipment && (
                     <div className="mt-2 pt-2 border-t border-gray-600 text-xs grid grid-cols-2 gap-x-4">
@@ -88,6 +92,13 @@ const ShopSlot: React.FC<{
                     {slot.quantity > 1000 ? `${Math.floor(slot.quantity / 1000)}k` : slot.quantity}
                 </span>
              )}
+            {(item.id.startsWith('grimy_') || item.id.startsWith('clean_') || item.id.endsWith('_potion_unf')) && (
+                <span className="absolute bottom-0.5 left-0 right-0 text-center text-xs font-bold text-yellow-400 pointer-events-none" style={{ textShadow: '1px 1px 2px black', lineHeight: '1' }}>
+                    {item.id.startsWith('grimy_')
+                        ? `G${item.name.split(' ')[1]?.substring(0, 3) ?? ''}`
+                        : item.name.split(' ')[0].substring(0, 4)}
+                </span>
+            )}
         </div>
     );
 };
@@ -99,7 +110,7 @@ const ShopView: React.FC<ShopViewProps> = ({ shopId, playerInventory, playerCoin
 
     const inventoryGrid: (InventorySlot | null)[] = new Array(INVENTORY_CAPACITY).fill(null);
     playerInventory.forEach((item, index) => {
-        if (index < INVENTORY_CAPACITY) inventoryGrid[index] = item;
+        if (item && index < INVENTORY_CAPACITY) inventoryGrid[index] = item;
     });
 
     const createBuyContextMenu = (e: React.MouseEvent, itemId: string) => {
@@ -142,7 +153,7 @@ const ShopView: React.FC<ShopViewProps> = ({ shopId, playerInventory, playerCoin
         if (item.stackable) {
             sellableQuantity = slot.quantity;
         } else {
-            sellableQuantity = playerInventory.filter(s => s.itemId === slot.itemId).length;
+            sellableQuantity = playerInventory.filter(s => s && s.itemId === slot.itemId).length;
         }
 
         const performSellAction = (itemId: string, quantity: number | 'all') => {

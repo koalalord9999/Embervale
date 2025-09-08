@@ -35,7 +35,7 @@ const EquipmentSlotDisplay: React.FC<{
     const item = itemSlot ? ITEMS[itemSlot.itemId] : null;
 
     const handleMouseEnter = (e: React.MouseEvent) => {
-        if (!item?.equipment) {
+        if (!item?.equipment || !itemSlot) {
             const slotName = slotKey.charAt(0).toUpperCase() + slotKey.slice(1);
             setTooltip({
                 content: <p className="font-bold text-yellow-300">{slotName} Slot</p>,
@@ -50,6 +50,9 @@ const EquipmentSlotDisplay: React.FC<{
             <div>
                 <p className="font-bold text-yellow-300">{item.name}</p>
                 <p className="text-sm text-gray-300">{item.description}</p>
+                {item.stackable && itemSlot.quantity > 999 && (
+                    <p className="text-sm mt-1 text-gray-400">Quantity: {itemSlot.quantity.toLocaleString()}</p>
+                )}
                  <div className="mt-2 pt-2 border-t border-gray-600 text-xs grid grid-cols-2 gap-x-4">
                     <span>Stab Atk:</span><span className="font-semibold text-right">{equipment.stabAttack}</span>
                     <span>Slash Atk:</span><span className="font-semibold text-right">{equipment.slashAttack}</span>
@@ -100,7 +103,7 @@ const EquipmentSlotDisplay: React.FC<{
                     <img src={item.iconUrl} alt={item.name} className={`w-full h-full ${getIconClassName(item)}`} />
                     {item.stackable && itemSlot && itemSlot.quantity > 0 && (
                         <span className="absolute bottom-0 right-1 text-xs font-bold text-yellow-300" style={{ textShadow: '1px 1px 1px black' }}>
-                            {itemSlot.quantity.toLocaleString()}
+                            {itemSlot.quantity > 999 ? `${Math.floor(itemSlot.quantity/1000)}k` : itemSlot.quantity.toLocaleString()}
                         </span>
                     )}
                 </>
@@ -143,7 +146,7 @@ const EquipmentPanel: React.FC<EquipmentPanelProps> = ({ equipment, onUnequip, s
             </div>
             
             <div className="mt-4 p-2 bg-gray-900 rounded-md border border-gray-600 flex justify-around gap-2">
-                <button onClick={() => ui.setIsEquipmentStatsOpen(true)} className="flex-1 text-center py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded border border-gray-500 transition-colors">
+                <button onClick={() => ui.setEquipmentStats(equipment)} className="flex-1 text-center py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded border border-gray-500 transition-colors">
                     Equipment Stats
                 </button>
                  <button onClick={() => ui.setIsItemsOnDeathOpen(true)} className="flex-1 text-center py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded border border-gray-500 transition-colors">

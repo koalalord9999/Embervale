@@ -1,9 +1,7 @@
-
-
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { QUESTS, REGIONS, SHOPS } from '../../constants';
 import { POIS } from '../../data/pois';
-import { CombatStance, PlayerSlayerTask, ShopStates, SkillName, POIActivity } from '../../types';
+import { CombatStance, PlayerSlayerTask, ShopStates, SkillName, POIActivity, InventorySlot } from '../../types';
 import { useActivityLog } from '../../hooks/useActivityLog';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useInventory } from '../../hooks/useInventory';
@@ -15,7 +13,7 @@ import { useRepeatableQuests } from '../../hooks/useRepeatableQuests';
 import { useAggression } from '../../hooks/useAggression';
 import { useShops } from '../../hooks/useShops';
 import { useSkilling } from '../../hooks/useSkilling';
-import { useBank } from '../../hooks/useBank';
+import { useBank, padBank } from '../../hooks/useBank';
 import { useInteractQuest } from '../../hooks/useInteractQuest';
 import { useSlayer } from '../../hooks/useSlayer';
 import { useQuestLogic } from '../../hooks/useQuestLogic';
@@ -37,7 +35,6 @@ import MainViewController from '../game/MainViewController';
 import QuestDetailView from '../views/overlays/QuestDetailView';
 import AtlasView from '../views/AtlasView';
 import ExpandedMapView from '../views/ExpandedMapView';
-import DevConsole from '../common/DevConsole';
 import DevModePanel from '../common/DevModePanel';
 
 interface GameProps {
@@ -57,13 +54,14 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
     const [clearedSkillObstacles, setClearedSkillObstacles] = useState(initialState.clearedSkillObstacles);
     const [monsterRespawnTimers, setMonsterRespawnTimers] = useState(initialState.monsterRespawnTimers);
     
-    // Config Panel State
-    const [isSystemInputOpen, setIsSystemInputOpen] = useState(false);
+    // Dev Panel State
     const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
     const [combatSpeedMultiplier, setCombatSpeedMultiplier] = useState(1);
     const [isInstantRespawnOn, setIsInstantRespawnOn] = useState(false);
     const [instantRespawnCounter, setInstantRespawnCounter] = useState<number | null>(null);
     const [configAggroIds, setConfigAggroIds] = useState<string[]>([]);
+    const [isPlayerInvisible, setIsPlayerInvisible] = useState(false);
+    const [isAutoBankOn, setIsAutoBankOn] = useState(false);
 
     const [xpDrops, setXpDrops] = useState<XpDrop[]>([]);
     const handleXpGain = useCallback((skillName: SkillName, amount: number) => {
@@ -76,12 +74,20 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
     }, []);
 
     const char = useCharacter({ skills: initialState.skills, combatStance: initialState.combatStance, currentHp: initialState.currentHp }, { addLog, onXpGain: handleXpGain }, isInCombat, combatSpeedMultiplier);
-    const inv = useInventory({ inventory: initialState.inventory, coins: initialState.coins, equipment: initialState.equipment }, addLog);
+    
+    // Centralized Bank State
+    const [bank, setBank] = useState<(InventorySlot | null)[]>(padBank(initialState.bank));
+
+    const inv = useInventory(
+        { inventory: initialState.inventory, coins: initialState.coins, equipment: initialState.equipment },
+        addLog,
+        { isAutoBankOn, bank, setBank }
+    );
     const quests = useQuests({ playerQuests: initialState.playerQuests, lockedPois: initialState.lockedPois });
     
     const slayer = useSlayer(initialState.slayerTask, { addLog, addXp: char.addXp, combatLevel: char.combatLevel });
     const repeatableQuests = useRepeatableQuests(initialState.repeatableQuestsState, addLog, inv, char);
-    const bankLogic = useBank(initialState.bank, { addLog, ...inv, ...char, setCombatStance: char.setCombatStance });
+    const bankLogic = useBank({ bank, setBank }, { addLog, ...inv, ...char, setCombatStance: char.setCombatStance });
     const shops = useShops(initialState.shopStates, inv.coins, inv.modifyItem, addLog);
     const skilling = useSkilling(initialState.resourceNodeStates, { addLog, skills: char.skills, addXp: char.addXp, inventory: inv.inventory, modifyItem: inv.modifyItem, equipment: inv.equipment });
     const interactQuest = useInteractQuest({ addLog, activePlayerQuest: repeatableQuests.activePlayerQuest, handleTurnInRepeatableQuest: repeatableQuests.handleTurnInRepeatableQuest });
@@ -160,31 +166,10 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
         questLogic, repeatableQuests, slayer, setMonsterRespawnTimers, isInstantRespawnOn
     });
     
-    const toggleDevConsole = useCallback(() => {
-        setIsSystemInputOpen(prev => !prev);
+    const toggleDevPanel = useCallback(() => {
+        setIsConfigPanelOpen(prev => !prev);
     }, []);
 
-    const handleSystemCommand = useCallback((command: string) => {
-        const parts = command.toLowerCase().split(' ');
-        const cmd = parts[0];
-        const arg1 = parts[1];
-
-        if (cmd === 'devmode') {
-            if (arg1 === 'on') {
-                setIsConfigPanelOpen(true);
-                addLog(`System: Dev mode panel opened.`);
-            } else if (arg1 === 'off') {
-                setIsConfigPanelOpen(false);
-                addLog(`System: Dev mode panel closed.`);
-            } else {
-                addLog(`System: Usage: devmode <on|off>`);
-            }
-            return;
-        }
-
-        addLog(`System: Unknown command.`);
-    }, [addLog]);
-    
     const isCurrentMonsterAggro = useMemo(() => ui.combatQueue.some(id => configAggroIds.includes(id)), [ui.combatQueue, configAggroIds]);
 
     const handleToggleAggro = useCallback(() => {
@@ -262,7 +247,7 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
             skills: char.skills.map(({ name, level, xp }) => ({ name, level, xp })),
             inventory: inv.inventory,
             coins: inv.coins, equipment: inv.equipment, combatStance: char.combatStance,
-            bank: bankLogic.bank,
+            bank,
             currentHp: char.currentHp, currentPoiId: session.currentPoiId, playerQuests: quests.playerQuests, lockedPois: quests.lockedPois,
             clearedSkillObstacles,
             resourceNodeStates: optimizedResourceNodeStates,
@@ -277,7 +262,7 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
             },
             slayerTask: slayer.slayerTask
         };
-    }, [char, inv, session.currentPoiId, quests, skilling.resourceNodeStates, shops.shopStates, repeatableQuests, bankLogic.bank, clearedSkillObstacles, monsterRespawnTimers, slayer.slayerTask]);
+    }, [char, inv, session.currentPoiId, quests, skilling.resourceNodeStates, shops.shopStates, repeatableQuests, bank, clearedSkillObstacles, monsterRespawnTimers, slayer.slayerTask]);
 
     useSaveGame(gameState);
     
@@ -294,7 +279,8 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
         startCombat,
         addLog,
         monsterRespawnTimers,
-        configAggroIds
+        configAggroIds,
+        isPlayerInvisible
     );
 
     const activeMapRegionId = useMemo(() => {
@@ -312,6 +298,27 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
         handleCombatFinish();
     }, [ui, handleCombatFinish]);
 
+    const renderActivePanel = () => {
+        const panelToRender = ui.activePanel ?? 'inventory';
+
+        switch(panelToRender) {
+            case 'inventory':
+            case 'bank':
+                 return <InventoryPanel inventory={inv.inventory} coins={inv.coins} skills={char.skills} onEquip={(item, idx) => inv.handleEquip(item, idx, char.skills, char.combatStance, char.setCombatStance)} onConsume={itemActions.handleConsume} onDrop={inv.handleDropItem} onBury={itemActions.handleBuryBones} onEmpty={itemActions.handleEmptyItem} setTooltip={ui.setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} isBankOpen={ui.activePanel === 'bank'} onDeposit={bankLogic.handleDeposit} itemToUse={ui.itemToUse} setItemToUse={ui.setItemToUse} onUseItemOn={itemActions.handleUseItemOn} isBusy={isBusy} onMoveItem={inv.moveItem} setConfirmationPrompt={ui.setConfirmationPrompt} />;
+            case 'skills':
+                return <SkillsPanel skills={char.skills} setTooltip={ui.setTooltip} onOpenGuide={ui.setActiveSkillGuide} />;
+            case 'quests':
+                 return <QuestsPanel playerQuests={quests.playerQuests} activeRepeatableQuest={repeatableQuests.activePlayerQuest} inventory={inv.inventory} slayerTask={slayer.slayerTask} onSelectQuest={ui.setActiveQuestDetailId} />;
+            case 'equipment':
+                return <EquipmentPanel equipment={inv.equipment} onUnequip={(slot) => inv.handleUnequip(slot, char.setCombatStance)} setTooltip={ui.setTooltip} ui={ui} />;
+            case 'map':
+                return <WorldMapView currentPoiId={session.currentPoiId} unlockedPois={navigation.reachablePois} onNavigate={navigation.handleNavigate} setTooltip={ui.setTooltip} activeMapRegionId={activeMapRegionId} />;
+            default:
+                // This case handles null or any other unexpected value by defaulting to inventory.
+                return <InventoryPanel inventory={inv.inventory} coins={inv.coins} skills={char.skills} onEquip={(item, idx) => inv.handleEquip(item, idx, char.skills, char.combatStance, char.setCombatStance)} onConsume={itemActions.handleConsume} onDrop={inv.handleDropItem} onBury={itemActions.handleBuryBones} onEmpty={itemActions.handleEmptyItem} setTooltip={ui.setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} isBankOpen={ui.activePanel === 'bank'} onDeposit={bankLogic.handleDeposit} itemToUse={ui.itemToUse} setItemToUse={ui.setItemToUse} onUseItemOn={itemActions.handleUseItemOn} isBusy={isBusy} onMoveItem={inv.moveItem} setConfirmationPrompt={ui.setConfirmationPrompt} />;
+        }
+    };
+
     return (
         <>
             <div className="w-3/4 flex flex-col gap-4">
@@ -322,6 +329,7 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
                         char={char}
                         inv={inv}
                         quests={quests}
+                        bank={bank}
                         bankLogic={bankLogic}
                         shops={shops}
                         crafting={crafting}
@@ -357,14 +365,10 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
                     isBusy={isBusy}
                     setContextMenu={ui.setContextMenu}
                     onOpenExpandedMap={() => ui.setIsExpandedMapViewOpen(true)}
-                    onToggleDevConsole={toggleDevConsole}
+                    onToggleDevPanel={toggleDevPanel}
                 />
                 <div className="bg-black/70 border-2 border-gray-600 rounded-lg flex-grow p-2 min-h-0">
-                    {(ui.activePanel === 'inventory' || ui.activePanel === 'bank') && <InventoryPanel inventory={inv.inventory} coins={inv.coins} skills={char.skills} onEquip={(item, idx) => inv.handleEquip(item, idx, char.skills, char.combatStance, char.setCombatStance)} onConsume={itemActions.handleConsume} onDrop={inv.handleDropItem} onBury={itemActions.handleBuryBones} onEmpty={itemActions.handleEmptyItem} setTooltip={ui.setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} isBankOpen={ui.activePanel === 'bank'} onDeposit={bankLogic.handleDeposit} itemToUse={ui.itemToUse} setItemToUse={ui.setItemToUse} onUseItemOn={itemActions.handleUseItemOn} isBusy={isBusy} onMoveItem={inv.moveItem} />}
-                    {ui.activePanel === 'skills' && <SkillsPanel skills={char.skills} setTooltip={ui.setTooltip} onOpenGuide={ui.setActiveSkillGuide} />}
-                    {ui.activePanel === 'quests' && <QuestsPanel playerQuests={quests.playerQuests} activeRepeatableQuest={repeatableQuests.activePlayerQuest} inventory={inv.inventory} slayerTask={slayer.slayerTask} onSelectQuest={ui.setActiveQuestDetailId} />}
-                    {ui.activePanel === 'equipment' && <EquipmentPanel equipment={inv.equipment} onUnequip={(slot) => inv.handleUnequip(slot, char.setCombatStance)} setTooltip={ui.setTooltip} ui={ui} />}
-                    {ui.activePanel === 'map' && <WorldMapView currentPoiId={session.currentPoiId} unlockedPois={navigation.reachablePois} onNavigate={navigation.handleNavigate} setTooltip={ui.setTooltip} activeMapRegionId={activeMapRegionId} />}
+                    {renderActivePanel()}
                 </div>
             </div>
             <XpTracker drops={xpDrops} onRemoveDrop={removeXpDrop} />
@@ -381,7 +385,6 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
                 onClose={() => ui.setIsExpandedMapViewOpen(false)}
                 setTooltip={ui.setTooltip}
             />}
-            {isSystemInputOpen && <DevConsole onCommand={handleSystemCommand} onClose={() => setIsSystemInputOpen(false)} />}
             {isConfigPanelOpen && <DevModePanel
                 combatSpeedMultiplier={combatSpeedMultiplier}
                 setCombatSpeedMultiplier={(speed) => {
@@ -399,6 +402,16 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
                 isCurrentMonsterAggro={isCurrentMonsterAggro}
                 onToggleAggro={handleToggleAggro}
                 onClose={() => setIsConfigPanelOpen(false)}
+                isPlayerInvisible={isPlayerInvisible}
+                setIsPlayerInvisible={(isInvisible) => {
+                    setIsPlayerInvisible(isInvisible);
+                    addLog(`System: Player invisibility ${isInvisible ? 'enabled' : 'disabled'}.`);
+                }}
+                isAutoBankOn={isAutoBankOn}
+                setIsAutoBankOn={(isOn) => {
+                    setIsAutoBankOn(isOn);
+                    addLog(`System: Auto-bank ${isOn ? 'enabled' : 'disabled'}.`);
+                }}
             />}
         </>
     );

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import Button from './Button';
 
@@ -12,6 +11,10 @@ interface DevModePanelProps {
     isInCombat: boolean;
     isCurrentMonsterAggro: boolean;
     onToggleAggro: () => void;
+    isPlayerInvisible: boolean;
+    setIsPlayerInvisible: (isInvisible: boolean) => void;
+    isAutoBankOn: boolean;
+    setIsAutoBankOn: (isOn: boolean) => void;
     onClose: () => void;
 }
 
@@ -25,6 +28,10 @@ const DevModePanel: React.FC<DevModePanelProps> = ({
     isInCombat,
     isCurrentMonsterAggro,
     onToggleAggro,
+    isPlayerInvisible,
+    setIsPlayerInvisible,
+    isAutoBankOn,
+    setIsAutoBankOn,
     onClose,
 }) => {
     const [position, setPosition] = useState({ x: 480, y: 20 });
@@ -136,6 +143,28 @@ const DevModePanel: React.FC<DevModePanelProps> = ({
                         className="w-20 p-1 text-xs bg-gray-800 border border-gray-600 rounded disabled:opacity-50 text-center"
                     />
                 </div>
+            </div>
+
+            {/* Invisibility */}
+            <div className="mb-3">
+                <label className="block text-sm font-semibold mb-1">Invisibility</label>
+                <button
+                    onClick={() => setIsPlayerInvisible(!isPlayerInvisible)}
+                    className={`w-full py-1 text-xs rounded font-bold transition-colors ${isPlayerInvisible ? 'bg-green-600 hover:bg-green-500' : 'bg-red-700 hover:bg-red-600'}`}
+                >
+                    {isPlayerInvisible ? 'ON' : 'OFF'}
+                </button>
+            </div>
+
+            {/* Auto-Bank */}
+            <div className="mb-3">
+                <label className="block text-sm font-semibold mb-1">Auto-Bank</label>
+                <button
+                    onClick={() => setIsAutoBankOn(!isAutoBankOn)}
+                    className={`w-full py-1 text-xs rounded font-bold transition-colors ${isAutoBankOn ? 'bg-green-600 hover:bg-green-500' : 'bg-red-700 hover:bg-red-600'}`}
+                >
+                    {isAutoBankOn ? 'ON' : 'OFF'}
+                </button>
             </div>
 
             {/* Perm-Aggro */}

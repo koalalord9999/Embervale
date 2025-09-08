@@ -13,6 +13,7 @@ import SpinningInterface from './subviews/SpinningInterface';
 import LeatherworkingInterface from './subviews/LeatherworkingInterface';
 import GemCuttingInterface from './subviews/GemCuttingInterface';
 import FletchingInterface from './subviews/FletchingInterface';
+import JewelryInterface from './subviews/JewelryInterface';
 
 type BarType = 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'silver_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar';
 
@@ -45,6 +46,7 @@ const CraftingView: React.FC<CraftingViewProps> = (props) => {
             case 'spinning_wheel': return 'Spinning';
             case 'leatherworking': return 'Leatherworking';
             case 'gem_cutting': return 'Gem Cutting';
+            case 'jewelry': return 'Crafting - Jewelry';
             case 'fletching': return 'Fletching';
             default: return 'Crafting';
         }
@@ -58,6 +60,7 @@ const CraftingView: React.FC<CraftingViewProps> = (props) => {
             case 'spinning_wheel': return <SpinningInterface {...props} />;
             case 'leatherworking': return <LeatherworkingInterface {...props} />;
             case 'gem_cutting': return <GemCuttingInterface {...props} />;
+            case 'jewelry': return <JewelryInterface {...props} />;
             // FIX: FletchingInterface expects different props from CraftingViewProps. Instead of spreading, pass the expected props explicitly.
             case 'fletching': {
                 const { inventory, skills, onFletch, setMakeXPrompt } = props;

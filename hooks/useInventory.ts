@@ -1,8 +1,6 @@
-
-
 import { useState, useCallback } from 'react';
 import { InventorySlot, Equipment, CombatStance, WeaponType, PlayerSkill } from '../types';
-import { ITEMS, INVENTORY_CAPACITY } from '../constants';
+import { ITEMS, INVENTORY_CAPACITY, BANK_CAPACITY } from '../constants';
 
 // Helper to ensure inventory is always a fixed-size sparse array
 const padInventory = (inv: (InventorySlot | null)[]): (InventorySlot | null)[] => {
@@ -15,15 +13,73 @@ const padInventory = (inv: (InventorySlot | null)[]): (InventorySlot | null)[] =
     return padded;
 };
 
-export const useInventory = (initialData: { inventory: InventorySlot[], coins: number, equipment: Equipment }, addLog: (message: string) => void) => {
+const addToBank = (
+    itemId: string,
+    quantity: number,
+    bank: (InventorySlot | null)[],
+    setBank: React.Dispatch<React.SetStateAction<(InventorySlot | null)[]>>,
+    addLog: (message: string) => void,
+    quiet: boolean = false
+) => {
+    const itemData = ITEMS[itemId];
+    if (!itemData) return;
+
+    let itemsAdded = 0;
+    const newBank = [...bank]; // Create a mutable copy
+
+    // In the bank, all items are treated as stackable.
+    // Find if there's already a stack of this item.
+    const existingStackIndex = newBank.findIndex(i => i?.itemId === itemId);
+
+    if (existingStackIndex > -1) {
+        // If a stack exists, add to it.
+        newBank[existingStackIndex]!.quantity += quantity;
+        itemsAdded = quantity;
+    } else {
+        // If no stack exists, find an empty slot.
+        const emptySlotIndex = newBank.findIndex(slot => slot === null);
+        if (emptySlotIndex > -1 && emptySlotIndex < BANK_CAPACITY) {
+            newBank[emptySlotIndex] = { itemId, quantity };
+            itemsAdded = quantity;
+        }
+    }
+
+    setBank(newBank); // Update state with the new bank array
+
+    if (!quiet) {
+        if (itemsAdded > 0) {
+            addLog(`Auto-banked: ${itemsAdded}x ${itemData.name}.`);
+        }
+        const itemsLost = quantity - itemsAdded;
+        if (itemsLost > 0) {
+            addLog(`Bank is full. Lost ${itemsLost}x ${itemData.name}.`);
+        }
+    }
+};
+
+export const useInventory = (
+    initialData: { inventory: InventorySlot[], coins: number, equipment: Equipment },
+    addLog: (message: string) => void,
+    options?: {
+        isAutoBankOn?: boolean;
+        bank?: (InventorySlot | null)[];
+        setBank?: React.Dispatch<React.SetStateAction<(InventorySlot | null)[]>>;
+    }
+) => {
     const [inventory, setInventory] = useState<(InventorySlot | null)[]>(padInventory(initialData.inventory));
     const [coins, setCoins] = useState<number>(initialData.coins);
     const [equipment, setEquipment] = useState<Equipment>(initialData.equipment);
+    const { isAutoBankOn = false, bank, setBank } = options ?? {};
 
     const modifyItem = useCallback((itemId: string, quantity: number, quiet: boolean = false) => {
         if (itemId === 'coins') {
             setCoins(c => c + quantity);
             if (quantity !== 0 && !quiet) addLog(`${quantity > 0 ? 'Gained' : 'Lost'} ${Math.abs(quantity)} coins.`);
+            return;
+        }
+
+        if (quantity > 0 && isAutoBankOn && bank && setBank) {
+            addToBank(itemId, quantity, bank, setBank, addLog, quiet);
             return;
         }
 
@@ -108,7 +164,7 @@ export const useInventory = (initialData: { inventory: InventorySlot[], coins: n
                 return newInv;
             });
         }
-    }, [addLog]);
+    }, [addLog, isAutoBankOn, bank, setBank]);
 
     const hasItems = useCallback((requirements: { itemId: string, quantity: number }[]): boolean => {
       return requirements.every(req => {
@@ -121,6 +177,7 @@ export const useInventory = (initialData: { inventory: InventorySlot[], coins: n
         const itemData = ITEMS[itemToEquip.itemId];
         if (!itemData?.equipment) return;
 
+        // Requirement checks
         if (itemData.equipment.requiredLevels) {
             for (const requirement of itemData.equipment.requiredLevels) {
                 const playerSkill = skills.find(s => s.name === requirement.skill);
@@ -133,6 +190,21 @@ export const useInventory = (initialData: { inventory: InventorySlot[], coins: n
 
         const slotKey = itemData.equipment.slot.toLowerCase() as keyof Equipment;
         const currentlyEquipped = equipment[slotKey];
+
+        // Handle merging stackable items (like arrows)
+        if (currentlyEquipped && currentlyEquipped.itemId === itemToEquip.itemId && itemData.stackable) {
+            const totalQuantity = currentlyEquipped.quantity + itemToEquip.quantity;
+            setEquipment(prev => ({ ...prev, [slotKey]: { ...currentlyEquipped, quantity: totalQuantity } }));
+            setInventory(prevInv => {
+                const newInventory = [...prevInv];
+                newInventory[inventoryIndex] = null;
+                return newInventory;
+            });
+            addLog(`Added ${itemToEquip.quantity}x ${itemData.name} to your equipped stack.`);
+            return;
+        }
+
+        // Stance change for weapons
         if (slotKey === 'weapon') {
             const newWeaponType = itemData.equipment.weaponType;
             const isRanged = newWeaponType === WeaponType.Bow;
@@ -140,34 +212,56 @@ export const useInventory = (initialData: { inventory: InventorySlot[], coins: n
             if (isRanged && !currentIsRanged) setCombatStance(CombatStance.RangedAccurate);
             else if (!isRanged && currentIsRanged) setCombatStance(CombatStance.Accurate);
         }
+        
+        const quantityToEquip = itemData.stackable ? itemToEquip.quantity : 1;
 
-        setEquipment(prev => ({ ...prev, [slotKey]: { itemId: itemToEquip.itemId, quantity: 1 } }));
+        // Equip the new item
+        setEquipment(prev => ({ ...prev, [slotKey]: { itemId: itemToEquip.itemId, quantity: quantityToEquip } }));
 
+        // Update inventory
         setInventory(prevInv => {
             const newInventory = [...prevInv];
-            const sourceSlot = newInventory[inventoryIndex];
-            if (sourceSlot) {
-                if (itemData.stackable && sourceSlot.quantity > 1) {
-                    sourceSlot.quantity -= 1;
-                } else {
+            
+            // For non-stackable items, we remove just the one item being equipped.
+            // For stackable items, the entire stack moves, so we clear the slot.
+            if (itemData.stackable) {
+                newInventory[inventoryIndex] = null;
+            } else {
+                newInventory[inventoryIndex]!.quantity -= 1;
+                if (newInventory[inventoryIndex]!.quantity <= 0) {
                     newInventory[inventoryIndex] = null;
                 }
             }
-
+            
             if (currentlyEquipped) {
-                 const equippedItemData = ITEMS[currentlyEquipped.itemId];
-                 const existingStackIndex = newInventory.findIndex(i => i?.itemId === currentlyEquipped.itemId && equippedItemData.stackable);
-                if (existingStackIndex > -1) {
-                    newInventory[existingStackIndex]!.quantity += currentlyEquipped.quantity;
+                const equippedItemData = ITEMS[currentlyEquipped.itemId];
+                
+                if (equippedItemData.stackable) {
+                    const existingStackIndex = newInventory.findIndex(i => i?.itemId === currentlyEquipped.itemId);
+                    if (existingStackIndex > -1) {
+                        newInventory[existingStackIndex]!.quantity += currentlyEquipped.quantity;
+                    } else {
+                        const emptySlotIndex = newInventory.findIndex(slot => slot === null);
+                        if (emptySlotIndex > -1) {
+                            newInventory[emptySlotIndex] = currentlyEquipped;
+                        } else {
+                            // This case should be rare, but as a fallback, we log and don't drop the item
+                             addLog("Your inventory is full. The previously equipped item could not be returned.");
+                        }
+                    }
                 } else {
                     const emptySlotIndex = newInventory.findIndex(slot => slot === null);
-                    if (emptySlotIndex > -1) {
+                     if (emptySlotIndex > -1) {
                         newInventory[emptySlotIndex] = currentlyEquipped;
+                    } else {
+                         addLog("Your inventory is full. The previously equipped item could not be returned.");
                     }
                 }
             }
+            
             return newInventory;
         });
+
         addLog(`Equipped ${itemData.name}.`);
     }, [equipment, addLog]);
 

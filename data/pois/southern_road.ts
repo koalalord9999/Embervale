@@ -7,7 +7,7 @@ export const southernRoadPois: Record<string, POI> = {
         id: 'south_meadow_road',
         name: 'South Meadow Road',
         description: 'A dusty road leading south from Meadowdale. A smaller path branches off towards a ranch.',
-        connections: ['meadowdale_south_gate', 'dusty_crossroads', 'mcgregors_ranch'],
+        connections: ['meadowdale_south_gate', 'dusty_crossroads'],
         activities: [
             { type: 'skilling', id: 'south_meadow_road_tree', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 0.8, xp: 25 }], resourceCount: { min: 1, max: 2 }, respawnTime: 12000, gatherTime: 2000 },
             { type: 'skilling', id: 'south_meadow_road_tree_2', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 0.8, xp: 25 }], resourceCount: { min: 1, max: 2 }, respawnTime: 12000, gatherTime: 2000 },

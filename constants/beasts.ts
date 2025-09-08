@@ -1,5 +1,3 @@
-
-
 import { Monster, MonsterType } from '../types';
 
 export const beasts: Monster[] = [
@@ -30,6 +28,7 @@ export const beasts: Monster[] = [
         iconUrl: '/assets/npcChatHeads/chicken.png',
         drops: [ { itemId: 'raw_chicken', chance: 1, minQuantity: 1, maxQuantity: 1 }, { itemId: 'bones', chance: 1, minQuantity: 1, maxQuantity: 1 }, { itemId: 'feathers', chance: 1, minQuantity: 1, maxQuantity: 20 }, ],
         monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 10000, aggressive: false, attackStyle: 'stab',
+        customMaxHit: 0,
     },
     {
         id: 'wild_boar', name: 'Wild Boar', level: 6, maxHp: 22, attack: 7,

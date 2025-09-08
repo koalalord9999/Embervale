@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Monster, PlayerSkill, SkillName, Equipment, CombatStance, WeaponType, MonsterType } from '../../types';
 import { MONSTERS, ITEMS, rollOnLootTable } from '../../constants';
@@ -341,7 +339,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                 if (evasionBuff) totalDefence = Math.floor(totalDefence * (1 + evasionBuff.value / 100));
 
                 const monsterAccuracy = calculateAccuracy(monster.attack, totalDefence);
-                const monsterMaxHit = Math.floor(monster.attack / 4) + 1;
+                const monsterMaxHit = monster.customMaxHit != null ? monster.customMaxHit : Math.floor(monster.attack / 4) + 1;
                 let monsterDamage = 0;
                 if (Math.random() < monsterAccuracy) {
                     monsterDamage = Math.floor(Math.random() * (monsterMaxHit + 1));

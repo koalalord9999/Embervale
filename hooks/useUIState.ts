@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { ActivePanel, SkillName, InventorySlot, ActiveCraftingAction, DialogueNode, CraftingContext } from '../types';
+import { ActivePanel, SkillName, InventorySlot, ActiveCraftingAction, DialogueNode, CraftingContext, Equipment } from '../types';
 import { ContextMenuOption } from '../components/common/ContextMenu';
 
 export interface TooltipState {
@@ -62,7 +62,7 @@ export const useUIState = () => {
     const [activeQuestDetailId, setActiveQuestDetailId] = useState<string | null>(null);
 
     // New state for equipment overlays
-    const [isEquipmentStatsOpen, setIsEquipmentStatsOpen] = useState<boolean>(false);
+    const [equipmentStats, setEquipmentStats] = useState<Equipment | null>(null);
     const [isItemsOnDeathOpen, setIsItemsOnDeathOpen] = useState<boolean>(false);
     const [isPriceCheckerOpen, setIsPriceCheckerOpen] = useState<boolean>(false);
     const [isAtlasViewOpen, setIsAtlasViewOpen] = useState<boolean>(false);
@@ -96,7 +96,7 @@ export const useUIState = () => {
         setActiveSkillGuide(null);
         setActiveCraftingAction(null);
         setActiveQuestDetailId(null);
-        setIsEquipmentStatsOpen(false);
+        setEquipmentStats(null);
         setIsItemsOnDeathOpen(false);
         setIsPriceCheckerOpen(false);
         setIsAtlasViewOpen(false);
@@ -124,7 +124,7 @@ export const useUIState = () => {
         activeSkillGuide, setActiveSkillGuide,
         activeCraftingAction, setActiveCraftingAction,
         activeQuestDetailId, setActiveQuestDetailId,
-        isEquipmentStatsOpen, setIsEquipmentStatsOpen,
+        equipmentStats, setEquipmentStats,
         isItemsOnDeathOpen, setIsItemsOnDeathOpen,
         isPriceCheckerOpen, setIsPriceCheckerOpen,
         isAtlasViewOpen, setIsAtlasViewOpen,

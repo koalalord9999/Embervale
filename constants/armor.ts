@@ -316,6 +316,34 @@ export const armor: Item[] = [
             strengthBonus: 0, rangedStrength: 0, magicDamageBonus: 0, requiredLevels: [{ skill: SkillName.Defence, level: 1 }],
         }
     },
+    // Jewelry
+    {
+        id: 'silver_ring', name: 'Silver Ring', description: 'A simple silver ring.', stackable: false, value: 600,
+        iconUrl: 'https://api.iconify.design/game-icons:ring.svg', material: 'silver',
+        equipment: {
+            slot: EquipmentSlot.Ring, stabAttack: 0, slashAttack: 0, crushAttack: 0, rangedAttack: 0, magicAttack: 0,
+            stabDefence: 0, slashDefence: 0, crushDefence: 0, rangedDefence: 0, magicDefence: 0,
+            strengthBonus: 0, rangedStrength: 0, magicDamageBonus: 0,
+        },
+    },
+    {
+        id: 'silver_necklace', name: 'Silver Necklace', description: 'A simple silver necklace.', stackable: false, value: 675,
+        iconUrl: 'https://api.iconify.design/game-icons:necklace.svg', material: 'silver',
+        equipment: {
+            slot: EquipmentSlot.Necklace, stabAttack: 0, slashAttack: 0, crushAttack: 0, rangedAttack: 0, magicAttack: 0,
+            stabDefence: 0, slashDefence: 0, crushDefence: 0, rangedDefence: 0, magicDefence: 0,
+            strengthBonus: 0, rangedStrength: 0, magicDamageBonus: 0,
+        },
+    },
+    {
+        id: 'silver_amulet', name: 'Silver Amulet', description: 'A simple silver amulet on a string.', stackable: false, value: 800,
+        iconUrl: 'https://api.iconify.design/game-icons:gem-pendant.svg', material: 'silver',
+        equipment: {
+            slot: EquipmentSlot.Necklace, stabAttack: 0, slashAttack: 0, crushAttack: 0, rangedAttack: 0, magicAttack: 0,
+            stabDefence: 0, slashDefence: 0, crushDefence: 0, rangedDefence: 0, magicDefence: 0,
+            strengthBonus: 0, rangedStrength: 0, magicDamageBonus: 0,
+        },
+    },
     // Other
     {
         id: 'wooden_shield', name: 'Wooden Shield', description: 'A simple wooden shield.', stackable: false, value: 15,

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { InventorySlot } from '../../../types';
 import { ITEMS, getIconClassName } from '../../../constants';
@@ -58,6 +59,9 @@ const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose,
         const tooltipContent = (
             <div>
                 <p className="font-bold text-yellow-300">{itemData.name}</p>
+                {itemData.stackable && item.quantity > 999 && (
+                    <p className="text-sm mt-1 text-gray-400">Quantity: {item.quantity.toLocaleString()}</p>
+                )}
                 <p className="text-sm text-gray-300">Value (each): {itemData.value.toLocaleString()}</p>
                 <p className="text-sm text-gray-300">Total Value: {(itemData.value * item.quantity).toLocaleString()}</p>
             </div>
@@ -79,20 +83,30 @@ const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose,
                     {/* Price Checker Area */}
                     <div className="w-1/2 flex flex-col">
                          <div className="flex-grow grid grid-cols-4 gap-2 bg-black/40 p-2 rounded-lg border border-gray-600">
-                           {checkerGrid.map((slot, index) => (
+                           {checkerGrid.map((slot, index) => {
+                                const item = slot ? ITEMS[slot.itemId] : null;
+                                return (
                                 <div key={index} className="w-full aspect-square bg-gray-900 border border-gray-700 rounded-md p-1 relative cursor-pointer" onClick={() => slot && removeFromChecker(index)} onMouseEnter={(e) => slot && handleMouseEnter(e, slot)} onMouseLeave={() => setTooltip(null)}>
-                                     {slot && ITEMS[slot.itemId] && (
+                                     {slot && item && (
                                         <>
-                                            <img src={ITEMS[slot.itemId].iconUrl} alt={ITEMS[slot.itemId].name} className={`w-full h-full ${getIconClassName(ITEMS[slot.itemId])}`} />
+                                            <img src={item.iconUrl} alt={item.name} className={`w-full h-full ${getIconClassName(item)}`} />
                                             {slot.quantity > 1 && (
                                                 <span className="absolute bottom-0 right-1 text-xs font-bold text-yellow-300" style={{ textShadow: '1px 1px 1px black' }}>
                                                     {slot.quantity > 1000 ? `${Math.floor(slot.quantity / 1000)}k` : slot.quantity}
                                                 </span>
                                             )}
+                                            {(item.id.startsWith('grimy_') || item.id.startsWith('clean_') || item.id.endsWith('_potion_unf')) && (
+                                                <span className="absolute bottom-0.5 left-0 right-0 text-center text-xs font-bold text-yellow-400 pointer-events-none" style={{ textShadow: '1px 1px 2px black', lineHeight: '1' }}>
+                                                    {item.id.startsWith('grimy_')
+                                                        ? `G${item.name.split(' ')[1]?.substring(0, 3) ?? ''}`
+                                                        : item.name.split(' ')[0].substring(0, 4)}
+                                                </span>
+                                            )}
                                         </>
                                     )}
                                 </div>
-                           ))}
+                               )
+                           })}
                         </div>
                         <div className="mt-2 p-2 text-center bg-gray-900 rounded-md border border-gray-600">
                              Total Value: <span className="font-bold text-yellow-400">{totalValue.toLocaleString()} Coins</span>
@@ -101,20 +115,30 @@ const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose,
                     {/* Inventory Area */}
                      <div className="w-1/2 flex flex-col">
                         <div className="flex-grow grid grid-cols-5 gap-2 bg-black/40 p-2 rounded-lg border border-gray-600">
-                            {inventoryGrid.map((slot, index) => (
+                            {inventoryGrid.map((slot, index) => {
+                                const item = slot ? ITEMS[slot.itemId] : null;
+                                return (
                                 <div key={index} className="w-full aspect-square bg-gray-900 border border-gray-700 rounded-md p-1 relative cursor-pointer" onClick={() => slot && addToChecker(slot, index)} onMouseEnter={(e) => slot && handleMouseEnter(e, slot)} onMouseLeave={() => setTooltip(null)}>
-                                     {slot && ITEMS[slot.itemId] && (
+                                     {slot && item && (
                                         <>
-                                            <img src={ITEMS[slot.itemId].iconUrl} alt={ITEMS[slot.itemId].name} className={`w-full h-full ${getIconClassName(ITEMS[slot.itemId])}`} />
+                                            <img src={item.iconUrl} alt={item.name} className={`w-full h-full ${getIconClassName(item)}`} />
                                             {slot.quantity > 1 && (
                                                 <span className="absolute bottom-0 right-1 text-xs font-bold text-yellow-300" style={{ textShadow: '1px 1px 1px black' }}>
                                                     {slot.quantity > 1000 ? `${Math.floor(slot.quantity / 1000)}k` : slot.quantity}
                                                 </span>
                                             )}
+                                            {(item.id.startsWith('grimy_') || item.id.startsWith('clean_') || item.id.endsWith('_potion_unf')) && (
+                                                <span className="absolute bottom-0.5 left-0 right-0 text-center text-xs font-bold text-yellow-400 pointer-events-none" style={{ textShadow: '1px 1px 2px black', lineHeight: '1' }}>
+                                                    {item.id.startsWith('grimy_')
+                                                        ? `G${item.name.split(' ')[1]?.substring(0, 3) ?? ''}`
+                                                        : item.name.split(' ')[0].substring(0, 4)}
+                                                </span>
+                                            )}
                                         </>
                                     )}
                                 </div>
-                            ))}
+                                )
+                            })}
                         </div>
                     </div>
                 </div>

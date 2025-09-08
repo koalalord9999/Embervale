@@ -37,6 +37,7 @@ export interface Item {
   stackable: boolean;
   value: number; // Value for selling/buying
   iconUrl: string;
+  charges?: number;
   equipment?: EquipmentStats & { slot: EquipmentSlot };
   consumable?: { 
     healAmount?: number; 
@@ -51,14 +52,13 @@ export interface Item {
         poison_damage?: number;
         style?: 'melee' | 'ranged' | 'all';
     }[]; 
-    // FIX: Moved potionEffect into the consumable object, as it describes a consumable's effect.
     potionEffect?: { description: string };
   };
   buryable?: { prayerXp: number };
   tool?: { type: ToolType; power: number };
   cleanable?: { cleanItemId: string; xp: number };
   emptyable?: { emptyItemId: string };
-  material?: 'bronze' | 'iron' | 'steel' | 'mithril' | 'adamantite' | 'runic' | 'aquatite' | 'copper' | 'tin' | 'iron-ore' | 'mithril-ore' | 'adamantite-ore' | 'titanium-ore' | 'silver' | 'coal' | 'raw-fish' | 'raw-meat' | 'cooked-fish' | 'cooked-meat' | 'burnt' | 'sapphire' | 'uncut-sapphire' | 'emerald' | 'uncut-emerald' | 'ruby' | 'uncut-ruby' | 'leather' | 'gold' | 'grimy-herb' | 'clean-herb' | 'unfinished-potion' | 'potion';
+  material?: 'bronze' | 'iron' | 'steel' | 'mithril' | 'adamantite' | 'runic' | 'aquatite' | 'copper' | 'tin' | 'iron-ore' | 'mithril-ore' | 'adamantite-ore' | 'titanium-ore' | 'silver' | 'coal' | 'raw-fish' | 'raw-meat' | 'cooked-fish' | 'cooked-meat' | 'burnt' | 'sapphire' | 'uncut-sapphire' | 'emerald' | 'uncut-emerald' | 'ruby' | 'uncut-ruby' | 'leather' | 'gold' | 'wood-normal' | 'wood-oak' | 'wood-willow' | 'wood-feywood' | 'wood-yew' | 'wood-driftwood' | 'wood-mahogany' | 'grimy-herb' | 'clean-herb' | 'unfinished-potion' | 'potion' | 'vial' | 'vial-water' | 'potion-attack' | 'potion-strength' | 'potion-defence' | 'potion-ranged' | 'potion-magic' | 'potion-super-attack' | 'potion-super-strength' | 'potion-super-defence' | 'potion-super-ranged' | 'potion-super-magic' | 'potion-antipoison' | 'potion-super-antipoison' | 'potion-poison' | 'potion-restore' | 'potion-prayer' | 'potion-combo' | 'potion-mining' | 'potion-smithing' | 'potion-woodcutting' | 'potion-fletching' | 'potion-crafting' | 'potion-fishing' | 'potion-herblore' | 'potion-antifire' | 'potion-stamina';
 }
 
 export interface InventorySlot {
@@ -102,4 +102,5 @@ export interface Monster {
   specialAttacks?: { name: string; chance: number; effect: 'damage_multiplier'; value: number }[];
   aggressive: boolean;
   alwaysAggressive?: boolean;
+  customMaxHit?: number;
 }

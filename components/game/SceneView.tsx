@@ -1,11 +1,12 @@
 
+
 import React, { useMemo, useEffect, useState } from 'react';
 import { POI, POIActivity, PlayerQuestState, SkillName, InventorySlot, ResourceNodeState, PlayerRepeatableQuest, SkillRequirement, PlayerSkill, DialogueNode } from '../../types';
 import { MONSTERS, QUESTS, SHOPS, ITEMS } from '../../constants';
 import { POIS } from '../../data/pois';
 import Button from '../common/Button';
 import { ContextMenuOption } from '../common/ContextMenu';
-import { MakeXPrompt, QuestDialogueState, InteractiveDialogueState, TooltipState } from '../../hooks/useUIState';
+import { MakeXPrompt, QuestDialogueState, InteractiveDialogueState, TooltipState, useUIState } from '../../hooks/useUIState';
 import ProgressBar from '../common/ProgressBar';
 import { useSkillingAnimations } from '../../hooks/useSkillingAnimations';
 import { useSceneInteractions } from '../../hooks/useSceneInteractions';
@@ -25,7 +26,6 @@ interface SceneViewProps {
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
     setTooltip: (tooltip: TooltipState | null) => void;
     addLog: (message: string) => void;
-    onSmelt: (quantity: number) => void;
     startQuest: (questId: string, addLog: (message: string) => void) => void;
     hasItems: (items: { itemId: string; quantity: number }[]) => boolean;
     resourceNodeStates: Record<string, ResourceNodeState>;
@@ -44,6 +44,8 @@ interface SceneViewProps {
     monsterRespawnTimers: Record<string, number>;
     setActiveQuestDialogue: (dialogue: QuestDialogueState | null) => void;
     setActiveInteractiveDialogue: (dialogue: InteractiveDialogueState | null) => void;
+    onDepositBackpack: () => void;
+    ui: ReturnType<typeof useUIState>; // Pass the whole ui object
 }
 
 const CleanupProgress: React.FC<{
@@ -82,7 +84,7 @@ const CleanupProgress: React.FC<{
 
 
 const SceneView: React.FC<SceneViewProps> = (props) => {
-    const { poi, unlockedPois, onNavigate, onActivity, onStartCombat, playerQuests, inventory, completeQuestStage, setContextMenu, setMakeXPrompt, setTooltip, addLog, onSmelt, startQuest, hasItems, resourceNodeStates, activeSkillingNodeId, onToggleSkilling, initializeNodeState, skillingTick, getSuccessChance, activeRepeatableQuest, activeCleanup, onStartInteractQuest, onCancelInteractQuest, clearedSkillObstacles, onClearObstacle, skills, monsterRespawnTimers, setActiveQuestDialogue, setActiveInteractiveDialogue } = props;
+    const { poi, unlockedPois, onNavigate, onActivity, onStartCombat, playerQuests, inventory, completeQuestStage, setContextMenu, setMakeXPrompt, setTooltip, addLog, startQuest, hasItems, resourceNodeStates, activeSkillingNodeId, onToggleSkilling, initializeNodeState, skillingTick, getSuccessChance, activeRepeatableQuest, activeCleanup, onStartInteractQuest, onCancelInteractQuest, clearedSkillObstacles, onClearObstacle, skills, monsterRespawnTimers, setActiveQuestDialogue, setActiveInteractiveDialogue, onDepositBackpack, ui } = props;
     const { depletedNodesAnimating } = useSkillingAnimations(resourceNodeStates, poi.activities);
     const [countdown, setCountdown] = useState<Record<string, number>>({});
     const [shakingNodeId, setShakingNodeId] = useState<string | null>(null);
@@ -160,6 +162,27 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
             </Button>
         )
     }
+
+    const createFurnaceContextMenu = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setContextMenu({
+            options: [
+                { label: 'Smelt', onClick: () => ui.openCraftingView({ type: 'furnace' }) },
+                { label: 'Craft Jewelry', onClick: () => ui.openCraftingView({ type: 'jewelry' }) }
+            ],
+            position: { x: e.clientX, y: e.clientY }
+        });
+    };
+
+    const createBankContextMenu = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setContextMenu({
+            options: [
+                { label: 'Quick Deposit', onClick: onDepositBackpack },
+            ],
+            position: { x: e.clientX, y: e.clientY }
+        });
+    };
 
     const getActivityButton = (activity: POIActivity, index: number) => {
         if (activity.type === 'skilling') {
@@ -309,8 +332,7 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
                 </Button>
             );
         }
-
-        const isFurnace = activity.type === 'furnace';
+        
         const isQuestStart = activity.type === 'quest_start' && playerQuests.some(q => q.questId === activity.questId);
         if (isQuestStart) return null;
         
@@ -332,37 +354,23 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
             case 'interactive_dialogue': text = `Talk to ${activity.dialogue[activity.startNode].npcName}`; break;
         }
 
+        const isFurnace = activity.type === 'furnace';
+        const isBank = activity.type === 'bank';
+
         return (
-            <Button 
-                key={`${activity.type}-${index}`} 
-                onClick={() => handleActivityClick(activity)}
-                onContextMenu={(e) => {
-                    if (isFurnace) createSmeltingContextMenu(e);
-                }}
+            <Button
+                key={`${activity.type}-${index}`}
+                onClick={!isFurnace ? () => handleActivityClick(activity) : undefined}
+                onContextMenu={
+                    isFurnace ? createFurnaceContextMenu :
+                    isBank ? createBankContextMenu :
+                    undefined
+                }
             >
                 {text}
             </Button>
         );
     }
-    
-    const createSmeltingContextMenu = (e: React.MouseEvent) => {
-        e.preventDefault();
-        const copperCount = inventory.filter(s => s.itemId === 'copper_ore').length;
-        const tinCount = inventory.filter(s => s.itemId === 'tin_ore').length;
-        const maxSmelt = Math.min(copperCount, tinCount);
-
-        const options: ContextMenuOption[] = [
-            { label: 'Smelt 1', onClick: () => onSmelt(1), disabled: maxSmelt < 1 },
-            { label: 'Smelt 5', onClick: () => onSmelt(5), disabled: maxSmelt < 5 },
-            { label: 'Smelt All', onClick: () => onSmelt(maxSmelt), disabled: maxSmelt < 1 },
-            { 
-                label: 'Smelt X...', 
-                onClick: () => setMakeXPrompt({ title: 'Smelt Bronze Bars', max: maxSmelt, onConfirm: onSmelt }), 
-                disabled: maxSmelt < 1 
-            },
-        ];
-        setContextMenu({ options, position: { x: e.clientX, y: e.clientY } });
-    };
 
     const renderTravelOption = (connId: string) => {
         const obstacleId = `${poi.id}-${connId}`;

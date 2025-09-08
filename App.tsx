@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useUIState } from './hooks/useUIState';
 import { useGameStateManager } from './hooks/useGameStateManager';
@@ -86,7 +87,7 @@ const App: React.FC = () => {
             {ui.isImportModalOpen && <ImportModal onImport={loadFromImportedData} onClose={ui.closeImportModal} />}
             {ui.activeSkillGuide && <SkillGuideView activeSkill={ui.activeSkillGuide} setActiveSkill={ui.setActiveSkillGuide} onClose={ui.closeSkillGuide} playerSkills={initialState.skills as any[]} />}
             {ui.activeQuestDetailId && <QuestDetailView questId={ui.activeQuestDetailId} playerQuests={initialState.playerQuests} onClose={() => ui.setActiveQuestDetailId(null)} />}
-            {ui.isEquipmentStatsOpen && <EquipmentStatsView equipment={initialState.equipment} onClose={() => ui.setIsEquipmentStatsOpen(false)} />}
+            {ui.equipmentStats && <EquipmentStatsView equipment={ui.equipmentStats} onClose={() => ui.setEquipmentStats(null)} />}
             {ui.isItemsOnDeathOpen && <ItemsOnDeathView coins={initialState.coins} onClose={() => ui.setIsItemsOnDeathOpen(false)} />}
             {ui.isPriceCheckerOpen && <PriceCheckerView inventory={initialState.inventory} onClose={() => ui.setIsPriceCheckerOpen(false)} setTooltip={ui.setTooltip} />}
         </div>

@@ -2,7 +2,6 @@
 
 import { useCallback } from 'react';
 import { InventorySlot, PlayerSkill, SkillName, ActiveCraftingAction, Item, CraftingContext } from '../types';
-// FIX: Import the HERBS constant.
 import { ITEMS, FLETCHING_RECIPES, HERBLORE_RECIPES, HERBS, INVENTORY_CAPACITY } from '../constants';
 import { MakeXPrompt } from './useUIState';
 
@@ -235,12 +234,42 @@ export const useItemActions = (props: UseItemActionsProps) => {
         // Herblore: Making finished potions
         const finRecipe = HERBLORE_RECIPES.finished.find(r => (r.unfinishedPotionId === usedId && r.secondaryId === targetId) || (r.unfinishedPotionId === targetId && r.secondaryId === usedId));
         if (finRecipe) {
-            if (herbloreLevel < finRecipe.level) { addLog(`You need a Herblore level of ${finRecipe.level} to make this.`); return; }
-            modifyItem(finRecipe.unfinishedPotionId, -1, true);
-            modifyItem(finRecipe.secondaryId, -1, true);
-            modifyItem(finRecipe.finishedPotionId, 1);
-            addXp(SkillName.Herblore, finRecipe.xp);
-            addLog(`You mix in the ${ITEMS[finRecipe.secondaryId].name} and create a ${ITEMS[finRecipe.finishedPotionId].name}.`);
+            if (herbloreLevel < finRecipe.level) {
+                addLog(`You need a Herblore level of ${finRecipe.level} to make this.`);
+                return;
+            }
+    
+            const unfPotionCount = getItemCount(finRecipe.unfinishedPotionId);
+            const secondaryCount = getItemCount(finRecipe.secondaryId);
+            const maxCreatable = Math.min(unfPotionCount, secondaryCount);
+    
+            if (maxCreatable < 1) {
+                addLog("You don't have enough ingredients.");
+                return;
+            }
+    
+            setMakeXPrompt({
+                title: `Create ${ITEMS[finRecipe.finishedPotionId].name}`,
+                max: maxCreatable,
+                onConfirm: (quantity) => {
+                    if (activeCraftingAction) {
+                        addLog("You are already busy crafting something else.");
+                        return;
+                    }
+                    if (quantity > 0) {
+                        addLog(`You begin mixing the potions...`);
+                        setActiveCraftingAction({
+                            recipeId: finRecipe.finishedPotionId,
+                            recipeType: 'herblore-finished',
+                            totalQuantity: quantity,
+                            completedQuantity: 0,
+                            startTime: Date.now(),
+                            duration: 800,
+                            payload: { unfinishedPotionId: finRecipe.unfinishedPotionId, secondaryId: finRecipe.secondaryId }
+                        });
+                    }
+                }
+            });
             return;
         }
 
@@ -257,6 +286,19 @@ export const useItemActions = (props: UseItemActionsProps) => {
                 modifyItem('clean_coin_pouch', 1);
                 addXp(SkillName.Herblore, 15);
                 addLog("You use the cleanser to scrub the grime off the pouch.");
+            }
+            return;
+        }
+
+        // Amulet Stringing
+        const isSilverAmulet = (usedId === 'silver_amulet_u' && targetId === 'ball_of_wool') || (targetId === 'silver_amulet_u' && usedId === 'ball_of_wool');
+        if (isSilverAmulet) {
+            if (hasItems([{ itemId: 'silver_amulet_u', quantity: 1 }, { itemId: 'ball_of_wool', quantity: 1 }])) {
+                modifyItem('silver_amulet_u', -1, true);
+                modifyItem('ball_of_wool', -1, true);
+                modifyItem('silver_amulet', 1);
+                addXp(SkillName.Crafting, 5);
+                addLog("You string the silver amulet.");
             }
             return;
         }

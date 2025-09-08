@@ -9,7 +9,7 @@ interface QuestBoardViewProps {
     boardId: string;
     boardQuests: GeneratedRepeatableQuest[];
     activePlayerQuest: PlayerRepeatableQuest | null;
-    inventory: InventorySlot[];
+    inventory: (InventorySlot | null)[];
     onAccept: (quest: GeneratedRepeatableQuest, boardId: string) => void;
     onTurnIn: () => void;
     onExit: () => void;
@@ -39,7 +39,7 @@ const QuestBoardView: React.FC<QuestBoardViewProps> = ({ boardId, boardQuests, a
         if (quest.type !== 'gather') return null;
         const itemId = quest.target.itemId!;
         const currentAmount = inventory.reduce((total, slot) => {
-            return slot.itemId === itemId ? total + slot.quantity : total;
+            return slot && slot.itemId === itemId ? total + slot.quantity : total;
         }, 0);
         return { current: currentAmount, required: quest.requiredQuantity };
     };

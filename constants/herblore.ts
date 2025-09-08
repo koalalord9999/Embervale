@@ -53,6 +53,7 @@ export const HERBLORE_RECIPES = {
         { unfinishedPotionId: 'bog_nettle_potion_unf', secondaryId: 'consecrated_dust', finishedPotionId: 'prayer_potion', level: 30, xp: 75 },
         { unfinishedPotionId: 'bog_nettle_potion_unf', secondaryId: 'iron_ore', finishedPotionId: 'smithing_potion', level: 32, xp: 78 },
         { unfinishedPotionId: 'bog_nettle_potion_unf', secondaryId: 'boar_tusk', finishedPotionId: 'combo_brew', level: 42, xp: 105 },
+        { unfinishedPotionId: 'bog_nettle_potion_unf', secondaryId: 'glimmerhorn_dust', finishedPotionId: 'pouch_cleanser', level: 38, xp: 95 },
         // Gloom Moss (Lvl 40)
         { unfinishedPotionId: 'gloom_moss_potion_unf', secondaryId: 'bloodroot_tendril', finishedPotionId: 'super_attack_potion', level: 40, xp: 100 },
         { unfinishedPotionId: 'gloom_moss_potion_unf', secondaryId: 'willow_logs', finishedPotionId: 'fletching_potion', level: 43, xp: 102 },

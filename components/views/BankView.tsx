@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { InventorySlot } from '../../types';
 import { ITEMS, BANK_CAPACITY, getIconClassName } from '../../constants';
@@ -134,6 +135,9 @@ const BankView: React.FC<BankViewProps> = ({ bank, onClose, onWithdraw, onDeposi
                                         <div>
                                             <p className="font-bold text-yellow-300">{item.name}</p>
                                             <p className="text-sm text-gray-300">{item.description}</p>
+                                            {item.stackable && slot.quantity > 999 && (
+                                                <p className="text-sm mt-1 text-gray-400">Quantity: {slot.quantity.toLocaleString()}</p>
+                                            )}
                                         </div>
                                     );
                                     setTooltip({ content: tooltipContent, position: { x: e.clientX, y: e.clientY } });
@@ -146,6 +150,13 @@ const BankView: React.FC<BankViewProps> = ({ bank, onClose, onWithdraw, onDeposi
                                         <span className="absolute bottom-0 right-1 text-xs font-bold text-yellow-300" style={{ textShadow: '1px 1px 1px black' }}>
                                             {formatQuantity(slot.quantity)}
                                         </span>
+                                        {(item.id.startsWith('grimy_') || item.id.startsWith('clean_') || item.id.endsWith('_potion_unf')) && (
+                                            <span className="absolute bottom-0.5 left-0 right-0 text-center text-xs font-bold text-yellow-400 pointer-events-none" style={{ textShadow: '1px 1px 2px black', lineHeight: '1' }}>
+                                                {item.id.startsWith('grimy_')
+                                                    ? `G${item.name.split(' ')[1]?.substring(0, 3) ?? ''}`
+                                                    : item.name.split(' ')[0].substring(0, 4)}
+                                            </span>
+                                        )}
                                     </>
                                 )}
                             </div>

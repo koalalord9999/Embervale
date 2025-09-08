@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useRef } from 'react';
 import { PlayerSkill, SkillName, InventorySlot, ActiveCraftingAction } from '../types';
-import { ITEMS, SMITHING_RECIPES, COOKING_RECIPES, INVENTORY_CAPACITY, CRAFTING_RECIPES, FLETCHING_RECIPES, GEM_CUTTING_RECIPES, SPINNING_RECIPES, HERBLORE_RECIPES } from '../constants';
+import { ITEMS, SMITHING_RECIPES, COOKING_RECIPES, INVENTORY_CAPACITY, CRAFTING_RECIPES, FLETCHING_RECIPES, GEM_CUTTING_RECIPES, SPINNING_RECIPES, HERBLORE_RECIPES, JEWELRY_CRAFTING_RECIPES } from '../constants';
 
 interface UseCraftingProps {
     skills: PlayerSkill[];
@@ -38,27 +38,47 @@ export const useCrafting = (props: UseCraftingProps) => {
     }, [skills, hasItems, addLog, setActiveCraftingAction]);
 
     const handleCrafting = useCallback((recipeId: string, quantity: number = 1) => {
-        const recipe = CRAFTING_RECIPES.find(r => r.itemId === recipeId) ?? SPINNING_RECIPES.find(r => r.itemId === recipeId);
-        if (!recipe) { addLog("You don't know how to craft that."); return; }
-        const craftingLevel = skills.find(s => s.name === SkillName.Crafting)?.level ?? 1;
-        if (craftingLevel < recipe.level) { addLog(`You need a Crafting level of ${recipe.level} to make this.`); return; }
-        if (!hasItems(recipe.ingredients)) { addLog(`You don't have the required ingredients.`); return; }
+        const leatherRecipe = CRAFTING_RECIPES.find(r => r.itemId === recipeId);
+        const jewelryRecipe = JEWELRY_CRAFTING_RECIPES.find(r => r.itemId === recipeId);
 
-        let duration = 1200; // Default
-        if (recipe.itemId.startsWith('leather_')) {
+        if (leatherRecipe) {
+            const recipe = leatherRecipe;
+            const craftingLevel = skills.find(s => s.name === SkillName.Crafting)?.level ?? 1;
+            if (craftingLevel < recipe.level) { addLog(`You need a Crafting level of ${recipe.level} to make this.`); return; }
+            if (!hasItems(recipe.ingredients)) { addLog(`You don't have the required ingredients.`); return; }
+
             const leatherIngredient = recipe.ingredients.find(ing => ing.itemId === 'leather');
-            duration = (leatherIngredient?.quantity ?? 1) * 1200;
-        }
+            const duration = (leatherIngredient?.quantity ?? 1) * 1200;
 
-        addLog(`You begin crafting...`);
-        setActiveCraftingAction({
-            recipeId,
-            recipeType: 'crafting',
-            totalQuantity: quantity,
-            completedQuantity: 0,
-            startTime: Date.now(),
-            duration,
-        });
+            addLog(`You begin crafting...`);
+            setActiveCraftingAction({
+                recipeId,
+                recipeType: 'crafting',
+                totalQuantity: quantity,
+                completedQuantity: 0,
+                startTime: Date.now(),
+                duration,
+            });
+        } else if (jewelryRecipe) {
+            const recipe = jewelryRecipe;
+            const smithingLevel = skills.find(s => s.name === SkillName.Smithing)?.level ?? 1;
+            if (smithingLevel < recipe.level) { addLog(`You need a Smithing level of ${recipe.level} to make this.`); return; }
+            
+            const requiredItems = [{ itemId: recipe.barType, quantity: recipe.barsRequired }, { itemId: recipe.mouldId, quantity: 1 }];
+            if (!hasItems(requiredItems)) { addLog(`You don't have the required ingredients.`); return; }
+
+            addLog(`You begin crafting...`);
+            setActiveCraftingAction({
+                recipeId,
+                recipeType: 'jewelry',
+                totalQuantity: quantity,
+                completedQuantity: 0,
+                startTime: Date.now(),
+                duration: 1800,
+            });
+        } else {
+            addLog("You don't know how to craft that.");
+        }
     }, [skills, hasItems, addLog, setActiveCraftingAction]);
 
     const handleGemCutting = useCallback((cutId: string, quantity: number = 1) => {
@@ -201,6 +221,17 @@ export const useCrafting = (props: UseCraftingProps) => {
                     }
                 }
                 break;
+            case 'jewelry':
+                recipe = JEWELRY_CRAFTING_RECIPES.find(r => r.itemId === action.recipeId);
+                if (recipe) {
+                    if (!hasItems([{itemId: recipe.mouldId, quantity: 1}])) {
+                        return { success: false, logMessage: "You need the correct mould." };
+                    }
+                    ingredients = [{itemId: recipe.barType, quantity: recipe.barsRequired}];
+                    xp = { skill: SkillName.Smithing, amount: recipe.xp };
+                    levelReq = { skill: SkillName.Smithing, level: recipe.level };
+                }
+                break;
             case 'fletching-carve':
                 recipe = FLETCHING_RECIPES.carving[action.payload!.logId!]?.find(r => r.itemId === action.recipeId);
                  if (recipe) {
@@ -270,6 +301,17 @@ export const useCrafting = (props: UseCraftingProps) => {
                     levelReq = { skill: SkillName.Herblore, level: recipe.level };
                 }
                 break;
+            case 'herblore-finished':
+                recipe = HERBLORE_RECIPES.finished.find(r => r.finishedPotionId === action.recipeId && r.unfinishedPotionId === action.payload?.unfinishedPotionId && r.secondaryId === action.payload?.secondaryId);
+                if (recipe) {
+                    ingredients = [{itemId: recipe.unfinishedPotionId, quantity: 1}, {itemId: recipe.secondaryId, quantity: 1}];
+                    const finishedItemData = ITEMS[recipe.finishedPotionId];
+                    const quantityToGive = finishedItemData.charges ?? 1;
+                    product = { itemId: recipe.finishedPotionId, quantity: quantityToGive };
+                    xp = { skill: SkillName.Herblore, amount: recipe.xp };
+                    levelReq = { skill: SkillName.Herblore, level: recipe.level };
+                }
+                break;
             case 'cooking': {
                 recipe = COOKING_RECIPES.find(r => r.itemId === action.recipeId);
                 if (!recipe) return { success: false, logMessage: "Could not find cooking recipe." };
@@ -278,24 +320,19 @@ export const useCrafting = (props: UseCraftingProps) => {
                 if (cookingLevel < recipe.level) return { success: false, logMessage: `You need a Cooking level of ${recipe.level}.` };
                 if (!hasItems(recipe.ingredients)) return { success: false, logMessage: "You ran out of ingredients." };
                 
-                // --- NEW INVENTORY CHECK LOGIC FOR COOKING ---
                 let slotsFreed = 0;
                 for (const ing of recipe.ingredients) {
                     const itemData = ITEMS[ing.itemId];
                     if (itemData.stackable) {
                         const invSlot = inventory.find(s => s && s.itemId === ing.itemId);
-                        // If the stack is fully consumed, a slot is freed
                         if (invSlot && invSlot.quantity <= ing.quantity) {
                             slotsFreed++;
                         }
                     } else {
-                        // Unstackable items free up one slot per item
                         slotsFreed += ing.quantity;
                     }
                 }
 
-                // Cooking produces one item (cooked or burnt), which is unstackable.
-                // It will take one new slot.
                 const slotsGained = 1;
 
                 const finalSlotCount = inventory.filter(Boolean).length - slotsFreed + slotsGained;
@@ -303,12 +340,9 @@ export const useCrafting = (props: UseCraftingProps) => {
                 if (finalSlotCount > INVENTORY_CAPACITY) {
                     return { success: false, logMessage: "You don't have enough inventory space for the finished product." };
                 }
-                // --- END NEW INVENTORY CHECK ---
 
-                // Consume ingredients
                 recipe.ingredients.forEach(ing => modifyItem(ing.itemId, -ing.quantity, true));
 
-                // Calculate success
                 const successChance = Math.min(0.95, 0.5 + (cookingLevel - recipe.level) * 0.02);
                 if (Math.random() < successChance) {
                     modifyItem(recipe.itemId, 1, true);
@@ -325,10 +359,9 @@ export const useCrafting = (props: UseCraftingProps) => {
         if (skillLevel < levelReq.level) return { success: false, logMessage: "Your level is too low." };
         if (!hasItems(ingredients)) return { success: false, logMessage: "You ran out of ingredients." };
 
-        // --- Start of new inventory check logic ---
         let slotsFreed = 0;
         for (const ing of ingredients) {
-            if (ing.quantity === 0) continue; // Skip presence-only checks
+            if (ing.quantity === 0) continue; 
             const itemData = ITEMS[ing.itemId];
             if (itemData.stackable) {
                 const invSlot = inventory.find(s => s && s.itemId === ing.itemId);
@@ -355,7 +388,6 @@ export const useCrafting = (props: UseCraftingProps) => {
         if (finalSlotCount > INVENTORY_CAPACITY) {
             return { success: false, logMessage: "You don't have enough inventory space for the finished product." };
         }
-        // --- End of new inventory check logic ---
 
         ingredients.forEach(ing => {
             if (ing.quantity > 0) modifyItem(ing.itemId, -ing.quantity, true)
@@ -370,22 +402,18 @@ export const useCrafting = (props: UseCraftingProps) => {
         return { success: true };
     }, [skills, hasItems, modifyItem, addXp, inventory, checkQuestProgressOnSpin]);
 
-    // Create a ref to hold the latest completeCraftingItem instance
     const completeCraftingItemRef = useRef(completeCraftingItem);
     useEffect(() => {
-        // Update the ref on every render to ensure the timeout closure has the latest functions
         completeCraftingItemRef.current = completeCraftingItem;
     });
 
-    // Time-based crafting logic
     useEffect(() => {
         if (!activeCraftingAction) return;
     
         const handle = setTimeout(() => {
-            // Use the ref to call the latest version of the function, which has access to the latest state
             const { success, logMessage } = completeCraftingItemRef.current(activeCraftingAction);
     
-            if (!success) { // Ran out of items, space, etc.
+            if (!success) { 
                 if(logMessage) addLog(logMessage);
                 setActiveCraftingAction(null);
                 return;
@@ -396,7 +424,10 @@ export const useCrafting = (props: UseCraftingProps) => {
     
             if (nextAction.completedQuantity >= nextAction.totalQuantity) {
                 const finalItem = ITEMS[nextAction.recipeId];
-                addLog(`You finished making ${nextAction.totalQuantity}x ${finalItem.name}.`);
+                const quantityText = (finalItem.charges && finalItem.charges > 1) ? "" : `${nextAction.totalQuantity}x `;
+                const logMessageText = (finalItem.charges && finalItem.charges > 1 && nextAction.totalQuantity === 1) ? `You finished making a ${finalItem.name}.` : `You finished making ${quantityText}${finalItem.name}.`
+
+                addLog(logMessageText);
                 setActiveCraftingAction(null);
             } else {
                 nextAction.startTime = Date.now();

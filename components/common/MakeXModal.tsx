@@ -10,14 +10,14 @@ interface MakeXModalProps {
 }
 
 const MakeXModal: React.FC<MakeXModalProps> = ({ title, maxQuantity, onConfirm, onCancel }) => {
-    const [quantity, setQuantity] = useState(1);
+    const [quantity, setQuantity] = useState(maxQuantity);
 
     useEffect(() => {
-        // Clamp initial quantity if max is less than 1
+        // When the modal opens or the max quantity changes, set the quantity to the max.
         if (maxQuantity < 1) {
             setQuantity(0);
         } else {
-            setQuantity(1);
+            setQuantity(maxQuantity);
         }
     }, [maxQuantity]);
 
@@ -68,6 +68,7 @@ const MakeXModal: React.FC<MakeXModalProps> = ({ title, maxQuantity, onConfirm, 
                         max={maxQuantity}
                         className="w-24 text-center text-xl p-2 bg-gray-900 border border-gray-500 rounded-md"
                         autoFocus
+                        onFocus={(e) => e.target.select()}
                     />
                     <span className="text-lg text-gray-400">/ {maxQuantity}</span>
                 </div>

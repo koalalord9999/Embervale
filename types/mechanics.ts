@@ -1,3 +1,4 @@
+
 export interface Shop {
     id: string;
     name: string;
@@ -27,6 +28,15 @@ export interface CraftingRecipe {
     ingredients: { itemId: string; quantity: number }[];
 }
 
+export interface JewelryRecipe {
+    itemId: string;
+    level: number;
+    xp: number;
+    barType: 'silver_bar' | 'gold_bar';
+    barsRequired: number;
+    mouldId: string;
+}
+
 export interface SkillGuideEntry {
     level: number;
     description: string;
@@ -36,7 +46,7 @@ export interface SkillGuideEntry {
 export interface ActiveCraftingAction {
     recipeId: string;
     // Distinguishes between different types of recipes that might share item IDs
-    recipeType: 'smithing-bar' | 'smithing-item' | 'fletching-carve' | 'fletching-string' | 'fletching-headless' | 'fletching-tip' | 'crafting' | 'gem-cutting' | 'spinning' | 'cooking' | 'herblore-unfinished' | 'herblore-finished';
+    recipeType: 'smithing-bar' | 'smithing-item' | 'fletching-carve' | 'fletching-string' | 'fletching-headless' | 'fletching-tip' | 'crafting' | 'gem-cutting' | 'spinning' | 'cooking' | 'herblore-unfinished' | 'herblore-finished' | 'jewelry';
     totalQuantity: number;
     completedQuantity: number;
     startTime: number;

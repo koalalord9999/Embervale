@@ -11,10 +11,11 @@ export const useAggression = (
     startCombat: (monsterIds: string[]) => void,
     addLog: (message: string) => void,
     monsterRespawnTimers: Record<string, number>,
-    devAggroIds: string[]
+    devAggroIds: string[],
+    isPlayerInvisible: boolean
 ) => {
     useEffect(() => {
-        if (!isGameLoaded || isBusy) return;
+        if (!isGameLoaded || isBusy || isPlayerInvisible) return;
 
         const poi = POIS[currentPoiId];
         if (!poi) return;
@@ -52,5 +53,5 @@ export const useAggression = (
             addLog("You've been spotted by aggressive creatures! Prepare for battle!");
             startCombat(aggressiveMonsterInstances);
         }
-    }, [currentPoiId, isGameLoaded, isBusy, playerCombatLevel, startCombat, addLog, monsterRespawnTimers, devAggroIds]);
+    }, [currentPoiId, isGameLoaded, isBusy, playerCombatLevel, startCombat, addLog, monsterRespawnTimers, devAggroIds, isPlayerInvisible]);
 };
