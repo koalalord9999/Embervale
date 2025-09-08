@@ -47,6 +47,7 @@ export const resources: Item[] = [
     { id: 'ball_of_wool', name: 'Ball of Wool', description: 'A ball of fluffy wool, ready for crafting.', stackable: false, value: 3, iconUrl: 'https://api.iconify.design/game-icons:wool.svg' },
     { id: 'bones', name: 'Bones', description: 'A set of ordinary bones. Can be buried for Prayer experience.', stackable: false, value: 2, iconUrl: 'https://api.iconify.design/game-icons:crossed-bones.svg', buryable: { prayerXp: 5 } },
     { id: 'big_bones', name: 'Big Bones', description: 'Larger bones from a tougher creature. Can be buried for Prayer experience.', stackable: false, value: 10, iconUrl: 'https://api.iconify.design/game-icons:crossed-bones.svg', buryable: { prayerXp: 15 } },
+    { id: 'feathers', name: 'Feathers', description: 'A soft feather of an avian.', stackable: true, value: 1, iconUrl: 'https://api.iconify.design/game-icons:feather.svg' },
     { id: 'eggs', name: 'Chicken Egg', description: 'A fresh egg. A simple cooking ingredient.', stackable: false, value: 2, iconUrl: 'https://api.iconify.design/game-icons:egg-clutch.svg' },
     { id: 'cowhide', name: 'Cowhide', description: 'The unprocessed hide of a cow.', stackable: false, value: 6, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg' },
     { id: 'leather', name: 'Leather', description: 'A piece of tanned leather, ready for crafting.', stackable: false, value: 10, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg', material: 'leather' },

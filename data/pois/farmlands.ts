@@ -26,7 +26,7 @@ export const farmlandsPois: Record<string, POI> = {
         description: 'A field of tall, flowering flax plants.',
         connections: ['mcgregors_ranch'],
         activities: [
-            { type: 'skilling', id: 'flax_field_gathering', name: 'Pick Flax', skill: SkillName.Crafting, requiredLevel: 1, loot: [{ itemId: 'flax', chance: 1, xp: 1 }], resourceCount: { min: 10, max: 20 }, respawnTime: 20000, gatherTime: 1500 }
+            { type: 'skilling', id: 'flax_field_gathering', name: 'Pick Flax', skill: SkillName.Crafting, requiredLevel: 1, loot: [{ itemId: 'flax', chance: 1, xp: 1 }], resourceCount: { min: 10, max: 20 }, respawnTime: 20000, gatherTime: 600 }
         ],
         regionId: 'wilderness',
         x: 860, y: 1200

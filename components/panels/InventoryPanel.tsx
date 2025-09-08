@@ -218,7 +218,7 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
                                         {item.stackable && slot.quantity > 999 && (
                                             <p className="text-sm mt-1 text-gray-400">Quantity: {slot.quantity.toLocaleString()}</p>
                                         )}
-                                        {itemToUse && <p className="text-sm mt-1 text-green-300">Use {ITEMS[itemToUse.item.itemId].name} -> {item.name}</p>}
+                                        {itemToUse && <p className="text-sm mt-1 text-green-300">Use {ITEMS[itemToUse.item.itemId].name} on {item.name}</p>}
                                         {item.equipment && (
                                             <div className="mt-2 pt-2 border-t border-gray-600 text-xs grid grid-cols-2 gap-x-4">
                                                 <span>Stab Atk:</span><span className="font-semibold text-right">{item.equipment.stabAttack}</span>

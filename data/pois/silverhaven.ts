@@ -82,6 +82,7 @@ export const silverhavenPois: Record<string, POI> = {
         activities: [
              { type: 'shop', shopId: 'silverhaven_crafting' },
              { type: 'anvil' },
+             { type: 'spinning_wheel'},
              {
                 type: 'npc',
                 name: 'Artisan',
@@ -103,6 +104,7 @@ export const silverhavenPois: Record<string, POI> = {
         connections: ['silverhaven_artisans_quarter'],
         activities: [
             { type: 'furnace' },
+            { type: 'shop', shopId: 'gilded_hammer_armory' },
             {
                 type: 'npc',
                 name: 'Master Smith Gideon',
