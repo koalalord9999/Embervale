@@ -1,7 +1,8 @@
 
+
 import React, { useCallback } from 'react';
-import { POIActivity, SkillName, InventorySlot, PlayerSkill, SkillRequirement, PlayerQuestState } from '../../types';
-import { ITEMS, INVENTORY_CAPACITY } from '../../constants';
+import { POIActivity, SkillName, InventorySlot, PlayerSkill, SkillRequirement, PlayerQuestState } from '../types';
+import { ITEMS, INVENTORY_CAPACITY } from '../constants';
 import { MakeXPrompt } from './useUIState';
 
 interface UseWorldActionsProps {
