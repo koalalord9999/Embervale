@@ -73,7 +73,7 @@ export const isleOfWhispersPois: Record<string, POI> = {
             { type: 'shop', shopId: 'isle_of_whispers_general' }
         ],
         regionId: 'isle_of_whispers',
-        x: 500, y: 2400,
+        x: 500, y: 2380,
     },
     port_wreckage_bank: {
         id: 'port_wreckage_bank',

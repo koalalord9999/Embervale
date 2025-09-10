@@ -2,7 +2,7 @@
 
 import { Item } from '../types';
 import { armor } from './armor';
-import { foodAndPotions } from './foodAndPotions';
+import { foodAndPotions } from './items/foodAndPotions';
 import { misc } from './misc';
 import { resources } from './resources';
 import { weaponsAndTools } from './weaponsAndTools';
@@ -16,6 +16,16 @@ const allItemsUnsorted: Item[] = [
     ...weaponsAndTools,
     ...herbloreItems,
 ];
+
+// Add Tinderbox
+allItemsUnsorted.push({
+    id: 'tinderbox',
+    name: 'Tinderbox',
+    description: 'Used to light fires.',
+    stackable: false,
+    value: 1,
+    iconUrl: 'https://api.iconify.design/game-icons:flint-and-steel.svg',
+});
 
 // Sort the array alphabetically by item name for deterministic order if needed elsewhere
 allItemsUnsorted.sort((a, b) => a.name.localeCompare(b.name));

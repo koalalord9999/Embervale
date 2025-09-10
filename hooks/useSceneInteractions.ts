@@ -1,5 +1,4 @@
 
-
 import { useCallback } from 'react';
 import { POIActivity, PlayerQuestState } from '../types';
 import { QUESTS } from '../constants';
@@ -14,13 +13,27 @@ interface SceneInteractionDependencies {
     onActivity: (activity: POIActivity) => void;
     setActiveQuestDialogue: (dialogue: QuestDialogueState | null) => void;
     setActiveInteractiveDialogue: (dialogue: InteractiveDialogueState | null) => void;
+    tutorialStage: number;
+    advanceTutorial: (condition: string) => void;
 }
 
 export const useSceneInteractions = (poiId: string, deps: SceneInteractionDependencies) => {
-    const { playerQuests, completeQuestStage, startQuest, hasItems, addLog, onActivity, setActiveQuestDialogue, setActiveInteractiveDialogue } = deps;
+    const { playerQuests, completeQuestStage, startQuest, hasItems, addLog, onActivity, setActiveQuestDialogue, setActiveInteractiveDialogue, tutorialStage, advanceTutorial } = deps;
 
     const handleActivityClick = useCallback((activity: POIActivity) => {
+        // Tutorial start hook
+        if (tutorialStage === 0 && activity.type === 'npc' && activity.name === 'Leo the Guide' && poiId === 'enclave_start') {
+            advanceTutorial('start-tutorial');
+        }
+        
         if (activity.type === 'quest_start') {
+            // Special case for the tutorial's final step.
+            // It's a dialogue-triggered quest that needs to be manually started
+            // before the dialogue is shown, otherwise it can't be completed.
+            if (activity.questId === 'tutorial_completion' && !playerQuests.some(q => q.questId === 'tutorial_completion')) {
+                startQuest(activity.questId, addLog);
+            }
+
             const questData = QUESTS[activity.questId];
             if (questData?.dialogue) {
                 setActiveQuestDialogue({ questId: activity.questId });
@@ -50,8 +63,20 @@ export const useSceneInteractions = (poiId: string, deps: SceneInteractionDepend
                 }
                 return false;
             });
+
             if (questToUpdate) {
-                completeQuestStage(questToUpdate.questId);
+                const questData = QUESTS[questToUpdate.questId];
+                const stage = questData.stages[questToUpdate.currentStage];
+                const completionNodeKey = `complete_stage_${questToUpdate.currentStage}`;
+
+                if (stage.requirement.type === 'talk' && questData.dialogue && questData.dialogue[completionNodeKey]) {
+                    setActiveInteractiveDialogue({
+                        dialogue: questData.dialogue,
+                        startNode: completionNodeKey
+                    });
+                } else {
+                    completeQuestStage(questToUpdate.questId);
+                }
                 return;
             }
 
@@ -87,7 +112,7 @@ export const useSceneInteractions = (poiId: string, deps: SceneInteractionDepend
         
         // 4. If no quest logic was triggered, perform the default activity action
         onActivity(activity);
-    }, [playerQuests, completeQuestStage, startQuest, hasItems, addLog, onActivity, poiId, setActiveQuestDialogue, setActiveInteractiveDialogue]);
+    }, [playerQuests, completeQuestStage, startQuest, hasItems, addLog, onActivity, poiId, setActiveQuestDialogue, setActiveInteractiveDialogue, tutorialStage, advanceTutorial]);
 
     return { handleActivityClick };
 };

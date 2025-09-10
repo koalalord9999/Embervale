@@ -2,6 +2,28 @@ import { Monster, MonsterType } from '../types';
 
 export const beasts: Monster[] = [
     {
+        id: 'tutorial_rat',
+        name: 'Tutorial Rat',
+        level: 1,
+        maxHp: 3,
+        attack: 1,
+        stabDefence: 0,
+        slashDefence: 0,
+        crushDefence: 0,
+        rangedDefence: 0,
+        magicDefence: 0,
+        iconUrl: '/assets/npcChatHeads/giant_rat.png',
+        drops: [
+            { itemId: 'bones', chance: 1, minQuantity: 1, maxQuantity: 1 }
+        ],
+        monsterType: MonsterType.Standard,
+        attackSpeed: 4,
+        respawnTime: 10000,
+        aggressive: false,
+        attackStyle: 'stab',
+        customMaxHit: 1,
+    },
+    {
         id: 'giant_rat', name: 'Giant Rat', level: 1, maxHp: 5, attack: 1,
         stabDefence: 0, slashDefence: 0, crushDefence: 0, rangedDefence: 0, magicDefence: 0,
         iconUrl: '/assets/npcChatHeads/giant_rat.png',
@@ -79,5 +101,28 @@ export const beasts: Monster[] = [
         iconUrl: '/assets/npcChatHeads/jungle_stalker.png',
         drops: [ { itemId: 'big_bones', chance: 1, minQuantity: 1, maxQuantity: 1 } ],
         monsterType: MonsterType.Standard, attackSpeed: 3, respawnTime: 100000, aggressive: true, alwaysAggressive: true, attackStyle: 'slash',
+    },
+    {
+        id: 'bog_mite',
+        name: 'Bog Mite',
+        level: 26,
+        maxHp: 45,
+        attack: 20,
+        stabDefence: 15,
+        slashDefence: 18,
+        crushDefence: 12,
+        rangedDefence: 20,
+        magicDefence: 10,
+        iconUrl: '/assets/npcChatHeads/bog_mite.png',
+        drops: [
+            { itemId: 'bones', chance: 1, minQuantity: 1, maxQuantity: 1 },
+            { tableId: 'herb_table', chance: 0.3 }
+        ],
+        monsterType: MonsterType.Standard,
+        attackSpeed: 4,
+        respawnTime: 25000,
+        aggressive: true,
+        alwaysAggressive: true,
+        attackStyle: 'stab',
     },
 ];

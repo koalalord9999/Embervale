@@ -1,6 +1,14 @@
 import { SkillName } from './enums';
 import { InventorySlot } from './entities';
 
+// FIX: Added missing PlayerQuestState interface.
+export interface PlayerQuestState {
+  questId: string;
+  currentStage: number;
+  progress: number;
+  isComplete: boolean;
+}
+
 export interface PlayerSlayerTask {
     monsterId: string;
     requiredCount: number;
@@ -13,11 +21,13 @@ export type QuestRequirement =
   | { type: 'kill'; monsterId: string; quantity: number }
   | { type: 'talk'; poiId: string; npcName: string }
   | { type: 'shear'; quantity: number }
+  | { type: 'smith'; itemId: string; quantity: number }
   | { type: 'spin'; quantity: number };
 
 export interface QuestStage {
   description: string;
   requirement: QuestRequirement;
+  stageRewards?: { xp?: { skill: SkillName; amount: number }[]; items?: InventorySlot[]; coins?: number };
 }
 
 export interface DialogueResponse {
@@ -47,13 +57,6 @@ export interface Quest {
   startHint: string;
   playerStagePerspectives: string[];
   completionSummary: string;
-}
-
-export interface PlayerQuestState {
-    questId: string;
-    currentStage: number;
-    progress: number; // e.g., items gathered or monsters killed
-    isComplete: boolean;
 }
 
 export interface RepeatableQuest {

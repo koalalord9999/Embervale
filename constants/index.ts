@@ -14,3 +14,4 @@ export * from './fletching';
 export * from './herblore';
 export * from './lootTables';
 export * from '../data/regions';
+export * from '../data/tutorial';

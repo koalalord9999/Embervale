@@ -1,18 +1,20 @@
 
 import React from 'react';
-import { SkillName } from '../../../../types';
+import { InventorySlot, PlayerSkill, SkillName } from '../../../../types';
 import { SPINNING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
 import Button from '../../../common/Button';
 import { CraftingViewProps } from '../CraftingView';
 
 const SpinningInterface: React.FC<CraftingViewProps> = ({ inventory, skills, onSpin, setContextMenu, setMakeXPrompt }) => {
     const craftingLevel = skills.find(s => s.name === SkillName.Crafting)?.level ?? 1;
-
+    
     const getIngredientCount = (itemId: string) => {
         const item = ITEMS[itemId];
         if (item.stackable) {
+            // FIX: Handle null slots when searching for an item.
             return inventory.find(slot => slot && slot.itemId === itemId)?.quantity ?? 0;
         }
+        // FIX: Handle null slots when filtering for an item.
         return inventory.filter(slot => slot && slot.itemId === itemId).length;
     };
 
@@ -28,14 +30,14 @@ const SpinningInterface: React.FC<CraftingViewProps> = ({ inventory, skills, onS
                 { label: 'Spin 1', onClick: () => onSpin(recipe.itemId, 1), disabled: !hasLevel || maxCraftable < 1 },
                 { label: 'Spin 5', onClick: () => onSpin(recipe.itemId, 5), disabled: !hasLevel || maxCraftable < 5 },
                 { label: 'Spin All', onClick: () => onSpin(recipe.itemId, maxCraftable), disabled: !hasLevel || maxCraftable < 1 },
-                {
-                    label: 'Spin X...',
+                { 
+                    label: 'Spin X...', 
                     onClick: () => setMakeXPrompt({
                         title: `Spin ${ITEMS[recipe.itemId].name}`,
                         max: maxCraftable,
                         onConfirm: (quantity) => onSpin(recipe.itemId, quantity)
-                    }),
-                    disabled: !hasLevel || maxCraftable < 1
+                    }), 
+                    disabled: !hasLevel || maxCraftable < 1 
                 },
             ],
             position: { x: e.clientX, y: e.clientY }
@@ -59,8 +61,8 @@ const SpinningInterface: React.FC<CraftingViewProps> = ({ inventory, skills, onS
                         const canCraft = hasLevel && hasIngredients;
 
                         return (
-                            <div
-                                key={recipe.itemId}
+                            <div 
+                                key={recipe.itemId} 
                                 className={`bg-gray-900 p-3 rounded-lg border-2 ${canCraft ? 'border-gray-600' : 'border-red-800/50'}`}
                                 onContextMenu={(e) => createContextMenu(e, recipe)}
                             >

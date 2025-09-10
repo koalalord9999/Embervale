@@ -85,7 +85,7 @@ export const SKILL_GUIDES: Record<SkillName, SkillGuideEntry[]> = {
         { level: 75, description: 'String a Yew Longbow.', itemId: 'yew_longbow' },
     ],
     [SkillName.Firemaking]: [
-        { level: 1, description: 'This skill is not yet implemented.' },
+        { level: 1, description: 'Light normal logs.', itemId: 'logs' },
     ],
     [SkillName.Fishing]: [
         { level: 1, description: 'Catch Shrimp.', itemId: 'raw_shrimp' },

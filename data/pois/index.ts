@@ -18,8 +18,10 @@ import { silverhavenPois } from './silverhaven';
 import { banditHideoutPois } from './bandit_hideout';
 import { isleOfWhispersPois } from './isle_of_whispers';
 import { sunkenLabyrinthPois } from './dungeon_sunken_labyrinth';
+import { tutorialZonePois } from './tutorial_zone';
 
 export const POIS: Record<string, POI> = {
+    ...tutorialZonePois,
     ...meadowdalePois,
     ...wildernessPois,
     ...minePois,

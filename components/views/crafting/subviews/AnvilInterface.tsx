@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { SkillName, WeaponType } from '../../../../types';
+import { SkillName, WeaponType, InventorySlot } from '../../../../types';
 import { SMITHING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
 import Button from '../../../common/Button';
 import { CraftingViewProps } from '../CraftingView';
@@ -15,8 +15,10 @@ const AnvilInterface: React.FC<CraftingViewProps> = ({ inventory, skills, player
         const item = ITEMS[itemId];
         if (!item) return 0;
         if (item.stackable) {
+            // FIX: Handle null slots when searching for an item.
             return inventory.find(slot => slot && slot.itemId === itemId)?.quantity ?? 0;
         }
+        // FIX: Handle null slots when filtering for an item.
         return inventory.filter(slot => slot && slot.itemId === itemId).length;
     };
 
@@ -79,7 +81,7 @@ const AnvilInterface: React.FC<CraftingViewProps> = ({ inventory, skills, player
                         variant={selectedBar === barType ? 'primary' : 'secondary'} 
                         size="sm"
                     >
-                        {ITEMS[barType].name.replace(' Bar', '')} ({count})
+                        {ITEMS[barType as BarType].name.replace(' Bar', '')} ({count})
                     </Button>
                 ))}
             </div>

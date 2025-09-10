@@ -1,6 +1,7 @@
 
 
-import { Monster, MonsterType } from '../types';
+
+import { Monster, MonsterType } from '../../types';
 
 export const magicalAndUndead: Monster[] = [
     {
@@ -80,5 +81,13 @@ export const magicalAndUndead: Monster[] = [
         iconUrl: '/assets/npcChatHeads/magma_imp.png',
         drops: [ { itemId: 'brimstone', chance: 0.3, minQuantity: 1, maxQuantity: 1 } ],
         monsterType: MonsterType.Standard, attackSpeed: 2, respawnTime: 90000, aggressive: true, alwaysAggressive: true, attackStyle: 'ranged'
+    },
+    {
+        id: 'training_dummy', name: 'Training Dummy', level: 1, maxHp: 10000, attack: 0,
+        stabDefence: 0, slashDefence: 0, crushDefence:0, rangedDefence: 0, magicDefence:0,
+        iconUrl: '/assets/npcChatHeads/training_dummy_png',
+        drops: [],
+        monsterType: MonsterType.Standard, attackSpeed: 5, respawnTime: 0, aggressive: false, attackStyle: 'crush',
+        customMaxHit: 0,
     }
 ];

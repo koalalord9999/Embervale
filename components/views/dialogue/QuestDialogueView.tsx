@@ -8,12 +8,13 @@ interface QuestDialogueViewProps {
     dialogueInfo: { questId: string, startNode?: string };
     onAcceptQuest: (questId: string) => void;
     onEndDialogue: () => void;
+    advanceTutorial: (condition: string) => void;
 }
 
-const QuestDialogueView: React.FC<QuestDialogueViewProps> = ({ dialogueInfo, onAcceptQuest, onEndDialogue }) => {
+const QuestDialogueView: React.FC<QuestDialogueViewProps> = ({ dialogueInfo, onAcceptQuest, onEndDialogue, advanceTutorial }) => {
     const { questId, startNode } = dialogueInfo;
     const quest = QUESTS[questId];
-    const [currentNodeKey, setCurrentNodeKey] = useState<string | undefined>(startNode ?? quest?.startDialogueNode);
+    const [currentNodeKey, setCurrentNodeKey] = useState<string | undefined>(startNode ?? quest?.startDialogueNode ?? (quest?.dialogue ? Object.keys(quest.dialogue)[0] : undefined));
 
     if (!quest || !quest.dialogue || !currentNodeKey || !quest.dialogue[currentNodeKey]) {
         return (
@@ -29,6 +30,9 @@ const QuestDialogueView: React.FC<QuestDialogueViewProps> = ({ dialogueInfo, onA
     const handleResponseClick = (response: DialogueResponse) => {
         if (response.action === 'accept_quest') {
             onAcceptQuest(questId);
+            if (questId === 'tutorial_completion') {
+                advanceTutorial('talk-to-guide-final');
+            }
             onEndDialogue();
         } else if (response.action === 'close') {
             onEndDialogue();

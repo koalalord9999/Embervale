@@ -104,7 +104,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'mountain_goat' },
         ],
         regionId: 'gale_swept_peaks',
-        x: 1000, y: 500
+        x: 960, y: 520
     },
     cave_mouth: {
         id: 'cave_mouth',
@@ -115,7 +115,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'cave_slime' }
         ],
         regionId: 'gale_swept_peaks',
-        x: 1020, y: 480
+        x: 1040, y: 440
     },
     inner_caverns: {
         id: 'inner_caverns',
@@ -191,7 +191,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
         connections: ['summit_approach', 'goat_trail'],
         activities: [],
         regionId: 'gale_swept_peaks',
-        x: 1020, y: 280
+        x: 960, y: 260
     },
     the_summit: {
         id: 'the_summit',

@@ -35,7 +35,7 @@ export const theSerpentsCoilPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'bog_serpent' },
         ],
         regionId: 'serpents_coil',
-        x: 1520, y: 1060
+        x: 1520, y: 1100
     },
     flooded_forest: {
         id: 'flooded_forest',
@@ -44,7 +44,7 @@ export const theSerpentsCoilPois: Record<string, POI> = {
         connections: ['serpent_nesting_ground', 'sunken_temple_approach'],
         activities: [],
         regionId: 'serpents_coil',
-        x: 1480, y: 1020
+        x: 1480, y: 1080
     },
     murky_channel_east: {
         id: 'murky_channel_east',
@@ -75,6 +75,22 @@ export const theSerpentsCoilPois: Record<string, POI> = {
         connections: ['isolated_islet', 'sunken_temple_approach'],
         activities: [
             { type: 'combat', monsterId: 'bog_serpent' },
+            {
+                type: 'skilling',
+                id: 'serpent_coil_shipwreck_lumber',
+                name: 'Harvest Debris',
+                skill: SkillName.Woodcutting,
+                requiredLevel: 30,
+                loot: [
+                    { itemId: 'logs', chance: 1.0, xp: 90 },
+                    { itemId: 'oak_logs', chance: 0.641, xp: 90 },
+                    { itemId: 'willow_logs', chance: 0.606, xp: 90 },
+                    { itemId: 'treasure_chest', chance: 0.01, xp: 250 }
+                ],
+                resourceCount: { min: 60, max: 60 },
+                respawnTime: 120000,
+                gatherTime: 3500
+            }
         ],
         regionId: 'serpents_coil',
         x: 1600, y: 1260

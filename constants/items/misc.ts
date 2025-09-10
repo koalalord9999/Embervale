@@ -1,5 +1,4 @@
-
-import { Item, EquipmentSlot, WeaponType } from '../types';
+import { Item, EquipmentSlot, WeaponType } from '../../types';
 
 export const misc: Item[] = [
     // Currency
@@ -17,17 +16,6 @@ export const misc: Item[] = [
     { id: 'tinderbox', name: 'Tinderbox', description: 'Used to light fires.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:flint-and-steel.svg' },
     { id: 'unusual_sandwich', name: 'Unusual Sandwich', description: 'Leo gave you this. It looks... crunchy. Maybe you should take a closer look.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:sandwich.svg' },
     { id: 'leos_masterpiece_sandwich', name: "Leo's Masterpiece", description: 'A sandwich made with care. Heals a good amount of health.', stackable: false, value: 50, iconUrl: 'https://api.iconify.design/game-icons:sandwich.svg', consumable: { healAmount: 15 }, material: 'cooked-meat' },
-    {
-        id: 'treasure_chest',
-        name: 'Treasure Chest',
-        description: 'A waterlogged chest, sealed tight. Opening it might reveal valuable treasures.',
-        stackable: false,
-        value: 500,
-        iconUrl: 'https://api.iconify.design/game-icons:treasure-chest.svg',
-        consumable: {
-            special: 'treasure_chest'
-        }
-    },
     
     // Pouches
     { id: 'grimy_coin_pouch', name: 'Grimy Coin Pouch', description: "A small, dirty pouch that jingles slightly. It's too grimy to open by hand.", stackable: false, value: 50, iconUrl: 'https://api.iconify.design/game-icons:money-stack.svg' },

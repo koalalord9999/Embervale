@@ -40,7 +40,7 @@ export const farmlandsPois: Record<string, POI> = {
             { type: 'spinning_wheel' }
         ],
         regionId: 'wilderness',
-        x: 840, y: 1160
+        x: 800, y: 1140
     },
     sheep_pen: {
         id: 'sheep_pen',

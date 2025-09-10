@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect, useCallback } from 'react';
 import { saveGameState, loadGameState, deleteGameState } from '../db';
 import { ALL_SKILLS, REPEATABLE_QUEST_POOL, ITEMS, MONSTERS } from '../constants';
@@ -11,14 +9,15 @@ import { useUIState } from './useUIState';
 type GameState = typeof defaultState;
 
 const defaultState = {
+    username: '',
     skills: ALL_SKILLS,
-    inventory: [{ itemId: 'bronze_axe', quantity: 1 }, { itemId: 'bronze_pickaxe', quantity: 1 }, { itemId: 'beer', quantity: 5 }, { itemId: 'knife', quantity: 1 }],
+    inventory: [],
     bank: [],
-    coins: 100,
+    coins: 0,
     equipment: { weapon: null, shield: null, head: null, body: null, legs: null, ammo: null, gloves: null, boots: null, cape: null, necklace: null, ring: null },
     combatStance: CombatStance.Accurate,
     currentHp: 10,
-    currentPoiId: 'meadowdale_square',
+    currentPoiId: 'enclave_start',
     playerQuests: [],
     lockedPois: Object.keys(POIS).filter(id => !!POIS[id].unlockRequirement),
     clearedSkillObstacles: [],
@@ -33,10 +32,12 @@ const defaultState = {
         boardCompletions: {},
     },
     slayerTask: null as PlayerSlayerTask | null,
+    tutorialStage: 0,
 };
 
 const validateAndMergeState = (parsedData: any): GameState => {
     const validatedState: GameState & { skills: any[]; playerQuests: any[] } = { ...defaultState };
+    if (typeof parsedData.username === 'string') validatedState.username = parsedData.username;
     if (Array.isArray(parsedData.skills) && parsedData.skills.length > 0) validatedState.skills = parsedData.skills;
     if (Array.isArray(parsedData.inventory)) validatedState.inventory = parsedData.inventory;
     if (Array.isArray(parsedData.bank)) validatedState.bank = parsedData.bank;
@@ -46,6 +47,7 @@ const validateAndMergeState = (parsedData: any): GameState => {
     if (typeof parsedData.currentHp === 'number') validatedState.currentHp = parsedData.currentHp;
     if (parsedData.currentPoiId && POIS[parsedData.currentPoiId]) validatedState.currentPoiId = parsedData.currentPoiId;
     if (Array.isArray(parsedData.playerQuests)) validatedState.playerQuests = parsedData.playerQuests;
+    if (typeof parsedData.tutorialStage === 'number') validatedState.tutorialStage = parsedData.tutorialStage;
 
     if (Array.isArray(parsedData.lockedPois)) {
         validatedState.lockedPois = parsedData.lockedPois;
@@ -136,7 +138,7 @@ export const useGameStateManager = (ui: ReturnType<typeof useUIState>) => {
         ui.setIsImportModalOpen(true);
     }, [ui]);
     
-    const loadFromImportedData = useCallback((data: string): boolean => {
+    const baseLoadFromImportedData = useCallback((data: string): boolean => {
         try {
             const parsedData = JSON.parse(data);
             if (!parsedData.skills || !parsedData.inventory || typeof parsedData.coins === 'undefined') {
@@ -161,16 +163,13 @@ export const useGameStateManager = (ui: ReturnType<typeof useUIState>) => {
         }
     }, [ui]);
 
-    const handleResetGame = useCallback(() => {
-        ui.setConfirmationPrompt({
-            message: "Are you sure you want to start a new game? All progress will be lost.",
-            onConfirm: async () => {
-                ui.closeAllModals();
-                await deleteGameState();
-                setInitialState({ ...defaultState });
-                setGameKey(k => k + 1);
-            }
-        });
+    const startNewGame = useCallback(async (username: string) => {
+        ui.closeAllModals();
+        await deleteGameState();
+        const newGame = { ...defaultState, username };
+        await saveGameState(newGame);
+        setInitialState(newGame);
+        setGameKey(k => k + 1);
     }, [ui]);
 
     useEffect(() => {
@@ -205,7 +204,7 @@ export const useGameStateManager = (ui: ReturnType<typeof useUIState>) => {
         gameKey,
         handleExportSave,
         handleImportSave,
-        loadFromImportedData,
-        handleResetGame,
+        baseLoadFromImportedData,
+        startNewGame,
     };
 };

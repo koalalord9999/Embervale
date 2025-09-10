@@ -53,6 +53,7 @@ export interface Item {
         style?: 'melee' | 'ranged' | 'all';
     }[]; 
     potionEffect?: { description: string };
+    special?: 'treasure_chest';
   };
   buryable?: { prayerXp: number };
   tool?: { type: ToolType; power: number };

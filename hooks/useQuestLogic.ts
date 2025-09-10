@@ -1,5 +1,3 @@
-
-
 import React, { useCallback } from 'react';
 import { PlayerQuestState, SkillName } from '../types';
 import { QUESTS, ITEMS, MONSTERS } from '../constants';
@@ -50,6 +48,25 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
                         return { ...q, currentStage: q.currentStage + 1, progress: 0 };
                     }
                     addLog(`Quest progress: Spun ${newProgress}/${stage.requirement.quantity} balls of wool.`);
+                    return { ...q, progress: newProgress };
+                }
+            }
+            return q;
+        }));
+    }, [setPlayerQuests, addLog]);
+    
+    const checkQuestProgressOnSmith = useCallback((itemId: string, quantity: number) => {
+        setPlayerQuests(qs => qs.map(q => {
+            const questData = QUESTS[q.questId];
+            if (!q.isComplete && questData && questData.stages[q.currentStage]) {
+                const stage = questData.stages[q.currentStage];
+                if (stage?.requirement.type === 'smith' && stage.requirement.itemId === itemId) {
+                    const newProgress = q.progress + quantity;
+                    if (newProgress >= stage.requirement.quantity) {
+                        addLog(`Quest updated: ${questData.name} - stage completed!`);
+                        return { ...q, currentStage: q.currentStage + 1, progress: 0 };
+                    }
+                    addLog(`Quest progress: Smithed ${newProgress}/${stage.requirement.quantity} ${ITEMS[itemId].name}.`);
                     return { ...q, progress: newProgress };
                 }
             }
@@ -117,7 +134,7 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
                 const currentStageIndex = q.currentStage;
                 const currentStage = questData.stages[currentStageIndex];
                 
-                if (currentStage.requirement.type === 'gather') {
+                if (currentStage?.requirement.type === 'gather') {
                      if (!hasItems([{ itemId: currentStage.requirement.itemId, quantity: currentStage.requirement.quantity }])) {
                         addLog(`You still need to gather ${currentStage.requirement.quantity} ${ITEMS[currentStage.requirement.itemId].name}.`);
                         return q;
@@ -125,6 +142,23 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
                     modifyItem(currentStage.requirement.itemId, -currentStage.requirement.quantity);
                 }
                 
+                // Grant stage-specific rewards
+                if (currentStage?.stageRewards) {
+                    const rewards = currentStage.stageRewards;
+                    if (rewards.coins) {
+                        modifyItem('coins', rewards.coins);
+                        addLog(`You received ${rewards.coins} coins.`);
+                    }
+                    rewards.items?.forEach(item => {
+                        modifyItem(item.itemId, item.quantity);
+                        addLog(`You received ${item.quantity}x ${ITEMS[item.itemId].name}.`);
+                    });
+                    rewards.xp?.forEach(xpReward => {
+                        addXp(xpReward.skill, xpReward.amount);
+                        addLog(`You gained ${xpReward.amount} ${xpReward.skill} XP.`);
+                    });
+                }
+
                 const isCompletingFinalStage = q.currentStage >= questData.stages.length - 1;
 
                 if(isCompletingFinalStage) {
@@ -153,6 +187,9 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
                     if (questData.id === 'a_pinch_of_trouble') {
                         modifyItem('giant_crab_claw', -1);
                     }
+                    if (questData.id === 'leos_lunch') {
+                        modifyItem('unusual_sandwich', -1, true);
+                    }
                     return {...q, isComplete: true};
                 }
                 addLog(`Quest updated: ${questData.name} - stage completed!`);
@@ -166,6 +203,7 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
         checkQuestProgressOnShear,
         checkQuestProgressOnSpin,
         checkQuestProgressOnKill,
+        checkQuestProgressOnSmith,
         completeQuestStage,
     };
 };

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SkillName } from '../../../../types';
+import { SkillName, InventorySlot } from '../../../../types';
 import { ITEMS, getIconClassName } from '../../../../constants';
 import Button from '../../../common/Button';
 import { CraftingViewProps } from '../CraftingView';
@@ -14,8 +14,10 @@ const FurnaceInterface: React.FC<CraftingViewProps> = ({ inventory, skills, onSm
         const item = ITEMS[itemId];
         if (!item) return 0;
         if (item.stackable) {
+            // FIX: Handle null slots when searching for an item.
             return inventory.find(slot => slot && slot.itemId === itemId)?.quantity ?? 0;
         }
+        // FIX: Handle null slots when filtering for an item.
         return inventory.filter(slot => slot && slot.itemId === itemId).length;
     };
 

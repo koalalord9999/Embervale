@@ -23,6 +23,8 @@ interface CombatViewProps {
     onConsumeAmmo: () => void;
     activeBuffs: ActiveBuff[];
     combatSpeedMultiplier: number;
+    activeCombatStyleHighlight?: CombatStance | null;
+    advanceTutorial: (condition: string) => void;
 }
 
 interface MonsterStatusEffect {
@@ -89,7 +91,7 @@ const SmoothCombatCooldownBar: React.FC<{ label: string, nextAttackTime: number,
 };
 
 
-const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, playerSkills, playerHp, equipment, combatStance, setCombatStance, setPlayerHp, onCombatEnd, addXp, addLoot, addLog, onPlayerDeath, onKill, onConsumeAmmo, activeBuffs, combatSpeedMultiplier }) => {
+const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, playerSkills, playerHp, equipment, combatStance, setCombatStance, setPlayerHp, onCombatEnd, addXp, addLoot, addLog, onPlayerDeath, onKill, onConsumeAmmo, activeBuffs, combatSpeedMultiplier, activeCombatStyleHighlight, advanceTutorial }) => {
     const [currentMonsterIndex, setCurrentMonsterIndex] = useState(0);
     const currentInstanceId = monsterQueue[currentMonsterIndex];
     const monsterId = currentInstanceId.split(':')[1];
@@ -194,6 +196,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                 setPlayerAttacking(true);
                 setTimeout(() => setPlayerAttacking(false), 300);
                 let playerDamage = 0;
+                let successfulHit = false;
                 
                 const speedBuff = activeBuffs.find(b => b.type === 'attack_speed_boost');
                 let effectiveSpeed = playerWeapon.speed;
@@ -208,7 +211,10 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                         const totalRangedAttack = effectiveRanged + playerStats.rangedAttack;
                         const accuracy = calculateAccuracy(totalRangedAttack, monster.rangedDefence);
                         const maxHit = Math.floor(effectiveRanged / 10 + playerStats.rangedStrength / 8);
-                        if (Math.random() < accuracy) playerDamage = Math.floor(Math.random() * (maxHit + 1));
+                        if (Math.random() < accuracy) { 
+                            playerDamage = Math.floor(Math.random() * (maxHit + 1));
+                            successfulHit = true;
+                        }
                         onConsumeAmmo();
                     }
                 } else {
@@ -250,7 +256,25 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                     const accuracy = calculateAccuracy(totalAttack, monsterDefence, accuracyBuff?.value);
                     const equipmentStrengthBonus = playerStats.strengthBonus;
                     const maxHit = Math.ceil(0.5 + effectiveStrength * ((equipmentStrengthBonus + 64) / 640));
-                    if (Math.random() < accuracy) playerDamage = Math.floor(Math.random() * (maxHit + 1));
+                    if (Math.random() < accuracy) {
+                        playerDamage = Math.floor(Math.random() * (maxHit + 1));
+                        successfulHit = true;
+                    }
+                }
+
+                if (successfulHit && monsterId === 'training_dummy') {
+                    if (combatStance === CombatStance.Aggressive) advanceTutorial('hit-dummy-aggressive');
+                    if (combatStance === CombatStance.Defensive) advanceTutorial('hit-dummy-defensive');
+
+                    if (playerDamage === 0) {
+                        if (isRangedWeapon) addXp(SkillName.Ranged, 1);
+                        else {
+                            if (combatStance === CombatStance.Accurate) addXp(SkillName.Attack, 1);
+                            if (combatStance === CombatStance.Aggressive) addXp(SkillName.Strength, 1);
+                            if (combatStance === CombatStance.Defensive) addXp(SkillName.Defence, 1);
+                        }
+                        addXp(SkillName.Hitpoints, 1);
+                    }
                 }
 
                 let isCrushingBlow = false;
@@ -282,6 +306,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                 const newMonsterHp = Math.max(0, monsterHp - playerDamage);
                 setMonsterHp(newMonsterHp);
                 addHitSplat(playerDamage > 0 ? playerDamage : 'miss', 'monster');
+
                 if (playerDamage > 0) {
                     if (isCrushingBlow) {
                         addLog(`Your mace lands a crushing blow on the ${monster.name} for ${playerDamage} damage!`);
@@ -295,7 +320,11 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                         if (combatStance === CombatStance.Defensive) addXp(SkillName.Defence, playerDamage * 4);
                     }
                     addXp(SkillName.Hitpoints, playerDamage * 1.33);
-                } else { addLog(`You miss the ${monster.name}.`); }
+                } else if (successfulHit && monsterId === 'training_dummy') {
+                    addLog(`You hit the ${monster.name} for 0 damage.`);
+                } else {
+                    addLog(`You miss the ${monster.name}.`);
+                }
         
                 if (newMonsterHp <= 0) {
                     addLog(`You have defeated the ${monster.name}!`);
@@ -497,7 +526,13 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
             <div className="flex flex-col items-center gap-4">
                  <div className="flex gap-2">
                     {availableStances.map(stance => (
-                        <Button key={stance} size="sm" variant={combatStance === stance ? 'primary' : 'secondary'} onClick={() => setCombatStance(stance)}>
+                        <Button
+                            key={stance}
+                            size="sm"
+                            variant={combatStance === stance ? 'primary' : 'secondary'}
+                            onClick={() => setCombatStance(stance)}
+                            className={activeCombatStyleHighlight === stance ? 'tutorial-highlight-target' : ''}
+                        >
                             {stance.replace('Ranged ', '')}
                         </Button>
                     ))}

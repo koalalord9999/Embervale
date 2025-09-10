@@ -25,7 +25,7 @@ export const sunkenLandsPois: Record<string, POI> = {
              { type: 'skilling', id: 'murky_shallows_fishing_1', name: 'Fish for Eels', skill: SkillName.Fishing, requiredLevel: 35, loot: [{ itemId: 'raw_eel', chance: 1, xp: 70 }], resourceCount: { min: 1, max: 70 }, respawnTime: 20000, gatherTime: 2800 },
         ],
         regionId: 'sunken_lands',
-        x: 1160, y: 1440
+        x: 1220, y: 1440
     },
     mire_of_sorrow: {
         id: 'mire_of_sorrow',
@@ -67,16 +67,16 @@ export const sunkenLandsPois: Record<string, POI> = {
         id: 'toadstool_bog',
         name: 'Toadstool Bog',
         description: 'Giant, sickly-looking mushrooms grow in clusters here, releasing puffs of spores. A sluggish waterway is filled with black, slithering shapes.',
-        connections: ['mire_of_sorrow', 'sunken_ruins', 'leech-infested_waters'],
+        connections: ['mire_of_sorrow', 'leech_infested_waters'],
         activities: [
             { type: 'combat', monsterId: 'giant_toad' },
             { type: 'skilling', id: 'toadstool_bog_fishing_1', name: 'Fish for Eels', skill: SkillName.Fishing, requiredLevel: 35, loot: [{ itemId: 'raw_eel', chance: 1, xp: 70 }], resourceCount: { min: 3, max: 8 }, respawnTime: 20000, gatherTime: 2800 },
         ],
         regionId: 'sunken_lands',
-        x: 1320, y: 1400
+        x: 1320, y: 1340
     },
-    'leech-infested_waters': {
-        id: 'leech-infested_waters',
+    leech_infested_waters: {
+        id: 'leech_infested_waters',
         name: 'Leech-Infested Waters',
         description: 'The water here is particularly foul and writhing with leeches. However, this seems to be where the largest eels congregate.',
         connections: ['toadstool_bog'],
@@ -84,13 +84,13 @@ export const sunkenLandsPois: Record<string, POI> = {
             { type: 'skilling', id: 'leech_bog_fishing_1', name: 'Fish for Eels', skill: SkillName.Fishing, requiredLevel: 35, loot: [{ itemId: 'raw_eel', chance: 1, xp: 70 }], resourceCount: { min: 5, max: 10 }, respawnTime: 20000, gatherTime: 2800 },
         ],
         regionId: 'sunken_lands',
-        x: 1360, y: 1460
+        x: 1360, y: 1260
     },
     sunken_ruins: {
         id: 'sunken_ruins',
         name: 'Sunken Ruins',
         description: 'The crumbling stone ruins of an ancient structure jut out from the muck. A palpable aura of dread hangs over the area.',
-        connections: ['toadstool_bog', 'witchs_hut', 'submerged_pathway', 'flooded_crypt_entrance'],
+        connections: ['witchs_hut', 'submerged_pathway'],
         activities: [
             { type: 'combat', monsterId: 'swamp_horror' },
             { type: 'skilling', id: 'sunken_ruins_adamantite_1', name: 'Mine Adamantite Rock', skill: SkillName.Mining, requiredLevel: 65, loot: [{ itemId: 'adamantite_ore', chance: 1, xp: 120 }], resourceCount: { min: 1, max: 1 }, respawnTime: 50000, gatherTime: 5000 },
@@ -98,25 +98,25 @@ export const sunkenLandsPois: Record<string, POI> = {
         regionId: 'sunken_lands',
         x: 1380, y: 1340
     },
-    flooded_crypt_entrance: {
-        id: 'flooded_crypt_entrance',
-        name: 'Flooded Crypt Entrance',
-        description: 'A stone doorway, half-submerged in murky water, leads down into darkness.',
-        connections: ['sunken_ruins', 'flooded_crypt_hallway'],
+    submerged_pathway: {
+        id: 'submerged_pathway',
+        name: 'Submerged Pathway',
+        description: 'An ancient stone pathway, now mostly underwater. It offers a shortcut back to the swamp entrance, but also leads towards a dark, flooded crypt.',
+        connections: ['sunken_ruins', 'tangled_entry', 'flooded_crypt_hallway'],
         activities: [],
         regionId: 'sunken_lands',
-        x: 1440, y: 1300
+        x: 1280, y: 1400
     },
     flooded_crypt_hallway: {
         id: 'flooded_crypt_hallway',
         name: 'Flooded Hallway',
         description: 'The water is waist-deep here. Sarcophagi line the walls, their lids slightly ajar.',
-        connections: ['flooded_crypt_entrance', 'flooded_crypt_chamber'],
+        connections: ['submerged_pathway', 'flooded_crypt_chamber'],
         activities: [
             { type: 'combat', monsterId: 'swamp_horror' },
         ],
         regionId: 'sunken_lands',
-        x: 1480, y: 1260
+        x: 1340, y: 1400
     },
     flooded_crypt_chamber: {
         id: 'flooded_crypt_chamber',
@@ -128,16 +128,7 @@ export const sunkenLandsPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'swamp_horror' },
         ],
         regionId: 'sunken_lands',
-        x: 1520, y: 1220
-    },
-    submerged_pathway: {
-        id: 'submerged_pathway',
-        name: 'Submerged Pathway',
-        description: 'An ancient stone pathway, now mostly underwater, offers a shortcut back to the swamp entrance.',
-        connections: ['sunken_ruins', 'tangled_entry'],
-        activities: [],
-        regionId: 'sunken_lands',
-        x: 1280, y: 1440
+        x: 1400, y: 1460
     },
     witchs_hut: {
         id: 'witchs_hut',
@@ -167,6 +158,6 @@ export const sunkenLandsPois: Record<string, POI> = {
         connections: ['flooded_crypt_chamber', 'serpents_coil_entrance'],
         activities: [],
         regionId: 'sunken_lands',
-        x: 1560, y: 1180
+        x: 1460, y: 1460
     },
 };

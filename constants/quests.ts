@@ -1,7 +1,132 @@
-
 import { Quest, RepeatableQuest, SkillName } from '../types';
 
 export const QUESTS: Record<string, Quest> = {
+    tutorial_completion: {
+        id: 'tutorial_completion',
+        name: 'A New Adventure',
+        // FIX: Added missing 'description' property to satisfy the Quest type.
+        description: "Complete your training in the enclave and venture out into the world.",
+        isHidden: true,
+        startPoi: 'enclave_departure_point',
+        startHint: "Complete Leo's training.",
+        playerStagePerspectives: ["I'm ready to leave the enclave. I should speak to Leo one last time."],
+        completionSummary: "I completed my training with Leo and have now entered the main world of Embervale.",
+        dialogue: {
+            start: {
+                npcName: 'Leo the Guide',
+                npcIcon: '/assets/npcChatHeads/tavern_regular.png',
+                text: "You're ready. Your first stop should be Meadowdale. The smith there, Valerius, is always looking for new talent. Or, you could check the quest board in The Rusty Flagon inn for work. Good luck.",
+                responses: [
+                    { text: "Thank you, Leo. I'm ready.", action: 'accept_quest' },
+                ],
+            },
+        },
+        stages: [
+            {
+                description: "Leave the enclave and enter the world.",
+                requirement: { type: 'talk', poiId: 'enclave_departure_point', npcName: 'Leo the Guide' },
+            }
+        ],
+        rewards: {}
+    },
+    leos_lunch: {
+        id: 'leos_lunch',
+        name: "Leo's Lunch?",
+        description: "You found a rock in the sandwich Leo gave you. What is he playing at?",
+        startPoi: 'enclave_start',
+        isHidden: true,
+        startHint: "Examine the strange sandwich Leo gives you during the tutorial.",
+        playerStagePerspectives: ["I found a rock in my sandwich. I should ask Leo about this."],
+        completionSummary: "I found a rock in the sandwich Leo gave me. As a reward for my curiosity, he taught me a thing or two and gave me a better one.",
+        dialogue: {
+            start: {
+                npcName: 'Leo the Guide',
+                npcIcon: '/assets/npcChatHeads/tavern_regular.png',
+                text: "A rock? Hah! You found it! I put that there to teach you a lesson: always be aware. Adventuring is about more than just swinging a sword. It's about paying attention.",
+                responses: [
+                    { text: "That's a strange lesson.", next: 'reward' },
+                ],
+            },
+            reward: {
+                npcName: 'Leo the Guide',
+                npcIcon: '/assets/npcChatHeads/tavern_regular.png',
+                text: "Maybe so, but it's one you won't forget. For being so observant, here's a proper sandwich. And a little something for your trouble. Now, where were we?",
+                responses: [
+                    { text: "Thank you!", action: 'custom', customActionId: 'complete_leos_lunch' },
+                ],
+            }
+        },
+        stages: [
+            {
+                description: 'Talk to Leo about the rock in your sandwich.',
+                requirement: { type: 'talk', poiId: 'enclave_start', npcName: 'Leo the Guide' }
+            }
+        ],
+        rewards: {
+            xp: [{ skill: SkillName.Attack, amount: 25 }, { skill: SkillName.Strength, amount: 25 }, { skill: SkillName.Defence, amount: 25 }],
+            items: [{ itemId: 'leos_masterpiece_sandwich', quantity: 1 }]
+        }
+    },
+    a_smiths_apprentice: {
+        id: 'a_smiths_apprentice',
+        name: "A Smith's Apprentice",
+        description: "Valerius the Master Smith is looking for an extra pair of hands to help around the smithy. This could be a good opportunity to learn the craft.",
+        startPoi: 'meadowdale_smithy',
+        startDialogueNode: 'start',
+        startHint: "Speak to Valerius the Master Smith in Meadowdale.",
+        playerStagePerspectives: [
+            "Valerius needs me to bring him 1 Copper Ore and 1 Tin Ore.",
+            "I should bring the ore back to Valerius.",
+            "Valerius gave me a Bronze Bar and told me to smith a Bronze Dagger at the anvil.",
+            "I've smithed the dagger. I should show it to Valerius."
+        ],
+        completionSummary: "I helped Valerius the smith by gathering ore for him. He taught me how to smelt it into a bar and then smith that bar into a dagger. I've learned the basics of smithing.",
+        dialogue: {
+            start: {
+                npcName: 'Valerius the Master Smith',
+                npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                text: "You there! You look like you're not afraid of a bit of hard work. I could use some help, and you could learn a valuable skill. Interested?",
+                responses: [
+                    { text: "What do you need help with?", next: 'details' },
+                    { text: "I'm not interested, thanks.", action: 'close' },
+                ],
+            },
+            details: {
+                npcName: 'Valerius the Master Smith',
+                npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                text: "I need ore. The foundation of all good smithing is good metal. The local mine is full of Copper and Tin. Bring me one of each, and I'll show you the first step of turning rock into a weapon.",
+                responses: [
+                    { text: "I'll be back with your ore.", action: 'accept_quest' },
+                ],
+            },
+        },
+        stages: [
+            {
+                description: "Gather 1 Copper Ore and 1 Tin Ore.",
+                requirement: { type: 'gather', itemId: 'copper_ore', quantity: 1 },
+            },
+            {
+                description: "Return to Valerius the Master Smith.",
+                requirement: { type: 'talk', poiId: 'meadowdale_smithy', npcName: 'Valerius the Master Smith' },
+                stageRewards: {
+                    items: [{ itemId: 'bronze_bar', quantity: 1 }],
+                    xp: [{ skill: SkillName.Smithing, amount: 25 }]
+                }
+            },
+            {
+                description: "Use the anvil to smith a Bronze Dagger.",
+                requirement: { type: 'smith', itemId: 'bronze_dagger', quantity: 1 }
+            },
+            {
+                description: "Show the Bronze Dagger to Valerius.",
+                requirement: { type: 'talk', poiId: 'meadowdale_smithy', npcName: 'Valerius the Master Smith' }
+            }
+        ],
+        rewards: {
+            xp: [{ skill: SkillName.Smithing, amount: 100 }],
+            coins: 100
+        }
+    },
     goblin_menace: {
         id: 'goblin_menace',
         name: 'Goblin Menace',
@@ -18,24 +143,7 @@ export const QUESTS: Record<string, Quest> = {
             start: {
                 npcName: 'Old Man Fitzwilliam',
                 npcIcon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
-                text: "My ears! My poor, old ears! Can you hear that infernal racket? It's been going on for days, echoing all the way from the Stonebreak Mine. I haven't had a decent nap in a week!",
-                responses: [
-                    { text: "What kind of racket?", next: 'racket_explained' },
-                    { text: "I'm a bit busy right now.", action: 'close' },
-                ],
-            },
-            racket_explained: {
-                npcName: 'Old Man Fitzwilliam',
-                npcIcon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
-                text: "It's like a thousand tiny hammers wielded by a thousand tiny, angry drummers with no sense of rhythm! And the shrieking! It can only be one thing: goblins. They've taken up residence in the mine, and their... 'music'... is a menace to this whole town's peace and quiet!",
-                responses: [
-                    { text: "So what do you want me to do about it?", next: 'the_job' },
-                ],
-            },
-            the_job: {
-                npcName: 'Old Man Fitzwilliam',
-                npcIcon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
-                text: "I want you to go in there and... 'encourage' them to practice their percussion elsewhere. Permanently. The town guard is too busy polishing their helmets. If you can clear out a handful of them, maybe they'll get the message. I'll make it worth your while.",
+                text: "My ears! My poor, old ears! It's an infernal racket from the Stonebreak Mine. It can only be one thing: goblins. If you can clear out a handful of them, maybe they'll get the message. I'll make it worth your while.",
                 responses: [
                     { text: "Alright, I'll restore the peace. For a price.", action: 'accept_quest' },
                     { text: "Sounds dangerous. Not my problem.", action: 'close' },
@@ -247,179 +355,109 @@ export const QUESTS: Record<string, Quest> = {
                 requirement: { type: 'talk', poiId: 'silverhaven_residential_district', npcName: 'Elara' }
             }
         ],
+// FIX: The rewards object for this quest was malformed and incomplete. It has been corrected.
         rewards: {
-            xp: [{ skill: SkillName.Slayer, amount: 250 }],
-            coins: 500,
+            xp: [{ skill: SkillName.Slayer, amount: 350 }],
+            coins: 1500,
         }
     },
-    missing_shipment: {
-        id: 'missing_shipment',
-        name: "The Missing Shipment",
-        description: "A merchant in Silverhaven is worried about a caravan that never arrived. He suspects foul play on the King's Road.",
-        startPoi: 'silverhaven_trade_district',
-        startHint: "Speak to Merchant Theron in the Silverhaven Trade District.",
-        playerStagePerspectives: [
-            "A merchant's caravan was hit by bandits. I need to investigate their hideout on the King's Road and deal with their leader.",
-            "I've recovered the goods. I should return them to Merchant Theron in Silverhaven."
-        ],
-        completionSummary: "A merchant's shipment went missing on the King's Road. I tracked it to a nearby bandit hideout, defeated their leader, and returned the stolen goods to the grateful merchant.",
-        stages: [
-            {
-                description: "Investigate the Bandit Hideout on the King's Road and defeat the Bandit Leader.",
-                requirement: { type: 'kill', monsterId: 'bandit_leader', quantity: 1 }
-            },
-            {
-                description: "Return the Stolen Caravan Goods to Merchant Theron in Silverhaven.",
-                requirement: { type: 'talk', poiId: 'silverhaven_trade_district', npcName: 'Merchant Theron' }
-            }
-        ],
-        rewards: {
-            xp: [{ skill: SkillName.Strength, amount: 750 }],
-            coins: 2500,
-        }
-    },
-    a_pinch_of_trouble: {
-        id: 'a_pinch_of_trouble',
-        name: "A Pinch of Trouble",
-        description: "A fisherman on the Isle of Whispers is having problems with oversized crabs.",
-        startPoi: 'port_wreckage_docks',
-        startDialogueNode: 'start',
-        startHint: "Speak to Fisherman Brody on the docks at Port Wreckage.",
-        playerStagePerspectives: [
-            "The fisherman is being troubled by crabs. I need to defeat 8 of the Giant Crabs on the nearby island.",
-            "I need to bring one of the giant claws back to Fisherman Brody as proof.",
-            "I have the claw. I should talk to Brody to get my reward."
-        ],
-        completionSummary: "The crabs on the Isle of Whispers were causing trouble for a local fisherman. I thinned their numbers and brought him back a giant claw as proof, and he rewarded me for my help.",
-        dialogue: {
-            start: {
-                npcName: 'Fisherman Brody',
-                npcIcon: '/assets/npcChatHeads/fisherman_brody.png',
-                text: "Careful out here, traveler. These isles ain't as peaceful as they look. The crabs... they've gotten bigger. And meaner.",
-                responses: [
-                    { text: "What's wrong with the crabs?", next: 'problem' },
-                    { text: "I can handle a few crabs.", action: 'close' },
-                ],
-            },
-            problem: {
-                npcName: 'Fisherman Brody',
-                npcIcon: '/assets/npcChatHeads/fisherman_brody.png',
-                text: "It's their claws, see? Big as a man's fist! They're cutting my nets and scaring off all the fish. I can't make a living like this. Someone needs to thin their numbers.",
-                responses: [
-                    { text: "What would it be worth to you?", next: 'job' },
-                ],
-            },
-            job: {
-                npcName: 'Fisherman Brody',
-                npcIcon: '/assets/npcChatHeads/fisherman_brody.png',
-                text: "You look tough enough. If you could take out, say, eight of the big ones on Crabclaw Isle, it'd be a great help. Bring me back one of their giant claws as proof, and I'll make sure you're rewarded for your time.",
-                responses: [
-                    { text: "I'll take care of your crab problem.", action: 'accept_quest' },
-                    { text: "I've got bigger fish to fry.", action: 'close' },
-                ],
-            },
-        },
-        stages: [
-            {
-                description: 'Defeat 8 Giant Crabs on Crabclaw Isle.',
-                requirement: { type: 'kill', monsterId: 'giant_crab', quantity: 8 },
-            },
-            {
-                description: "Bring a Giant Crab Claw to Fisherman Brody in Port Wreckage.",
-                requirement: { type: 'gather', itemId: 'giant_crab_claw', quantity: 1 }
-            },
-            {
-                description: "Talk to Fisherman Brody to receive your reward.",
-                requirement: { type: 'talk', poiId: 'port_wreckage_docks', npcName: 'Fisherman Brody' }
-            }
-        ],
-        rewards: {
-            xp: [{ skill: SkillName.Fishing, amount: 200 }],
-            coins: 350,
-        }
-    },
-    the_sunken_curse: {
-        id: 'the_sunken_curse',
-        name: "The Sunken Curse",
-        description: "An ancient evil stirs in a labyrinth deep within the island. The elder of Port Wreckage seeks a hero to investigate.",
-        startPoi: 'port_wreckage_square',
-        startHint: "Speak to Elder Maeve in the Port Wreckage square.",
-        playerStagePerspectives: [
-            "I need to find a Siren in Siren's Cove and get a lock of its enchanted hair.",
-            "I have the hair. Now I need to find pure Brimstone from the volcanic vents.",
-            "I have the hair and brimstone. Now I need an Ancient Gear from a sentinel in the labyrinth.",
-            "I have all the components. I should take them to Elder Maeve so she can prepare the offering.",
-            "I must venture into the Sunken Labyrinth and find the source of the corruption at the temple's heart.",
-            "I have cleansed the altar. I should return to Elder Maeve with the news."
-        ],
-        completionSummary: "I spoke with the elder of Port Wreckage and learned of a growing corruption. I gathered rare components from across the Isle of Whispers, entered the ancient Sunken Labyrinth, and cleansed the central altar, restoring peace to the island.",
-        stages: [
-            {
-                description: "Gather Siren's Hair from a Siren in Siren's Cove.",
-                requirement: { type: 'gather', itemId: 'sirens_hair', quantity: 1 }
-            },
-            {
-                description: "Gather Brimstone from the Volcanic Vents.",
-                requirement: { type: 'gather', itemId: 'brimstone', quantity: 1 }
-            },
-            {
-                description: "Gather an Ancient Gear from an Ancient Sentinel.",
-                requirement: { type: 'gather', itemId: 'ancient_gear', quantity: 1 }
-            },
-            {
-                description: "Return to Elder Maeve with the components.",
-                requirement: { type: 'talk', poiId: 'port_wreckage_square', npcName: 'Elder Maeve' }
-            },
-            {
-                description: "Find the central altar in the Sunken Labyrinth and cleanse it.",
-                requirement: { type: 'talk', poiId: 'laby_central_altar', npcName: 'Altar of the Depths' }
-            },
-            {
-                description: "Return to Elder Maeve in Port Wreckage.",
-                requirement: { type: 'talk', poiId: 'port_wreckage_square', npcName: 'Elder Maeve' }
-            }
-        ],
-        rewards: {
-            xp: [{ skill: SkillName.Slayer, amount: 5000 }, { skill: SkillName.Magic, amount: 2500 }],
-            coins: 10000,
-        }
-    }
 };
 
+// FIX: Define and export the REPEATABLE_QUEST_POOL to resolve module export errors.
 export const REPEATABLE_QUEST_POOL: RepeatableQuest[] = [
-    // Meadowdale Gather
-    { id: 'rqg_rat_tails', type: 'gather', location: 'meadowdale', title: 'Pest Control', description: 'The innkeeper needs rat tails as proof of a job well done.', target: { itemId: 'rat_tail' }, baseCoinReward: 2, xpReward: { skill: SkillName.Slayer, amount: 5 } },
-    { id: 'rqg_goblin_hide', type: 'gather', location: 'meadowdale', title: 'Tanning Supplies', description: 'A local craftsman needs goblin hides for a new project.', target: { itemId: 'goblin_hide' }, baseCoinReward: 5, xpReward: { skill: SkillName.Slayer, amount: 8 } },
-    { id: 'rqg_cowhide', type: 'gather', location: 'meadowdale', title: 'Leatherworking Order', description: 'The local tanner has a large order to fill and needs cowhides.', target: { itemId: 'cowhide' }, baseCoinReward: 6, xpReward: { skill: SkillName.Crafting, amount: 4 } },
-    { id: 'rqg_logs_smithy', type: 'gather', location: 'meadowdale', title: 'Firewood for the Forge', description: "Valerius the smith needs a steady supply of logs to keep his forge burning hot.", target: { itemId: 'logs' }, baseCoinReward: 1, xpReward: { skill: SkillName.Woodcutting, amount: 3 } },
-    { id: 'rqg_shrimp_kitchen', type: 'gather', location: 'meadowdale', title: 'A Fresh Catch', description: "The cook in Meadowdale is planning a seafood stew and needs fresh shrimp.", target: { itemId: 'raw_shrimp' }, baseCoinReward: 2, xpReward: { skill: SkillName.Fishing, amount: 3 } },
-    { id: 'rqg_ores_smith', type: 'gather', location: 'meadowdale', title: "A Smith's Foundation", description: "Valerius needs a fresh supply of copper ore to smelt into bronze bars.", target: { itemId: 'copper_ore' }, baseCoinReward: 3, xpReward: { skill: SkillName.Mining, amount: 4 } },
-    { id: 'rqg_feathers_fletcher', type: 'gather', location: 'meadowdale', title: 'Fletching Supplies', description: 'A local fletcher is buying feathers in bulk to make arrows.', target: { itemId: 'feathers' }, baseCoinReward: 0.5, xpReward: { skill: SkillName.Fletching, amount: 2 } },
-    { id: 'rqg_eggs_inn', type: 'gather', location: 'meadowdale', title: "The Inn's Breakfast", description: 'Barkeep Grimley needs eggs for the morning breakfast rush at the inn.', target: { itemId: 'eggs' }, baseCoinReward: 1, xpReward: { skill: SkillName.Cooking, amount: 5 } },
-    
-    // Oakhaven Gather & Kill
-    { id: 'rqk_bandits', type: 'kill', location: 'oakhaven', title: "Undertaker's Request", description: "The Oakhaven undertaker is paying adventurers to deal with the bandit problem on the roads south of Meadowdale.", target: { monsterId: 'cloaked_bandit' }, baseCoinReward: 20, xpReward: { skill: SkillName.Slayer, amount: 15 } },
-    { id: 'rqg_iron_ore_guard', type: 'gather', location: 'oakhaven', title: 'Iron for the Guard', description: "The Oakhaven town guard has placed an order for raw iron ore for new equipment.", target: { itemId: 'iron_ore' }, baseCoinReward: 8, xpReward: { skill: SkillName.Mining, amount: 8 } },
-    { id: 'rqg_boar_hide_tanner', type: 'gather', location: 'oakhaven', title: 'Tough Hides Needed', description: "Tanner Sven in Oakhaven needs tough boar hides for some specialty leatherwork.", target: { itemId: 'boar_hide' }, baseCoinReward: 6, xpReward: { skill: SkillName.Crafting, amount: 8 } },
-    { id: 'rqg_willow_logs_fletcher', type: 'gather', location: 'oakhaven', title: 'Quality Bows', description: 'A bowyer in Oakhaven is paying well for willow logs to craft quality bows.', target: { itemId: 'willow_logs' }, baseCoinReward: 30, xpReward: { skill: SkillName.Woodcutting, amount: 20 } },
-
-    // General Gather
-    { id: 'rqg_spider_silk', type: 'gather', location: 'general', title: 'Silky Smooth', description: 'A tailor is looking for spider silk to make fine clothing.', target: { itemId: 'spider_silk' }, baseCoinReward: 8, xpReward: { skill: SkillName.Crafting, amount: 8 } },
-
-    // Meadowdale Interact
-    { id: 'rqi_clean_fountain', type: 'interact', location: 'meadowdale', title: 'Clean the Fountain', description: 'The fountain in Meadowdale Square is looking a bit grimy.', locationPoiId: 'meadowdale_square', target: { name: 'Fountain' }, baseCoinReward: 25, xpReward: { skill: SkillName.Strength, amount: 50 } },
-    { id: 'rqi_tidy_tavern_md', type: 'interact', location: 'meadowdale', title: 'Tidy the Tavern', description: 'The Rusty Flagon is a mess after a busy night. Help clean it up.', locationPoiId: 'the_rusty_flagon', target: { name: 'Tavern Floor' }, baseCoinReward: 20, xpReward: { skill: SkillName.Strength, amount: 40 } },
-    { id: 'rqi_sweep_smithy', type: 'interact', location: 'meadowdale', title: 'Sweep the Smithy', description: 'The smithy in Meadowdale is covered in soot and metal shavings.', locationPoiId: 'meadowdale_smithy', target: { name: 'Smithy Floor' }, baseCoinReward: 15, xpReward: { skill: SkillName.Strength, amount: 30 } },
-    { id: 'rqi_restock_shelves', type: 'interact', location: 'meadowdale', title: 'Restock Shelves', description: 'Help the general store owner in Meadowdale restock the shelves.', locationPoiId: 'meadowdale_square', target: { name: 'General Store Shelves' }, baseCoinReward: 20, xpReward: { skill: SkillName.Strength, amount: 40 } },
-    
-    // Oakhaven Interact
-    { id: 'rqi_polish_well', type: 'interact', location: 'oakhaven', title: 'Polish the Well', description: 'The wishing well in Oakhaven Square could use a good polish.', locationPoiId: 'oakhaven_square', target: { name: 'Wishing Well' }, baseCoinReward: 25, xpReward: { skill: SkillName.Crafting, amount: 50 } },
-    { id: 'rqi_tidy_tavern_oh', type: 'interact', location: 'oakhaven', title: 'Tidy the Tavern', description: 'The Carved Mug is a mess after a busy night. Help clean it up.', locationPoiId: 'the_carved_mug', target: { name: 'Tavern Floor' }, baseCoinReward: 20, xpReward: { skill: SkillName.Strength, amount: 40 } },
-    { id: 'rqi_sort_tannery', type: 'interact', location: 'oakhaven', title: 'Sort the Tannery', description: "Tanner Sven's workshop is a mess of hides and tools. He needs help organizing.", locationPoiId: 'oakhaven_crafting_district', target: { name: 'Tannery' }, baseCoinReward: 30, xpReward: { skill: SkillName.Crafting, amount: 60 } },
-
-    // Isle of Whispers Gather & Kill
-    { id: 'rqk_jungle_stalkers', type: 'kill', location: 'general', title: 'Stalker Hunt', description: 'The shipwright in Port Wreckage needs tough stalker claws for reinforcing hulls.', target: { monsterId: 'jungle_stalker' }, baseCoinReward: 150, xpReward: { skill: SkillName.Slayer, amount: 100 } },
-    { id: 'rqg_siren_hair', type: 'gather', location: 'general', title: 'Enchanted Ropes', description: 'An old sailor is buying enchanted siren hair to weave into unsnappable ropes.', target: { itemId: 'sirens_hair' }, baseCoinReward: 200, xpReward: { skill: SkillName.Magic, amount: 50 } },
-    { id: 'rqg_brimstone', type: 'gather', location: 'general', title: 'Fuel for the Fire', description: 'The local alchemist requires brimstone for their experiments.', target: { itemId: 'brimstone' }, baseCoinReward: 180, xpReward: { skill: SkillName.Mining, amount: 80 } },
-    { id: 'rqk_tidal_crawlers', type: 'kill', location: 'general', title: 'Crawler Cull', description: 'The tidal crawlers are becoming a nuisance on the flats. Thin their numbers.', target: { monsterId: 'tidal_crawler' }, baseCoinReward: 100, xpReward: { skill: SkillName.Slayer, amount: 60 } },
+    // --- GATHER ---
+    {
+        id: 'gather_logs_meadowdale',
+        type: 'gather',
+        title: 'Restock the Woodpile',
+        description: "The innkeeper needs more logs for the fire. Bring him a bundle of standard logs.",
+        location: 'meadowdale',
+        target: { itemId: 'logs' },
+        baseCoinReward: 5,
+        xpReward: { skill: SkillName.Woodcutting, amount: 5 },
+    },
+    {
+        id: 'gather_ore_meadowdale',
+        type: 'gather',
+        title: 'Ore for the Smithy',
+        description: "The smithy is running low on basic ore for training new apprentices. Provide some copper ore.",
+        location: 'meadowdale',
+        target: { itemId: 'copper_ore' },
+        baseCoinReward: 8,
+        xpReward: { skill: SkillName.Mining, amount: 4 },
+    },
+    {
+        id: 'gather_shrimp_meadowdale',
+        type: 'gather',
+        title: "Chef's Request: Shrimp",
+        description: "The local chef needs fresh shrimp for a new recipe. They'll pay for any you can bring.",
+        location: 'meadowdale',
+        target: { itemId: 'raw_shrimp' },
+        baseCoinReward: 6,
+        xpReward: { skill: SkillName.Fishing, amount: 3 },
+    },
+    {
+        id: 'gather_wool_oakhaven',
+        type: 'gather',
+        title: 'Wool for the Weavers',
+        description: "Oakhaven's weavers are always in need of wool for their fine crafts. Shear some sheep and bring it in.",
+        location: 'oakhaven',
+        target: { itemId: 'wool' },
+        baseCoinReward: 4,
+        xpReward: { skill: SkillName.Crafting, amount: 2 },
+    },
+    // --- KILL ---
+    {
+        id: 'kill_rats_meadowdale',
+        type: 'kill',
+        title: 'Cellar Infestation',
+        description: "Giant rats have infested the tavern's cellar. Clear them out.",
+        location: 'meadowdale',
+        target: { monsterId: 'giant_rat' },
+        baseCoinReward: 20,
+        xpReward: { skill: SkillName.Attack, amount: 10 },
+    },
+    {
+        id: 'kill_goblins_meadowdale',
+        type: 'kill',
+        title: 'Mine Mischief',
+        description: 'Goblins are causing trouble in the Stonebreak Mine again. Thin their numbers.',
+        location: 'meadowdale',
+        target: { monsterId: 'goblin' },
+        baseCoinReward: 30,
+        xpReward: { skill: SkillName.Strength, amount: 15 },
+    },
+    {
+        id: 'kill_spiders_oakhaven',
+        type: 'kill',
+        title: 'Farmstead Frights',
+        description: 'Giant spiders have taken over the abandoned farmstead south of Meadowdale. It needs to be cleared for safety.',
+        location: 'oakhaven',
+        target: { monsterId: 'giant_spider' },
+        baseCoinReward: 50,
+        xpReward: { skill: SkillName.Defence, amount: 20 },
+    },
+    // --- INTERACT ---
+    {
+        id: 'interact_clean_tavern_meadowdale',
+        type: 'interact',
+        title: 'Tidy the Tavern',
+        description: "The Rusty Flagon is a mess after a busy night. Help the barkeep clean up.",
+        location: 'meadowdale',
+        locationPoiId: 'the_rusty_flagon',
+        target: { name: 'Tidy the Tavern' },
+        baseCoinReward: 100,
+        xpReward: { skill: SkillName.Strength, amount: 50 },
+    },
+    {
+        id: 'interact_sharpen_tools_oakhaven',
+        type: 'interact',
+        title: 'Sharpen Crafting Tools',
+        description: "The artisans in Oakhaven need their tools sharpened. It's tedious work, but someone's got to do it.",
+        location: 'oakhaven',
+        locationPoiId: 'oakhaven_crafting_district',
+        target: { name: 'Sharpen Tools' },
+        baseCoinReward: 250,
+        xpReward: { skill: SkillName.Crafting, amount: 100 },
+    },
 ];

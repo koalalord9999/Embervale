@@ -1,5 +1,4 @@
 
-
 import React, { useCallback } from 'react';
 import { useUIState } from '../../hooks/useUIState';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -16,7 +15,7 @@ import { useQuestLogic } from '../../hooks/useQuestLogic';
 import { useSkilling } from '../../hooks/useSkilling';
 import { useInteractQuest } from '../../hooks/useInteractQuest';
 import { useGameSession } from '../../hooks/useGameSession';
-import { SkillName, InventorySlot } from '../../types';
+import { SkillName, InventorySlot, CombatStance } from '../../types';
 import { QUESTS } from '../../constants';
 import { POIS } from '../../data/pois';
 import CraftingProgressView from '../views/crafting/CraftingProgressView';
@@ -54,11 +53,14 @@ interface MainViewControllerProps {
     handlePlayerDeath: () => void;
     handleKill: (uniqueInstanceId: string) => void;
     combatSpeedMultiplier: number;
+    advanceTutorial: (condition: string) => void;
+    tutorialStage: number;
+    activeCombatStyleHighlight?: CombatStance | null;
 }
 
 const MainViewController: React.FC<MainViewControllerProps> = (props) => {
     const {
-        ui, addLog, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, combatSpeedMultiplier
+        ui, addLog, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, combatSpeedMultiplier, advanceTutorial, tutorialStage, activeCombatStyleHighlight
     } = props;
 
     const handleCustomDialogueAction = useCallback((actionId: string | undefined) => {
@@ -79,11 +81,16 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 addLog("You sail back to the mainland.");
                 navigation.handleForcedNavigate('silverhaven_docks');
                 break;
+            case 'complete_leos_lunch':
+                questLogic.completeQuestStage('leos_lunch');
+                advanceTutorial('complete-leos-lunch');
+                ui.closeAllModals(); // Close the dialogue
+                break;
             default:
                 console.warn(`Unknown custom dialogue action: ${actionId}`);
                 ui.closeAllModals();
         }
-    }, [inv, addLog, navigation, ui]);
+    }, [inv, addLog, navigation, ui, questLogic, advanceTutorial]);
 
     const handleTeleport = useCallback((toBoardId: string) => {
         addLog(`You focus on the quest board and feel yourself pulled through space...`);
@@ -122,6 +129,9 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
             onKill={handleKill} 
             activeBuffs={char.activeBuffs}
             combatSpeedMultiplier={combatSpeedMultiplier}
+            activeCombatStyleHighlight={activeCombatStyleHighlight}
+            // FIX: Pass the advanceTutorial prop to satisfy the CombatViewProps type.
+            advanceTutorial={advanceTutorial}
         />;
     }
     if (ui.activeTeleportBoardId) {
@@ -137,6 +147,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
             dialogueInfo={ui.activeQuestDialogue}
             onAcceptQuest={(questId) => quests.startQuest(questId, addLog)}
             onEndDialogue={() => ui.setActiveQuestDialogue(null)}
+            advanceTutorial={advanceTutorial}
         />;
     }
     if (ui.activeInteractiveDialogue) {
@@ -152,7 +163,6 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
             onClose={() => ui.setActiveNpcDialogue(null)}
         />;
     }
-    // FIX: Pass the `bank` state directly to the `BankView` component instead of trying to access it through `bankLogic`, which only contains handler functions.
     if (ui.activePanel === 'bank') return <BankView 
         bank={bank}
         onClose={() => ui.setActivePanel(null)}
@@ -196,8 +206,18 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
         onOpenTeleportModal={() => ui.setActiveTeleportBoardId(ui.activeQuestBoardId!)}
      />
     
+    const poi = POIS[session.currentPoiId];
+    if (!poi) {
+        // Fallback in case a POI ID is invalid, to prevent a hard crash.
+        // This might happen with corrupted save data.
+        console.error(`Error: Could not find POI with id "${session.currentPoiId}". Defaulting to start location.`);
+        addLog(`Error: Location "${session.currentPoiId}" not found. Returning to Meadowdale.`);
+        session.setCurrentPoiId('meadowdale_south_gate');
+        return <div>Error: Location not found. Resetting...</div>;
+    }
+
     return (
-        <SceneView poi={POIS[session.currentPoiId]} unlockedPois={navigation.reachablePois} onNavigate={navigation.handleNavigate} inventory={inv.inventory}
+        <SceneView poi={poi} unlockedPois={navigation.reachablePois} onNavigate={navigation.handleNavigate} inventory={inv.inventory}
             onActivity={activity => {
                 if (activity.type === 'shearing' || activity.type === 'egg_collecting') worldActions.handleSimpleSkilling(activity);
                 if (activity.type === 'shop') ui.setActiveShopId(activity.shopId);
@@ -271,6 +291,8 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
             setActiveInteractiveDialogue={ui.setActiveInteractiveDialogue}
             onDepositBackpack={bankLogic.handleDepositBackpack}
             ui={ui}
+            tutorialStage={tutorialStage}
+            advanceTutorial={advanceTutorial}
         />
     );
 };

@@ -1,7 +1,6 @@
 
 
 import { useMemo, useCallback } from 'react';
-// Fix: Corrected POIS import path.
 import { REGIONS } from '../constants';
 import { POIS } from '../data/pois';
 import { useUIState } from './useUIState';

@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Equipment, InventorySlot } from '../../types';
 import { ITEMS, getIconClassName } from '../../constants';
@@ -93,6 +94,7 @@ const EquipmentSlotDisplay: React.FC<{
 
     return (
         <div
+            data-tutorial-id={`equipment-slot-${slotKey}`}
             className="w-full aspect-square bg-gray-900 border-2 border-gray-600 rounded-md flex items-center justify-center p-1 relative transition-colors cursor-pointer hover:border-yellow-400"
             onClick={handleUnequip}
             onMouseEnter={handleMouseEnter}

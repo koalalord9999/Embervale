@@ -40,7 +40,7 @@ export interface ConfirmationPrompt {
 }
 
 export const useUIState = () => {
-    const [activePanel, setActivePanel] = useState<ActivePanel>('inventory');
+    const [activePanel, setActivePanel] = useState<ActivePanel>(null);
     const [combatQueue, setCombatQueue] = useState<string[]>([]);
     const [isMandatoryCombat, setIsMandatoryCombat] = useState<boolean>(false);
     const [activeShopId, setActiveShopId] = useState<string | null>(null);

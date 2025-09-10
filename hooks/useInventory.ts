@@ -1,3 +1,5 @@
+
+
 import { useState, useCallback } from 'react';
 import { InventorySlot, Equipment, CombatStance, WeaponType, PlayerSkill } from '../types';
 import { ITEMS, INVENTORY_CAPACITY, BANK_CAPACITY } from '../constants';
@@ -60,6 +62,7 @@ const addToBank = (
 export const useInventory = (
     initialData: { inventory: InventorySlot[], coins: number, equipment: Equipment },
     addLog: (message: string) => void,
+    advanceTutorial: (condition: string) => void,
     options?: {
         isAutoBankOn?: boolean;
         bank?: (InventorySlot | null)[];
@@ -72,6 +75,7 @@ export const useInventory = (
     const { isAutoBankOn = false, bank, setBank } = options ?? {};
 
     const modifyItem = useCallback((itemId: string, quantity: number, quiet: boolean = false) => {
+        console.log(`[DEBUG_INVENTORY] modifyItem called. Item: ${itemId}, Quantity: ${quantity}`);
         if (itemId === 'coins') {
             setCoins(c => c + quantity);
             if (quantity !== 0 && !quiet) addLog(`${quantity > 0 ? 'Gained' : 'Lost'} ${Math.abs(quantity)} coins.`);
@@ -84,10 +88,14 @@ export const useInventory = (
         }
 
         const itemData = ITEMS[itemId];
-        if (!itemData) return;
+        if (!itemData) {
+            console.error(`[DEBUG_INVENTORY] ERROR: Could not find item data for ID: ${itemId}`);
+            return;
+        }
 
         if (quantity > 0) { // ADDING
             setInventory(prevInv => {
+                console.log('[DEBUG_INVENTORY] Inventory state BEFORE adding:', JSON.parse(JSON.stringify(prevInv)));
                 const newInv = [...prevInv];
                 
                 if (itemData.stackable) {
@@ -95,16 +103,15 @@ export const useInventory = (
                     if (existingStack) {
                         existingStack.quantity += quantity;
                         if (!quiet) addLog(`Gained ${quantity}x ${itemData.name}.`);
-                        return newInv;
                     } else {
                         const emptySlotIndex = newInv.findIndex(slot => slot === null);
                         if (emptySlotIndex === -1) {
                             if (!quiet) addLog(`Your inventory is full. Could not pick up ${itemData.name}.`);
+                            console.log('[DEBUG_INVENTORY] Inventory state AFTER failed add (full):', JSON.parse(JSON.stringify(prevInv)));
                             return prevInv;
                         }
                         newInv[emptySlotIndex] = { itemId, quantity };
                         if (!quiet) addLog(`Gained ${quantity}x ${itemData.name}.`);
-                        return newInv;
                     }
                 } else { // NOT STACKABLE
                     let added = 0;
@@ -124,11 +131,13 @@ export const useInventory = (
                     if (added > 0 && !quiet) {
                         addLog(`Gained ${added}x ${itemData.name}.`);
                     }
-                    return newInv;
                 }
+                console.log('[DEBUG_INVENTORY] Inventory state AFTER adding:', JSON.parse(JSON.stringify(newInv)));
+                return newInv;
             });
         } else { // REMOVING
             setInventory(prevInv => {
+                 console.log('[DEBUG_INVENTORY] Inventory state BEFORE removing:', JSON.parse(JSON.stringify(prevInv)));
                 const newInv = [...prevInv];
                 let removedCount = 0;
                 const amountToRemove = Math.abs(quantity);
@@ -161,6 +170,7 @@ export const useInventory = (
                 if (removedCount > 0 && !quiet) {
                      addLog(`Lost ${removedCount}x ${itemData.name}.`);
                 }
+                 console.log('[DEBUG_INVENTORY] Inventory state AFTER removing:', JSON.parse(JSON.stringify(newInv)));
                 return newInv;
             });
         }
@@ -217,6 +227,10 @@ export const useInventory = (
 
         // Equip the new item
         setEquipment(prev => ({ ...prev, [slotKey]: { itemId: itemToEquip.itemId, quantity: quantityToEquip } }));
+        
+        if (itemToEquip.itemId === 'bronze_dagger') {
+            advanceTutorial('equip-dagger');
+        }
 
         // Update inventory
         setInventory(prevInv => {
@@ -263,7 +277,7 @@ export const useInventory = (
         });
 
         addLog(`Equipped ${itemData.name}.`);
-    }, [equipment, addLog]);
+    }, [equipment, addLog, advanceTutorial]);
 
     const handleUnequip = useCallback((slotKey: keyof Equipment, setCombatStance: (stance: CombatStance) => void) => {
         const itemToUnequip = equipment[slotKey];

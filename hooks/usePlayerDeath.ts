@@ -14,22 +14,31 @@ interface PlayerDeathDependencies {
     char: ReturnType<typeof useCharacter>;
     inv: ReturnType<typeof useInventory>;
     addLog: (message: string) => void;
+    tutorialStage: number;
 }
 
 export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
-    const { skilling, interactQuest, ui, session, char, inv, addLog } = deps;
+    const { skilling, interactQuest, ui, session, char, inv, addLog, tutorialStage } = deps;
 
     const handlePlayerDeath = useCallback(() => {
         skilling.stopSkilling();
         interactQuest.handleCancelInteractQuest();
         ui.setCombatQueue([]);
         ui.setIsMandatoryCombat(false);
-        // This is a special case navigation that bypasses adjacency check
-        session.setCurrentPoiId('meadowdale_square');
+
+        const isTutorialActive = tutorialStage >= 0;
+        const respawnPoi = isTutorialActive ? 'enclave_start' : 'meadowdale_square';
+        session.setCurrentPoiId(respawnPoi);
         char.setCurrentHp(char.maxHp);
-        inv.setCoins(c => Math.floor(c / 2));
-        addLog("You have died and respawned in Meadowdale, losing half your coins.");
-    }, [session, char, inv, addLog, ui, skilling, interactQuest]);
+
+        if (isTutorialActive) {
+            addLog("You have been defeated! Don't worry, you've been safely returned to the start of the enclave. In the main world, death is more costly, usually causing you to lose half of your coins.");
+        } else {
+            const coinsLost = Math.floor(inv.coins / 2);
+            inv.setCoins(c => c - coinsLost);
+            addLog(`You have died and respawned in Meadowdale, losing ${coinsLost} coins.`);
+        }
+    }, [session, char, inv, addLog, ui, skilling, interactQuest, tutorialStage]);
 
     return { handlePlayerDeath };
 };

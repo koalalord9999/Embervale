@@ -59,7 +59,7 @@ export const silverhavenPois: Record<string, POI> = {
             { type: 'quest_start', questId: 'missing_shipment' },
         ],
         regionId: 'silverhaven',
-        x: 250, y: 280,
+        x: 310, y: 320,
         type: 'internal',
     },
     silverhaven_bank: {

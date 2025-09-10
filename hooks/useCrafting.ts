@@ -1,5 +1,4 @@
 
-
 import React, { useCallback, useEffect, useRef } from 'react';
 import { PlayerSkill, SkillName, InventorySlot, ActiveCraftingAction } from '../types';
 import { ITEMS, SMITHING_RECIPES, COOKING_RECIPES, INVENTORY_CAPACITY, CRAFTING_RECIPES, FLETCHING_RECIPES, GEM_CUTTING_RECIPES, SPINNING_RECIPES, HERBLORE_RECIPES, JEWELRY_CRAFTING_RECIPES } from '../constants';
@@ -14,10 +13,12 @@ interface UseCraftingProps {
     modifyItem: (itemId: string, quantity: number, quiet?: boolean) => void;
     addXp: (skill: SkillName, amount: number) => void;
     checkQuestProgressOnSpin: (itemId: string, quantity: number) => void;
+    checkQuestProgressOnSmith: (itemId: string, quantity: number) => void;
+    advanceTutorial: (condition: string) => void;
 }
 
 export const useCrafting = (props: UseCraftingProps) => {
-    const { skills, hasItems, addLog, setActiveCraftingAction, inventory, modifyItem, addXp, checkQuestProgressOnSpin, activeCraftingAction } = props;
+    const { skills, hasItems, addLog, setActiveCraftingAction, inventory, modifyItem, addXp, checkQuestProgressOnSpin, checkQuestProgressOnSmith, activeCraftingAction, advanceTutorial } = props;
 
     const handleSpinning = useCallback((recipeId: string, quantity: number = 1) => {
         const recipe = SPINNING_RECIPES.find(r => r.itemId === recipeId);
@@ -398,9 +399,19 @@ export const useCrafting = (props: UseCraftingProps) => {
         if (action.recipeType === 'spinning') {
             checkQuestProgressOnSpin(product.itemId, product.quantity);
         }
+        if (action.recipeType === 'smithing-item') {
+            checkQuestProgressOnSmith(product.itemId, product.quantity);
+        }
         
+        if (action.recipeType === 'smithing-bar' && product.itemId === 'bronze_bar') {
+            advanceTutorial('smelt-bar');
+        }
+        if (action.recipeType === 'smithing-item' && product.itemId === 'bronze_dagger') {
+            advanceTutorial('smith-dagger');
+        }
+
         return { success: true };
-    }, [skills, hasItems, modifyItem, addXp, inventory, checkQuestProgressOnSpin]);
+    }, [skills, hasItems, modifyItem, addXp, inventory, checkQuestProgressOnSpin, checkQuestProgressOnSmith, advanceTutorial]);
 
     const completeCraftingItemRef = useRef(completeCraftingItem);
     useEffect(() => {

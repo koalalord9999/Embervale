@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react';
 import { InventorySlot, PlayerSkill, SkillName, ActiveCraftingAction, Item, CraftingContext } from '../types';
-import { ITEMS, FLETCHING_RECIPES, HERBLORE_RECIPES, HERBS, INVENTORY_CAPACITY } from '../constants';
+import { ITEMS, FLETCHING_RECIPES, HERBLORE_RECIPES, HERBS, INVENTORY_CAPACITY, rollOnLootTable } from '../constants';
 import { MakeXPrompt } from './useUIState';
 
 interface UseItemActionsProps {
@@ -23,10 +23,12 @@ interface UseItemActionsProps {
     setItemToUse: (item: { item: InventorySlot, index: number } | null) => void;
     addBuff: (buff: Omit<any, 'id' | 'expiresAt'>) => void;
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
+    startQuest: (questId: string) => void;
+    advanceTutorial: (condition: string) => void;
 }
 
 export const useItemActions = (props: UseItemActionsProps) => {
-    const { addLog, currentHp, maxHp, setCurrentHp, applyStatModifier, setInventory, skills, inventory, activeCraftingAction, setActiveCraftingAction, hasItems, modifyItem, addXp, openCraftingView, setItemToUse, addBuff, setMakeXPrompt } = props;
+    const { addLog, currentHp, maxHp, setCurrentHp, applyStatModifier, setInventory, skills, inventory, activeCraftingAction, setActiveCraftingAction, hasItems, modifyItem, addXp, openCraftingView, setItemToUse, addBuff, setMakeXPrompt, startQuest, advanceTutorial } = props;
 
     const handleConsume = useCallback((itemId: string, inventoryIndex: number) => {
         const itemData = ITEMS[itemId];
@@ -53,6 +55,52 @@ export const useItemActions = (props: UseItemActionsProps) => {
             return;
         }
 
+        if (itemData.consumable.special === 'treasure_chest') {
+            const freeSlots = inventory.filter(s => s === null).length;
+            // The chest takes 1 slot. Max loot is 10 items (5 gems, 3 herbs, 1 steel, 1 runic).
+            // So we need 10 slots available *after* the chest is used.
+            // This means we need 9 empty slots + the chest's slot = 10 total.
+            if (freeSlots < 9) {
+                addLog("You need at least 10 free inventory slots to open this chest.");
+                return;
+            }
+        
+            modifyItem(itemId, -1, true); // Consume the chest
+            addLog("You open the treasure chest and find...");
+        
+            // 1. 5 random uncut gems
+            const uncutGems = ['uncut_sapphire', 'uncut_emerald', 'uncut_ruby'];
+            for (let i = 0; i < 5; i++) {
+                const randomGem = uncutGems[Math.floor(Math.random() * uncutGems.length)];
+                modifyItem(randomGem, 1, true);
+            }
+        
+            // 2. 3 rolls on the herb table
+            for (let i = 0; i < 3; i++) {
+                const herb = rollOnLootTable('herb_table');
+                if (herb) {
+                    modifyItem(herb, 1, true);
+                }
+            }
+        
+            // 3. A random piece of Steel equipment (excluding warhammer)
+            const steelEquipment = Object.values(ITEMS).filter(
+                item => item.material === 'steel' && item.equipment && item.id !== 'steel_warhammer'
+            );
+            if (steelEquipment.length > 0) {
+                const randomSteelItem = steelEquipment[Math.floor(Math.random() * steelEquipment.length)];
+                modifyItem(randomSteelItem.id, 1, true);
+            }
+        
+            // 4. 1% chance for a Runic Sword
+            if (Math.random() < 0.01) {
+                modifyItem('runic_sword', 1, true);
+                addLog("Incredibly lucky! You found a Runic Sword inside!");
+            }
+        
+            return; // Stop further processing
+        }
+
         const hasNonHealingEffect = !!(itemData.consumable.statModifiers || itemData.consumable.buffs || itemData.consumable.givesCoins);
 
         if (itemData.consumable.healAmount && currentHp >= maxHp && !hasNonHealingEffect) {
@@ -70,6 +118,9 @@ export const useItemActions = (props: UseItemActionsProps) => {
             const healAmount = itemData.consumable.healAmount;
             setCurrentHp(prev => Math.min(maxHp, prev + healAmount));
             addLog(`You consume the ${itemData.name} and heal ${healAmount} HP.`);
+            if (itemId === 'sandwich') {
+                advanceTutorial('eat-sandwich');
+            }
         }
         if (itemData.consumable.statModifiers) {
             itemData.consumable.statModifiers.forEach(modifier => {
@@ -126,7 +177,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
             return newInv;
         });
 
-    }, [skills, currentHp, maxHp, setCurrentHp, setInventory, addLog, applyStatModifier, modifyItem, addXp, addBuff]);
+    }, [skills, currentHp, maxHp, setCurrentHp, setInventory, addLog, applyStatModifier, modifyItem, addXp, addBuff, advanceTutorial, inventory]);
     
     const handleBuryBones = useCallback((itemId: string, inventoryIndex: number) => {
         const itemData = ITEMS[itemId];
@@ -188,6 +239,24 @@ export const useItemActions = (props: UseItemActionsProps) => {
                 return slot && slot.itemId === itemId ? total + slot.quantity : total;
             }, 0);
         };
+
+        const isFiremaking = (usedId === 'tinderbox' && targetId === 'logs') || (targetId === 'tinderbox' && usedId === 'logs');
+        if (isFiremaking) {
+            const firemakingLevel = skills.find(s => s.name === SkillName.Firemaking)?.level ?? 1;
+            if (firemakingLevel < 1) {
+                addLog("You need a Firemaking level of 1 to light a fire.");
+                return;
+            }
+            if (hasItems([{ itemId: 'logs', quantity: 1 }])) {
+                modifyItem('logs', -1, true);
+                addXp(SkillName.Firemaking, 40);
+                addLog("You light a fire.");
+                if (advanceTutorial) advanceTutorial('light-fire');
+            } else {
+                addLog("You need some logs to light a fire.");
+            }
+            return;
+        }
 
         // Herblore: Making unfinished potions
         const unfRecipe = HERBLORE_RECIPES.unfinished.find(r => (r.cleanHerbId === usedId && targetId === 'vial_of_water') || (r.cleanHerbId === targetId && usedId === 'vial_of_water'));
@@ -356,7 +425,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
         }
 
         addLog("Nothing interesting happens.");
-    }, [skills, inventory, addLog, setActiveCraftingAction, hasItems, modifyItem, addXp, setMakeXPrompt, activeCraftingAction]);
+    }, [skills, inventory, addLog, setActiveCraftingAction, hasItems, modifyItem, addXp, setMakeXPrompt, activeCraftingAction, advanceTutorial]);
 
     const handleUseItemOn = useCallback((used: { item: InventorySlot, index: number }, target: { item: InventorySlot, index: number }) => {
         const usedItem = ITEMS[used.item.itemId];

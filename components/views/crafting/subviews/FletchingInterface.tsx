@@ -7,6 +7,7 @@ import { MakeXPrompt } from '../../../../hooks/useUIState';
 
 interface FletchingViewProps {
     logId: string;
+    // FIX: Inventory can contain null slots.
     inventory: (InventorySlot | null)[];
     skills: PlayerSkill[];
     onFletch: (action: { type: 'carve'; payload: any }, quantity: number) => void;
@@ -18,6 +19,7 @@ const FletchingView: React.FC<FletchingViewProps> = ({ logId, inventory, skills,
     const fletchingLevel = skills.find(s => s.name === SkillName.Fletching)?.level ?? 1;
     const logName = ITEMS[logId].name;
     const recipes = FLETCHING_RECIPES.carving[logId] ?? [];
+    // FIX: Ensure null slots are handled safely.
     const logCount = inventory.filter(s => s && s.itemId === logId).length;
 
     return (

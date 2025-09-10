@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { InventorySlot, PlayerSkill } from '../../types';
+import { InventorySlot, PlayerSkill, Item } from '../../types';
 import { ITEMS, INVENTORY_CAPACITY, getIconClassName } from '../../constants';
 import { ContextMenuOption } from '../common/ContextMenu';
 import { ConfirmationPrompt } from '../../hooks/useUIState';
@@ -25,10 +25,16 @@ interface InventoryPanelProps {
     onMoveItem: (from: number, to: number) => void;
     isBusy?: boolean;
     setConfirmationPrompt: (prompt: ConfirmationPrompt | null) => void;
+    tutorialStage?: number;
+    advanceTutorial?: (condition: string) => void;
+    onTutorialAction?: (action: 'left_click_axe') => void;
+    onExamine: (item: Item) => void;
 }
 
+const TUTORIAL_ITEM_IDS = ['bronze_axe', 'tinderbox', 'logs', 'bronze_sword', 'unusual_sandwich'];
+
 const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
-    const { inventory, coins, skills, onEquip, onConsume, onDrop, onBury, onEmpty, setTooltip, setContextMenu, addLog, isBankOpen = false, onDeposit = () => {}, itemToUse, setItemToUse, onUseItemOn, onMoveItem, isBusy = false, setConfirmationPrompt } = props;
+    const { inventory, coins, skills, onEquip, onConsume, onDrop, onBury, onEmpty, setTooltip, setContextMenu, addLog, isBankOpen = false, onDeposit = () => {}, itemToUse, setItemToUse, onUseItemOn, onMoveItem, isBusy = false, setConfirmationPrompt, tutorialStage, advanceTutorial, onTutorialAction, onExamine } = props;
     const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -88,6 +94,12 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
         const item = ITEMS[slot.itemId];
         if (!item) return;
         
+        // Tutorial Hook for left-click
+        if (tutorialStage === 5 && slot.itemId === 'bronze_axe' && onTutorialAction) {
+            onTutorialAction('left_click_axe');
+            return; // Prevent the equip action from happening
+        }
+
         if (e.shiftKey) {
             if (isBusy) {
                 addLog("You are busy and cannot do that right now.");
@@ -95,6 +107,10 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
             }
             if (isBankOpen) {
                 addLog("You cannot drop items while the bank is open.");
+                return;
+            }
+            if (tutorialStage >= 0 && TUTORIAL_ITEM_IDS.includes(slot.itemId)) {
+                addLog("You can't drop this item during the tutorial.");
                 return;
             }
             
@@ -147,6 +163,11 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
         const item = ITEMS[slot.itemId];
         if (!item) return;
 
+        // Tutorial Hook for right-click
+        if (tutorialStage === 5 && slot.itemId === 'bronze_axe' && advanceTutorial) {
+            advanceTutorial('context-menu-axe');
+        }
+
         const options: ContextMenuOption[] = [];
         
         if (isBankOpen) {
@@ -170,11 +191,29 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
 
             options.push({ label: 'Use', onClick: () => { setItemToUse({ item: slot, index }); }, disabled: isBusy });
             
+            const isTutorialItem = tutorialStage >= 0 && TUTORIAL_ITEM_IDS.includes(item.id);
+
             if (item.emptyable) options.push({ label: 'Empty', onClick: () => performAction(() => onEmpty(item.id, index)), disabled: isBusy });
-            options.push({ label: 'Drop', onClick: () => performAction(() => onDrop(index)), disabled: isBusy });
+            
+            const handleDropClick = () => {
+                if (item.value > 1000) {
+                    setConfirmationPrompt({
+                        message: `Are you sure you want to drop your ${item.name}?`,
+                        onConfirm: () => onDrop(index)
+                    });
+                } else {
+                    performAction(() => onDrop(index));
+                }
+            };
+            
+            options.push({ 
+                label: 'Drop', 
+                onClick: handleDropClick, 
+                disabled: isBusy || isTutorialItem 
+            });
         }
 
-        options.push({ label: 'Examine', onClick: () => addLog(`[Examine: ${item.name}] ${item.description}`) });
+        options.push({ label: 'Examine', onClick: () => onExamine(item) });
         setContextMenu({ options, position: { x: e.clientX, y: e.clientY } });
     };
 
@@ -200,6 +239,7 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
                     return (
                         <div
                             key={index}
+                            data-tutorial-id={slot ? `inventory-slot-${slot.itemId}` : `inventory-slot-empty-${index}`}
                             draggable={!!slot && !isBusy && !itemToUse}
                             onDragStart={(e) => handleDragStart(e, index)}
                             onDragOver={(e) => handleDragOver(e, index)}

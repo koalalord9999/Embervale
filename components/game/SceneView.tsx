@@ -1,5 +1,4 @@
 
-
 import React, { useMemo, useEffect, useState } from 'react';
 import { POI, POIActivity, PlayerQuestState, SkillName, InventorySlot, ResourceNodeState, PlayerRepeatableQuest, SkillRequirement, PlayerSkill, DialogueNode } from '../../types';
 import { MONSTERS, QUESTS, SHOPS, ITEMS } from '../../constants';
@@ -12,6 +11,8 @@ import { useSkillingAnimations } from '../../hooks/useSkillingAnimations';
 import { useSceneInteractions } from '../../hooks/useSceneInteractions';
 
 type SkillingActivity = Extract<POIActivity, { type: 'skilling' }>;
+type GridItem = POI | { type: 'obstacle'; fromPoiId: string; toPoiId: string; requirement: SkillRequirement };
+
 
 interface SceneViewProps {
     poi: POI;
@@ -20,7 +21,7 @@ interface SceneViewProps {
     onActivity: (activity: POIActivity) => void;
     onStartCombat: (uniqueInstanceId: string) => void;
     playerQuests: PlayerQuestState[];
-    inventory: InventorySlot[];
+    inventory: (InventorySlot | null)[];
     completeQuestStage: (questId: string) => void;
     setContextMenu: (menu: { options: ContextMenuOption[]; position: { x: number; y: number; } } | null) => void;
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
@@ -46,6 +47,8 @@ interface SceneViewProps {
     setActiveInteractiveDialogue: (dialogue: InteractiveDialogueState | null) => void;
     onDepositBackpack: () => void;
     ui: ReturnType<typeof useUIState>; // Pass the whole ui object
+    tutorialStage: number;
+    advanceTutorial: (condition: string) => void;
 }
 
 const CleanupProgress: React.FC<{
@@ -84,7 +87,7 @@ const CleanupProgress: React.FC<{
 
 
 const SceneView: React.FC<SceneViewProps> = (props) => {
-    const { poi, unlockedPois, onNavigate, onActivity, onStartCombat, playerQuests, inventory, completeQuestStage, setContextMenu, setMakeXPrompt, setTooltip, addLog, startQuest, hasItems, resourceNodeStates, activeSkillingNodeId, onToggleSkilling, initializeNodeState, skillingTick, getSuccessChance, activeRepeatableQuest, activeCleanup, onStartInteractQuest, onCancelInteractQuest, clearedSkillObstacles, onClearObstacle, skills, monsterRespawnTimers, setActiveQuestDialogue, setActiveInteractiveDialogue, onDepositBackpack, ui } = props;
+    const { poi, unlockedPois, onNavigate, onActivity, onStartCombat, playerQuests, inventory, completeQuestStage, setContextMenu, setMakeXPrompt, setTooltip, addLog, startQuest, hasItems, resourceNodeStates, activeSkillingNodeId, onToggleSkilling, initializeNodeState, skillingTick, getSuccessChance, activeRepeatableQuest, activeCleanup, onStartInteractQuest, onCancelInteractQuest, clearedSkillObstacles, onClearObstacle, skills, monsterRespawnTimers, setActiveQuestDialogue, setActiveInteractiveDialogue, onDepositBackpack, ui, tutorialStage, advanceTutorial } = props;
     const { depletedNodesAnimating } = useSkillingAnimations(resourceNodeStates, poi.activities);
     const [countdown, setCountdown] = useState<Record<string, number>>({});
     const [shakingNodeId, setShakingNodeId] = useState<string | null>(null);
@@ -95,9 +98,14 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
         startQuest,
         hasItems,
         addLog,
-        onActivity,
+        onActivity: (activity) => {
+            onActivity(activity);
+            if (activity.type === 'bank') advanceTutorial('open-bank');
+        },
         setActiveQuestDialogue,
         setActiveInteractiveDialogue,
+        tutorialStage,
+        advanceTutorial,
     });
 
     useEffect(() => {
@@ -134,10 +142,65 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
         return () => clearInterval(interval);
     }, [monsterRespawnTimers, poi.id, poi.activities]);
 
-    const connections = useMemo(() => {
-        if (poi.id.startsWith('warrens_') || poi.id.startsWith('laby_')) return [...poi.connections].sort(() => Math.random() - 0.5);
-        return poi.connections;
-    }, [poi.id, poi.connections]);
+    const gridItems = useMemo(() => {
+        const grid: GridItem[][] = Array(9).fill(null).map(() => []);
+    
+        const getDirectionalGridIndex = (angle: number): number => {
+            if (angle > -22.5 && angle <= 22.5) return 5; // E
+            if (angle > 22.5 && angle <= 67.5) return 8; // SE
+            if (angle > 67.5 && angle <= 112.5) return 7; // S
+            if (angle > 112.5 && angle <= 157.5) return 6; // SW
+            if (angle > 157.5 || angle <= -157.5) return 3; // W
+            if (angle > -157.5 && angle <= -112.5) return 0; // NW
+            if (angle > -112.5 && angle <= -67.5) return 1; // N
+            if (angle > -67.5 && angle <= -22.5) return 2; // NE
+            return 1; // Fallback
+        };
+    
+        if (!poi.connections) return grid;
+    
+        poi.connections.forEach(connId => {
+            const destinationPoi = POIS[connId];
+            if (!destinationPoi) return;
+
+            // Handle gate entry: if current POI is external and destination is internal, put in center.
+            if (poi.type !== 'internal' && destinationPoi.type === 'internal') {
+                grid[4].push(destinationPoi);
+                return;
+            }
+    
+            let destX, destY;
+            // Handle city exit: if current POI is internal and destination is external gate, use gate's cityMap coords.
+            if (poi.type === 'internal' && destinationPoi.type !== 'internal') {
+                destX = destinationPoi.cityMapX ?? destinationPoi.x;
+                destY = destinationPoi.cityMapY ?? destinationPoi.y;
+            } else {
+                destX = destinationPoi.x;
+                destY = destinationPoi.y;
+            }
+
+            const dx = (destX ?? poi.x) - poi.x;
+            const dy = (destY ?? poi.y) - poi.y;
+            const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+            const gridIndex = getDirectionalGridIndex(angle);
+    
+            const obstacleId = `${poi.id}-${connId}`;
+            const requirement = poi.connectionRequirements?.[connId];
+            if (requirement && !clearedSkillObstacles.includes(obstacleId)) {
+                grid[gridIndex].push({
+                    type: 'obstacle',
+                    fromPoiId: poi.id,
+                    toPoiId: connId,
+                    requirement,
+                });
+            } else {
+                grid[gridIndex].push(destinationPoi);
+            }
+        });
+    
+        return grid;
+    }, [poi, clearedSkillObstacles]);
+
 
     const renderInteractQuestActivity = () => {
         if (!activeRepeatableQuest || activeRepeatableQuest.generatedQuest.type !== 'interact') return null;
@@ -165,11 +228,21 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
 
     const createFurnaceContextMenu = (e: React.MouseEvent) => {
         e.preventDefault();
+        if (tutorialStage === 16) advanceTutorial('context-menu-furnace');
         setContextMenu({
             options: [
                 { label: 'Smelt', onClick: () => ui.openCraftingView({ type: 'furnace' }) },
                 { label: 'Craft Jewelry', onClick: () => ui.openCraftingView({ type: 'jewelry' }) }
             ],
+            position: { x: e.clientX, y: e.clientY }
+        });
+    };
+
+    const createAnvilContextMenu = (e: React.MouseEvent) => {
+        e.preventDefault();
+        if (tutorialStage === 18) advanceTutorial('context-menu-anvil');
+        setContextMenu({
+            options: [{ label: 'Smith', onClick: () => ui.openCraftingView({ type: 'anvil' }) }],
             position: { x: e.clientX, y: e.clientY }
         });
     };
@@ -185,6 +258,7 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
     };
 
     const getActivityButton = (activity: POIActivity, index: number) => {
+        const tutorialId = `activity-button-${index}`;
         if (activity.type === 'skilling') {
             const animationSkill = depletedNodesAnimating[activity.id];
             if (animationSkill) {
@@ -234,7 +308,8 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
                 }
                 
                 let tooltipContent: React.ReactNode;
-                const buttonText = activity.name ?? `Gather ${ITEMS[activity.loot[0].itemId]?.name}`;
+                const primaryLootItem = activity.loot[0] ? ITEMS[activity.loot[0].itemId] : null;
+                let buttonText = activity.name ?? `Gather ${primaryLootItem?.name ?? 'Resources'}`;
                 
                 if (activity.skill === SkillName.Woodcutting || activity.skill === SkillName.Mining) {
                     const chance = getSuccessChance(activity as SkillingActivity);
@@ -273,6 +348,7 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
                             setTooltip({ content: <p>Currently gathering...</p>, position: { x: e.clientX, y: e.clientY } });
                         }}
                         onMouseLeave={() => setTooltip(null)}
+                        data-tutorial-id={tutorialId}
                     >
                         <div className="absolute inset-0 animate-pulse-bg"></div>
                         <button onClick={() => onToggleSkilling(activity)} className="relative w-full h-full flex items-center justify-center font-bold text-white">
@@ -286,10 +362,12 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
             const respawnTimeSec = nodeState ? Math.ceil(nodeState.respawnTimer / 1000) : 0;
             const isDisabled = isDepleted;
             
-            let buttonText = activity.name ?? `Gather ${ITEMS[activity.loot[0].itemId]?.name}`;
+            const primaryLootItem = activity.loot[0] ? ITEMS[activity.loot[0].itemId] : null;
+            let buttonText = activity.name ?? `Gather ${primaryLootItem?.name ?? 'Resources'}`;
+
             if (activity.skill === SkillName.Woodcutting) buttonText = activity.name ?? 'Chop Trees';
-            if (activity.skill === SkillName.Fishing) buttonText = activity.name ?? `Net ${ITEMS[activity.loot[0].itemId]?.name}`;
-            if (activity.skill === SkillName.Mining) buttonText = activity.name ?? `Mine ${ITEMS[activity.loot[0].itemId]?.name}`;
+            if (activity.skill === SkillName.Fishing) buttonText = activity.name ?? `Net ${primaryLootItem?.name ?? 'Fish'}`;
+            if (activity.skill === SkillName.Mining) buttonText = activity.name ?? `Mine ${primaryLootItem?.name ?? 'Ore'}`;
 
             if (isDisabled) buttonText = `Depleted (${respawnTimeSec}s)`;
 
@@ -300,6 +378,7 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
                     disabled={isDisabled}
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={() => setTooltip(null)}
+                    data-tutorial-id={tutorialId}
                 >
                     {buttonText}
                 </Button>
@@ -308,6 +387,15 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
 
         if (activity.type === 'combat') {
             const monster = MONSTERS[activity.monsterId];
+            if (!monster) {
+                console.error(`Error: Monster with ID "${activity.monsterId}" not found in MONSTERS constant. This may be due to a data loading issue or circular dependency.`);
+                return (
+                    <Button key={`${activity.type}-${index}`} disabled variant="combat">
+                        Error: Unknown Monster
+                    </Button>
+                );
+            }
+
             const uniqueInstanceId = `${poi.id}:${activity.monsterId}:${index}`;
             const remainingTime = countdown[uniqueInstanceId];
 
@@ -327,6 +415,7 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
                     onClick={() => onStartCombat(uniqueInstanceId)}
                     variant="combat"
                     className={textColorClass}
+                    data-tutorial-id={tutorialId}
                 >
                     {text}
                 </Button>
@@ -339,7 +428,11 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
         let text = 'Interact';
         switch (activity.type) {
             case 'shop': text = `Visit ${SHOPS[activity.shopId].name}`; break;
-            case 'quest_start': text = `Talk about '${QUESTS[activity.questId].name}'`; break;
+            case 'quest_start':
+                const quest = QUESTS[activity.questId];
+                if (quest) { text = `Talk about '${quest.name}'`; } 
+                else { text = `Start Quest`; }
+                break;
             case 'npc': text = `Talk to ${activity.name}`; break;
             case 'cooking_range': text = 'Use Cooking Range'; break;
             case 'furnace': text = 'Use Furnace'; break;
@@ -355,14 +448,17 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
         }
 
         const isFurnace = activity.type === 'furnace';
+        const isAnvil = activity.type === 'anvil';
         const isBank = activity.type === 'bank';
 
         return (
             <Button
                 key={`${activity.type}-${index}`}
-                onClick={!isFurnace ? () => handleActivityClick(activity) : undefined}
+                data-tutorial-id={tutorialId}
+                onClick={() => handleActivityClick(activity)}
                 onContextMenu={
                     isFurnace ? createFurnaceContextMenu :
+                    isAnvil ? createAnvilContextMenu :
                     isBank ? createBankContextMenu :
                     undefined
                 }
@@ -372,37 +468,35 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
         );
     }
 
-    const renderTravelOption = (connId: string) => {
-        const obstacleId = `${poi.id}-${connId}`;
-        const requirement = poi.connectionRequirements?.[connId];
-        const destinationPoi = POIS[connId];
-
-        if (requirement && !clearedSkillObstacles.includes(obstacleId)) {
+    const renderTravelOption = (item: GridItem) => {
+        if ('type' in item && item.type === 'obstacle') {
+            const { fromPoiId, toPoiId, requirement } = item;
+            const destinationPoi = POIS[toPoiId];
             const playerSkill = skills.find(s => s.name === requirement.skill);
             const hasLevel = playerSkill && playerSkill.level >= requirement.level;
             const hasRequiredItems = requirement.items ? hasItems(requirement.items) : true;
 
             return (
-                <div key={connId} className="p-2 border-2 border-dashed border-gray-600 rounded-md">
-                    <p className="text-center font-semibold text-gray-400 mb-2">
-                        The path to <span className="text-yellow-400">{destinationPoi?.name ?? 'an unknown area'}</span> is blocked. {requirement.description}
+                <div key={toPoiId} className="w-full text-center p-1 border border-dashed border-gray-600 rounded">
+                    <p className="text-xs text-gray-400 mb-1">
+                        To {destinationPoi?.name ?? 'an unknown area'}:
                     </p>
                     <Button 
-                        onClick={() => onClearObstacle(poi.id, connId, requirement)}
+                        onClick={() => onClearObstacle(fromPoiId, toPoiId, requirement)}
                         disabled={!hasLevel || !hasRequiredItems}
                         className="w-full"
+                        size="sm"
                     >
-                        {requirement.actionText} ({requirement.skill} {requirement.level})
+                        {requirement.actionText} ({requirement.level})
                     </Button>
                 </div>
             );
         }
 
-        const connectedPoi = POIS[connId];
-        if (!connectedPoi) return null;
-        const isLocked = !unlockedPois.includes(connId);
+        const connectedPoi = item as POI;
+        const isLocked = !unlockedPois.includes(connectedPoi.id);
         return (
-            <Button key={connId} onClick={() => onNavigate(connId)} disabled={isLocked} variant={connectedPoi.type === 'internal' ? 'internal' : 'primary'}>
+            <Button key={connectedPoi.id} onClick={() => onNavigate(connectedPoi.id)} disabled={isLocked} variant={connectedPoi.type === 'internal' ? 'internal' : 'primary'} data-tutorial-id={`navigation-button-${connectedPoi.id}`} className="w-full">
                 {connectedPoi.name} {isLocked ? '(Locked)' : ''}
             </Button>
         );
@@ -423,8 +517,21 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
                 </div>
                 <div>
                     <h3 className="text-xl font-bold mb-2 text-yellow-300">Travel</h3>
-                    <div className="flex flex-col gap-2">
-                        {connections.map(renderTravelOption)}
+                     <div className="grid grid-cols-3 grid-rows-3 gap-2 h-full">
+                        {gridItems.map((cellItems, index) => (
+                            <div key={index} className="bg-black/20 rounded-md p-2 flex flex-col items-center justify-center gap-2 min-h-[6rem]">
+                               {index === 4 && cellItems.length > 0 ? (
+                                    cellItems.map(renderTravelOption)
+                                ) : index === 4 ? (
+                                    <div className="flex flex-col items-center text-gray-500">
+                                        <img src="https://api.iconify.design/game-icons:world.svg" alt="Current Location" className="w-8 h-8 opacity-50 filter invert" />
+                                        <span className="text-xs font-semibold">Here</span>
+                                    </div>
+                                ) : (
+                                    cellItems.map(renderTravelOption)
+                                )}
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>

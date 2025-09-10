@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SkillName } from '../../../../types';
+import { SkillName, InventorySlot } from '../../../../types';
 import { COOKING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
 import Button from '../../../common/Button';
 import { CraftingViewProps } from '../CraftingView';
@@ -10,6 +10,7 @@ const CookingInterface: React.FC<CraftingViewProps> = ({ inventory, skills, play
 
     const getItemCount = (itemId: string): number => {
         return inventory.reduce((total, slot) => {
+            // FIX: Handle null slots when calculating item count.
             return slot && slot.itemId === itemId ? total + slot.quantity : total;
         }, 0);
     };
