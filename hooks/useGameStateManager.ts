@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { saveGameState, loadGameState, deleteGameState } from '../db';
 import { ALL_SKILLS, REPEATABLE_QUEST_POOL, ITEMS, MONSTERS } from '../constants';
@@ -125,6 +126,19 @@ export const useGameStateManager = (ui: ReturnType<typeof useUIState>) => {
     const [initialState, setInitialState] = useState<GameState | null>(null);
     const [gameKey, setGameKey] = useState(0); // Used to force-remount the Game component
 
+    const parseSaveData = useCallback((data: string): GameState | null => {
+        try {
+            const parsedData = JSON.parse(data);
+            if (!parsedData.skills || !parsedData.inventory || typeof parsedData.coins === 'undefined') {
+                throw new Error("Invalid save file format.");
+            }
+            return validateAndMergeState(parsedData);
+        } catch (error) {
+            console.error("Failed to parse save data:", error);
+            return null;
+        }
+    }, []);
+
     const handleExportSave = useCallback((gameState: object) => {
         try {
             const dataStr = JSON.stringify(gameState, null, 2);
@@ -138,31 +152,6 @@ export const useGameStateManager = (ui: ReturnType<typeof useUIState>) => {
         ui.setIsImportModalOpen(true);
     }, [ui]);
     
-    const baseLoadFromImportedData = useCallback((data: string): boolean => {
-        try {
-            const parsedData = JSON.parse(data);
-            if (!parsedData.skills || !parsedData.inventory || typeof parsedData.coins === 'undefined') {
-                throw new Error("Invalid save file format.");
-            }
-            ui.closeImportModal();
-            ui.setConfirmationPrompt({
-                message: "Are you sure you want to import this save? This will overwrite your current progress.",
-                onConfirm: async () => {
-                    const migratedState = { ...parsedData };
-                    delete migratedState.activityLog; // Migration logic for old saves
-                    await saveGameState(migratedState);
-                    const stateToLoad = validateAndMergeState(parsedData);
-                    setInitialState(stateToLoad);
-                    setGameKey(k => k + 1);
-                }
-            });
-            return true;
-        } catch (error) {
-            console.error("Failed to import save:", error);
-            return false;
-        }
-    }, [ui]);
-
     const startNewGame = useCallback(async (username: string) => {
         ui.closeAllModals();
         await deleteGameState();
@@ -171,6 +160,21 @@ export const useGameStateManager = (ui: ReturnType<typeof useUIState>) => {
         setInitialState(newGame);
         setGameKey(k => k + 1);
     }, [ui]);
+    
+    const loadImportedState = useCallback(async (newState: GameState) => {
+        ui.closeAllModals();
+        await saveGameState(newState);
+        setInitialState(newState);
+        setGameKey(k => k + 1);
+    }, [ui]);
+
+    const updateUsernameAndSave = useCallback(async (username: string) => {
+        if (initialState) {
+            const newState = { ...initialState, username };
+            await saveGameState(newState);
+            setInitialState(newState);
+        }
+    }, [initialState]);
 
     useEffect(() => {
         const performLoad = async () => {
@@ -204,7 +208,9 @@ export const useGameStateManager = (ui: ReturnType<typeof useUIState>) => {
         gameKey,
         handleExportSave,
         handleImportSave,
-        baseLoadFromImportedData,
+        parseSaveData,
         startNewGame,
+        updateUsernameAndSave,
+        loadImportedState,
     };
 };

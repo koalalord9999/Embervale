@@ -18,6 +18,7 @@ import PreloadScreen from './components/screens/PreloadScreen';
 import UsernamePrompt from './components/common/UsernamePrompt';
 
 type AppState = 'LOADING_DB' | 'PRELOAD' | 'USERNAME_PROMPT' | 'GAME';
+type PromptReason = 'new_game' | 'set_username' | 'set_username_import' | null;
 
 const App: React.FC = () => {
     const ui = useUIState();
@@ -26,15 +27,18 @@ const App: React.FC = () => {
         gameKey, 
         handleExportSave, 
         handleImportSave, 
-        baseLoadFromImportedData, 
-        startNewGame 
+        parseSaveData, 
+        startNewGame,
+        updateUsernameAndSave,
+        loadImportedState
     } = useGameStateManager(ui);
     
     const [appState, setAppState] = useState<AppState>('LOADING_DB');
+    const [promptReason, setPromptReason] = useState<PromptReason>(null);
+    const [pendingImportState, setPendingImportState] = useState<any | null>(null);
 
     useEffect(() => {
         // Only transition from LOADING_DB to PRELOAD once.
-        // This prevents this hook from incorrectly resetting the state during a new game creation.
         if (initialState && appState === 'LOADING_DB') {
             setAppState('PRELOAD');
         }
@@ -49,27 +53,68 @@ const App: React.FC = () => {
         "Cooking on a range can turn a simple fish into a life-saving meal."
     ], []);
 
-    const loadFromImportedData = useCallback((data: string): boolean => {
-        const success = baseLoadFromImportedData(data);
-        if (success) {
+    const handleContinue = useCallback(() => {
+        if (initialState && (!initialState.username || initialState.username.trim() === '')) {
+            setPromptReason('set_username');
+            setAppState('USERNAME_PROMPT');
+        } else {
             setAppState('GAME');
         }
-        return success;
-    }, [baseLoadFromImportedData]);
+    }, [initialState]);
+
+    const onConfirmImport = useCallback(async (state: any) => {
+        if (!state.username || state.username.trim() === '') {
+            setPendingImportState(state);
+            setPromptReason('set_username_import');
+            setAppState('USERNAME_PROMPT');
+        } else {
+            await loadImportedState(state);
+            setAppState('GAME');
+        }
+    }, [loadImportedState]);
     
-    const beginNewGameFlow = useCallback(() => {
+    const loadFromImportedData = useCallback((data: string): boolean => {
+        const state = parseSaveData(data);
+        if (state) {
+            ui.closeImportModal();
+            ui.setConfirmationPrompt({
+                message: "Are you sure you want to import this save? This will overwrite your current progress.",
+                onConfirm: () => onConfirmImport(state)
+            });
+            return true;
+        }
+        return false;
+    }, [parseSaveData, ui, onConfirmImport]);
+    
+    const requestNewGame = useCallback(() => {
         ui.setConfirmationPrompt({
             message: "Are you sure you want to start a new game? All progress will be lost.",
             onConfirm: () => {
+                setPromptReason('new_game');
                 setAppState('USERNAME_PROMPT');
             }
         });
     }, [ui]);
     
-    const confirmNewGame = useCallback(async (username: string) => {
-        await startNewGame(username);
+    const handleUsernameConfirm = useCallback(async (username: string) => {
+        if (promptReason === 'new_game') {
+            await startNewGame(username);
+        } else if (promptReason === 'set_username') {
+            await updateUsernameAndSave(username);
+        } else if (promptReason === 'set_username_import' && pendingImportState) {
+            const newState = { ...pendingImportState, username };
+            await loadImportedState(newState);
+        }
+        setPendingImportState(null);
+        setPromptReason(null);
         setAppState('GAME');
-    }, [startNewGame]);
+    }, [promptReason, startNewGame, updateUsernameAndSave, pendingImportState, loadImportedState]);
+
+    const handleUsernameCancel = useCallback(() => {
+        setPendingImportState(null);
+        setPromptReason(null);
+        setAppState('PRELOAD');
+    }, []);
 
     const renderAppContent = () => {
         if (!initialState) {
@@ -92,18 +137,17 @@ const App: React.FC = () => {
                 return (
                     <PreloadScreen 
                         loadingTips={loadingTips} 
-                        onContinue={() => setAppState('GAME')} 
-                        onNewGame={beginNewGameFlow} 
+                        onContinue={handleContinue} 
+                        onNewGame={requestNewGame} 
                         onImport={handleImportSave}
                         setContextMenu={ui.setContextMenu}
                     />
                 );
             case 'USERNAME_PROMPT':
                 return (
-                     <div className="w-[1024px] h-[768px] bg-cover bg-center border-8 border-gray-900 shadow-2xl p-4 flex gap-4 relative" style={{ backgroundImage: `url('https://images.unsplash.com/photo-15052367semberv5279-228d5d36c34b?q=80&w=1024&auto=format=fit=crop')`}}>
+                     <div className="w-[1024px] h-[768px] bg-cover bg-center border-8 border-gray-900 shadow-2xl p-4 flex items-center justify-center relative" style={{ backgroundImage: `url('https://images.unsplash.com/photo-15052367semberv5279-228d5d36c34b?q=80&w=1024&auto=format=fit=crop')`}}>
                         <div className="absolute inset-0 bg-black/60"></div>
-                        <Game key={gameKey} initialState={initialState} onExportGame={() => {}} onImportGame={() => {}} onResetGame={() => {}} ui={ui} />
-                        <UsernamePrompt onConfirm={confirmNewGame} onCancel={() => setAppState('PRELOAD')} />
+                        <UsernamePrompt onConfirm={handleUsernameConfirm} onCancel={handleUsernameCancel} />
                      </div>
                 );
             case 'GAME':
@@ -115,7 +159,7 @@ const App: React.FC = () => {
                             initialState={initialState} 
                             onExportGame={handleExportSave} 
                             onImportGame={handleImportSave} 
-                            onResetGame={beginNewGameFlow} 
+                            onResetGame={requestNewGame} 
                             ui={ui} 
                         />
                     </div>
