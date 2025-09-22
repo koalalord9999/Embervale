@@ -1,1 +1,1 @@
-export type ActivePanel = 'inventory' | 'skills' | 'quests' | 'equipment' | 'crafting' | 'map' | 'bank' | null;
+export type ActivePanel = 'inventory' | 'skills' | 'quests' | 'equipment' | 'crafting' | 'map' | 'bank' | 'dev' | 'combat' | 'settings' | 'spellbook' | 'prayer' | null;

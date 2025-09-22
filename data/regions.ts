@@ -1,8 +1,14 @@
-
-
 import { Region } from '../types';
 
 export const REGIONS: Record<string, Region> = {
+    the_verdant_fields: {
+        id: 'the_verdant_fields',
+        name: 'The Verdant Fields',
+        type: 'region',
+        entryPoiId: 'mcgregors_ranch',
+        x: 800,
+        y: 1200,
+    },
     meadowdale: {
         id: 'meadowdale',
         name: 'Meadowdale',
@@ -24,8 +30,8 @@ export const REGIONS: Record<string, Region> = {
         name: 'Silverhaven',
         type: 'city',
         entryPoiId: 'silverhaven_gates',
-        x: 640,
-        y: 1800,
+        x: 644,
+        y: 1813,
     },
     wilderness: {
         id: 'wilderness',
@@ -42,6 +48,18 @@ export const REGIONS: Record<string, Region> = {
         entryPoiId: 'warrens_entrance',
         x: 0,
         y: 0,
+        description: 'A filthy warren teeming with goblins of all kinds. Their king is said to hoard stolen treasures.',
+        recommendedCombatLevel: 15,
+    },
+    dwarven_outpost: {
+        id: 'dwarven_outpost',
+        name: 'Dwarven Outpost',
+        type: 'city',
+        entryPoiId: 'dwarven_outpost_entrance',
+        x: 1400,
+        y: 1200,
+        description: 'A small, functional outpost carved into the rock by industrious dwarves.',
+        recommendedCombatLevel: 5,
     },
     gale_swept_peaks: {
         id: 'gale_swept_peaks',
@@ -90,5 +108,25 @@ export const REGIONS: Record<string, Region> = {
         entryPoiId: 'laby_entrance',
         x: 0,
         y: 0,
+        description: 'An ancient, flooded temple complex. The original inhabitants are long gone, but their guardians remain.',
+        recommendedCombatLevel: 50,
+    },
+    salt_flats: {
+        id: 'salt_flats',
+        name: 'The Salt Flats',
+        type: 'region',
+        entryPoiId: 'salt_flats_entrance',
+        x: 0,
+        y: 0,
+    },
+    crystalline_isles: {
+        id: 'crystalline_isles',
+        name: 'The Crystalline Isles',
+        type: 'region',
+        entryPoiId: 'crystalline_isles_landing',
+        x: 1000,
+        y: 200, // Conceptually above the world
+        description: 'A breathtaking series of floating islands composed of massive, shimmering crystals. The air is thin and hums with a strange, resonant energy.',
+        recommendedCombatLevel: 55,
     },
 };

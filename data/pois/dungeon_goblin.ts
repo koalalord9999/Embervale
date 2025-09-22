@@ -1,5 +1,3 @@
-
-
 import { POI, SkillName } from '../../types';
 
 export const goblinDungeonPois: Record<string, POI> = {
@@ -157,7 +155,7 @@ export const goblinDungeonPois: Record<string, POI> = {
         id: 'warrens_throne_room',
         name: "The Junk-Heap Throne",
         description: "A large cavern dominated by a throne made of junk and bones. Upon it sits a goblin larger and more menacing than any you've seen.",
-        connections: ['warrens_throne_approach'],
+        connections: ['warrens_throne_approach', 'flux_altar'],
         activities: [
             { type: 'combat', monsterId: 'grumlok_goblin_king' },
         ],
@@ -219,5 +217,16 @@ export const goblinDungeonPois: Record<string, POI> = {
         ],
         regionId: 'goblin_dungeon',
         x: 1800, y: 1140
+    },
+    flux_altar: {
+        id: 'flux_altar',
+        name: 'Altar of Chaos',
+        description: 'A cracked, unstable-looking altar that seems to warp the air around it. It radiates a volatile, chaotic energy.',
+        connections: ['warrens_throne_room'],
+        activities: [
+            { type: 'runecrafting_altar', runeId: 'flux_rune' }
+        ],
+        regionId: 'goblin_dungeon',
+        x: 1920, y: 960,
     },
 };

@@ -1,5 +1,3 @@
-
-
 export * from './game';
 export * from './items';
 export * from './monsters';
@@ -13,5 +11,8 @@ export * from './skillGuides';
 export * from './fletching';
 export * from './herblore';
 export * from './lootTables';
+export * from './spells';
 export * from '../data/regions';
 export * from '../data/tutorial';
+export * from './map_features';
+export * from './dialogue';

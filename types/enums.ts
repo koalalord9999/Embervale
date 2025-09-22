@@ -1,4 +1,3 @@
-
 export enum SkillName {
   Attack = "Attack",
   Strength = "Strength",
@@ -43,6 +42,9 @@ export enum CombatStance {
     RangedAccurate = "Ranged Accurate",
     RangedRapid = "Ranged Rapid",
     RangedDefence = "Ranged Defence",
+    // Magic
+    Autocast = "Autocast",
+    DefensiveAutocast = "Defensive Cast",
 }
 
 export enum WeaponType {
@@ -55,6 +57,7 @@ export enum WeaponType {
     Battleaxe = "Battleaxe",
     Warhammer = "Warhammer",
     Bow = "Bow",
+    Staff = "Staff",
 }
 
 export enum MonsterType {

@@ -1,18 +1,19 @@
 
+
 import React from 'react';
 import { InventorySlot, PlayerSkill, PlayerQuestState, SkillName } from '../../../types';
 import { COOKING_RECIPES, ITEMS, getIconClassName } from '../../../constants';
 import Button from '../../common/Button';
 import { ContextMenuOption } from '../../common/ContextMenu';
-import { MakeXPrompt } from '../../../hooks/useUIState';
+import { MakeXPrompt, ContextMenuState } from '../../../hooks/useUIState';
 
 interface CookingViewProps {
-    inventory: InventorySlot[];
+    inventory: (InventorySlot | null)[];
     skills: PlayerSkill[];
     playerQuests: PlayerQuestState[];
     onCook: (recipeId: string, quantity: number) => void;
     onExit: () => void;
-    setContextMenu: (menu: { options: ContextMenuOption[]; position: { x: number; y: number; } } | null) => void;
+    setContextMenu: (menu: ContextMenuState | null) => void;
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
 }
 
@@ -21,7 +22,7 @@ const CookingView: React.FC<CookingViewProps> = ({ inventory, skills, playerQues
 
     const getItemCount = (itemId: string): number => {
         return inventory.reduce((total, slot) => {
-            return slot.itemId === itemId ? total + slot.quantity : total;
+            return slot && slot.itemId === itemId ? total + slot.quantity : total;
         }, 0);
     };
 
@@ -48,7 +49,7 @@ const CookingView: React.FC<CookingViewProps> = ({ inventory, skills, playerQues
                 disabled: !hasLevel || maxCook < 1 
             },
         ];
-        setContextMenu({ options, position: { x: e.clientX, y: e.clientY } });
+        setContextMenu({ options, event: e, isTouchInteraction: false });
     };
     
     const warhammerQuestComplete = playerQuests.some(q => q.questId === 'art_of_the_warhammer' && q.isComplete);

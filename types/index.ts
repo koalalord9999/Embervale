@@ -5,3 +5,7 @@ export * from './world';
 export * from './mechanics';
 export * from './ui';
 export * from './crafting';
+export * from './drops';
+export * from './spells';
+export type { POIActivity } from './world';
+export type { Spell } from './spells';

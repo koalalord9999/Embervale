@@ -12,7 +12,7 @@ export const banditHideoutPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'bandit_marksman' }
         ],
         regionId: 'wilderness',
-        x: 760, y: 1740
+        x: 759, y: 1776
     },
     bandit_hideout_cave_1: {
         id: 'bandit_hideout_cave_1',
@@ -25,7 +25,7 @@ export const banditHideoutPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'bandit_marksman' },
         ],
         regionId: 'wilderness',
-        x: 700, y: 1740
+        x: 727, y: 1743
     },
     bandit_leader_lair: {
         id: 'bandit_leader_lair',
@@ -36,6 +36,6 @@ export const banditHideoutPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'bandit_leader' }
         ],
         regionId: 'wilderness',
-        x: 640, y: 1740
+        x: 762, y: 1728
     },
 };

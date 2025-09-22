@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { PlayerRepeatableQuest, GeneratedRepeatableQuest, RepeatableQuestsState, SkillName, PlayerSkill } from '../types';
 import { REPEATABLE_QUEST_POOL, MONSTERS, ITEMS, XP_TABLE, TELEPORT_UNLOCK_THRESHOLD } from '../constants';
@@ -24,8 +22,12 @@ const generateNewQuestsForBoard = (boardId: string, playerSkills: (PlayerSkill &
 
     return selectedQuests.map(quest => {
         if (quest.type === 'gather') {
+            if (!quest.target.itemId) {
+                console.error(`Repeatable quest with id '${quest.id}' is of type 'gather' but has no itemId.`);
+                return null;
+            }
             const requiredQuantity = Math.floor(Math.random() * 11) + 5; // 5-15
-            const itemValue = ITEMS[quest.target.itemId!]?.value ?? 1;
+            const itemValue = ITEMS[quest.target.itemId]?.value ?? 1;
             const finalCoinReward = Math.ceil(requiredQuantity * itemValue * 0.4);
             const finalXpAmount = requiredQuantity * quest.xpReward.amount;
             return { ...quest, requiredQuantity, finalCoinReward, xpReward: { ...quest.xpReward, amount: finalXpAmount } };
@@ -54,7 +56,7 @@ const generateNewQuestsForBoard = (boardId: string, playerSkills: (PlayerSkill &
 
             return { ...quest, requiredQuantity: 1, finalCoinReward: quest.baseCoinReward, xpReward: { ...quest.xpReward, amount: finalXpAmount } };
         }
-    });
+    }).filter((q): q is GeneratedRepeatableQuest => q !== null);
 };
 
 export const useRepeatableQuests = (
@@ -74,7 +76,6 @@ export const useRepeatableQuests = (
     });
     
     const resetBoards = useCallback(() => {
-        addLog("The adventurer's guild boards have been updated with new tasks.");
         const newBoards: Record<string, GeneratedRepeatableQuest[]> = {};
         BOARD_IDS.forEach(id => {
             newBoards[id] = generateNewQuestsForBoard(id, charRef.current.skills);
@@ -188,7 +189,9 @@ export const useRepeatableQuests = (
             if (quest.type === 'gather') {
                 const monster = MONSTERS[monsterId];
                 if (!monster) return currentQuest;
-                const targetDrop = monster.drops.find(d => d.itemId === quest.target.itemId);
+                // FIX: Property 'drops' does not exist on type 'Monster'. Combined all drop tables to check for the required item.
+                const allDrops = [...(monster.guaranteedDrops || []), ...(monster.mainDrops || []), ...(monster.tertiaryDrops || [])];
+                const targetDrop = allDrops.find(d => d.itemId === quest.target.itemId);
                 if (targetDrop) {
                      const newProgress = currentQuest.progress + 1;
                      if (newProgress >= quest.requiredQuantity) {

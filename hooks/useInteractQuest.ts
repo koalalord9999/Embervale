@@ -21,7 +21,6 @@ export const useInteractQuest = (deps: InteractQuestDependencies) => {
     const handleStartInteractQuest = useCallback((quest: PlayerRepeatableQuest) => {
         if (!quest || activeCleanup) return;
         const duration = 15000; // Static 15 second timer for all interaction tasks.
-        depsRef.current.addLog(`You begin to ${quest.generatedQuest.title.toLowerCase()}...`);
         setActiveCleanup({ quest, startTime: Date.now(), duration });
     }, [activeCleanup]); // Dependency on activeCleanup prevents starting a new task while one is running
 

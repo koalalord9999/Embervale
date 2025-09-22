@@ -1,26 +1,24 @@
-
-
 import { SkillName, Item } from '../types';
 
 export const SKILL_ICONS: Record<SkillName, string> = {
-    [SkillName.Attack]: 'https://api.iconify.design/game-icons:sword-clash.svg',
+    [SkillName.Attack]: 'https://api.iconify.design/game-icons:gladius.svg',
     [SkillName.Strength]: 'https://api.iconify.design/game-icons:biceps.svg',
-    [SkillName.Defence]: 'https://api.iconify.design/game-icons:shield.svg',
+    [SkillName.Defence]: 'https://api.iconify.design/game-icons:checked-shield.svg',
     [SkillName.Ranged]: 'https://api.iconify.design/game-icons:high-shot.svg',
-    [SkillName.Magic]: 'https://api.iconify.design/game-icons:magic-swirl.svg',
+    [SkillName.Magic]: 'https://api.iconify.design/game-icons:pointy-hat.svg',
     [SkillName.Hitpoints]: 'https://api.iconify.design/game-icons:health-normal.svg',
-    [SkillName.Prayer]: 'https://api.iconify.design/game-icons:holy-symbol.svg',
-    [SkillName.Woodcutting]: 'https://api.iconify.design/game-icons:wood-axe.svg',
+    [SkillName.Prayer]: 'https://api.iconify.design/game-icons:polar-star.svg',
+    [SkillName.Woodcutting]: 'https://api.iconify.design/game-icons:beech.svg',
     [SkillName.Fletching]: 'https://api.iconify.design/game-icons:whiplash.svg',
     [SkillName.Firemaking]: 'https://api.iconify.design/game-icons:campfire.svg',
-    [SkillName.Fishing]: 'https://api.iconify.design/game-icons:fishing-pole.svg',
+    [SkillName.Fishing]: 'https://api.iconify.design/game-icons:fishing.svg',
     [SkillName.Cooking]: 'https://api.iconify.design/game-icons:chef-toque.svg',
     [SkillName.Crafting]: 'https://api.iconify.design/game-icons:sewing-needle.svg',
-    [SkillName.Mining]: 'https://api.iconify.design/game-icons:miner.svg',
+    [SkillName.Mining]: 'https://api.iconify.design/game-icons:mining.svg',
     [SkillName.Smithing]: 'https://api.iconify.design/game-icons:anvil.svg',
     [SkillName.Herblore]: 'https://api.iconify.design/game-icons:apothecary.svg',
     [SkillName.Runecrafting]: 'https://api.iconify.design/game-icons:rune-stone.svg',
-    [SkillName.Slayer]: 'https://api.iconify.design/game-icons:skull-crack.svg',
+    [SkillName.Slayer]: 'https://api.iconify.design/game-icons:blade-bite.svg',
 };
 
 export const getIconClassName = (item?: Item | null): string => {
@@ -53,7 +51,10 @@ export const getIconClassName = (item?: Item | null): string => {
         case 'uncut-emerald': return 'item-icon-uncut-emerald';
         case 'ruby': return 'item-icon-ruby';
         case 'uncut-ruby': return 'item-icon-uncut-ruby';
+        case 'diamond': return 'item-icon-diamond';
+        case 'uncut-diamond': return 'item-icon-uncut-diamond';
         case 'leather': return 'item-icon-leather';
+        case 'wizard-blue': return 'item-icon-wizard-blue';
         case 'gold': return 'item-icon-gold';
         case 'wood-normal': return 'item-icon-wood-normal';
         case 'wood-oak': return 'item-icon-wood-oak';
@@ -68,15 +69,20 @@ export const getIconClassName = (item?: Item | null): string => {
         case 'potion': return 'item-icon-potion';
         case 'vial': return 'item-icon-vial';
         case 'vial-water': return 'item-icon-vial-water';
+        case 'potion-weak-attack': return 'item-icon-potion-weak-attack';
         case 'potion-attack': return 'item-icon-potion-attack';
-        case 'potion-strength': return 'item-icon-potion-strength';
-        case 'potion-defence': return 'item-icon-potion-defence';
-        case 'potion-ranged': return 'item-icon-potion-ranged';
-        case 'potion-magic': return 'item-icon-potion-magic';
         case 'potion-super-attack': return 'item-icon-potion-super-attack';
+        case 'potion-weak-strength': return 'item-icon-potion-weak-strength';
+        case 'potion-strength': return 'item-icon-potion-strength';
         case 'potion-super-strength': return 'item-icon-potion-super-strength';
+        case 'potion-weak-defence': return 'item-icon-potion-weak-defence';
+        case 'potion-defence': return 'item-icon-potion-defence';
         case 'potion-super-defence': return 'item-icon-potion-super-defence';
+        case 'potion-weak-ranged': return 'item-icon-potion-weak-ranged';
+        case 'potion-ranged': return 'item-icon-potion-ranged';
         case 'potion-super-ranged': return 'item-icon-potion-super-ranged';
+        case 'potion-weak-magic': return 'item-icon-potion-weak-magic';
+        case 'potion-magic': return 'item-icon-potion-magic';
         case 'potion-super-magic': return 'item-icon-potion-super-magic';
         case 'potion-antipoison': return 'item-icon-potion-antipoison';
         case 'potion-super-antipoison': return 'item-icon-potion-super-antipoison';
@@ -84,13 +90,33 @@ export const getIconClassName = (item?: Item | null): string => {
         case 'potion-restore': return 'item-icon-potion-restore';
         case 'potion-prayer': return 'item-icon-potion-prayer';
         case 'potion-combo': return 'item-icon-potion-combo';
+        case 'potion-weak-mining': return 'item-icon-potion-weak-mining';
         case 'potion-mining': return 'item-icon-potion-mining';
+        case 'potion-weak-smithing': return 'item-icon-potion-weak-smithing';
         case 'potion-smithing': return 'item-icon-potion-smithing';
+        case 'potion-weak-woodcutting': return 'item-icon-potion-weak-woodcutting';
         case 'potion-woodcutting': return 'item-icon-potion-woodcutting';
+        case 'potion-weak-fletching': return 'item-icon-potion-weak-fletching';
         case 'potion-fletching': return 'item-icon-potion-fletching';
+        case 'potion-weak-crafting': return 'item-icon-potion-weak-crafting';
         case 'potion-crafting': return 'item-icon-potion-crafting';
+        case 'potion-weak-fishing': return 'item-icon-potion-weak-fishing';
         case 'potion-fishing': return 'item-icon-potion-fishing';
+        case 'potion-weak-herblore': return 'item-icon-potion-weak-herblore';
         case 'potion-herblore': return 'item-icon-potion-herblore';
+        case 'rune-gust': return 'item-icon-rune-gust';
+        case 'rune-binding': return 'item-icon-rune-binding';
+        case 'rune-stone': return 'item-icon-rune-stone';
+        case 'rune-aqua': return 'item-icon-rune-aqua';
+        case 'rune-ember': return 'item-icon-rune-ember';
+        case 'rune-flux': return 'item-icon-rune-flux';
+        case 'rune-verdant': return 'item-icon-rune-verdant';
+        case 'rune-nexus': return 'item-icon-rune-nexus';
+        case 'rune-hex': return 'item-icon-rune-hex';
+        case 'rune-passage': return 'item-icon-rune-passage';
+        case 'rune-anima': return 'item-icon-rune-anima';
+        case 'rune-astral': return 'item-icon-rune-astral';
+        case 'rune-aether': return 'item-icon-rune-aether';
         default: return 'item-icon-default';
     }
 };

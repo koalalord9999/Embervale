@@ -27,12 +27,18 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
         ui.setIsMandatoryCombat(false);
 
         const isTutorialActive = tutorialStage >= 0;
-        const respawnPoi = isTutorialActive ? 'enclave_start' : 'meadowdale_square';
+        let respawnPoi = isTutorialActive ? 'enclave_start' : 'meadowdale_square';
+        
+        // If the player dies late in the tutorial, respawn them at the end to avoid a long walk back.
+        if (isTutorialActive && tutorialStage >= 22) {
+            respawnPoi = 'enclave_departure_point';
+        }
+
         session.setCurrentPoiId(respawnPoi);
         char.setCurrentHp(char.maxHp);
 
         if (isTutorialActive) {
-            addLog("You have been defeated! Don't worry, you've been safely returned to the start of the enclave. In the main world, death is more costly, usually causing you to lose half of your coins.");
+            addLog("You have been defeated! Don't worry, you've been safely returned. In the main world, death is more costly, usually causing you to lose half of your coins.");
         } else {
             const coinsLost = Math.floor(inv.coins / 2);
             inv.setCoins(c => c - coinsLost);

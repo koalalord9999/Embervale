@@ -1,46 +1,35 @@
-
-
 import { useState, useEffect, useCallback } from 'react';
 import { ShopStates } from '../types';
 import { SHOPS, ITEMS } from '../constants';
 
 export const useShops = (
-    initialShopStates: ShopStates,
+    initialShopStates: ShopStates, // This is kept for signature compatibility but is no longer used.
     playerCoins: number,
-    modifyItem: (itemId: string, quantity: number, quiet?: boolean) => void,
+    modifyItem: (itemId: string, quantity: number, quiet?: boolean, doses?: number, options?: { bypassAutoBank?: boolean }) => void,
     addLog: (message: string) => void
 ) => {
-    const [shopStates, setShopStates] = useState<ShopStates>(initialShopStates);
-
-    // Sync shop states with constants on game load, handles new shops/items in updates
-    useEffect(() => {
-        setShopStates(prevStates => {
-            const newStates: ShopStates = JSON.parse(JSON.stringify(prevStates));
-            let needsUpdate = false;
-    
-            for (const shopId in SHOPS) {
-                if (!newStates[shopId]) {
-                    newStates[shopId] = {};
-                    needsUpdate = true;
+    const [shopStates, setShopStates] = useState<ShopStates>(() => {
+        // Always initialize shops from the master list, ignoring saved state.
+        const initialStates: ShopStates = {};
+        for (const shopId in SHOPS) {
+            const shopData = SHOPS[shopId];
+            initialStates[shopId] = {};
+            for (const defaultItem of shopData.inventory) {
+                if (!ITEMS[defaultItem.itemId]) {
+                    console.warn(`Item '${defaultItem.itemId}' defined in shop '${shopId}' but not in ITEMS. Skipping.`);
+                    continue;
                 }
-                const shopData = SHOPS[shopId];
-                for (const item of shopData.inventory) {
-                    if (!newStates[shopId][item.itemId]) {
-                        newStates[shopId][item.itemId] = {
-                            itemId: item.itemId,
-                            currentStock: item.quantity,
-                            restockProgress: 0,
-                        };
-                        needsUpdate = true;
-                    }
-                }
+                initialStates[shopId][defaultItem.itemId] = {
+                    itemId: defaultItem.itemId,
+                    currentStock: defaultItem.quantity,
+                    restockProgress: 0,
+                };
             }
-    
-            return needsUpdate ? newStates : prevStates;
-        });
-    }, []); // Run only once on initial load
+        }
+        return initialStates;
+    });
 
-    // Shop stock regeneration
+    // Shop stock regeneration (for in-session changes)
     useEffect(() => {
         const interval = setInterval(() => {
             setShopStates(prevStates => {
@@ -106,7 +95,7 @@ export const useShops = (
         }
 
         modifyItem('coins', -totalCost, true);
-        modifyItem(itemId, quantity, true);
+        modifyItem(itemId, quantity, true, itemData.initialDoses, { bypassAutoBank: true });
         
         setShopStates(prev => {
             const newStates = JSON.parse(JSON.stringify(prev));

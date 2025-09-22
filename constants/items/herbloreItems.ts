@@ -1,11 +1,14 @@
-import { Item, SkillName } from '../types';
-import { HERBS, HERBLORE_RECIPES } from './herblore';
+import { Item, SkillName } from '../../types';
+import { HERBS, HERBLORE_RECIPES } from '../herblore';
 
 const getPotionMaterial = (potionId: string): Item['material'] => {
-    // Super potions first to avoid matching the base potion
+    // Weak potions
+    if (potionId.startsWith('weak_')) {
+        return `potion-${potionId.replace('_potion', '')}` as Item['material'];
+    }
+    // Super potions
     if (potionId.startsWith('super_')) {
         const base = potionId.replace('super_', '');
-        // e.g. super_attack_potion -> potion-super-attack
         return `potion-super-${base.replace('_potion', '')}` as Item['material'];
     }
     // Handle specific complex names first
@@ -26,40 +29,68 @@ const getPotionMaterial = (potionId: string): Item['material'] => {
 // This helper function creates consumable properties for potions
 const getPotionEffect = (potionId: string): Item['consumable'] => {
     switch (potionId) {
+        case 'weak_attack_potion':
+            return { statModifiers: [{ skill: SkillName.Attack, percent: 0.10, base: 2, duration: 180000 }] };
         case 'attack_potion':
-            return { statModifiers: [{ skill: SkillName.Attack, value: 3, duration: 180000 }] };
-        case 'strength_potion':
-            return { statModifiers: [{ skill: SkillName.Strength, value: 3, duration: 180000 }] };
-        case 'defence_potion':
-            return { statModifiers: [{ skill: SkillName.Defence, value: 3, duration: 180000 }] };
-        case 'mining_potion':
-             return { statModifiers: [{ skill: SkillName.Mining, value: 3, duration: 180000 }] };
-        case 'woodcutting_potion':
-             return { statModifiers: [{ skill: SkillName.Woodcutting, value: 3, duration: 180000 }] };
-        case 'fishing_potion':
-             return { statModifiers: [{ skill: SkillName.Fishing, value: 3, duration: 180000 }] };
-        case 'crafting_potion':
-             return { statModifiers: [{ skill: SkillName.Crafting, value: 3, duration: 180000 }] };
-        case 'smithing_potion':
-             return { statModifiers: [{ skill: SkillName.Smithing, value: 3, duration: 180000 }] };
-        case 'fletching_potion':
-             return { statModifiers: [{ skill: SkillName.Fletching, value: 3, duration: 180000 }] };
-        case 'herblore_potion':
-             return { statModifiers: [{ skill: SkillName.Herblore, value: 3, duration: 180000 }] };
+            return { statModifiers: [{ skill: SkillName.Attack, percent: 0.15, base: 4, duration: 180000 }] };
         case 'super_attack_potion':
-            return { statModifiers: [{ skill: SkillName.Attack, value: 5, duration: 300000 }] };
+            return { statModifiers: [{ skill: SkillName.Attack, percent: 0.20, base: 6, duration: 300000 }] };
+        case 'weak_strength_potion':
+            return { statModifiers: [{ skill: SkillName.Strength, percent: 0.10, base: 2, duration: 180000 }] };
+        case 'strength_potion':
+            return { statModifiers: [{ skill: SkillName.Strength, percent: 0.15, base: 4, duration: 180000 }] };
         case 'super_strength_potion':
-            return { statModifiers: [{ skill: SkillName.Strength, value: 5, duration: 300000 }] };
+            return { statModifiers: [{ skill: SkillName.Strength, percent: 0.20, base: 6, duration: 300000 }] };
+        case 'weak_defence_potion':
+            return { statModifiers: [{ skill: SkillName.Defence, percent: 0.10, base: 2, duration: 180000 }] };
+        case 'defence_potion':
+            return { statModifiers: [{ skill: SkillName.Defence, percent: 0.15, base: 4, duration: 180000 }] };
         case 'super_defence_potion':
-            return { statModifiers: [{ skill: SkillName.Defence, value: 5, duration: 300000 }] };
+            return { statModifiers: [{ skill: SkillName.Defence, percent: 0.20, base: 6, duration: 300000 }] };
+        case 'weak_ranged_potion':
+            return { statModifiers: [{ skill: SkillName.Ranged, percent: 0.10, base: 2, duration: 180000 }] };
         case 'ranged_potion':
-             return { statModifiers: [{ skill: SkillName.Ranged, value: 3, duration: 180000 }] };
+             return { statModifiers: [{ skill: SkillName.Ranged, percent: 0.15, base: 4, duration: 180000 }] };
         case 'super_ranged_potion':
-             return { statModifiers: [{ skill: SkillName.Ranged, value: 5, duration: 300000 }] };
+             return { statModifiers: [{ skill: SkillName.Ranged, percent: 0.20, base: 6, duration: 300000 }] };
+        case 'weak_magic_potion':
+            return { statModifiers: [{ skill: SkillName.Magic, percent: 0.10, base: 2, duration: 180000 }] };
         case 'magic_potion':
-             return { statModifiers: [{ skill: SkillName.Magic, value: 3, duration: 180000 }] };
+             return { statModifiers: [{ skill: SkillName.Magic, percent: 0.15, base: 4, duration: 180000 }] };
         case 'super_magic_potion':
-             return { statModifiers: [{ skill: SkillName.Magic, value: 5, duration: 300000 }] };
+             return { statModifiers: [{ skill: SkillName.Magic, percent: 0.20, base: 6, duration: 300000 }] };
+        
+        // Skilling potions
+        case 'weak_mining_potion':
+            return { statModifiers: [{ skill: SkillName.Mining, percent: 0.10, base: 2, duration: 180000 }] };
+        case 'mining_potion':
+             return { statModifiers: [{ skill: SkillName.Mining, percent: 0.15, base: 4, duration: 180000 }] };
+        case 'weak_woodcutting_potion':
+            return { statModifiers: [{ skill: SkillName.Woodcutting, percent: 0.10, base: 2, duration: 180000 }] };
+        case 'woodcutting_potion':
+             return { statModifiers: [{ skill: SkillName.Woodcutting, percent: 0.15, base: 4, duration: 180000 }] };
+        case 'weak_fishing_potion':
+            return { statModifiers: [{ skill: SkillName.Fishing, percent: 0.10, base: 2, duration: 180000 }] };
+        case 'fishing_potion':
+             return { statModifiers: [{ skill: SkillName.Fishing, percent: 0.15, base: 4, duration: 180000 }] };
+        case 'weak_crafting_potion':
+            return { statModifiers: [{ skill: SkillName.Crafting, percent: 0.10, base: 2, duration: 180000 }] };
+        case 'crafting_potion':
+             return { statModifiers: [{ skill: SkillName.Crafting, percent: 0.15, base: 4, duration: 180000 }] };
+        case 'weak_smithing_potion':
+            return { statModifiers: [{ skill: SkillName.Smithing, percent: 0.10, base: 2, duration: 180000 }] };
+        case 'smithing_potion':
+             return { statModifiers: [{ skill: SkillName.Smithing, percent: 0.15, base: 4, duration: 180000 }] };
+        case 'weak_fletching_potion':
+            return { statModifiers: [{ skill: SkillName.Fletching, percent: 0.10, base: 2, duration: 180000 }] };
+        case 'fletching_potion':
+             return { statModifiers: [{ skill: SkillName.Fletching, percent: 0.15, base: 4, duration: 180000 }] };
+        case 'weak_herblore_potion':
+            return { statModifiers: [{ skill: SkillName.Herblore, percent: 0.10, base: 2, duration: 180000 }] };
+        case 'herblore_potion':
+             return { statModifiers: [{ skill: SkillName.Herblore, percent: 0.15, base: 4, duration: 180000 }] };
+
+        // Other potions
         case 'prayer_potion':
             return { potionEffect: { description: 'Restores some Prayer points.'} };
         case 'stat_restore_potion':
@@ -158,6 +189,20 @@ const finishedPotions: Item[] = HERBLORE_RECIPES.finished.map(recipe => {
     else if (recipe.finishedPotionId.includes('poison')) description = `A vial of deadly poison.`
     else if (recipe.finishedPotionId.includes('antipoison')) description = `Cures and prevents poison.`
     
+    // Special handling for Pouch Cleanser
+    if (recipe.finishedPotionId === 'pouch_cleanser') {
+        return {
+            id: recipe.finishedPotionId,
+            name: name,
+            description: 'A special herbal concoction that can clean grime off items. Has 25 charges.',
+            stackable: true,
+            value: recipe.level * 8,
+            iconUrl: 'https://api.iconify.design/game-icons:potion-ball.svg',
+            material: getPotionMaterial(recipe.finishedPotionId),
+            charges: 25,
+        };
+    }
+
     return {
         id: recipe.finishedPotionId,
         name: name,
@@ -167,7 +212,9 @@ const finishedPotions: Item[] = HERBLORE_RECIPES.finished.map(recipe => {
         iconUrl: 'https://api.iconify.design/game-icons:potion-ball.svg',
         material: getPotionMaterial(recipe.finishedPotionId),
         consumable: effect,
-        emptyable: { emptyItemId: 'vial' },
+        doseable: true,
+        maxDoses: 4,
+        initialDoses: 3,
     }
 });
 

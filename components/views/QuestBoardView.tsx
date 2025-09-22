@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { GeneratedRepeatableQuest, PlayerRepeatableQuest, InventorySlot } from '../../types';
 import { ITEMS, MONSTERS, TELEPORT_UNLOCK_THRESHOLD } from '../../constants';

@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { POI, Region } from '../../types';
-import { REGIONS } from '../../constants';
+import { REGIONS, MAP_FEATURES } from '../../constants';
 import { POIS } from '../../data/pois';
 import { MAP_DIMENSIONS, CITY_MAP_DIMENSIONS } from '../../constants';
 import { TooltipState } from '../../hooks/useUIState';
@@ -230,6 +230,17 @@ const WorldMapView: React.FC<WorldMapViewProps> = ({ currentPoiId, unlockedPois,
                     willChange: 'transform',
                 }}>
                     <svg className="absolute top-0 left-0 pointer-events-none" width={mapDimensions.width} height={mapDimensions.height} style={{ overflow: 'visible' }}>
+                        {isWorldView && MAP_FEATURES.map(feature => (
+                            <path
+                                key={feature.id}
+                                d={feature.path}
+                                stroke={feature.strokeColor}
+                                strokeWidth={feature.strokeWidth / view.zoom}
+                                fill="none"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
+                        ))}
                         {poisToDisplay.map(startPoi => {
                             if (!startPoi) return null;
                             const startPoiData = POIS[startPoi.id] ?? startPoi;
@@ -313,7 +324,7 @@ const WorldMapView: React.FC<WorldMapViewProps> = ({ currentPoiId, unlockedPois,
                                     className={`relative rounded-full ${isUnlocked ? 'cursor-pointer hover:scale-150' : 'cursor-default'} transition-transform duration-200`}
                                     style={{ width: `${12 / view.zoom}px`, height: `${12 / view.zoom}px` }}
                                     onClick={() => isUnlocked && onNavigate(poi.id)}
-                                    onMouseEnter={(e) => isUnlocked && handleMouseEnter(e, poi)}
+                                    onMouseEnter={(e) => handleMouseEnter(e, poi)}
                                     onMouseLeave={() => setTooltip(null)}
                                 >
                                     <div className={`w-full h-full rounded-full ${dotColorClass}`}></div>

@@ -1,5 +1,3 @@
-
-
 import { POI, SkillName } from '../../types';
 
 export const southernRoadPois: Record<string, POI> = {
@@ -79,11 +77,15 @@ export const southernRoadPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Old Man Hemlock',
                 icon: '/assets/npcChatHeads/old_man_hemlock.png',
-                dialogue: [
-                    "Get off my property! Unless you've got something to trade...",
-                    "The swamp... it remembers. Best not to disturb what sleeps in the deep muck.",
-                    "Heard tell of ruins deeper in. Sunken, they are. Full of things that haven't seen the sun in a thousand years."
-                ]
+                dialogue: {
+                    start: {
+                        npcName: 'Old Man Hemlock',
+                        npcIcon: '/assets/npcChatHeads/old_man_hemlock.png',
+                        text: "Get off my property! Unless you've got something to trade...\n\nThe swamp... it remembers. Best not to disturb what sleeps in the deep muck.\n\nHeard tell of ruins deeper in. Sunken, they are. Full of things that haven't seen the sun in a thousand years.",
+                        responses: []
+                    }
+                },
+                startNode: 'start'
             }
         ],
         regionId: 'wilderness',
@@ -92,10 +94,11 @@ export const southernRoadPois: Record<string, POI> = {
     ruined_watchtower: {
         id: 'ruined_watchtower',
         name: 'Ruined Watchtower',
-        description: 'The crumbling remains of an old watchtower overlook the road. It offers a good vantage point, but is now home to bandits.',
+        description: 'The crumbling remains of an old watchtower overlook the road. A strange, oppressive heat radiates from a glowing brazier at its peak. It is guarded by a lone bandit.',
         connections: ['oakhaven_road_1'],
         activities: [
-            { type: 'combat', monsterId: 'cloaked_bandit' }
+            { type: 'combat', monsterId: 'cloaked_bandit' },
+            { type: 'runecrafting_altar', runeId: 'ember_rune' }
         ],
         regionId: 'wilderness',
         x: 1060, y: 1640

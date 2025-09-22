@@ -1,4 +1,3 @@
-
 import { CookingRecipe, CraftingRecipe, JewelryRecipe } from '../types';
 
 export const SMITHING_RECIPES = [
@@ -86,9 +85,13 @@ export const SMITHING_RECIPES = [
   { itemId: 'runic_battleaxe', level: 90, barsRequired: 3, xp: 225, barType: 'runic_bar' },
   { itemId: 'runic_kiteshield', level: 92, barsRequired: 3, xp: 225, barType: 'runic_bar' },
   { itemId: 'runic_platebody', level: 94, barsRequired: 5, xp: 375, barType: 'runic_bar' },
+  // Other
+  { itemId: 'silver_tiara', level: 25, barsRequired: 1, xp: 52.5, barType: 'silver_bar' },
 ];
 
 export const COOKING_RECIPES: CookingRecipe[] = [
+    { itemId: 'bread', level: 1, xp: 30, ingredients: [{ itemId: 'bread_dough', quantity: 1 }], burntItemId: 'burnt_bread',},
+    { itemId: 'scrambled_eggs', level: 1, xp: 30, ingredients: [{ itemId: 'eggs', quantity: 1 }], burntItemId: 'burnt_eggs',},
     { itemId: 'cooked_shrimp', level: 1, xp: 30, ingredients: [{ itemId: 'raw_shrimp', quantity: 1 }], burntItemId: 'burnt_shrimp',},
     { itemId: 'rat_kebab_cooked', level: 1, xp: 30, ingredients: [{ itemId: 'rat_kebab_uncooked', quantity: 1 }], burntItemId: 'rat_kebab_burnt',},
     { itemId: 'cooked_sardine', level: 5, xp: 40, ingredients: [{ itemId: 'raw_sardine', quantity: 1 }], burntItemId: 'burnt_sardine',},
@@ -99,6 +102,7 @@ export const COOKING_RECIPES: CookingRecipe[] = [
     { itemId: 'cooked_boar_meat', level: 10, xp: 60, ingredients: [{ itemId: 'raw_boar_meat', quantity: 1 }], burntItemId: 'burnt_boar_meat',},
     { itemId: 'cooked_trout', level: 20, xp: 70, ingredients: [{ itemId: 'raw_trout', quantity: 1 }], burntItemId: 'burnt_trout',},
     { itemId: 'cooked_pike', level: 30, xp: 80, ingredients: [{ itemId: 'raw_pike', quantity: 1 }], burntItemId: 'burnt_pike',},
+    { itemId: 'cake', level: 35, xp: 120, ingredients: [{ itemId: 'cake_batter', quantity: 1 }], burntItemId: 'burnt_cake',},
     { itemId: 'cooked_eel', level: 38, xp: 95, ingredients: [{ itemId: 'raw_eel', quantity: 1 }], burntItemId: 'burnt_eel',},
     { itemId: 'serpent_omelet_cooked', level: 50, xp: 200, ingredients: [{ itemId: 'serpents_egg', quantity: 1 }, { itemId: 'eggs', quantity: 1 }], burntItemId: 'serpent_omelet_burnt',}
 ];
@@ -109,13 +113,42 @@ export const SPINNING_RECIPES: CraftingRecipe[] = [
     { itemId: 'rope', level: 15, xp: 15, ingredients: [{ itemId: 'flax', quantity: 1 }] },
 ];
 
+export const DOUGH_RECIPES: CraftingRecipe[] = [
+    { itemId: 'bread_dough', level: 1, xp: 0, ingredients: [{ itemId: 'flour', quantity: 1 }, { itemId: 'bucket_of_water', quantity: 1 }] },
+    { itemId: 'pie_dough', level: 1, xp: 0, ingredients: [{ itemId: 'flour', quantity: 1 }, { itemId: 'bucket_of_water', quantity: 1 }, { itemId: 'pie_dish', quantity: 1 }] },
+    { itemId: 'pizza_dough', level: 1, xp: 0, ingredients: [{ itemId: 'flour', quantity: 1 }, { itemId: 'bucket_of_water', quantity: 1 }] },
+];
+
 export const CRAFTING_RECIPES: CraftingRecipe[] = [
+    // Leather (Level 1)
     { itemId: 'leather_gloves', level: 1, xp: 14, ingredients: [{ itemId: 'leather', quantity: 1 }, { itemId: 'thread', quantity: 1 }] },
     { itemId: 'leather_boots', level: 3, xp: 16, ingredients: [{ itemId: 'leather', quantity: 1 }, { itemId: 'thread', quantity: 1 }] },
-    { itemId: 'leather_cowl', level: 5, xp: 18, ingredients: [{ itemId: 'leather', quantity: 1 }, { itemId: 'thread', quantity: 1 }] },
-    { itemId: 'leather_vambraces', level: 6, xp: 22, ingredients: [{ itemId: 'leather', quantity: 1 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'leather_cowl', level: 6, xp: 22, ingredients: [{ itemId: 'leather', quantity: 1 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'leather_vambraces', level: 5, xp: 18, ingredients: [{ itemId: 'leather', quantity: 1 }, { itemId: 'thread', quantity: 1 }] },
     { itemId: 'leather_chaps', level: 7, xp: 50, ingredients: [{ itemId: 'leather', quantity: 2 }, { itemId: 'thread', quantity: 1 }] },
     { itemId: 'leather_body', level: 9, xp: 81, ingredients: [{ itemId: 'leather', quantity: 3 }, { itemId: 'thread', quantity: 1 }] },
+    // Boar Hide (Level 9)
+    { itemId: 'boar_hide_cowl', level: 10, xp: 26, ingredients: [{ itemId: 'boar_leather', quantity: 1 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'boar_hide_vambraces', level: 9, xp: 29, ingredients: [{ itemId: 'boar_leather', quantity: 1 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'boar_hide_chaps', level: 11, xp: 68, ingredients: [{ itemId: 'boar_leather', quantity: 2 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'boar_hide_body', level: 13, xp: 117, ingredients: [{ itemId: 'boar_leather', quantity: 3 }, { itemId: 'thread', quantity: 1 }] },
+    // Wolf Pelt (Level 18)
+    { itemId: 'wolf_pelt_cowl', level: 19, xp: 44, ingredients: [{ itemId: 'wolf_leather', quantity: 1 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'wolf_pelt_vambraces', level: 18, xp: 40, ingredients: [{ itemId: 'wolf_leather', quantity: 1 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'wolf_pelt_chaps', level: 20, xp: 96, ingredients: [{ itemId: 'wolf_leather', quantity: 2 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'wolf_pelt_body', level: 22, xp: 160, ingredients: [{ itemId: 'wolf_leather', quantity: 3 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'wolf_pelt_cloak', level: 26, xp: 295, ingredients: [{ itemId: 'wolf_leather', quantity: 5 }, { itemId: 'thread', quantity: 1 }] },
+    // Bear Hide (Level 32)
+    { itemId: 'bear_hide_cowl', level: 33, xp: 66, ingredients: [{ itemId: 'bear_leather', quantity: 1 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'bear_hide_vambraces', level: 32, xp: 60, ingredients: [{ itemId: 'bear_leather', quantity: 1 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'bear_hide_chaps', level: 34, xp: 145, ingredients: [{ itemId: 'bear_leather', quantity: 2 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'bear_hide_body', level: 36, xp: 240, ingredients: [{ itemId: 'bear_leather', quantity: 3 }, { itemId: 'thread', quantity: 1 }] },
+    // Tomes
+    { itemId: 'tome_of_warding', level: 10, xp: 50, ingredients: [{ itemId: 'leather', quantity: 5 }, { itemId: 'thread', quantity: 10 }, { itemId: 'gust_rune', quantity: 20 }] },
+    { itemId: 'tome_of_focus', level: 20, xp: 100, ingredients: [{ itemId: 'leather', quantity: 8 }, { itemId: 'thread', quantity: 20 }, { itemId: 'aqua_rune', quantity: 40 }] },
+    { itemId: 'tome_of_power', level: 30, xp: 150, ingredients: [{ itemId: 'boar_leather', quantity: 5 }, { itemId: 'thread', quantity: 30 }, { itemId: 'stone_rune', quantity: 60 }] },
+    { itemId: 'tome_of_the_arcane', level: 40, xp: 200, ingredients: [{ itemId: 'wolf_leather', quantity: 5 }, { itemId: 'thread', quantity: 40 }, { itemId: 'ember_rune', quantity: 80 }] },
+    { itemId: 'tome_of_the_master', level: 50, xp: 250, ingredients: [{ itemId: 'bear_leather', quantity: 5 }, { itemId: 'thread', quantity: 50 }, { itemId: 'flux_rune', quantity: 100 }] },
 ];
 
 export const JEWELRY_CRAFTING_RECIPES: JewelryRecipe[] = [
@@ -123,12 +156,47 @@ export const JEWELRY_CRAFTING_RECIPES: JewelryRecipe[] = [
     { itemId: 'silver_ring', level: 5, xp: 35, barType: 'silver_bar', barsRequired: 1, mouldId: 'ring_mould' },
     { itemId: 'silver_necklace', level: 8, xp: 42, barType: 'silver_bar', barsRequired: 1, mouldId: 'necklace_mould' },
     { itemId: 'silver_amulet_u', level: 12, xp: 60, barType: 'silver_bar', barsRequired: 1, mouldId: 'amulet_mould' },
-    // Gold Jewelry placeholder
-    // Gem-bound Jewelry (Sapphire, Emerald, Ruby, Golem Core) placeholder
+    // Gold Jewelry (Plain)
+    { itemId: 'gold_ring', level: 20, xp: 50, barType: 'gold_bar', barsRequired: 1, mouldId: 'ring_mould' },
+    { itemId: 'gold_necklace', level: 24, xp: 60, barType: 'gold_bar', barsRequired: 1, mouldId: 'necklace_mould' },
+    { itemId: 'gold_amulet_u', level: 30, xp: 75, barType: 'gold_bar', barsRequired: 1, mouldId: 'amulet_mould' },
+    // Sapphire Jewelry (Gold)
+    { itemId: 'sapphire_ring', level: 22, xp: 65, barType: 'gold_bar', barsRequired: 1, mouldId: 'ring_mould', gemId: 'sapphire' },
+    { itemId: 'sapphire_necklace', level: 26, xp: 75, barType: 'gold_bar', barsRequired: 1, mouldId: 'necklace_mould', gemId: 'sapphire' },
+    { itemId: 'sapphire_amulet_u', level: 32, xp: 90, barType: 'gold_bar', barsRequired: 1, mouldId: 'amulet_mould', gemId: 'sapphire' },
+    // Emerald Jewelry (Gold)
+    { itemId: 'emerald_ring', level: 29, xp: 80, barType: 'gold_bar', barsRequired: 1, mouldId: 'ring_mould', gemId: 'emerald' },
+    { itemId: 'emerald_necklace', level: 33, xp: 95, barType: 'gold_bar', barsRequired: 1, mouldId: 'necklace_mould', gemId: 'emerald' },
+    { itemId: 'emerald_amulet_u', level: 40, xp: 110, barType: 'gold_bar', barsRequired: 1, mouldId: 'amulet_mould', gemId: 'emerald' },
+    // Ruby Jewelry (Gold)
+    { itemId: 'ruby_ring', level: 36, xp: 100, barType: 'gold_bar', barsRequired: 1, mouldId: 'ring_mould', gemId: 'ruby' },
+    { itemId: 'ruby_necklace', level: 41, xp: 120, barType: 'gold_bar', barsRequired: 1, mouldId: 'necklace_mould', gemId: 'ruby' },
+    { itemId: 'ruby_amulet_u', level: 48, xp: 140, barType: 'gold_bar', barsRequired: 1, mouldId: 'amulet_mould', gemId: 'ruby' },
+    // Diamond Jewelry (Gold)
+    { itemId: 'diamond_ring', level: 55, xp: 150, barType: 'gold_bar', barsRequired: 1, mouldId: 'ring_mould', gemId: 'diamond' },
+    { itemId: 'diamond_necklace', level: 62, xp: 170, barType: 'gold_bar', barsRequired: 1, mouldId: 'necklace_mould', gemId: 'diamond' },
+    { itemId: 'diamond_amulet_u', level: 70, xp: 190, barType: 'gold_bar', barsRequired: 1, mouldId: 'amulet_mould', gemId: 'diamond' },
 ];
 
 export const GEM_CUTTING_RECIPES = [
     { uncutId: 'uncut_sapphire', cutId: 'sapphire', level: 20, xp: 80 },
     { uncutId: 'uncut_emerald', cutId: 'emerald', level: 27, xp: 125 },
     { uncutId: 'uncut_ruby', cutId: 'ruby', level: 34, xp: 200 },
+    { uncutId: 'uncut_diamond', cutId: 'diamond', level: 43, xp: 350 },
+];
+
+export const RUNECRAFTING_RECIPES = [
+    { runeId: 'gust_rune', level: 1, xp: 2, talismanId: 'gust_talisman' },
+    { runeId: 'binding_rune', level: 2, xp: 3, talismanId: 'binding_talisman' },
+    { runeId: 'stone_rune', level: 5, xp: 4, talismanId: 'stone_talisman' },
+    { runeId: 'aqua_rune', level: 9, xp: 5, talismanId: 'aqua_talisman' },
+    { runeId: 'ember_rune', level: 14, xp: 6, talismanId: 'ember_talisman' },
+    { runeId: 'flux_rune', level: 20, xp: 7, talismanId: 'flux_talisman' },
+    { runeId: 'verdant_rune', level: 27, xp: 8, talismanId: 'verdant_talisman' },
+    { runeId: 'astral_rune', level: 35, xp: 9, talismanId: 'astral_talisman' },
+    { runeId: 'hex_rune', level: 44, xp: 10, talismanId: 'hex_talisman' },
+    { runeId: 'passage_rune', level: 50, xp: 11, talismanId: 'passage_talisman' },
+    { runeId: 'nexus_rune', level: 55, xp: 12, talismanId: 'nexus_talisman' },
+    { runeId: 'anima_rune', level: 72, xp: 13, talismanId: 'anima_talisman' },
+    { runeId: 'aether_rune', level: 85, xp: 15, talismanId: 'aether_talisman' },
 ];

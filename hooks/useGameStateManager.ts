@@ -1,9 +1,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { saveGameState, loadGameState, deleteGameState } from '../db';
-import { ALL_SKILLS, REPEATABLE_QUEST_POOL, ITEMS, MONSTERS } from '../constants';
+import { ALL_SKILLS, REPEATABLE_QUEST_POOL, ITEMS, MONSTERS, SPELLS } from '../constants';
 import { POIS } from '../data/pois';
-import { CombatStance, PlayerSlayerTask, GeneratedRepeatableQuest } from '../types';
+import { CombatStance, PlayerSlayerTask, GeneratedRepeatableQuest, InventorySlot, WorldState, Spell } from '../types';
 import { useUIState } from './useUIState';
 
 // Define the shape of the game state
@@ -24,7 +24,6 @@ const defaultState = {
     clearedSkillObstacles: [],
     resourceNodeStates: {},
     monsterRespawnTimers: {},
-    shopStates: {},
     repeatableQuestsState: {
         boards: {},
         activePlayerQuest: null,
@@ -34,14 +33,37 @@ const defaultState = {
     },
     slayerTask: null as PlayerSlayerTask | null,
     tutorialStage: 0,
+    worldState: { windmillFlour: 0 } as WorldState,
+    autocastSpell: null as Spell | null,
 };
 
 const validateAndMergeState = (parsedData: any): GameState => {
-    const validatedState: GameState & { skills: any[]; playerQuests: any[] } = { ...defaultState };
+    const validatedState: GameState & { skills: any[]; playerQuests: any[], worldState: WorldState } = { ...defaultState };
     if (typeof parsedData.username === 'string') validatedState.username = parsedData.username;
     if (Array.isArray(parsedData.skills) && parsedData.skills.length > 0) validatedState.skills = parsedData.skills;
-    if (Array.isArray(parsedData.inventory)) validatedState.inventory = parsedData.inventory;
-    if (Array.isArray(parsedData.bank)) validatedState.bank = parsedData.bank;
+    
+    // Potion Migration Logic
+    const migratePotions = (slots: (InventorySlot | null)[]): (InventorySlot | null)[] => {
+        if (!slots) return [];
+        return slots.map(slot => {
+            if (!slot) return null;
+            const itemData = ITEMS[slot.itemId];
+            // If it's a potion that is now doseable, but this save entry doesn't have the 'doses' property, it's an old item.
+            if (itemData?.doseable && typeof slot.doses === 'undefined') {
+                // Convert it to a 3-dose version.
+                return { ...slot, doses: 3 };
+            }
+            return slot;
+        });
+    };
+
+    if (Array.isArray(parsedData.inventory)) {
+        validatedState.inventory = migratePotions(parsedData.inventory);
+    }
+    if (Array.isArray(parsedData.bank)) {
+        validatedState.bank = migratePotions(parsedData.bank);
+    }
+    
     if (typeof parsedData.coins === 'number') validatedState.coins = parsedData.coins;
     if (parsedData.equipment && typeof parsedData.equipment === 'object') validatedState.equipment = { ...defaultState.equipment, ...parsedData.equipment };
     if (parsedData.combatStance && Object.values(CombatStance).includes(parsedData.combatStance)) validatedState.combatStance = parsedData.combatStance;
@@ -49,6 +71,9 @@ const validateAndMergeState = (parsedData: any): GameState => {
     if (parsedData.currentPoiId && POIS[parsedData.currentPoiId]) validatedState.currentPoiId = parsedData.currentPoiId;
     if (Array.isArray(parsedData.playerQuests)) validatedState.playerQuests = parsedData.playerQuests;
     if (typeof parsedData.tutorialStage === 'number') validatedState.tutorialStage = parsedData.tutorialStage;
+    if (parsedData.autocastSpell && SPELLS.find(s => s.id === (parsedData.autocastSpell as Spell).id)) {
+        validatedState.autocastSpell = parsedData.autocastSpell;
+    }
 
     if (Array.isArray(parsedData.lockedPois)) {
         validatedState.lockedPois = parsedData.lockedPois;
@@ -60,7 +85,6 @@ const validateAndMergeState = (parsedData: any): GameState => {
     if(Array.isArray(parsedData.clearedSkillObstacles)) validatedState.clearedSkillObstacles = parsedData.clearedSkillObstacles;
     if (parsedData.resourceNodeStates) validatedState.resourceNodeStates = parsedData.resourceNodeStates;
     if (parsedData.monsterRespawnTimers) validatedState.monsterRespawnTimers = parsedData.monsterRespawnTimers;
-    if (parsedData.shopStates) validatedState.shopStates = parsedData.shopStates;
 
     if (parsedData.repeatableQuestsState) {
         const boards = parsedData.repeatableQuestsState.boards ?? {};
@@ -118,6 +142,9 @@ const validateAndMergeState = (parsedData: any): GameState => {
     }
 
     if (parsedData.slayerTask) validatedState.slayerTask = parsedData.slayerTask;
+    if (parsedData.worldState && typeof parsedData.worldState.windmillFlour === 'number') {
+        validatedState.worldState = parsedData.worldState;
+    }
 
     return validatedState;
 };
@@ -208,6 +235,7 @@ export const useGameStateManager = (ui: ReturnType<typeof useUIState>) => {
         gameKey,
         handleExportSave,
         handleImportSave,
+// @FIX: Expose parseSaveData so it can be used in other components.
         parseSaveData,
         startNewGame,
         updateUsernameAndSave,

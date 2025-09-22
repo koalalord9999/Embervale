@@ -1,12 +1,32 @@
-
 import React, { useState } from 'react';
 import { InventorySlot } from '../../../types';
 import { ITEMS, getIconClassName } from '../../../constants';
 import Button from '../../common/Button';
 import { TooltipState } from '../../../hooks/useUIState';
+import { getDisplayName } from '../../panels/InventorySlot';
+
+const getQuantityColor = (quantity: number): string => {
+    if (quantity >= 10000000) return 'text-green-400';
+    if (quantity >= 100000) return 'text-white';
+    return 'text-yellow-300';
+};
+
+const formatItemQuantity = (quantity: number): string => {
+    if (quantity >= 1000000000) {
+        return `${Math.floor(quantity / 1000000000)}B`;
+    }
+    if (quantity >= 1000000) {
+        return `${Math.floor(quantity / 1000000)}M`;
+    }
+    if (quantity >= 10000) {
+        return `${Math.floor(quantity / 1000)}k`;
+    }
+    return quantity.toLocaleString();
+};
+
 
 interface PriceCheckerViewProps {
-    inventory: InventorySlot[];
+    inventory: (InventorySlot | null)[];
     onClose: () => void;
     setTooltip: (tooltip: TooltipState | null) => void;
 }
@@ -18,20 +38,15 @@ const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose,
         const item = ITEMS[invSlot.itemId];
         if (!item) return;
 
-        const existingItem = checkedItems.find(i => i.itemId === invSlot.itemId);
+        const existingItemIndex = checkedItems.findIndex(i => i.itemId === invSlot.itemId && !!i.noted === !!invSlot.noted);
 
-        if (existingItem) {
-            // If item is stackable, we just add to the quantity
-            if (item.stackable) {
-                existingItem.quantity += invSlot.quantity;
-            } else {
-                 // If not stackable, we add a new entry
-                 setCheckedItems(prev => [...prev, { ...invSlot }]);
-            }
+        if (existingItemIndex > -1) {
+            const updatedItems = [...checkedItems];
+            updatedItems[existingItemIndex].quantity += invSlot.quantity;
+            setCheckedItems(updatedItems);
         } else {
-             setCheckedItems(prev => [...prev, { ...invSlot }]);
+            setCheckedItems(prev => [...prev, { ...invSlot }]);
         }
-        setCheckedItems(prev => [...prev]); // Force re-render
     };
 
     const removeFromChecker = (itemIndex: number) => {
@@ -45,7 +60,7 @@ const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose,
 
     const inventoryGrid: (InventorySlot | null)[] = new Array(35).fill(null);
     inventory.forEach((item, index) => {
-        if (index < 35) inventoryGrid[index] = item;
+        if (item && index < 35) inventoryGrid[index] = item;
     });
 
     const checkerGrid: (InventorySlot | null)[] = new Array(20).fill(null);
@@ -58,10 +73,7 @@ const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose,
         if (!itemData) return;
         const tooltipContent = (
             <div>
-                <p className="font-bold text-yellow-300">{itemData.name}</p>
-                {itemData.stackable && item.quantity > 999 && (
-                    <p className="text-sm mt-1 text-gray-400">Quantity: {item.quantity.toLocaleString()}</p>
-                )}
+                <p className="font-bold text-yellow-300">{getDisplayName(item)}</p>
                 <p className="text-sm text-gray-300">Value (each): {itemData.value.toLocaleString()}</p>
                 <p className="text-sm text-gray-300">Total Value: {(itemData.value * item.quantity).toLocaleString()}</p>
             </div>
@@ -89,17 +101,22 @@ const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose,
                                 <div key={index} className="w-full aspect-square bg-gray-900 border border-gray-700 rounded-md p-1 relative cursor-pointer" onClick={() => slot && removeFromChecker(index)} onMouseEnter={(e) => slot && handleMouseEnter(e, slot)} onMouseLeave={() => setTooltip(null)}>
                                      {slot && item && (
                                         <>
-                                            <img src={item.iconUrl} alt={item.name} className={`w-full h-full ${getIconClassName(item)}`} />
-                                            {slot.quantity > 1 && (
-                                                <span className="absolute bottom-0 right-1 text-xs font-bold text-yellow-300" style={{ textShadow: '1px 1px 1px black' }}>
-                                                    {slot.quantity > 1000 ? `${Math.floor(slot.quantity / 1000)}k` : slot.quantity}
+                                            {slot.noted ? (
+                                                <div className="item-note-wrapper">
+                                                    <img src="https://api.iconify.design/game-icons:folded-paper.svg" alt="Note" className="item-note-paper" />
+                                                    <img src={item.iconUrl} alt={item.name} className={`item-note-icon ${getIconClassName(item)}`} />
+                                                </div>
+                                            ) : (
+                                                <img src={item.iconUrl} alt={item.name} className={`w-full h-full ${getIconClassName(item)}`} />
+                                            )}
+                                            {slot.quantity > 1 && !item.doseable && (
+                                                <span className={`absolute bottom-0 right-1 text-xs font-bold ${getQuantityColor(slot.quantity)}`} style={{ textShadow: '1px 1px 1px black', zIndex: 2 }}>
+                                                    {formatItemQuantity(slot.quantity)}
                                                 </span>
                                             )}
-                                            {(item.id.startsWith('grimy_') || item.id.startsWith('clean_') || item.id.endsWith('_potion_unf')) && (
-                                                <span className="absolute bottom-0.5 left-0 right-0 text-center text-xs font-bold text-yellow-400 pointer-events-none" style={{ textShadow: '1px 1px 2px black', lineHeight: '1' }}>
-                                                    {item.id.startsWith('grimy_')
-                                                        ? `G${item.name.split(' ')[1]?.substring(0, 3) ?? ''}`
-                                                        : item.name.split(' ')[0].substring(0, 4)}
+                                            {item.doseable && slot.doses && (
+                                                <span className="absolute bottom-0 right-1 text-xs font-bold text-yellow-300" style={{ textShadow: '1px 1px 1px black' }}>
+                                                    {slot.doses}
                                                 </span>
                                             )}
                                         </>
@@ -121,17 +138,22 @@ const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose,
                                 <div key={index} className="w-full aspect-square bg-gray-900 border border-gray-700 rounded-md p-1 relative cursor-pointer" onClick={() => slot && addToChecker(slot, index)} onMouseEnter={(e) => slot && handleMouseEnter(e, slot)} onMouseLeave={() => setTooltip(null)}>
                                      {slot && item && (
                                         <>
-                                            <img src={item.iconUrl} alt={item.name} className={`w-full h-full ${getIconClassName(item)}`} />
-                                            {slot.quantity > 1 && (
-                                                <span className="absolute bottom-0 right-1 text-xs font-bold text-yellow-300" style={{ textShadow: '1px 1px 1px black' }}>
-                                                    {slot.quantity > 1000 ? `${Math.floor(slot.quantity / 1000)}k` : slot.quantity}
+                                            {slot.noted ? (
+                                                <div className="item-note-wrapper">
+                                                    <img src="https://api.iconify.design/game-icons:folded-paper.svg" alt="Note" className="item-note-paper" />
+                                                    <img src={item.iconUrl} alt={item.name} className={`item-note-icon ${getIconClassName(item)}`} />
+                                                </div>
+                                            ) : (
+                                                <img src={item.iconUrl} alt={item.name} className={`w-full h-full ${getIconClassName(item)}`} />
+                                            )}
+                                            {slot.quantity > 1 && !item.doseable && (
+                                                <span className={`absolute bottom-0 right-1 text-xs font-bold ${getQuantityColor(slot.quantity)}`} style={{ textShadow: '1px 1px 1px black' }}>
+                                                    {formatItemQuantity(slot.quantity)}
                                                 </span>
                                             )}
-                                            {(item.id.startsWith('grimy_') || item.id.startsWith('clean_') || item.id.endsWith('_potion_unf')) && (
-                                                <span className="absolute bottom-0.5 left-0 right-0 text-center text-xs font-bold text-yellow-400 pointer-events-none" style={{ textShadow: '1px 1px 2px black', lineHeight: '1' }}>
-                                                    {item.id.startsWith('grimy_')
-                                                        ? `G${item.name.split(' ')[1]?.substring(0, 3) ?? ''}`
-                                                        : item.name.split(' ')[0].substring(0, 4)}
+                                            {item.doseable && slot.doses && (
+                                                <span className="absolute bottom-0 right-1 text-xs font-bold text-yellow-300" style={{ textShadow: '1px 1px 1px black' }}>
+                                                    {slot.doses}
                                                 </span>
                                             )}
                                         </>

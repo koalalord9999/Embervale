@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { Equipment, InventorySlot } from '../../types';
 import { ITEMS, getIconClassName } from '../../constants';
@@ -8,6 +6,7 @@ import { useUIState } from '../../hooks/useUIState';
 
 interface EquipmentPanelProps {
     equipment: Equipment;
+    inventory: (InventorySlot | null)[];
     onUnequip: (slot: keyof Equipment) => void;
     setTooltip: (tooltip: TooltipState | null) => void;
     ui: ReturnType<typeof useUIState>;
@@ -118,7 +117,7 @@ const EquipmentSlotDisplay: React.FC<{
 
 const EmptySlot = () => <div className="w-full aspect-square" />;
 
-const EquipmentPanel: React.FC<EquipmentPanelProps> = ({ equipment, onUnequip, setTooltip, ui }) => {
+const EquipmentPanel: React.FC<EquipmentPanelProps> = ({ equipment, inventory, onUnequip, setTooltip, ui }) => {
     return (
         <div className="flex flex-col h-full text-gray-300">
             <h3 className="text-lg font-bold text-center mb-3 text-yellow-400">Equipment</h3>
@@ -154,7 +153,7 @@ const EquipmentPanel: React.FC<EquipmentPanelProps> = ({ equipment, onUnequip, s
                  <button onClick={() => ui.setIsItemsOnDeathOpen(true)} className="flex-1 text-center py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded border border-gray-500 transition-colors">
                     Items Kept on Death
                 </button>
-                <button onClick={() => ui.setIsPriceCheckerOpen(true)} className="flex-1 text-center py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded border border-gray-500 transition-colors">
+                <button onClick={() => ui.setPriceCheckerInventory(inventory)} className="flex-1 text-center py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded border border-gray-500 transition-colors">
                     Price Checker
                 </button>
             </div>

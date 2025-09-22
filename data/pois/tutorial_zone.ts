@@ -11,7 +11,15 @@ export const tutorialZonePois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Leo the Guide',
                 icon: '/assets/npcChatHeads/tavern_regular.png',
-                dialogue: ["Welcome, newcomer. Ready to learn the ropes?"]
+                dialogue: {
+                    start: {
+                        npcName: 'Leo the Guide',
+                        npcIcon: '/assets/npcChatHeads/tavern_regular.png',
+                        text: "Welcome, newcomer. Ready to learn the ropes?",
+                        responses: []
+                    }
+                },
+                startNode: 'start'
             }
         ],
         regionId: 'wilderness',
@@ -71,8 +79,18 @@ export const tutorialZonePois: Record<string, POI> = {
         connections: ['enclave_forge'],
         activities: [
             {
-                type: 'quest_start',
-                questId: 'tutorial_completion'
+                type: 'npc',
+                name: 'Leo the Guide',
+                icon: '/assets/npcChatHeads/tavern_regular.png',
+                dialogue: {
+                    start: {
+                        npcName: 'Leo the Guide',
+                        npcIcon: '/assets/npcChatHeads/tavern_regular.png',
+                        text: "This is it. Ready to go?",
+                        responses: []
+                    }
+                },
+                startNode: 'start'
             }
         ],
         regionId: 'wilderness',

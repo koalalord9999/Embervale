@@ -1,4 +1,3 @@
-
 import { Shop } from '../types';
 
 export const SHOPS: Record<string, Shop> = {
@@ -7,8 +6,14 @@ export const SHOPS: Record<string, Shop> = {
         name: "Meadowdale General Store",
         inventory: [
             { itemId: 'knife', quantity: 10, priceModifier: 1.0 },
+            { itemId: 'tinderbox', quantity: 10, priceModifier: 1.0},
+            { itemId: 'hammer', quantity: 10, priceModifier: 1.0 },
             { itemId: 'shears', quantity: 5, priceModifier: 1.0 },
+            { itemId: 'bucket', quantity: 100, priceModifier: 1.0 },
+            { itemId: 'pie_dish', quantity: 50, priceModifier: 1.0 },
+            { itemId: 'cake_tin', quantity: 50, priceModifier: 1.0 },
             { itemId: 'bronze_axe', quantity: 10, priceModifier: 1.1 },
+            { itemId: 'bronze_pickaxe', quantity: 10, priceModifier: 1.1 },
             { itemId: 'shortbow', quantity: 5, priceModifier: 1.1 },
             { itemId: 'bronze_arrow', quantity: 1000, priceModifier: 1.1 },
             { itemId: 'bronze_sword', quantity: 10, priceModifier: 1.1},
@@ -17,13 +22,28 @@ export const SHOPS: Record<string, Shop> = {
             { itemId: 'vial', quantity: 1000, priceModifier: 1.0 },
         ]
     },
+    dwarven_pickaxes: {
+        id: 'dwarven_pickaxes',
+        name: "Durin's Pickaxes",
+        inventory: [
+            { itemId: 'bronze_pickaxe', quantity: 5, priceModifier: 1.1 },
+            { itemId: 'iron_pickaxe', quantity: 5, priceModifier: 1.1 },
+            { itemId: 'steel_pickaxe', quantity: 5, priceModifier: 1.1 },
+            { itemId: 'mithril_pickaxe', quantity: 5, priceModifier: 1.1 },
+        ]
+    },
     oakhaven_general: {
         id: 'oakhaven_general',
         name: "Oakhaven General Store",
         inventory: [
             { itemId: 'knife', quantity: 10, priceModifier: 1.0 },
             { itemId: 'shears', quantity: 5, priceModifier: 1.0 },
+            { itemId: 'hammer', quantity: 10, priceModifier: 1.0 },
+            { itemId: 'bucket', quantity: 100, priceModifier: 1.0 },
+            { itemId: 'pie_dish', quantity: 50, priceModifier: 1.0 },
+            { itemId: 'cake_tin', quantity: 50, priceModifier: 1.0 },
             { itemId: 'bronze_axe', quantity: 10, priceModifier: 1.1 },
+            { itemId: 'bronze_pickaxe', quantity: 10, priceModifier: 1.1 },
             { itemId: 'bronze_sword', quantity: 10, priceModifier: 1.1},
             { itemId: 'wooden_shield', quantity: 10, priceModifier: 1.1},
             { itemId: 'vial', quantity: 100, priceModifier: 1.0 },
@@ -31,7 +51,7 @@ export const SHOPS: Record<string, Shop> = {
     },
     oakhaven_crafting: {
         id: 'oakhaven_crafting',
-        name: "Oakhaven Crafting Supplies",
+        name: "Artisan Supplies",
         inventory: [
             { itemId: 'chisel', quantity: 10, priceModifier: 1.0 },
             { itemId: 'needle', quantity: 100, priceModifier: 1.0 },
@@ -40,6 +60,15 @@ export const SHOPS: Record<string, Shop> = {
             { itemId: 'necklace_mould', quantity: 10, priceModifier: 1.0 },
             { itemId: 'amulet_mould', quantity: 10, priceModifier: 1.0 },
             { itemId: 'vial', quantity: 1000, priceModifier: 1.0 },
+        ]
+    },
+    oakhaven_herblore: {
+        id: 'oakhaven_herblore',
+        name: "Elara's Apothecary",
+        inventory: [
+            { itemId: 'pestle_and_mortar', quantity: 10, priceModifier: 1.0 },
+            { itemId: 'vial_of_water', quantity: 1000, priceModifier: 1.0 },
+            { itemId: 'spider_eggs', quantity: 5, priceModifier: 1.2 },
         ]
     },
     silverhaven_general: {
@@ -67,6 +96,28 @@ export const SHOPS: Record<string, Shop> = {
             { itemId: 'ring_mould', quantity: 10, priceModifier: 1.0 },
             { itemId: 'necklace_mould', quantity: 10, priceModifier: 1.0 },
             { itemId: 'amulet_mould', quantity: 10, priceModifier: 1.0 },
+        ]
+    },
+    silverhaven_magic_shop: {
+        id: 'silverhaven_magic_shop',
+        name: 'Silverhaven Arcane Wares',
+        inventory: [
+            { itemId: 'staff_of_gusts', quantity: 5, priceModifier: 1.2 },
+            { itemId: 'staff_of_aqua', quantity: 5, priceModifier: 1.2 },
+            { itemId: 'staff_of_stone', quantity: 5, priceModifier: 1.2 },
+            { itemId: 'staff_of_ember', quantity: 5, priceModifier: 1.2 },
+            { itemId: 'wizard_hat', quantity: 10, priceModifier: 1.1 },
+            { itemId: 'wizard_robe_top', quantity: 10, priceModifier: 1.1 },
+            { itemId: 'wizard_robe_skirt', quantity: 10, priceModifier: 1.1 },
+            { itemId: 'wizard_boots', quantity: 10, priceModifier: 1.1 },
+            { itemId: 'gust_rune', quantity: 5000, priceModifier: 1.2 },
+            { itemId: 'aqua_rune', quantity: 5000, priceModifier: 1.2 },
+            { itemId: 'stone_rune', quantity: 5000, priceModifier: 1.2 },
+            { itemId: 'ember_rune', quantity: 5000, priceModifier: 1.2 },
+            { itemId: 'binding_rune', quantity: 2500, priceModifier: 1.2 },
+            { itemId: 'flux_rune', quantity: 300, priceModifier: 1.2 },
+            { itemId: 'hex_rune', quantity: 100, priceModifier: 1.2 },
+            { itemId: 'nexus_rune', quantity: 100, priceModifier: 1.2 },
         ]
     },
     silverhaven_fishing: {

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { PlayerQuestState, PlayerRepeatableQuest, InventorySlot, PlayerSlayerTask } from '../../types';
 import { QUESTS, ITEMS, MONSTERS } from '../../constants';
@@ -6,7 +5,7 @@ import { QUESTS, ITEMS, MONSTERS } from '../../constants';
 interface QuestsPanelProps {
     playerQuests: PlayerQuestState[];
     activeRepeatableQuest: PlayerRepeatableQuest | null;
-    inventory: InventorySlot[];
+    inventory: (InventorySlot | null)[];
     slayerTask: PlayerSlayerTask | null;
     onSelectQuest: (questId: string) => void;
 }
@@ -21,7 +20,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ playerQuests, activeRepeatabl
         if (generatedQuest.type === 'gather') {
             const itemId = generatedQuest.target.itemId!;
             const currentAmount = inventory.reduce((total, slot) => {
-                return slot.itemId === itemId ? total + slot.quantity : total;
+                return slot && slot.itemId === itemId ? total + slot.quantity : total;
             }, 0);
             return `(${currentAmount} / ${generatedQuest.requiredQuantity})`;
         }
@@ -50,13 +49,17 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ playerQuests, activeRepeatabl
                         <h4 className="font-bold text-purple-300 border-b border-purple-300/50 mb-2 pb-1">Tasks</h4>
                         {slayerTask && (
                              <div className="mb-2">
-                                <h5 className="font-semibold text-red-400">
-                                   Slayer Task
-                                </h5>
-                                <p className="text-sm text-gray-400 italic mt-1">
-                                   - Slay {slayerTask.requiredCount} {MONSTERS[slayerTask.monsterId].name}s.
-                                    {` (${slayerTask.progress}/${slayerTask.requiredCount})`}
-                                </p>
+                                <h5 className="font-semibold text-red-400">Slayer Task</h5>
+                                {slayerTask.isComplete ? (
+                                    <p className="text-sm text-green-400 italic mt-1">
+                                        Task Complete! Return to a Slayer Master for a new assignment and a reward.
+                                    </p>
+                                ) : (
+                                    <p className="text-sm text-gray-400 italic mt-1">
+                                        - Slay {slayerTask.requiredCount} {MONSTERS[slayerTask.monsterId].name}s.
+                                        {` (${slayerTask.progress}/${slayerTask.requiredCount})`}
+                                    </p>
+                                )}
                             </div>
                         )}
                         {activeRepeatableQuest && (

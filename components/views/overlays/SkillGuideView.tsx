@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { PlayerSkill, SkillName } from '../../../types';
 import { SKILL_GUIDES, SKILL_ICONS, ITEMS, ALL_SKILLS, getIconClassName, HERBS, HERBLORE_RECIPES } from '../../../constants';
@@ -17,7 +16,7 @@ const HerbloreGuide: React.FC<{ playerLevel: number }> = ({ playerLevel }) => {
     const herbPotions = useMemo(() => {
         if (!selectedHerbId) return [];
 
-        const herbInfo = HERBS.find(h => h.grimy === selectedHerbId);
+        const herbInfo = HERBS.find(h => h.grimy === selectedHerbId || h.clean === selectedHerbId);
         if (!herbInfo) return [];
 
         const unfPotionRecipe = HERBLORE_RECIPES.unfinished.find(r => r.cleanHerbId === herbInfo.clean);
@@ -28,20 +27,20 @@ const HerbloreGuide: React.FC<{ playerLevel: number }> = ({ playerLevel }) => {
             .sort((a, b) => a.level - b.level);
     }, [selectedHerbId]);
 
-    const selectedHerb = selectedHerbId ? ITEMS[selectedHerbId] : null;
+    const selectedHerbItem = selectedHerbId ? ITEMS[selectedHerbId] : null;
 
     return (
-        <div className="flex h-full">
-            <div className="w-1/2 border-r-2 border-gray-700 overflow-y-auto p-2 space-y-1">
+        <div className="flex flex-col sm:flex-row h-full">
+            <div className="w-full sm:w-1/2 border-r-2 border-gray-700 overflow-y-auto p-2 space-y-1">
                 <h3 className="text-lg font-bold text-center mb-2 text-yellow-300">Herbs</h3>
                 {HERBS.map(herb => {
-                    const item = ITEMS[herb.grimy];
+                    const item = ITEMS[herb.clean];
                     const hasLevel = playerLevel >= herb.level;
                     return (
                         <button
-                            key={herb.grimy}
-                            onClick={() => setSelectedHerbId(herb.grimy)}
-                            className={`w-full flex items-center gap-3 p-2 rounded-md text-left transition-colors ${selectedHerbId === herb.grimy ? 'bg-yellow-800/80 ring-2 ring-yellow-500' : 'hover:bg-gray-700/50'} ${!hasLevel ? 'opacity-60' : ''}`}
+                            key={herb.clean}
+                            onClick={() => setSelectedHerbId(herb.clean)}
+                            className={`w-full flex items-center gap-3 p-2 rounded-md text-left transition-colors ${selectedHerbId === herb.clean ? 'bg-yellow-800/80 ring-2 ring-yellow-500' : 'hover:bg-gray-700/50'} ${!hasLevel ? 'opacity-60' : ''}`}
                         >
                             <div className="w-8 h-8 bg-black/40 rounded-md p-1 flex-shrink-0 flex items-center justify-center">
                                 <img src={item.iconUrl} alt={item.name} className={`w-full h-full ${getIconClassName(item)}`} />
@@ -54,10 +53,10 @@ const HerbloreGuide: React.FC<{ playerLevel: number }> = ({ playerLevel }) => {
                     );
                 })}
             </div>
-            <div className="w-1/2 overflow-y-auto p-4">
-                {selectedHerb ? (
+            <div className="w-full sm:w-1/2 overflow-y-auto p-4">
+                {selectedHerbItem ? (
                     <>
-                        <h3 className="text-lg font-bold text-center mb-4 text-yellow-300">Potions from {selectedHerb.name}</h3>
+                        <h3 className="text-lg font-bold text-center mb-4 text-yellow-300">Potions from {selectedHerbItem.name}</h3>
                         {herbPotions.length > 0 ? (
                              <div className="space-y-3">
                                 {herbPotions.map(recipe => {
@@ -137,8 +136,8 @@ const SkillGuideView: React.FC<SkillGuideViewProps> = ({ activeSkill, setActiveS
                     <Button onClick={onClose} size="sm">Close</Button>
                 </div>
                 
-                <div className="flex flex-grow min-h-0">
-                    <div className="w-1/4 bg-black/30 p-2 border-r-2 border-gray-600 overflow-y-auto">
+                <div className="flex flex-col md:flex-row flex-grow min-h-0">
+                    <div className="w-full md:w-1/4 bg-black/30 p-2 border-b-2 md:border-b-0 md:border-r-2 border-gray-600 overflow-y-auto h-48 md:h-auto">
                         <div className="space-y-1">
                             {ALL_SKILLS.map(skill => (
                                 <button
@@ -153,7 +152,7 @@ const SkillGuideView: React.FC<SkillGuideViewProps> = ({ activeSkill, setActiveS
                         </div>
                     </div>
                     
-                    <div className="w-3/4 flex-grow overflow-y-auto p-4">
+                    <div className="w-full md:w-3/4 flex-grow overflow-y-auto p-4">
                         {activeSkill === SkillName.Herblore 
                             ? <HerbloreGuide playerLevel={playerLevel} /> 
                             : renderDefaultGuide()

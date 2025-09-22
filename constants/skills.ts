@@ -5,7 +5,7 @@ import { SkillName, PlayerSkill } from '../types';
 export const ALL_SKILLS: PlayerSkill[] = Object.values(SkillName).map(name => ({
   name,
   level: name === SkillName.Hitpoints ? 10 : 1,
-  xp: name === SkillName.Hitpoints ? 1853 : 0, // XP for level 10
+  xp: name === SkillName.Hitpoints ? 1640 : 0, // XP for level 10
 }));
 
 export const XP_TABLE: number[] = [0];

@@ -32,14 +32,14 @@ export const useAggression = (
                 return { monster, uniqueInstanceId };
             })
             .filter(({ monster, uniqueInstanceId }) => {
+                // Dev aggro overrides ALL normal behavior, including respawn timers.
+                if (devAggroIds.includes(uniqueInstanceId)) {
+                    return true;
+                }
+
                 const respawnTime = monsterRespawnTimers[uniqueInstanceId];
                 if (respawnTime && respawnTime > Date.now()) {
                     return false; // Monster is respawning
-                }
-
-                // Dev aggro overrides normal behavior
-                if (devAggroIds.includes(uniqueInstanceId)) {
-                    return true;
                 }
 
                 if (!monster?.aggressive) return false;
@@ -50,7 +50,6 @@ export const useAggression = (
             .map(({ uniqueInstanceId }) => uniqueInstanceId);
         
         if (aggressiveMonsterInstances.length > 0) {
-            addLog("You've been spotted by aggressive creatures! Prepare for battle!");
             startCombat(aggressiveMonsterInstances);
         }
     }, [currentPoiId, isGameLoaded, isBusy, playerCombatLevel, startCombat, addLog, monsterRespawnTimers, devAggroIds, isPlayerInvisible]);

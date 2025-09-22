@@ -1,89 +1,136 @@
-
 import React from 'react';
 import { InventorySlot, PlayerSkill, SkillName } from '../../../../types';
 import { GEM_CUTTING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
-import Button from '../../../common/Button';
 import { CraftingViewProps } from '../CraftingView';
+import { useLongPress } from '../../../../hooks/useLongPress';
+import { useIsTouchDevice } from '../../../../hooks/useIsTouchDevice';
 
-const GemCuttingInterface: React.FC<CraftingViewProps> = ({ inventory, skills, onCut, setContextMenu, setMakeXPrompt }) => {
-    const craftingLevel = skills.find(s => s.name === SkillName.Crafting)?.level ?? 1;
+const GemCuttingSlot: React.FC<{
+    recipe: typeof GEM_CUTTING_RECIPES[0];
+    craftingLevel: number;
+    getItemCount: (itemId: string) => number;
+    hasChisel: boolean;
+    onCut: (cutId: string, quantity: number) => void;
+    setContextMenu: CraftingViewProps['setContextMenu'];
+    setMakeXPrompt: CraftingViewProps['setMakeXPrompt'];
+    setTooltip: CraftingViewProps['setTooltip'];
+    isTouchDevice: boolean;
+}> = ({ recipe, craftingLevel, getItemCount, hasChisel, onCut, setContextMenu, setMakeXPrompt, setTooltip, isTouchDevice }) => {
+    const cutItem = ITEMS[recipe.cutId];
+    const uncutItem = ITEMS[recipe.uncutId];
+    if (!cutItem || !uncutItem) return null;
+    
+    const uncutCount = getItemCount(recipe.uncutId);
+    const hasLevel = craftingLevel >= recipe.level;
+    const hasIngredients = uncutCount > 0 && hasChisel;
+    const canCut = hasLevel && hasIngredients;
 
-    // FIX: Handle null slots when filtering for an item.
-    const getItemCount = (itemId: string) => inventory.filter(slot => slot && slot.itemId === itemId).length;
-    // FIX: Handle null slots when checking for an item.
-    const hasChisel = inventory.some(slot => slot && slot.itemId === 'chisel');
+    const handleSingleTap = () => { if(canCut) onCut(recipe.cutId, 1); };
 
-    const createContextMenu = (e: React.MouseEvent, recipe: typeof GEM_CUTTING_RECIPES[0]) => {
+    const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();
+        const event = 'touches' in e ? e.touches[0] : e;
         const maxCut = getItemCount(recipe.uncutId);
-        const hasLevel = craftingLevel >= recipe.level;
-
         setContextMenu({
             options: [
-                { label: 'Cut 1', onClick: () => onCut(recipe.cutId, 1), disabled: !hasLevel || maxCut < 1 || !hasChisel },
-                { label: 'Cut 5', onClick: () => onCut(recipe.cutId, 5), disabled: !hasLevel || maxCut < 5 || !hasChisel },
-                { label: 'Cut All', onClick: () => onCut(recipe.cutId, maxCut), disabled: !hasLevel || maxCut < 1 || !hasChisel },
-                {
-                    label: 'Cut X...',
+                { label: 'Cut 1', onClick: () => onCut(recipe.cutId, 1), disabled: !canCut },
+                { label: 'Cut 5', onClick: () => onCut(recipe.cutId, 5), disabled: !canCut || maxCut < 5 },
+                { label: 'Cut All', onClick: () => onCut(recipe.cutId, maxCut), disabled: !canCut },
+                { 
+                    label: 'Cut X...', 
                     onClick: () => setMakeXPrompt({
-                        title: `Cut ${ITEMS[recipe.cutId].name}`,
-                        max: maxCut,
+                        title: `Cut ${cutItem.name}`, max: maxCut,
                         onConfirm: (quantity) => onCut(recipe.cutId, quantity)
-                    }),
-                    disabled: !hasLevel || maxCut < 1 || !hasChisel
+                    }), 
+                    disabled: !canCut
                 },
-            ],
-            position: { x: e.clientX, y: e.clientY }
+            ], event, isTouchInteraction: isTouchDevice
         });
     };
 
-    return (
-        <>
-            {!hasChisel && <p className="text-center text-red-400 mb-4">You need a chisel in your inventory to cut gems.</p>}
-            <div className="flex-grow overflow-y-auto pr-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {GEM_CUTTING_RECIPES.map((recipe) => {
-                        const cutItem = ITEMS[recipe.cutId];
-                        const uncutItem = ITEMS[recipe.uncutId];
-                        if (!cutItem || !uncutItem) return null;
+    const longPressHandlers = useLongPress({ onLongPress: handleLongPress, onClick: handleSingleTap });
 
-                        const uncutCount = getItemCount(recipe.uncutId);
-                        const hasLevel = craftingLevel >= recipe.level;
-                        const hasIngredients = uncutCount > 0 && hasChisel;
-                        const canCut = hasLevel && hasIngredients;
-
-                        return (
-                            <div
-                                key={recipe.cutId}
-                                className={`bg-gray-900 p-3 rounded-lg border-2 ${canCut ? 'border-gray-600' : 'border-red-800/50'}`}
-                                onContextMenu={(e) => createContextMenu(e, recipe)}
-                            >
-                                <div className="flex items-center gap-3 mb-2">
-                                    <img src={cutItem.iconUrl} alt={cutItem.name} className={`w-10 h-10 bg-black/30 p-1 rounded ${getIconClassName(cutItem)}`} />
-                                    <h3 className="text-lg font-semibold text-yellow-300">{cutItem.name}</h3>
-                                </div>
-                                <div className="text-sm space-y-1 mb-3">
-                                    <p className={hasLevel ? 'text-gray-400' : 'text-red-400'}>
-                                        Lvl: {recipe.level}
-                                    </p>
-                                    <p className={hasIngredients ? 'text-gray-400' : 'text-red-400'}>
-                                        {uncutItem.name}: 1 ({uncutCount} owned)
-                                    </p>
-                                </div>
-                                <Button
-                                    size="sm"
-                                    onClick={() => onCut(recipe.cutId, 1)}
-                                    disabled={!canCut}
-                                    className="w-full"
-                                >
-                                    Cut 1
-                                </Button>
-                            </div>
-                        );
-                    })}
+    const handleMouseEnter = (e: React.MouseEvent) => {
+        const craftTime = 1.2;
+    
+        const tooltipContent = (
+            <div className="text-sm text-left w-48">
+                <p className="font-bold text-yellow-300 mb-2 pb-1 border-b border-gray-600">{cutItem.name}</p>
+                <p className="font-semibold text-gray-400 uppercase text-xs mb-1">Materials</p>
+                <ul className="list-disc list-inside mb-2">
+                    <li className={uncutCount > 0 ? 'text-green-400' : 'text-red-400'}>{uncutItem.name} x1</li>
+                    <li className={hasChisel ? 'text-green-400' : 'text-red-400'}>Chisel</li>
+                </ul>
+                <p className="font-semibold text-gray-400 uppercase text-xs mb-1">Output</p>
+                <p className="mb-2 text-gray-300">{cutItem.name} x1</p>
+                
+                <div className="grid grid-cols-2 gap-x-4 text-xs">
+                    <span className="text-gray-400">{SkillName.Crafting} XP:</span>
+                    <span className="font-semibold text-right">{recipe.xp.toLocaleString()}</span>
+                    <span className="text-gray-400">Craft Time:</span>
+                    <span className="font-semibold text-right">{craftTime.toFixed(1)}s</span>
                 </div>
             </div>
-        </>
+        );
+    
+        setTooltip({ content: tooltipContent, position: { x: e.clientX, y: e.clientY } });
+    };
+
+    return (
+        <div 
+            className={`crafting-slot ${!canCut ? 'disabled' : ''}`} 
+            {...longPressHandlers}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={() => setTooltip(null)}
+        >
+            <div className={`crafting-slot-level ${hasLevel ? 'met' : 'unmet'}`}>
+                Lvl {recipe.level}
+            </div>
+            <img src={cutItem.iconUrl} alt={cutItem.name} className={`crafting-slot-icon ${getIconClassName(cutItem)}`} />
+            <div className="crafting-slot-ingredients">
+                <div className="ingredient-icon" title={`${uncutItem.name} (${uncutCount})`}>
+                    <img src={uncutItem.iconUrl} alt={uncutItem.name} className={getIconClassName(uncutItem)} />
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+const GemCuttingInterface: React.FC<CraftingViewProps> = ({ inventory, skills, onCut, setContextMenu, setMakeXPrompt, setTooltip }) => {
+    const craftingLevel = skills.find(s => s.name === SkillName.Crafting)?.currentLevel ?? 1;
+    const isTouchDevice = useIsTouchDevice(false);
+
+    const getItemCount = (itemId: string): number => {
+        return inventory.reduce((total, slot) => {
+            if (slot && slot.itemId === itemId && !slot.noted) {
+                return total + slot.quantity;
+            }
+            return total;
+        }, 0);
+    };
+    const hasChisel = inventory.some(slot => slot && slot.itemId === 'chisel');
+
+    return (
+        <div className="flex-grow overflow-y-auto pr-2">
+            {!hasChisel && <p className="text-center text-red-400 mb-4">You need a chisel in your inventory to cut gems.</p>}
+            <div className="crafting-grid">
+                {GEM_CUTTING_RECIPES.map((recipe) => (
+                    <GemCuttingSlot
+                        key={recipe.cutId}
+                        recipe={recipe}
+                        craftingLevel={craftingLevel}
+                        getItemCount={getItemCount}
+                        hasChisel={hasChisel}
+                        onCut={onCut}
+                        setContextMenu={setContextMenu}
+                        setMakeXPrompt={setMakeXPrompt}
+                        setTooltip={setTooltip}
+                        isTouchDevice={isTouchDevice}
+                    />
+                ))}
+            </div>
+        </div>
     );
 };
 

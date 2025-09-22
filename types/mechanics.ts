@@ -1,3 +1,4 @@
+import { Item } from './entities';
 
 export interface Shop {
     id: string;
@@ -35,6 +36,7 @@ export interface JewelryRecipe {
     barType: 'silver_bar' | 'gold_bar';
     barsRequired: number;
     mouldId: string;
+    gemId?: string;
 }
 
 export interface SkillGuideEntry {
@@ -46,9 +48,10 @@ export interface SkillGuideEntry {
 export interface ActiveCraftingAction {
     recipeId: string;
     // Distinguishes between different types of recipes that might share item IDs
-    recipeType: 'smithing-bar' | 'smithing-item' | 'fletching-carve' | 'fletching-string' | 'fletching-headless' | 'fletching-tip' | 'crafting' | 'gem-cutting' | 'spinning' | 'cooking' | 'herblore-unfinished' | 'herblore-finished' | 'jewelry';
+    recipeType: 'smithing-bar' | 'smithing-item' | 'fletching-carve' | 'fletching-string' | 'fletching-headless' | 'fletching-tip' | 'crafting' | 'gem-cutting' | 'spinning' | 'cooking' | 'herblore-unfinished' | 'herblore-finished' | 'jewelry' | 'firemaking' | 'milling' | 'dough-making';
     totalQuantity: number;
     completedQuantity: number;
+    successfulQuantity?: number;
     startTime: number;
     duration: number; // ms per item
     // Optional payload for specific recipe types
@@ -56,7 +59,7 @@ export interface ActiveCraftingAction {
         logId?: string; // for fletching-carve
         unstrungId?: string; // for fletching-string
         tipId?: string; // for fletching-tip
-        barType?: 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'silver_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar'; // for smithing-bar
+        barType?: 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'silver_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar' | 'gold_bar'; // for smithing-bar
         uncutId?: string; // for gem-cutting
         cleanHerbId?: string; // for herblore-unfinished
         unfinishedPotionId?: string; // for herblore-finished

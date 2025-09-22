@@ -15,20 +15,17 @@ import { useQuestLogic } from '../../hooks/useQuestLogic';
 import { useSkilling } from '../../hooks/useSkilling';
 import { useInteractQuest } from '../../hooks/useInteractQuest';
 import { useGameSession } from '../../hooks/useGameSession';
-import { SkillName, InventorySlot, CombatStance } from '../../types';
-import { QUESTS } from '../../constants';
+import { SkillName, InventorySlot, CombatStance, POIActivity, GroundItem, Spell } from '../../types';
 import { POIS } from '../../data/pois';
 import CraftingProgressView from '../views/crafting/CraftingProgressView';
 import CombatView from '../views/CombatView';
-import QuestDialogueView from '../views/dialogue/QuestDialogueView';
-import InteractiveDialogueView from '../views/dialogue/InteractiveDialogueView';
-import NpcDialogueView from '../views/dialogue/NpcDialogueView';
 import BankView from '../views/BankView';
 import ShopView from '../views/ShopView';
 import CraftingView from '../views/crafting/CraftingView';
 import QuestBoardView from '../views/QuestBoardView';
 import SceneView from './SceneView';
 import TeleportView from '../views/TeleportView';
+import LootView from '../views/LootView';
 
 interface MainViewControllerProps {
     ui: ReturnType<typeof useUIState>;
@@ -52,45 +49,38 @@ interface MainViewControllerProps {
     monsterRespawnTimers: Record<string, number>;
     handlePlayerDeath: () => void;
     handleKill: (uniqueInstanceId: string) => void;
+    handleDialogueAction: (action: any) => void;
     combatSpeedMultiplier: number;
     advanceTutorial: (condition: string) => void;
     tutorialStage: number;
     activeCombatStyleHighlight?: CombatStance | null;
+    isTouchSimulationEnabled: boolean;
+    // Map Manager props
+    isMapManagerEnabled?: boolean;
+    poiCoordinates?: Record<string, { x: number; y: number }>;
+    regionCoordinates?: Record<string, { x: number; y: number }>;
+    onUpdatePoiCoordinate?: (id: string, x: number, y: number, isRegion: boolean) => void;
+    poiConnections?: Record<string, string[]>;
+    onUpdatePoiConnections?: (poiId: string, newConnections: string[]) => void;
+    // Props from Game that were passed down
+    initialState: any;
+    onExportGame: (gameState: object) => void;
+    onImportGame: () => void;
+    onResetGame: () => void;
+    showAllPois: boolean;
+    // New props for dropped items
+    groundItemsForCurrentPoi: GroundItem[];
+    onPickUpItem: (uniqueId: number) => void;
+    onTakeAllLoot: () => void;
+    onItemDropped: (item: InventorySlot) => void;
+    isAutoBankOn: boolean;
 }
 
 const MainViewController: React.FC<MainViewControllerProps> = (props) => {
     const {
-        ui, addLog, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, combatSpeedMultiplier, advanceTutorial, tutorialStage, activeCombatStyleHighlight
+        ui, addLog, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, handleDialogueAction, combatSpeedMultiplier, advanceTutorial, tutorialStage, activeCombatStyleHighlight, isTouchSimulationEnabled, showAllPois,
+        groundItemsForCurrentPoi, onPickUpItem, onTakeAllLoot, onItemDropped, isAutoBankOn
     } = props;
-
-    const handleCustomDialogueAction = useCallback((actionId: string | undefined) => {
-        if (!actionId) return;
-
-        switch(actionId) {
-            case 'travel_to_isle_of_whispers':
-                if (inv.coins >= 10) {
-                    inv.modifyItem('coins', -10);
-                    addLog("You pay the ferryman 10 coins and set sail across the vast ocean.");
-                    navigation.handleForcedNavigate('port_wreckage_docks');
-                } else {
-                    addLog("You don't have enough coins for the ferry.");
-                    ui.closeAllModals();
-                }
-                break;
-            case 'travel_to_silverhaven':
-                addLog("You sail back to the mainland.");
-                navigation.handleForcedNavigate('silverhaven_docks');
-                break;
-            case 'complete_leos_lunch':
-                questLogic.completeQuestStage('leos_lunch');
-                advanceTutorial('complete-leos-lunch');
-                ui.closeAllModals(); // Close the dialogue
-                break;
-            default:
-                console.warn(`Unknown custom dialogue action: ${actionId}`);
-                ui.closeAllModals();
-        }
-    }, [inv, addLog, navigation, ui, questLogic, advanceTutorial]);
 
     const handleTeleport = useCallback((toBoardId: string) => {
         addLog(`You focus on the quest board and feel yourself pulled through space...`);
@@ -98,202 +88,179 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
         ui.closeAllModals(); // This will close the teleport modal
     }, [addLog, navigation, ui]);
 
-    if (ui.activeCraftingAction) {
-        return <CraftingProgressView
-            action={ui.activeCraftingAction}
-            onCancel={() => {
-                addLog("You cancel the action.");
-                ui.setActiveCraftingAction(null);
-            }}
-        />;
-    }
-    if (ui.combatQueue.length > 0) {
-        return <CombatView 
-            monsterQueue={ui.combatQueue} 
-            isMandatory={ui.isMandatoryCombat}
-            playerSkills={char.skills} 
-            playerHp={char.currentHp} 
-            equipment={inv.equipment} 
-            combatStance={char.combatStance}
-            setCombatStance={char.setCombatStance} 
-            setPlayerHp={char.setCurrentHp} 
-            onCombatEnd={() => {
-                ui.setCombatQueue([]);
-                ui.setIsMandatoryCombat(false);
-            }} 
-            addXp={char.addXp} 
-            addLoot={inv.modifyItem}
-            addLog={addLog} 
-            onConsumeAmmo={inv.handleConsumeAmmo} 
-            onPlayerDeath={handlePlayerDeath} 
-            onKill={handleKill} 
-            activeBuffs={char.activeBuffs}
-            combatSpeedMultiplier={combatSpeedMultiplier}
-            activeCombatStyleHighlight={activeCombatStyleHighlight}
-            // FIX: Pass the advanceTutorial prop to satisfy the CombatViewProps type.
-            advanceTutorial={advanceTutorial}
-        />;
-    }
-    if (ui.activeTeleportBoardId) {
-        return <TeleportView
-            fromBoardId={ui.activeTeleportBoardId}
-            boardCompletions={repeatableQuests.boardCompletions}
-            onTeleport={handleTeleport}
-            onClose={() => ui.setActiveTeleportBoardId(null)}
-        />
-    }
-    if (ui.activeQuestDialogue) {
-        return <QuestDialogueView
-            dialogueInfo={ui.activeQuestDialogue}
-            onAcceptQuest={(questId) => quests.startQuest(questId, addLog)}
-            onEndDialogue={() => ui.setActiveQuestDialogue(null)}
-            advanceTutorial={advanceTutorial}
-        />;
-    }
-    if (ui.activeInteractiveDialogue) {
-        return <InteractiveDialogueView
-            dialogueInfo={ui.activeInteractiveDialogue}
-            onClose={() => ui.setActiveInteractiveDialogue(null)}
-            onCustomAction={handleCustomDialogueAction}
-        />;
-    }
-    if (ui.activeNpcDialogue) {
-        return <NpcDialogueView
-            npc={ui.activeNpcDialogue}
-            onClose={() => ui.setActiveNpcDialogue(null)}
-        />;
-    }
-    if (ui.activePanel === 'bank') return <BankView 
-        bank={bank}
-        onClose={() => ui.setActivePanel(null)}
-        onWithdraw={bankLogic.handleWithdraw}
-        onDepositBackpack={bankLogic.handleDepositBackpack}
-        onDepositEquipment={bankLogic.handleDepositEquipment}
-        onMoveItem={bankLogic.moveBankItem}
-        setContextMenu={ui.setContextMenu}
-        setMakeXPrompt={ui.setMakeXPrompt}
-        setTooltip={ui.setTooltip}
-    />;
-    if (ui.activeShopId) return <ShopView shopId={ui.activeShopId} playerInventory={inv.inventory} playerCoins={inv.coins} shopStates={shops.shopStates} onBuy={shops.handleBuy} onSell={inv.handleSell} addLog={addLog} onExit={() => ui.setActiveShopId(null)} setContextMenu={ui.setContextMenu} setMakeXPrompt={ui.setMakeXPrompt} setTooltip={ui.setTooltip} />;
-    
-    if (ui.activeCraftingContext) return <CraftingView
-        context={ui.activeCraftingContext}
-        inventory={inv.inventory}
-        skills={char.skills}
-        playerQuests={quests.playerQuests}
-        onCook={crafting.handleCooking}
-        onCraftItem={crafting.handleCrafting}
-        onFletch={crafting.handleFletching}
-        onCut={crafting.handleGemCutting}
-        onSmithBar={crafting.handleSmelting}
-        onSmithItem={crafting.handleSmithItem}
-        onSpin={crafting.handleSpinning}
-        onExit={ui.closeCraftingView}
-        setContextMenu={ui.setContextMenu}
-        setMakeXPrompt={ui.setMakeXPrompt}
-    />;
-    
-    if (ui.activeQuestBoardId) return <QuestBoardView 
-        boardId={ui.activeQuestBoardId}
-        boardQuests={(repeatableQuests.boards[ui.activeQuestBoardId] ?? []).filter(q => !repeatableQuests.completedQuestIds.includes(q.id))}
-        activePlayerQuest={repeatableQuests.activePlayerQuest}
-        inventory={inv.inventory}
-        onAccept={repeatableQuests.acceptQuest}
-        onTurnIn={repeatableQuests.handleTurnInRepeatableQuest}
-        onExit={() => ui.setActiveQuestBoardId(null)}
-        nextResetTimestamp={repeatableQuests.nextResetTimestamp}
-        boardCompletions={repeatableQuests.boardCompletions}
-        onOpenTeleportModal={() => ui.setActiveTeleportBoardId(ui.activeQuestBoardId!)}
-     />
-    
-    const poi = POIS[session.currentPoiId];
-    if (!poi) {
-        // Fallback in case a POI ID is invalid, to prevent a hard crash.
-        // This might happen with corrupted save data.
-        console.error(`Error: Could not find POI with id "${session.currentPoiId}". Defaulting to start location.`);
-        addLog(`Error: Location "${session.currentPoiId}" not found. Returning to Meadowdale.`);
-        session.setCurrentPoiId('meadowdale_south_gate');
-        return <div>Error: Location not found. Resetting...</div>;
-    }
+    const onActivity = (activity: POIActivity) => {
+        if (activity.type === 'shop') ui.setActiveShopId(activity.shopId);
+        else if (activity.type === 'bank') ui.setActivePanel('bank');
+        else if (activity.type === 'slayer_master') slayer.handleSlayerMasterInteraction();
+        else if (activity.type === 'blimp_travel') {
+            const slayerLevel = char.skills.find(s => s.name === SkillName.Slayer)?.level ?? 1;
+            if (slayerLevel < activity.requiredSlayerLevel) addLog(`You need a Slayer level of ${activity.requiredSlayerLevel} to use this service.`);
+            else addLog("The blimp service to other regions is not yet available.");
+        }
+        else if (activity.type === 'cooking_range') ui.openCraftingView({ type: 'cooking_range' });
+        else if (activity.type === 'furnace') ui.openCraftingView({ type: 'furnace' });
+        else if (activity.type === 'anvil') ui.openCraftingView({ type: 'anvil' });
+        else if (activity.type === 'spinning_wheel') ui.openCraftingView({ type: 'spinning_wheel' });
+        else if (activity.type === 'wishing_well') worldActions.handleWishingWell();
+        else if (activity.type === 'water_source') worldActions.handleCollectWater();
+        else if (activity.type === 'quest_board') ui.setActiveQuestBoardId(session.currentPoiId);
+        else if (activity.type === 'ancient_chest') worldActions.handleOpenAncientChest();
+        else if (activity.type === 'runecrafting_altar') crafting.handleInstantRunecrafting(activity.runeId);
+        else if (activity.type === 'shearing') worldActions.handleSimpleSkilling(activity);
+    };
 
-    return (
-        <SceneView poi={poi} unlockedPois={navigation.reachablePois} onNavigate={navigation.handleNavigate} inventory={inv.inventory}
-            onActivity={activity => {
-                if (activity.type === 'shearing' || activity.type === 'egg_collecting') worldActions.handleSimpleSkilling(activity);
-                if (activity.type === 'shop') ui.setActiveShopId(activity.shopId);
-                if (activity.type === 'bank') ui.setActivePanel('bank');
-                if (activity.type === 'slayer_master') slayer.handleSlayerMasterInteraction();
-                if (activity.type === 'blimp_travel') {
-                    const slayerLevel = char.skills.find(s => s.name === SkillName.Slayer)?.level ?? 1;
-                    if (slayerLevel < activity.requiredSlayerLevel) {
-                        addLog(`You need a Slayer level of ${activity.requiredSlayerLevel} to use this service.`);
-                    } else {
-                        addLog("The blimp service to other regions is not yet available.");
-                    }
-                }
-                if (activity.type === 'quest_start') {
-                    const questData = QUESTS[activity.questId];
-                    if (questData?.dialogue) {
-                        ui.setActiveQuestDialogue({ questId: activity.questId });
-                    } else {
-                        quests.startQuest(activity.questId, addLog);
-                    }
-                }
-                if (activity.type === 'npc') {
-                    if (activity.name === 'Tanner Sven') {
-                        const cowhideCount = inv.inventory.filter(i => i && i.itemId === 'cowhide').length;
-                        const tanningCost = 5;
-                        const maxAffordable = Math.floor(inv.coins / tanningCost);
-                        const maxTannable = Math.min(cowhideCount, maxAffordable);
-            
-                        if (maxTannable < 1) {
-                            addLog("Sven tells you: \"You'll need at least one cowhide and 5 coins for me to get to work.\"");
-                            ui.setActiveNpcDialogue({ name: activity.name, icon: activity.icon, dialogue: activity.dialogue });
-                            return;
-                        }
-            
-                        ui.setMakeXPrompt({
-                            title: 'Tan Cowhide (5 coins each)',
-                            max: maxTannable,
-                            onConfirm: (quantity) => {
-                                worldActions.handleInstantTanning(quantity);
-                            }
-                        });
-                    } else {
-                         ui.setActiveNpcDialogue({ name: activity.name, icon: activity.icon, dialogue: activity.dialogue });
-                    }
-                }
-                if (activity.type === 'cooking_range') ui.openCraftingView({ type: 'cooking_range' });
-                if (activity.type === 'furnace') ui.openCraftingView({ type: 'furnace' });
-                if (activity.type === 'anvil') ui.openCraftingView({ type: 'anvil' });
-                if (activity.type === 'spinning_wheel') ui.openCraftingView({ type: 'spinning_wheel' });
-                if (activity.type === 'wishing_well') worldActions.handleWishingWell();
-                if (activity.type === 'water_source') worldActions.handleFillVials();
-                if (activity.type === 'quest_board') ui.setActiveQuestBoardId(session.currentPoiId);
-                if (activity.type === 'interactive_dialogue') ui.setActiveInteractiveDialogue({ dialogue: activity.dialogue, startNode: activity.startNode });
-            }}
-            onStartCombat={(uniqueInstanceId) => { ui.setCombatQueue([uniqueInstanceId]); ui.setIsMandatoryCombat(false); }}
-            playerQuests={quests.playerQuests} completeQuestStage={questLogic.completeQuestStage} setContextMenu={ui.setContextMenu} setMakeXPrompt={ui.setMakeXPrompt} addLog={addLog}
-            startQuest={quests.startQuest} hasItems={inv.hasItems} 
-            resourceNodeStates={skilling.resourceNodeStates} activeSkillingNodeId={skilling.activeSkillingNodeId} onToggleSkilling={skilling.handleToggleSkilling} initializeNodeState={skilling.initializeNodeState}
-            skillingTick={skilling.skillingTick}
-            getSuccessChance={skilling.getSuccessChance}
-            activeRepeatableQuest={repeatableQuests.activePlayerQuest} 
-            activeCleanup={interactQuest.activeCleanup}
-            onStartInteractQuest={interactQuest.handleStartInteractQuest}
-            onCancelInteractQuest={interactQuest.handleCancelInteractQuest}
-            clearedSkillObstacles={clearedSkillObstacles}
-            onClearObstacle={worldActions.handleClearObstacle}
-            skills={char.skills}
-            monsterRespawnTimers={monsterRespawnTimers}
-            setTooltip={ui.setTooltip}
-            setActiveQuestDialogue={ui.setActiveQuestDialogue}
-            setActiveInteractiveDialogue={ui.setActiveInteractiveDialogue}
+    const mainContent = (() => {
+        if (ui.activeCraftingAction) {
+            return <CraftingProgressView
+                action={ui.activeCraftingAction}
+                onCancel={() => {
+                    addLog("You cancel the action.");
+                    ui.setActiveCraftingAction(null);
+                }}
+            />;
+        }
+        if (ui.combatQueue.length > 0) {
+            return <CombatView 
+                monsterQueue={ui.combatQueue} 
+                isMandatory={ui.isMandatoryCombat}
+                playerSkills={char.skills} 
+                playerHp={char.currentHp} 
+                equipment={inv.equipment} 
+                combatStance={char.combatStance}
+                setCombatStance={char.setCombatStance} 
+                setPlayerHp={char.setCurrentHp} 
+                onCombatEnd={() => {
+                    ui.setCombatQueue([]);
+                    ui.setIsMandatoryCombat(false);
+                }} 
+                addXp={char.addXp} 
+                addLoot={inv.modifyItem}
+                onDropLoot={onItemDropped}
+                isAutoBankOn={isAutoBankOn}
+                addLog={addLog} 
+                onConsumeAmmo={inv.handleConsumeAmmo} 
+                onPlayerDeath={handlePlayerDeath} 
+                onKill={handleKill} 
+                activeBuffs={char.activeBuffs}
+                combatSpeedMultiplier={combatSpeedMultiplier}
+                advanceTutorial={advanceTutorial}
+                autocastSpell={char.autocastSpell}
+                inv={inv}
+            />;
+        }
+        if (ui.activeTeleportBoardId) {
+            return <TeleportView
+                fromBoardId={ui.activeTeleportBoardId}
+                boardCompletions={repeatableQuests.boardCompletions}
+                onTeleport={handleTeleport}
+                onClose={() => ui.setActiveTeleportBoardId(null)}
+            />
+        }
+        if (ui.activePanel === 'bank') return <BankView 
+            bank={bank}
+            onClose={() => ui.setActivePanel(null)}
+            onWithdraw={bankLogic.handleWithdraw}
             onDepositBackpack={bankLogic.handleDepositBackpack}
-            ui={ui}
-            tutorialStage={tutorialStage}
-            advanceTutorial={advanceTutorial}
-        />
+            onDepositEquipment={bankLogic.handleDepositEquipment}
+            onMoveItem={bankLogic.moveBankItem}
+            setContextMenu={ui.setContextMenu}
+            setMakeXPrompt={ui.setMakeXPrompt}
+            setTooltip={ui.setTooltip}
+        />;
+        if (ui.activeShopId) return <ShopView 
+            shopId={ui.activeShopId}
+            playerCoins={inv.coins}
+            shopStates={shops.shopStates} 
+            onBuy={shops.handleBuy}
+            addLog={addLog} 
+            onExit={() => ui.setActiveShopId(null)} 
+            setContextMenu={ui.setContextMenu} 
+            setMakeXPrompt={ui.setMakeXPrompt} 
+            setTooltip={ui.setTooltip} 
+        />;
+        
+        if (ui.activeCraftingContext) return <CraftingView
+            context={ui.activeCraftingContext}
+            inventory={inv.inventory}
+            skills={char.skills}
+            playerQuests={quests.playerQuests}
+            onCook={crafting.handleCooking}
+            onCraftItem={crafting.handleCrafting}
+            onFletch={crafting.handleFletching}
+            onCut={crafting.handleGemCutting}
+            onSmithBar={crafting.handleSmelting}
+            onSmithItem={crafting.handleSmithItem}
+            onSpin={crafting.handleSpinning}
+            onExit={ui.closeCraftingView}
+            setContextMenu={ui.setContextMenu}
+            setMakeXPrompt={ui.setMakeXPrompt}
+            setTooltip={ui.setTooltip}
+        />;
+        
+        if (ui.activeQuestBoardId) return <QuestBoardView 
+            boardId={ui.activeQuestBoardId}
+            boardQuests={(repeatableQuests.boards[ui.activeQuestBoardId] ?? []).filter(q => !repeatableQuests.completedQuestIds.includes(q.id))}
+            activePlayerQuest={repeatableQuests.activePlayerQuest}
+            inventory={inv.inventory}
+            onAccept={repeatableQuests.acceptQuest}
+            onTurnIn={repeatableQuests.handleTurnInRepeatableQuest}
+            onExit={() => ui.setActiveQuestBoardId(null)}
+            nextResetTimestamp={repeatableQuests.nextResetTimestamp}
+            boardCompletions={repeatableQuests.boardCompletions}
+            onOpenTeleportModal={() => ui.setActiveTeleportBoardId(ui.activeQuestBoardId!)}
+         />
+        
+        const poi = POIS[session.currentPoiId];
+        if (!poi) {
+            console.error(`Error: Could not find POI with id "${session.currentPoiId}". Defaulting to start location.`);
+            addLog(`Error: Location "${session.currentPoiId}" not found. Returning to Meadowdale.`);
+            session.setCurrentPoiId('meadowdale_south_gate');
+            return <div>Error: Location not found. Resetting...</div>;
+        }
+
+        return (
+            <SceneView poi={poi} unlockedPois={navigation.reachablePois} onNavigate={navigation.handleNavigate} inventory={inv.inventory}
+                onActivity={onActivity}
+                worldActions={worldActions}
+                onStartCombat={(uniqueInstanceId) => { ui.setCombatQueue([uniqueInstanceId]); ui.setIsMandatoryCombat(false); }}
+                playerQuests={quests.playerQuests} setContextMenu={ui.setContextMenu} setMakeXPrompt={ui.setMakeXPrompt} addLog={addLog}
+                startQuest={quests.startQuest} hasItems={inv.hasItems} 
+                resourceNodeStates={skilling.resourceNodeStates} activeSkillingNodeId={skilling.activeSkillingNodeId} onToggleSkilling={skilling.handleToggleSkilling} initializeNodeState={skilling.initializeNodeState}
+                skillingTick={skilling.skillingTick}
+                getSuccessChance={skilling.getSuccessChance}
+                activeRepeatableQuest={repeatableQuests.activePlayerQuest} 
+                activeCleanup={interactQuest.activeCleanup}
+                onStartInteractQuest={interactQuest.handleStartInteractQuest}
+                onCancelInteractQuest={interactQuest.handleCancelInteractQuest}
+                clearedSkillObstacles={clearedSkillObstacles}
+                onClearObstacle={worldActions.handleClearObstacle}
+                skills={char.skills as any[]}
+                monsterRespawnTimers={monsterRespawnTimers}
+                setTooltip={ui.setTooltip}
+                setActiveDialogue={ui.setActiveDialogue}
+                handleDialogueAction={handleDialogueAction}
+                onDepositBackpack={bankLogic.handleDepositBackpack}
+                ui={ui}
+                tutorialStage={tutorialStage}
+                advanceTutorial={advanceTutorial}
+                isTouchSimulationEnabled={isTouchSimulationEnabled}
+            />
+        );
+    })();
+    
+    return (
+        <>
+            {mainContent}
+            {ui.isLootViewOpen && (
+                <LootView
+                    items={groundItemsForCurrentPoi}
+                    onPickUp={onPickUpItem}
+                    onTakeAll={onTakeAllLoot}
+                    onClose={() => ui.setIsLootViewOpen(false)}
+                    setTooltip={ui.setTooltip}
+                />
+            )}
+        </>
     );
 };
 

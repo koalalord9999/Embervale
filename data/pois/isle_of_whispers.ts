@@ -1,5 +1,3 @@
-
-
 import { POI, SkillName } from '../../types';
 
 export const isleOfWhispersPois: Record<string, POI> = {
@@ -11,14 +9,17 @@ export const isleOfWhispersPois: Record<string, POI> = {
         connections: ['port_wreckage_square', 'crabclaw_isle'],
         activities: [
              {
-                type: 'interactive_dialogue',
+                type: 'npc',
+                name: 'Ferryman Silas',
+                icon: '/assets/npcChatHeads/ferryman_silas.png',
                 dialogue: {
                     start: {
                         npcName: 'Ferryman Silas',
                         npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
-                        text: "Ready to head back to the mainland? Had enough of the sea air?",
+                        text: "Ready to leave the isle? Or perhaps venture somewhere new?",
                         responses: [
                             { text: "Yes, take me back to Silverhaven.", action: 'custom', customActionId: 'travel_to_silverhaven' },
+                            { text: "I've heard tales of floating islands... (1600 coins)", action: 'custom', customActionId: 'travel_to_crystalline_isles'},
                             { text: "Not just yet.", action: 'close' },
                         ],
                     },
@@ -29,9 +30,16 @@ export const isleOfWhispersPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Fisherman Brody',
                 icon: '/assets/npcChatHeads/fisherman_brody.png',
-                dialogue: ["Welcome to the Isle of Whispers. Not much here but rocks, salt, and... crabs. Way too many crabs."]
-            },
-            { type: 'quest_start', questId: 'a_pinch_of_trouble' },
+                dialogue: {
+                    start: {
+                        npcName: 'Fisherman Brody',
+                        npcIcon: '/assets/npcChatHeads/fisherman_brody.png',
+                        text: "Welcome to the Isle of Whispers. Not much here but rocks, salt, and... crabs. Way too many crabs.",
+                        responses: []
+                    }
+                },
+                startNode: 'start'
+            }
         ],
         regionId: 'isle_of_whispers',
         x: 400, y: 2400,
@@ -46,9 +54,16 @@ export const isleOfWhispersPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Elder Maeve',
                 icon: '/assets/npcChatHeads/elder_maeve.png',
-                dialogue: ["The island is restless, stranger. An ancient darkness stirs in the depths of the temple. Be wary."]
-            },
-            { type: 'quest_start', questId: 'the_sunken_curse' }
+                dialogue: {
+                    start: {
+                        npcName: 'Elder Maeve',
+                        npcIcon: '/assets/npcChatHeads/elder_maeve.png',
+                        text: "The island is restless, stranger. An ancient darkness stirs in the depths of the temple. Be wary.",
+                        responses: []
+                    }
+                },
+                startNode: 'start'
+            }
         ],
         regionId: 'isle_of_whispers',
         x: 450, y: 2400,
@@ -77,7 +92,7 @@ export const isleOfWhispersPois: Record<string, POI> = {
     },
     port_wreckage_bank: {
         id: 'port_wreckage_bank',
-        name: 'Bank of Embervale - Wreckage Branch',
+        name: 'Bank of Embrune - Wreckage Branch',
         description: 'A surprisingly sturdy vault, likely salvaged from a treasure galleon. Your items are safe here.',
         connections: ['port_wreckage_square'],
         activities: [
@@ -201,9 +216,11 @@ export const isleOfWhispersPois: Record<string, POI> = {
     forgotten_temple_courtyard: {
         id: 'forgotten_temple_courtyard',
         name: 'Temple Courtyard',
-        description: 'The ruins of a grand temple courtyard. A huge, sealed archway is carved into the mountainside ahead.',
+        description: 'The ruins of a grand temple courtyard. A huge, sealed archway is carved into the mountainside ahead. An ornate, ancient chest sits on a pedestal in the center.',
         connections: ['forgotten_temple_path', 'laby_entrance'],
-        activities: [],
+        activities: [
+            { type: 'ancient_chest', name: 'Open Ancient Chest' }
+        ],
         regionId: 'isle_of_whispers',
         x: 700, y: 2200,
     },

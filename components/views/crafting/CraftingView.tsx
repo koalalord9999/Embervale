@@ -1,7 +1,8 @@
 
+
 import React from 'react';
 import { InventorySlot, PlayerSkill, PlayerQuestState, CraftingContext } from '../../../types';
-import { MakeXPrompt } from '../../../hooks/useUIState';
+import { MakeXPrompt, ContextMenuState, TooltipState } from '../../../hooks/useUIState';
 import { ContextMenuOption } from '../../common/ContextMenu';
 import Button from '../../common/Button';
 
@@ -14,14 +15,14 @@ import LeatherworkingInterface from './subviews/LeatherworkingInterface';
 import GemCuttingInterface from './subviews/GemCuttingInterface';
 import FletchingInterface from './subviews/FletchingInterface';
 import JewelryInterface from './subviews/JewelryInterface';
+import DoughMakingInterface from './subviews/DoughMakingInterface';
 
 type BarType = 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'silver_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar';
 
 export interface CraftingViewProps {
     context: CraftingContext;
-    // FIX: The inventory array can contain null slots.
     inventory: (InventorySlot | null)[];
-    skills: PlayerSkill[];
+    skills: (PlayerSkill & { currentLevel: number; })[];
     playerQuests: PlayerQuestState[];
     onCook: (recipeId: string, quantity: number) => void;
     onCraftItem: (itemId: string, quantity: number) => void;
@@ -31,8 +32,9 @@ export interface CraftingViewProps {
     onSmithItem: (itemId: string, quantity: number) => void;
     onSpin: (itemId: string, quantity: number) => void;
     onExit: () => void;
-    setContextMenu: (menu: { options: ContextMenuOption[]; position: { x: number; y: number; } } | null) => void;
+    setContextMenu: (menu: ContextMenuState | null) => void;
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
+    setTooltip: (tooltip: TooltipState | null) => void;
 }
 
 const CraftingView: React.FC<CraftingViewProps> = (props) => {
@@ -48,6 +50,7 @@ const CraftingView: React.FC<CraftingViewProps> = (props) => {
             case 'gem_cutting': return 'Gem Cutting';
             case 'jewelry': return 'Crafting - Jewelry';
             case 'fletching': return 'Fletching';
+            case 'dough_making': return 'Make Dough';
             default: return 'Crafting';
         }
     };
@@ -61,17 +64,9 @@ const CraftingView: React.FC<CraftingViewProps> = (props) => {
             case 'leatherworking': return <LeatherworkingInterface {...props} />;
             case 'gem_cutting': return <GemCuttingInterface {...props} />;
             case 'jewelry': return <JewelryInterface {...props} />;
-            // FIX: FletchingInterface expects different props from CraftingViewProps. Instead of spreading, pass the expected props explicitly.
+            case 'dough_making': return <DoughMakingInterface {...props} />;
             case 'fletching': {
-                const { inventory, skills, onFletch, setMakeXPrompt } = props;
-                return <FletchingInterface
-                    logId={context.logId}
-                    inventory={inventory}
-                    skills={skills}
-                    onFletch={onFletch}
-                    onExit={onExit}
-                    setMakeXPrompt={setMakeXPrompt}
-                />;
+                return <FletchingInterface {...props} />;
             }
             default: return <p>Unsupported crafting context.</p>;
         }

@@ -1,8 +1,7 @@
-
-
 import { useCallback } from 'react';
-import { InventorySlot, PlayerSkill, SkillName, ActiveCraftingAction, Item, CraftingContext } from '../types';
+import { InventorySlot, PlayerSkill, SkillName, ActiveCraftingAction, Item, CraftingContext, POIActivity, EquipmentSlot } from '../types';
 import { ITEMS, FLETCHING_RECIPES, HERBLORE_RECIPES, HERBS, INVENTORY_CAPACITY, rollOnLootTable } from '../constants';
+import { POIS } from '../data/pois';
 import { MakeXPrompt } from './useUIState';
 
 interface UseItemActionsProps {
@@ -10,14 +9,14 @@ interface UseItemActionsProps {
     currentHp: number;
     maxHp: number;
     setCurrentHp: React.Dispatch<React.SetStateAction<number>>;
-    applyStatModifier: (skill: SkillName, value: number, duration: number) => void;
+    applyStatModifier: (skill: SkillName, value: number, duration: number, baseLevelOnConsumption: number) => void;
     setInventory: React.Dispatch<React.SetStateAction<(InventorySlot | null)[]>>;
-    skills: PlayerSkill[];
+    skills: (PlayerSkill & { currentLevel: number; })[];
     inventory: (InventorySlot | null)[];
     activeCraftingAction: ActiveCraftingAction | null;
     setActiveCraftingAction: (action: ActiveCraftingAction | null) => void;
     hasItems: (items: { itemId: string, quantity: number }[]) => boolean;
-    modifyItem: (itemId: string, quantity: number, quiet?: boolean) => void;
+    modifyItem: (itemId: string, quantity: number, quiet?: boolean, doses?: number, options?: { noted?: boolean, bypassAutoBank?: boolean }) => void;
     addXp: (skill: SkillName, amount: number) => void;
     openCraftingView: (context: CraftingContext) => void;
     setItemToUse: (item: { item: InventorySlot, index: number } | null) => void;
@@ -25,24 +24,25 @@ interface UseItemActionsProps {
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
     startQuest: (questId: string) => void;
     advanceTutorial: (condition: string) => void;
+    currentPoiId: string;
 }
 
 export const useItemActions = (props: UseItemActionsProps) => {
-    const { addLog, currentHp, maxHp, setCurrentHp, applyStatModifier, setInventory, skills, inventory, activeCraftingAction, setActiveCraftingAction, hasItems, modifyItem, addXp, openCraftingView, setItemToUse, addBuff, setMakeXPrompt, startQuest, advanceTutorial } = props;
+    const { addLog, currentHp, maxHp, setCurrentHp, applyStatModifier, setInventory, skills, inventory, activeCraftingAction, setActiveCraftingAction, hasItems, modifyItem, addXp, openCraftingView, setItemToUse, addBuff, setMakeXPrompt, startQuest, advanceTutorial, currentPoiId } = props;
 
     const handleConsume = useCallback((itemId: string, inventoryIndex: number) => {
         const itemData = ITEMS[itemId];
         if (!itemData) return;
 
         if (itemData.cleanable) {
-            const herbloreLevel = skills.find(s => s.name === SkillName.Herblore)?.level ?? 1;
+            const herbloreLevel = skills.find(s => s.name === SkillName.Herblore)?.currentLevel ?? 1;
             const herbData = HERBS.find(h => h.grimy === itemId);
             if (herbData && herbloreLevel < herbData.level) {
                 addLog(`You need a Herblore level of ${herbData.level} to clean this herb.`);
                 return;
             }
             modifyItem(itemId, -1, true);
-            modifyItem(itemData.cleanable.cleanItemId, 1, true);
+            modifyItem(itemData.cleanable.cleanItemId, 1, true, undefined, { bypassAutoBank: true });
             addXp(SkillName.Herblore, itemData.cleanable.xp);
             addLog(`You clean the grimy herb.`);
             return;
@@ -72,14 +72,14 @@ export const useItemActions = (props: UseItemActionsProps) => {
             const uncutGems = ['uncut_sapphire', 'uncut_emerald', 'uncut_ruby'];
             for (let i = 0; i < 5; i++) {
                 const randomGem = uncutGems[Math.floor(Math.random() * uncutGems.length)];
-                modifyItem(randomGem, 1, true);
+                modifyItem(randomGem, 1, true, undefined, { bypassAutoBank: true });
             }
         
             // 2. 3 rolls on the herb table
             for (let i = 0; i < 3; i++) {
                 const herb = rollOnLootTable('herb_table');
                 if (herb) {
-                    modifyItem(herb, 1, true);
+                    modifyItem(herb, 1, true, undefined, { bypassAutoBank: true });
                 }
             }
         
@@ -89,12 +89,12 @@ export const useItemActions = (props: UseItemActionsProps) => {
             );
             if (steelEquipment.length > 0) {
                 const randomSteelItem = steelEquipment[Math.floor(Math.random() * steelEquipment.length)];
-                modifyItem(randomSteelItem.id, 1, true);
+                modifyItem(randomSteelItem.id, 1, true, undefined, { bypassAutoBank: true });
             }
         
             // 4. 1% chance for a Runic Sword
             if (Math.random() < 0.01) {
-                modifyItem('runic_sword', 1, true);
+                modifyItem('runic_sword', 1, true, undefined, { bypassAutoBank: true });
                 addLog("Incredibly lucky! You found a Runic Sword inside!");
             }
         
@@ -117,14 +117,22 @@ export const useItemActions = (props: UseItemActionsProps) => {
         if (itemData.consumable.healAmount && currentHp < maxHp) {
             const healAmount = itemData.consumable.healAmount;
             setCurrentHp(prev => Math.min(maxHp, prev + healAmount));
-            addLog(`You consume the ${itemData.name} and heal ${healAmount} HP.`);
-            if (itemId === 'sandwich') {
-                advanceTutorial('eat-sandwich');
-            }
         }
         if (itemData.consumable.statModifiers) {
             itemData.consumable.statModifiers.forEach(modifier => {
-                applyStatModifier(modifier.skill, modifier.value, modifier.duration);
+                let boostValue = 0;
+                const skillData = skills.find(s => s.name === modifier.skill);
+                const baseLevel = skillData ? skillData.level : 1;
+                
+                if (typeof modifier.value === 'number') { // For flat bonuses like beer, combo brew
+                    boostValue = modifier.value;
+                } else if (typeof modifier.percent === 'number' && typeof modifier.base === 'number') {
+                    boostValue = Math.floor(baseLevel * modifier.percent) + modifier.base;
+                }
+                
+                if (boostValue !== 0) {
+                    applyStatModifier(modifier.skill, boostValue, modifier.duration, baseLevel);
+                }
             });
         }
         if (itemData.consumable.buffs) {
@@ -133,7 +141,23 @@ export const useItemActions = (props: UseItemActionsProps) => {
             });
         }
         
-        const wasDrinkable = itemData.emptyable;
+        if (itemData.doseable) {
+            setInventory(prev => {
+                const newInv = [...prev];
+                const slot = newInv[inventoryIndex];
+                if (!slot) return prev;
+
+                const currentDoses = slot.doses ?? itemData.maxDoses ?? 4;
+
+                if (currentDoses > 1) {
+                    newInv[inventoryIndex] = { ...slot, doses: currentDoses - 1 };
+                } else {
+                    newInv[inventoryIndex] = { itemId: 'vial', quantity: 1 };
+                }
+                return newInv;
+            });
+            return;
+        }
         
         setInventory(prev => {
             const newInv = [...prev];
@@ -149,8 +173,8 @@ export const useItemActions = (props: UseItemActionsProps) => {
             }
     
             // 2. Add back the empty container if needed, without changing inventory size.
-            if (wasDrinkable) {
-                const emptyItemId = wasDrinkable.emptyItemId;
+            if (itemData.emptyable) {
+                const emptyItemId = itemData.emptyable.emptyItemId;
                 const emptyItemData = ITEMS[emptyItemId];
     
                 if (emptyItemData.stackable) {
@@ -160,7 +184,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
                     } else {
                         const emptySlotIndex = newInv[inventoryIndex] === null ? inventoryIndex : newInv.findIndex(slot => slot === null);
                         if (emptySlotIndex > -1) {
-                            newInv[emptySlotIndex] = { itemId: emptyItemId, quantity: 1 };
+                            newInv[inventoryIndex] = { itemId: emptyItemId, quantity: 1 };
                         } else {
                             addLog("You drop the empty container as your inventory is full.");
                         }
@@ -168,7 +192,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
                 } else { // Not stackable
                     const emptySlotIndex = newInv[inventoryIndex] === null ? inventoryIndex : newInv.findIndex(slot => slot === null);
                     if (emptySlotIndex > -1) {
-                        newInv[emptySlotIndex] = { itemId: emptyItemId, quantity: 1 };
+                        newInv[inventoryIndex] = { itemId: emptyItemId, quantity: 1 };
                     } else {
                         addLog("You drop the empty container as your inventory is full.");
                     }
@@ -227,12 +251,112 @@ export const useItemActions = (props: UseItemActionsProps) => {
         addLog(`You empty the ${itemData.name}.`);
     }, [setInventory, addLog]);
 
+    const handleDivine = useCallback((itemId: string, inventoryIndex: number) => {
+        const itemData = ITEMS[itemId];
+        if (!itemData?.divining) return;
+
+        const targetPoiId = itemData.divining.poiId;
+        if (currentPoiId === targetPoiId) {
+            addLog("The talisman is inert. You are standing at the altar's location.");
+            return;
+        }
+
+        const currentPoi = POIS[currentPoiId];
+        const targetPoi = POIS[targetPoiId];
+
+        if (!currentPoi || !targetPoi) {
+            addLog("The talisman seems confused by your location.");
+            return;
+        }
+
+        if (currentPoi.connections.includes(targetPoiId)) {
+            addLog("The talisman buzzes violently. The altar must be in an adjacent area!");
+            return;
+        }
+
+        const dx = targetPoi.x - currentPoi.x;
+        const dy = targetPoi.y - currentPoi.y;
+        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+        let direction = '';
+        if (angle > -22.5 && angle <= 22.5) direction = 'East';
+        else if (angle > 22.5 && angle <= 67.5) direction = 'South-East';
+        else if (angle > 67.5 && angle <= 112.5) direction = 'South';
+        else if (angle > 112.5 && angle <= 157.5) direction = 'South-West';
+        else if (angle > 157.5 || angle <= -157.5) direction = 'West';
+        else if (angle > -157.5 && angle <= -112.5) direction = 'North-West';
+        else if (angle > -112.5 && angle <= -67.5) direction = 'North';
+        else if (angle > -67.5 && angle <= -22.5) direction = 'North-East';
+        
+        addLog(`The talisman hums and pulls you towards the ${direction}.`);
+    }, [currentPoiId, addLog]);
 
     const handleItemCombination = useCallback((used: { item: InventorySlot, index: number }, target: { item: InventorySlot, index: number }) => {
-        const fletchingLevel = skills.find(s => s.name === SkillName.Fletching)?.level ?? 1;
-        const herbloreLevel = skills.find(s => s.name === SkillName.Herblore)?.level ?? 1;
+        const fletchingLevel = skills.find(s => s.name === SkillName.Fletching)?.currentLevel ?? 1;
+        const herbloreLevel = skills.find(s => s.name === SkillName.Herblore)?.currentLevel ?? 1;
         const usedId = used.item.itemId;
         const targetId = target.item.itemId;
+        const usedItemData = ITEMS[usedId];
+        const targetItem = ITEMS[targetId];
+
+        // Tiara Crafting
+        const isTiaraCrafting = (usedId === 'silver_tiara' && targetItem.divining) || (targetId === 'silver_tiara' && usedItemData.divining);
+        if (isTiaraCrafting) {
+            const talisman = usedItemData.divining ? usedItemData : targetItem;
+            const altarPoiId = talisman.divining!.poiId;
+            const altarPoi = POIS[altarPoiId];
+            const altarActivity = altarPoi?.activities.find(a => a.type === 'runecrafting_altar') as Extract<POIActivity, { type: 'runecrafting_altar' }> | undefined;
+
+            if (currentPoiId !== altarPoiId || !altarActivity) {
+                addLog("You can only infuse a tiara at its corresponding runecrafting altar.");
+                return;
+            }
+            
+            const runeId = altarActivity.runeId;
+            const tiaraItem = Object.values(ITEMS).find(i => i.equipment?.slot === EquipmentSlot.Head && i.equipment.runeType === runeId);
+
+            if (!tiaraItem) {
+                addLog("Something went wrong, could not find the right tiara to create.");
+                return;
+            }
+            
+            if (hasItems([{ itemId: 'silver_tiara', quantity: 1 }, { itemId: talisman.id, quantity: 1 }])) {
+                modifyItem('silver_tiara', -1, true);
+                modifyItem(talisman.id, -1, true);
+                modifyItem(tiaraItem.id, 1, true, undefined, { bypassAutoBank: true });
+                addXp(SkillName.Runecrafting, 50); // Some bonus XP
+                addLog(`You infuse the silver tiara with the power of the altar, creating a ${tiaraItem.name}.`);
+            }
+            return;
+        }
+        
+        if (used.item.itemId === target.item.itemId && usedItemData.doseable) {
+            const maxDoses = usedItemData.maxDoses ?? 4;
+            const usedDoses = used.item.doses ?? usedItemData.initialDoses ?? 1;
+            const targetDoses = target.item.doses ?? usedItemData.initialDoses ?? 1;
+
+            if (targetDoses >= maxDoses) {
+                addLog("This potion is already full.");
+                return;
+            }
+            
+            const totalDoses = usedDoses + targetDoses;
+            const newTargetDoses = Math.min(maxDoses, totalDoses);
+            const newUsedDoses = totalDoses - newTargetDoses;
+
+            setInventory(prev => {
+                const newInv = [...prev];
+                newInv[target.index] = { ...target.item, doses: newTargetDoses };
+                if (newUsedDoses > 0) {
+                    newInv[used.index] = { ...used.item, doses: newUsedDoses };
+                } else {
+                    newInv[used.index] = { itemId: 'vial', quantity: 1 };
+                }
+                return newInv;
+            });
+            addLog(`You decant the potions.`);
+            return;
+        }
 
         const getItemCount = (itemId: string): number => {
             return inventory.reduce((total, slot) => {
@@ -240,21 +364,87 @@ export const useItemActions = (props: UseItemActionsProps) => {
             }, 0);
         };
 
+        const isKeyCombination = (usedId === 'strange_key_loop' && targetId === 'strange_key_tooth') || (targetId === 'strange_key_loop' && usedId === 'strange_key_tooth');
+        if (isKeyCombination) {
+            if (hasItems([{ itemId: 'strange_key_loop', quantity: 1 }, { itemId: 'strange_key_tooth', quantity: 1 }])) {
+                modifyItem('strange_key_loop', -1, true);
+                modifyItem('strange_key_tooth', -1, true);
+                modifyItem('strange_key', 1, false, undefined, { bypassAutoBank: true });
+                addLog("You combine the two key halves to create a strange key.");
+            }
+            return;
+        }
+
+        // Hammering Golem Core
+        const isHammeringCore = (usedId === 'hammer' && targetId === 'golem_core') || (targetId === 'hammer' && usedId === 'golem_core');
+        if (isHammeringCore) {
+            if (hasItems([{ itemId: 'golem_core', quantity: 1 }])) {
+                modifyItem('golem_core', -1, true);
+                modifyItem('golem_core_shard', 10, true, undefined, { bypassAutoBank: true });
+                addXp(SkillName.Crafting, 25);
+                addLog("You carefully smash the golem core, breaking it into 10 smaller shards. You gain 25 Crafting XP.");
+            }
+            return;
+        }
+
+        // Crushing with Pestle and Mortar
+        const crushableMap: Record<string, { dust: string, xp: number }> = {
+            'glimmerhorn_antler': { dust: 'glimmerhorn_dust', xp: 2 },
+            'serpent_scale': { dust: 'serpent_scale_dust', xp: 2 },
+            'unicorn_horn': { dust: 'unicorn_horn_dust', xp: 2 },
+            'wyrmscale': { dust: 'wyrmscale_dust', xp: 2 }
+        };
+
+        const crushTargetId = (usedId === 'pestle_and_mortar') ? targetId : ((targetId === 'pestle_and_mortar') ? usedId : null);
+        if (crushTargetId && crushableMap[crushTargetId]) {
+            const recipe = crushableMap[crushTargetId];
+            const maxCrushable = getItemCount(crushTargetId);
+            if (maxCrushable < 1) {
+                addLog(`You don't have any ${ITEMS[crushTargetId].name} to grind.`);
+                return;
+            }
+            setMakeXPrompt({
+                title: `Grind ${ITEMS[crushTargetId].name}`,
+                max: maxCrushable,
+                onConfirm: (quantity) => {
+                    if (quantity > 0) {
+                        modifyItem(crushTargetId, -quantity, true);
+                        modifyItem(recipe.dust, quantity, true, undefined, { bypassAutoBank: true });
+                        const totalXp = recipe.xp * quantity;
+                        addXp(SkillName.Herblore, totalXp);
+                        addLog(`You grind ${quantity}x ${ITEMS[crushTargetId].name} into dust and gain ${totalXp} Herblore XP.`);
+                    }
+                }
+            });
+            return;
+        }
+
         const isFiremaking = (usedId === 'tinderbox' && targetId === 'logs') || (targetId === 'tinderbox' && usedId === 'logs');
         if (isFiremaking) {
-            const firemakingLevel = skills.find(s => s.name === SkillName.Firemaking)?.level ?? 1;
+            const firemakingLevel = skills.find(s => s.name === SkillName.Firemaking)?.currentLevel ?? 1;
             if (firemakingLevel < 1) {
                 addLog("You need a Firemaking level of 1 to light a fire.");
                 return;
             }
-            if (hasItems([{ itemId: 'logs', quantity: 1 }])) {
-                modifyItem('logs', -1, true);
-                addXp(SkillName.Firemaking, 40);
-                addLog("You light a fire.");
-                if (advanceTutorial) advanceTutorial('light-fire');
-            } else {
+            if (!hasItems([{ itemId: 'logs', quantity: 1 }])) {
                 addLog("You need some logs to light a fire.");
+                return;
             }
+            if (activeCraftingAction) {
+                addLog("You are already busy.");
+                return;
+            }
+
+            addLog("You attempt to light the logs...");
+            setActiveCraftingAction({
+                recipeId: 'logs',
+                recipeType: 'firemaking',
+                totalQuantity: 1, // Firemaking is one at a time for now
+                completedQuantity: 0,
+                successfulQuantity: 0,
+                startTime: Date.now(),
+                duration: 1800,
+            });
             return;
         }
 
@@ -284,7 +474,6 @@ export const useItemActions = (props: UseItemActionsProps) => {
                         return;
                     }
                     if (quantity > 0) {
-                        addLog(`You begin mixing the potions...`);
                         setActiveCraftingAction({
                             recipeId: unfRecipe.unfinishedPotionId,
                             recipeType: 'herblore-unfinished',
@@ -308,7 +497,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
                 return;
             }
     
-            const unfPotionCount = getItemCount(finRecipe.unfinishedPotionId);
+            const unfPotionCount = inventory.reduce((count, slot) => slot?.itemId === finRecipe.unfinishedPotionId ? count + (slot.doses ?? 1) : count, 0);
             const secondaryCount = getItemCount(finRecipe.secondaryId);
             const maxCreatable = Math.min(unfPotionCount, secondaryCount);
     
@@ -326,7 +515,6 @@ export const useItemActions = (props: UseItemActionsProps) => {
                         return;
                     }
                     if (quantity > 0) {
-                        addLog(`You begin mixing the potions...`);
                         setActiveCraftingAction({
                             recipeId: finRecipe.finishedPotionId,
                             recipeType: 'herblore-finished',
@@ -352,22 +540,26 @@ export const useItemActions = (props: UseItemActionsProps) => {
             if (hasItems([{ itemId: 'pouch_cleanser', quantity: 1 }, { itemId: 'grimy_coin_pouch', quantity: 1 }])) {
                 modifyItem('pouch_cleanser', -1, true);
                 modifyItem('grimy_coin_pouch', -1, true);
-                modifyItem('clean_coin_pouch', 1);
+                modifyItem('clean_coin_pouch', 1, false, undefined, { bypassAutoBank: true });
                 addXp(SkillName.Herblore, 15);
                 addLog("You use the cleanser to scrub the grime off the pouch.");
             }
             return;
         }
 
-        // Amulet Stringing
-        const isSilverAmulet = (usedId === 'silver_amulet_u' && targetId === 'ball_of_wool') || (targetId === 'silver_amulet_u' && usedId === 'ball_of_wool');
-        if (isSilverAmulet) {
-            if (hasItems([{ itemId: 'silver_amulet_u', quantity: 1 }, { itemId: 'ball_of_wool', quantity: 1 }])) {
-                modifyItem('silver_amulet_u', -1, true);
-                modifyItem('ball_of_wool', -1, true);
-                modifyItem('silver_amulet', 1);
-                addXp(SkillName.Crafting, 5);
-                addLog("You string the silver amulet.");
+        // --- JEWELRY AND AMULET COMBINATIONS ---
+        const isStringing = (usedId.endsWith('_amulet_u') && targetId === 'ball_of_wool') || (targetId.endsWith('_amulet_u') && usedId === 'ball_of_wool');
+        if (isStringing) {
+            const unstrungId = usedId.endsWith('_amulet_u') ? usedId : targetId;
+            const strungId = unstrungId.replace('_u', '');
+            if (ITEMS[strungId]) {
+                if (hasItems([{ itemId: unstrungId, quantity: 1 }, { itemId: 'ball_of_wool', quantity: 1 }])) {
+                    modifyItem(unstrungId, -1, true);
+                    modifyItem('ball_of_wool', -1, true);
+                    modifyItem(strungId, 1, false, undefined, { bypassAutoBank: true });
+                    addXp(SkillName.Crafting, 5);
+                    addLog(`You string the ${ITEMS[unstrungId].name}.`);
+                }
             }
             return;
         }
@@ -378,14 +570,13 @@ export const useItemActions = (props: UseItemActionsProps) => {
             if (hasItems([{ itemId: 'arrow_shaft', quantity: 1 }, { itemId: 'rat_tail', quantity: 1 }])) {
                 modifyItem('arrow_shaft', -1);
                 modifyItem('rat_tail', -1);
-                modifyItem('rat_kebab_uncooked', 1);
+                modifyItem('rat_kebab_uncooked', 1, false, undefined, { bypassAutoBank: true });
                 addLog("You skewer the rat tail with the arrow shaft, creating an uncooked kebab.");
             }
             return;
         }
 
         const startTimedAction = (recipeId: string, recipeType: ActiveCraftingAction['recipeType'], totalQuantity: number, duration: number, payload?: ActiveCraftingAction['payload']) => {
-            addLog("You begin to combine the items...");
             setActiveCraftingAction({ recipeId, recipeType, totalQuantity, completedQuantity: 0, startTime: Date.now(), duration, payload });
         };
         
@@ -425,7 +616,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
         }
 
         addLog("Nothing interesting happens.");
-    }, [skills, inventory, addLog, setActiveCraftingAction, hasItems, modifyItem, addXp, setMakeXPrompt, activeCraftingAction, advanceTutorial]);
+    }, [skills, inventory, addLog, setActiveCraftingAction, hasItems, modifyItem, addXp, setMakeXPrompt, activeCraftingAction, advanceTutorial, currentPoiId]);
 
     const handleUseItemOn = useCallback((used: { item: InventorySlot, index: number }, target: { item: InventorySlot, index: number }) => {
         const usedItem = ITEMS[used.item.itemId];
@@ -435,21 +626,21 @@ export const useItemActions = (props: UseItemActionsProps) => {
         const isChisel = (item: Item) => item.id === 'chisel';
         const isUncutGem = (item: Item) => item.id.startsWith('uncut_');
         const isNeedle = (item: Item) => item.id === 'needle';
-        const isLeather = (item: Item) => item.id === 'leather';
+        const isLeather = (item: Item) => ['leather', 'boar_leather', 'wolf_leather', 'bear_leather'].includes(item.id);
+        const isFlour = (item: Item) => item.id === 'flour';
+        const isWater = (item: Item) => item.id === 'bucket_of_water';
 
         if ((isChisel(usedItem) && isUncutGem(targetItem)) || (isUncutGem(usedItem) && isChisel(targetItem))) {
             openCraftingView({ type: 'gem_cutting' });
-        }
-        else if ((isNeedle(usedItem) && isLeather(targetItem)) || (isLeather(usedItem) && isNeedle(usedItem))) {
+        } else if ((isNeedle(usedItem) && isLeather(targetItem)) || (isLeather(usedItem) && isNeedle(targetItem))) {
             openCraftingView({ type: 'leatherworking' });
-        }
-        else if (usedItem.id === 'knife' && isLog(targetItem)) {
+        } else if (usedItem.id === 'knife' && isLog(targetItem)) {
             openCraftingView({ type: 'fletching', logId: targetItem.id });
-        }
-        else if (targetItem.id === 'knife' && isLog(usedItem)) {
+        } else if (targetItem.id === 'knife' && isLog(usedItem)) {
             openCraftingView({ type: 'fletching', logId: usedItem.id });
-        }
-        else {
+        } else if ((isWater(usedItem) && isFlour(targetItem)) || (isFlour(usedItem) && isWater(targetItem))) {
+            openCraftingView({ type: 'dough_making' });
+        } else {
             handleItemCombination(used, target);
         }
     
@@ -462,5 +653,6 @@ export const useItemActions = (props: UseItemActionsProps) => {
         handleBuryBones,
         handleEmptyItem,
         handleUseItemOn,
+        handleDivine,
     };
 };

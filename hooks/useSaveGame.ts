@@ -19,7 +19,10 @@ export const useSaveGame = (gameState: object) => {
 
         // Debounce saving to improve performance on subsequent state changes.
         const handler = setTimeout(() => {
-            saveGameState(gameState);
+            // Create a copy of the state to save, excluding shopStates.
+            const stateToSave = { ...gameState };
+            delete (stateToSave as any).shopStates;
+            saveGameState(stateToSave);
         }, 1000);
 
         return () => {

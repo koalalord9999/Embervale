@@ -1,5 +1,3 @@
-
-
 import { POI, SkillName } from '../../types';
 
 export const theFeywoodPois: Record<string, POI> = {
@@ -9,7 +7,7 @@ export const theFeywoodPois: Record<string, POI> = {
         description: 'The air grows still and a soft, ethereal light filters through the canopy. The trees here have a strange, silvery bark.',
         connections: ['ancient_clearing', 'shimmering_path', 'glowing_grove'],
         activities: [
-            { type: 'skilling', name: 'Ancient Feywood Tree', id: 'feywood_entrance_tree', skill: SkillName.Woodcutting, requiredLevel: 45, loot: [{ itemId: 'feywood_logs', chance: 1, xp: 120 }], resourceCount: { min: 2, max: 4 }, respawnTime: 30000, gatherTime: 4000 },
+            { type: 'skilling', name: 'Ancient Feywood Tree', id: 'feywood_entrance_tree', skill: SkillName.Woodcutting, requiredLevel: 55, loot: [{ itemId: 'feywood_logs', chance: 1, xp: 120 }], resourceCount: { min: 2, max: 4 }, respawnTime: 30000, gatherTime: 4000 },
         ],
         regionId: 'feywood',
         x: 1260, y: 600
@@ -31,8 +29,8 @@ export const theFeywoodPois: Record<string, POI> = {
         description: 'A grove of Feywood trees that pulse with a gentle, calming light. The area feels safe and peaceful.',
         connections: ['feywood_entrance', 'mushroom_circle'],
         activities: [
-            { type: 'skilling', name: 'Ancient Feywood Tree', id: 'glowing_grove_tree_1', skill: SkillName.Woodcutting, requiredLevel: 45, loot: [{ itemId: 'feywood_logs', chance: 1, xp: 120 }], resourceCount: { min: 3, max: 6 }, respawnTime: 30000, gatherTime: 4000 },
-            { type: 'skilling', name: 'Ancient Feywood Tree', id: 'glowing_grove_tree_2', skill: SkillName.Woodcutting, requiredLevel: 45, loot: [{ itemId: 'feywood_logs', chance: 1, xp: 120 }], resourceCount: { min: 3, max: 6 }, respawnTime: 30000, gatherTime: 4000 },
+            { type: 'skilling', name: 'Ancient Feywood Tree', id: 'glowing_grove_tree_1', skill: SkillName.Woodcutting, requiredLevel: 55, loot: [{ itemId: 'feywood_logs', chance: 1, xp: 120 }], resourceCount: { min: 3, max: 6 }, respawnTime: 30000, gatherTime: 4000 },
+            { type: 'skilling', name: 'Ancient Feywood Tree', id: 'glowing_grove_tree_2', skill: SkillName.Woodcutting, requiredLevel: 55, loot: [{ itemId: 'feywood_logs', chance: 1, xp: 120 }], resourceCount: { min: 3, max: 6 }, respawnTime: 30000, gatherTime: 4000 },
         ],
         regionId: 'feywood',
         x: 1200, y: 560
@@ -90,7 +88,7 @@ export const theFeywoodPois: Record<string, POI> = {
         id: 'moonlit_clearing',
         name: 'Moonlit Clearing',
         description: 'A beautiful, open clearing that seems to be perpetually bathed in moonlight, regardless of the time of day.',
-        connections: ['whispering_pond'],
+        connections: ['whispering_pond', 'aqua_altar'],
         activities: [],
         regionId: 'feywood',
         x: 1280, y: 460
@@ -101,7 +99,20 @@ export const theFeywoodPois: Record<string, POI> = {
         description: 'A simple, moss-covered stone altar stands in the center of this clearing. It radiates a powerful, yet peaceful, magic.',
         connections: ['sprite_circle'],
         activities: [
-            { type: 'npc', name: 'Fey Spirit', icon: '/assets/npcChatHeads/fey_spirit.png', dialogue: ["Tread lightly, mortal. This is a sacred place."] }
+            { 
+                type: 'npc', 
+                name: 'Fey Spirit', 
+                icon: '/assets/npcChatHeads/fey_spirit.png', 
+                dialogue: {
+                    start: {
+                        npcName: 'Fey Spirit',
+                        npcIcon: '/assets/npcChatHeads/fey_spirit.png',
+                        text: "Tread lightly, mortal. This is a sacred place.",
+                        responses: []
+                    }
+                },
+                startNode: 'start'
+            }
         ],
         regionId: 'feywood',
         x: 1440, y: 560
@@ -112,7 +123,7 @@ export const theFeywoodPois: Record<string, POI> = {
         description: 'The trees here are impossibly large and ancient, their branches weaving a tight canopy high above.',
         connections: ['sprite_circle', 'heart_of_the_fey'],
         activities: [
-            { type: 'skilling', name: 'Ancient Feywood Tree', id: 'ancient_feywood_tree', skill: SkillName.Woodcutting, requiredLevel: 45, loot: [{ itemId: 'feywood_logs', chance: 1, xp: 120 }], resourceCount: { min: 5, max: 10 }, respawnTime: 45000, gatherTime: 4000 },
+            { type: 'skilling', name: 'Ancient Feywood Tree', id: 'ancient_feywood_tree', skill: SkillName.Woodcutting, requiredLevel: 55, loot: [{ itemId: 'feywood_logs', chance: 1, xp: 120 }], resourceCount: { min: 5, max: 10 }, respawnTime: 45000, gatherTime: 4000 },
         ],
         regionId: 'feywood',
         x: 1420, y: 480
@@ -121,11 +132,33 @@ export const theFeywoodPois: Record<string, POI> = {
         id: 'heart_of_the_fey',
         name: 'Heart of the Fey',
         description: 'The very heart of the forest. The air is so thick with magic it feels tangible. A single, colossal tree pulses with soft light.',
-        connections: ['ancient_feywood'],
+        connections: ['ancient_feywood', 'verdant_altar'],
         activities: [
-            { type: 'skilling', name: 'Colossal Feywood Tree', id: 'ancient_feywood_tree', skill: SkillName.Woodcutting, requiredLevel: 60, loot: [{ itemId: 'feywood_logs', chance: 1, xp: 120 }], resourceCount: { min: 80, max: 300 }, respawnTime: 125000, gatherTime: 4000 }
+            { type: 'skilling', name: 'Colossal Feywood Tree', id: 'heart_feywood_tree', skill: SkillName.Woodcutting, requiredLevel: 70, loot: [{ itemId: 'feywood_logs', chance: 1, xp: 120 }], resourceCount: { min: 80, max: 300 }, respawnTime: 125000, gatherTime: 4000 }
         ],
         regionId: 'feywood',
         x: 1480, y: 440
+    },
+    aqua_altar: {
+        id: 'aqua_altar',
+        name: 'Altar of the Spring',
+        description: 'A serene altar made of smooth, river-worn stones. A spring of impossibly pure water bubbles up from its center, flowing into the Whispering Pond.',
+        connections: ['moonlit_clearing'],
+        activities: [
+            { type: 'runecrafting_altar', runeId: 'aqua_rune' }
+        ],
+        regionId: 'feywood',
+        x: 1240, y: 420,
+    },
+    verdant_altar: {
+        id: 'verdant_altar',
+        name: 'Altar of Life',
+        description: 'A living altar formed from intertwined roots and glowing moss. It pulses with a vibrant, natural energy.',
+        connections: ['heart_of_the_fey'],
+        activities: [
+            { type: 'runecrafting_altar', runeId: 'verdant_rune' }
+        ],
+        regionId: 'feywood',
+        x: 1520, y: 400,
     },
 };

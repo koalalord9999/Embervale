@@ -1,5 +1,3 @@
-
-
 import { POI, SkillName } from '../../types';
 
 export const galeSweptPeaksPois: Record<string, POI> = {
@@ -27,11 +25,16 @@ export const galeSweptPeaksPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Echo of a Watchman',
                 icon: '/assets/npcChatHeads/echo_of_a_watchman.png',
-                dialogue: [
-                    "...always watching... the north...",
-                    "The great metal... they forged it with the mountain's heart... runs with purple fire...",
-                    "We failed... the darkness from the swamp... it rose..."
-                ]
+                // FIX: Converted string array to DialogueNode structure.
+                dialogue: {
+                    start: {
+                        npcName: 'Echo of a Watchman',
+                        npcIcon: '/assets/npcChatHeads/echo_of_a_watchman.png',
+                        text: "...always watching... the north...\n\nThe great metal... they forged it with the mountain's heart... runs with purple fire...\n\nWe failed... the darkness from the swamp... it rose...",
+                        responses: []
+                    }
+                },
+                startNode: 'start'
             }
         ],
         regionId: 'gale_swept_peaks',
@@ -89,7 +92,18 @@ export const galeSweptPeaksPois: Record<string, POI> = {
         description: "A small, secluded cave, surprisingly warm inside. A makeshift forge and anvil stand in the corner, along with a comfortable-looking cot.",
         connections: ['goat_trail'],
         activities: [
-            { type: 'npc', name: 'Borin Stonehand', icon: '/assets/npcChatHeads/prospector_gudrun.png', dialogue: ["What do you want? Can't you see I'm busy?"] }
+            { type: 'npc', name: 'Borin Stonehand', icon: '/assets/npcChatHeads/prospector_gudrun.png', 
+                // FIX: Converted string array to DialogueNode structure.
+                dialogue: {
+                    start: {
+                        npcName: 'Borin Stonehand',
+                        npcIcon: '/assets/npcChatHeads/prospector_gudrun.png',
+                        text: "What do you want? Can't you see I'm busy?",
+                        responses: []
+                    }
+                },
+                startNode: 'start'
+             }
         ],
         regionId: 'gale_swept_peaks',
         x: 920, y: 400
@@ -156,7 +170,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
         description: 'A secluded, windswept ledge high in the peaks. A single, ancient yew tree grows here, undisturbed.',
         connections: ['harpy_roost'],
         activities: [
-            { type: 'skilling', id: 'eagles_eyrie_yew_1', name: 'Chop Ancient Yew', skill: SkillName.Woodcutting, requiredLevel: 60, loot: [{ itemId: 'yew_logs', chance: 1, xp: 175 }], resourceCount: { min: 2, max: 4 }, respawnTime: 60000, gatherTime: 5000 },
+            { type: 'skilling', id: 'eagles_eyrie_yew_1', name: 'Chop Ancient Yew', skill: SkillName.Woodcutting, requiredLevel: 65, loot: [{ itemId: 'yew_logs', chance: 1, xp: 175 }], resourceCount: { min: 2, max: 4 }, respawnTime: 60000, gatherTime: 5000 },
         ],
         regionId: 'gale_swept_peaks',
         x: 960, y: 340
@@ -167,7 +181,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
         description: 'The path grows steeper, leading above the treeline. The wind howls relentlessly. A few hardy, ancient yew trees cling to the rock.',
         connections: ['harpy_roost', 'the_summit', 'treacherous_ledge', 'frozen_lake'],
         activities: [
-            { type: 'skilling', id: 'summit_approach_yew_1', name: 'Chop Yew Tree', skill: SkillName.Woodcutting, requiredLevel: 60, loot: [{ itemId: 'yew_logs', chance: 1, xp: 175 }], resourceCount: { min: 1, max: 2 }, respawnTime: 60000, gatherTime: 5000 },
+            { type: 'skilling', id: 'summit_approach_yew_1', name: 'Chop Yew Tree', skill: SkillName.Woodcutting, requiredLevel: 65, loot: [{ itemId: 'yew_logs', chance: 1, xp: 175 }], resourceCount: { min: 1, max: 2 }, respawnTime: 60000, gatherTime: 5000 },
             { type: 'combat', monsterId: 'harpy' },
         ],
         regionId: 'gale_swept_peaks',
@@ -212,7 +226,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
         description: 'The crumbling ruins of a structure of unknown origin. It seems to lead nowhere.',
         connections: ['the_summit'],
         activities: [
-            { type: 'skilling', id: 'ancient_ruins_yew_1', name: 'Chop Gnarled Yew', skill: SkillName.Woodcutting, requiredLevel: 60, loot: [{ itemId: 'yew_logs', chance: 1, xp: 175 }], resourceCount: { min: 1, max: 1 }, respawnTime: 75000, gatherTime: 5000 },
+            { type: 'skilling', id: 'ancient_ruins_yew_1', name: 'Chop Gnarled Yew', skill: SkillName.Woodcutting, requiredLevel: 65, loot: [{ itemId: 'yew_logs', chance: 1, xp: 175 }], resourceCount: { min: 1, max: 1 }, respawnTime: 75000, gatherTime: 5000 },
             { type: 'skilling', id: 'ancient_ruins_titanium_1', name: 'Mine Titanium Vein', skill: SkillName.Mining, requiredLevel: 75, loot: [{ itemId: 'titanium_ore', chance: 1, xp: 200 }], resourceCount: { min: 1, max: 1 }, respawnTime: 300000, gatherTime: 6000 },
         ],
         regionId: 'gale_swept_peaks',

@@ -1,9 +1,9 @@
-// Obsolete individual files have been removed.
+// This barrel file combines all monster data from the /monsters directory.
 
 import { Monster } from '../types';
-import { beasts } from './beasts';
+import { beasts } from './monsters/beasts';
 import { humanoids } from './monsters/humanoids';
-import { magicalAndUndead } from './magicalAndUndead';
+import { magicalAndUndead } from './monsters/magicalAndUndead';
 
 // Assemble all monsters into a single array
 const allMonstersUnsorted: Monster[] = [

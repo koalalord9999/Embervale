@@ -1,14 +1,17 @@
-
 import React, { useMemo, useEffect, useState } from 'react';
-import { POI, POIActivity, PlayerQuestState, SkillName, InventorySlot, ResourceNodeState, PlayerRepeatableQuest, SkillRequirement, PlayerSkill, DialogueNode } from '../../types';
-import { MONSTERS, QUESTS, SHOPS, ITEMS } from '../../constants';
+import { POI, POIActivity, PlayerQuestState, SkillName, InventorySlot, ResourceNodeState, PlayerRepeatableQuest, SkillRequirement, PlayerSkill, DialogueNode, GroundItem } from '../../types';
+import { MONSTERS, QUESTS, SHOPS, ITEMS, REGIONS } from '../../constants';
 import { POIS } from '../../data/pois';
 import Button from '../common/Button';
 import { ContextMenuOption } from '../common/ContextMenu';
-import { MakeXPrompt, QuestDialogueState, InteractiveDialogueState, TooltipState, useUIState } from '../../hooks/useUIState';
+// FIX: Removed QuestDialogueState and InteractiveDialogueState as they are not exported or used.
+import { MakeXPrompt, TooltipState, useUIState, ContextMenuState, DialogueState } from '../../hooks/useUIState';
 import ProgressBar from '../common/ProgressBar';
 import { useSkillingAnimations } from '../../hooks/useSkillingAnimations';
 import { useSceneInteractions } from '../../hooks/useSceneInteractions';
+import { useIsTouchDevice } from '../../hooks/useIsTouchDevice';
+import { useLongPress } from '../../hooks/useLongPress';
+import { useWorldActions } from '../../hooks/useWorldActions';
 
 type SkillingActivity = Extract<POIActivity, { type: 'skilling' }>;
 type GridItem = POI | { type: 'obstacle'; fromPoiId: string; toPoiId: string; requirement: SkillRequirement };
@@ -22,8 +25,7 @@ interface SceneViewProps {
     onStartCombat: (uniqueInstanceId: string) => void;
     playerQuests: PlayerQuestState[];
     inventory: (InventorySlot | null)[];
-    completeQuestStage: (questId: string) => void;
-    setContextMenu: (menu: { options: ContextMenuOption[]; position: { x: number; y: number; } } | null) => void;
+    setContextMenu: (menu: ContextMenuState | null) => void;
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
     setTooltip: (tooltip: TooltipState | null) => void;
     addLog: (message: string) => void;
@@ -43,12 +45,15 @@ interface SceneViewProps {
     onClearObstacle: (fromPoiId: string, toPoiId: string, requirement: SkillRequirement) => void;
     skills: PlayerSkill[];
     monsterRespawnTimers: Record<string, number>;
-    setActiveQuestDialogue: (dialogue: QuestDialogueState | null) => void;
-    setActiveInteractiveDialogue: (dialogue: InteractiveDialogueState | null) => void;
+    // FIX: Replaced obsolete setters with the unified setActiveDialogue.
+    setActiveDialogue: (dialogue: DialogueState | null) => void;
+    handleDialogueAction: (action: any) => void;
     onDepositBackpack: () => void;
     ui: ReturnType<typeof useUIState>; // Pass the whole ui object
     tutorialStage: number;
     advanceTutorial: (condition: string) => void;
+    isTouchSimulationEnabled: boolean;
+    worldActions: ReturnType<typeof useWorldActions>;
 }
 
 const CleanupProgress: React.FC<{
@@ -79,22 +84,119 @@ const CleanupProgress: React.FC<{
             <div className="w-full">
                 <ProgressBar value={progress} maxValue={100} color="bg-green-600" />
             </div>
-            {/* FIX: Wrapped onCancel in an arrow function to ensure it's called with no arguments, matching its type signature. */}
-            <Button onClick={() => onCancel()} variant="secondary" size="sm">Cancel</Button>
+            <Button onClick={onCancel} variant="secondary" size="sm">Cancel</Button>
         </div>
+    );
+};
+
+const ActionableButton: React.FC<{
+    activity: POIActivity;
+    index: number;
+    handleActivityClick: (activity: POIActivity) => void;
+    setContextMenu: (menu: ContextMenuState | null) => void;
+    ui: ReturnType<typeof useUIState>;
+    onDepositBackpack: () => void;
+    tutorialStage: number;
+    advanceTutorial: (condition: string) => void;
+    isTouchDevice: boolean;
+    worldActions: ReturnType<typeof useWorldActions>;
+}> = ({ activity, index, handleActivityClick, setContextMenu, ui, onDepositBackpack, tutorialStage, advanceTutorial, isTouchDevice, worldActions }) => {
+    
+    let text = 'Interact';
+    switch (activity.type) {
+        case 'shop': text = `Visit ${SHOPS[activity.shopId].name}`; break;
+        case 'quest_start': text = `Talk about '${QUESTS[activity.questId].name}'`; break;
+        case 'npc': text = activity.name; break;
+        case 'cooking_range': text = 'Use Cooking Range'; break;
+        case 'furnace': text = 'Use Furnace'; break;
+        case 'anvil': text = 'Use Anvil'; break;
+        case 'bank': text = 'Use Bank'; break;
+        case 'shearing': text = 'Shear Sheep'; break;
+        case 'wishing_well': text = 'Toss a coin in the well'; break;
+        case 'quest_board': text = 'Check the Quest Board'; break;
+        case 'spinning_wheel': text = 'Use Spinning Wheel'; break;
+        case 'water_source': text = activity.name; break;
+        case 'interactive_dialogue': text = `Talk to ${activity.dialogue[activity.startNode].npcName}`; break;
+        case 'milking': text = 'Milk a Cow'; break;
+        case 'windmill': text = 'Collect Flour'; break;
+        case 'ancient_chest': text = activity.name; break;
+    }
+
+    const onLongPress = (e: React.MouseEvent | React.TouchEvent) => {
+        if (tutorialStage === 17 && activity.type === 'furnace') advanceTutorial('context-menu-furnace');
+        if (tutorialStage === 19 && activity.type === 'anvil') advanceTutorial('context-menu-anvil');
+
+        const event = 'touches' in e ? e.touches[0] : e;
+        let options: ContextMenuOption[] = [];
+
+        if (activity.type === 'furnace') {
+            options = [
+                { label: 'Smelt', onClick: () => ui.openCraftingView({ type: 'furnace' }) },
+                { label: 'Craft Jewelry', onClick: () => ui.openCraftingView({ type: 'jewelry' }) }
+            ];
+        } else if (activity.type === 'anvil') {
+            options = [{ label: 'Smith', onClick: () => ui.openCraftingView({ type: 'anvil' }) }];
+        } else if (activity.type === 'bank') {
+            options = [{ label: 'Quick Deposit', onClick: onDepositBackpack }];
+        } else if (activity.type === 'windmill') {
+            options = [
+                { label: 'Collect Flour', onClick: () => worldActions.handleCollectFlour() },
+                { label: 'Mill Wheat', onClick: () => worldActions.handleMillWheat() },
+            ];
+        }
+        
+        if (options.length > 0) {
+            setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
+        }
+    }
+
+    let customHandlers;
+    if (['furnace', 'anvil', 'bank', 'windmill'].includes(activity.type)) {
+        customHandlers = useLongPress({
+            onLongPress,
+            onClick: () => {
+                if(activity.type === 'windmill') {
+                    worldActions.handleCollectFlour();
+                } else {
+                    handleActivityClick(activity);
+                }
+            }
+        });
+    } else {
+        customHandlers = { onClick: () => handleActivityClick(activity) };
+    }
+    
+    const tutorialId = `activity-button-${index}`;
+
+    return (
+        <button
+            data-tutorial-id={tutorialId}
+            className="font-bold rounded-md shadow-md transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 bg-yellow-700 hover:bg-yellow-600 border-2 border-yellow-800 hover:border-yellow-700 text-white focus:ring-yellow-500 px-2 py-1 text-sm w-full"
+            {...customHandlers}
+        >
+            {text}
+        </button>
     );
 };
 
 
 const SceneView: React.FC<SceneViewProps> = (props) => {
-    const { poi, unlockedPois, onNavigate, onActivity, onStartCombat, playerQuests, inventory, completeQuestStage, setContextMenu, setMakeXPrompt, setTooltip, addLog, startQuest, hasItems, resourceNodeStates, activeSkillingNodeId, onToggleSkilling, initializeNodeState, skillingTick, getSuccessChance, activeRepeatableQuest, activeCleanup, onStartInteractQuest, onCancelInteractQuest, clearedSkillObstacles, onClearObstacle, skills, monsterRespawnTimers, setActiveQuestDialogue, setActiveInteractiveDialogue, onDepositBackpack, ui, tutorialStage, advanceTutorial } = props;
+    const { poi, unlockedPois, onNavigate, onActivity, onStartCombat, playerQuests, inventory, setContextMenu, setMakeXPrompt, setTooltip, addLog, startQuest, hasItems, resourceNodeStates, activeSkillingNodeId, onToggleSkilling, initializeNodeState, skillingTick, getSuccessChance, activeRepeatableQuest, activeCleanup, onStartInteractQuest, onCancelInteractQuest, clearedSkillObstacles, onClearObstacle, skills, monsterRespawnTimers, setActiveDialogue, handleDialogueAction, onDepositBackpack, ui, tutorialStage, advanceTutorial, isTouchSimulationEnabled, worldActions } = props;
     const { depletedNodesAnimating } = useSkillingAnimations(resourceNodeStates, poi.activities);
     const [countdown, setCountdown] = useState<Record<string, number>>({});
     const [shakingNodeId, setShakingNodeId] = useState<string | null>(null);
+    const isTouchDevice = useIsTouchDevice(isTouchSimulationEnabled);
+
+    const [isDescriptionVisible, setIsDescriptionVisible] = useState(true);
+    const [areActionsVisible, setAreActionsVisible] = useState(true);
+
+    useEffect(() => {
+        // When POI changes, always show the actions list.
+        setAreActionsVisible(true);
+    }, [poi.id]);
     
     const { handleActivityClick } = useSceneInteractions(poi.id, {
         playerQuests,
-        completeQuestStage,
         startQuest,
         hasItems,
         addLog,
@@ -102,10 +204,10 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
             onActivity(activity);
             if (activity.type === 'bank') advanceTutorial('open-bank');
         },
-        setActiveQuestDialogue,
-        setActiveInteractiveDialogue,
+        setActiveDialogue,
         tutorialStage,
         advanceTutorial,
+        handleDialogueAction,
     });
 
     useEffect(() => {
@@ -159,6 +261,9 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
     
         if (!poi.connections) return grid;
     
+        const currentX = poi.internalX ?? poi.x;
+        const currentY = poi.internalY ?? poi.y;
+
         poi.connections.forEach(connId => {
             const destinationPoi = POIS[connId];
             if (!destinationPoi) return;
@@ -175,12 +280,12 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
                 destX = destinationPoi.cityMapX ?? destinationPoi.x;
                 destY = destinationPoi.cityMapY ?? destinationPoi.y;
             } else {
-                destX = destinationPoi.x;
-                destY = destinationPoi.y;
+                destX = destinationPoi.internalX ?? destinationPoi.x;
+                destY = destinationPoi.internalY ?? destinationPoi.y;
             }
 
-            const dx = (destX ?? poi.x) - poi.x;
-            const dy = (destY ?? poi.y) - poi.y;
+            const dx = (destX ?? currentX) - currentX;
+            const dy = (destY ?? currentY) - currentY;
             const angle = Math.atan2(dy, dx) * (180 / Math.PI);
             const gridIndex = getDirectionalGridIndex(angle);
     
@@ -201,64 +306,16 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
         return grid;
     }, [poi, clearedSkillObstacles]);
 
-
-    const renderInteractQuestActivity = () => {
-        if (!activeRepeatableQuest || activeRepeatableQuest.generatedQuest.type !== 'interact') return null;
-        
-        const quest = activeRepeatableQuest.generatedQuest;
-        if (quest.locationPoiId !== poi.id) return null;
-        
-        if (activeCleanup && activeCleanup.quest.questId === activeRepeatableQuest.questId) {
-            return (
-                <CleanupProgress
-                    startTime={activeCleanup.startTime}
-                    duration={activeCleanup.duration}
-                    title={quest.title}
-                    onCancel={onCancelInteractQuest}
-                />
-            );
+    const getActivityButton = (activity: POIActivity, index: number) => {
+        if (activity.type === 'npc' && activity.questCondition) {
+            const playerQuest = playerQuests.find(q => q.questId === activity.questCondition!.questId);
+            const stages = activity.questCondition!.stages ?? (activity.questCondition!.stage !== undefined ? [activity.questCondition!.stage] : []);
+            
+            if (!playerQuest || playerQuest.isComplete || !stages.includes(playerQuest.currentStage)) {
+                return null;
+            }
         }
 
-        return (
-            <Button onClick={() => onStartInteractQuest(activeRepeatableQuest)} variant="primary" disabled={!!activeCleanup}>
-                Start Task: {quest.title}
-            </Button>
-        )
-    }
-
-    const createFurnaceContextMenu = (e: React.MouseEvent) => {
-        e.preventDefault();
-        if (tutorialStage === 16) advanceTutorial('context-menu-furnace');
-        setContextMenu({
-            options: [
-                { label: 'Smelt', onClick: () => ui.openCraftingView({ type: 'furnace' }) },
-                { label: 'Craft Jewelry', onClick: () => ui.openCraftingView({ type: 'jewelry' }) }
-            ],
-            position: { x: e.clientX, y: e.clientY }
-        });
-    };
-
-    const createAnvilContextMenu = (e: React.MouseEvent) => {
-        e.preventDefault();
-        if (tutorialStage === 18) advanceTutorial('context-menu-anvil');
-        setContextMenu({
-            options: [{ label: 'Smith', onClick: () => ui.openCraftingView({ type: 'anvil' }) }],
-            position: { x: e.clientX, y: e.clientY }
-        });
-    };
-
-    const createBankContextMenu = (e: React.MouseEvent) => {
-        e.preventDefault();
-        setContextMenu({
-            options: [
-                { label: 'Quick Deposit', onClick: onDepositBackpack },
-            ],
-            position: { x: e.clientX, y: e.clientY }
-        });
-    };
-
-    const getActivityButton = (activity: POIActivity, index: number) => {
-        const tutorialId = `activity-button-${index}`;
         if (activity.type === 'skilling') {
             const animationSkill = depletedNodesAnimating[activity.id];
             if (animationSkill) {
@@ -348,7 +405,7 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
                             setTooltip({ content: <p>Currently gathering...</p>, position: { x: e.clientX, y: e.clientY } });
                         }}
                         onMouseLeave={() => setTooltip(null)}
-                        data-tutorial-id={tutorialId}
+                        data-tutorial-id={`activity-button-${index}`}
                     >
                         <div className="absolute inset-0 animate-pulse-bg"></div>
                         <button onClick={() => onToggleSkilling(activity)} className="relative w-full h-full flex items-center justify-center font-bold text-white">
@@ -378,7 +435,7 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
                     disabled={isDisabled}
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={() => setTooltip(null)}
-                    data-tutorial-id={tutorialId}
+                    data-tutorial-id={`activity-button-${index}`}
                 >
                     {buttonText}
                 </Button>
@@ -415,57 +472,54 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
                     onClick={() => onStartCombat(uniqueInstanceId)}
                     variant="combat"
                     className={textColorClass}
-                    data-tutorial-id={tutorialId}
+                    data-tutorial-id={`activity-button-${index}`}
                 >
                     {text}
                 </Button>
             );
         }
         
-        const isQuestStart = activity.type === 'quest_start' && playerQuests.some(q => q.questId === activity.questId);
-        if (isQuestStart) return null;
+        if (activity.type === 'quest_start' && playerQuests.some(q => q.questId === activity.questId)) return null;
         
-        let text = 'Interact';
-        switch (activity.type) {
-            case 'shop': text = `Visit ${SHOPS[activity.shopId].name}`; break;
-            case 'quest_start':
-                const quest = QUESTS[activity.questId];
-                if (quest) { text = `Talk about '${quest.name}'`; } 
-                else { text = `Start Quest`; }
-                break;
-            case 'npc': text = `Talk to ${activity.name}`; break;
-            case 'cooking_range': text = 'Use Cooking Range'; break;
-            case 'furnace': text = 'Use Furnace'; break;
-            case 'anvil': text = 'Use Anvil'; break;
-            case 'bank': text = 'Use Bank'; break;
-            case 'shearing': text = 'Shear Sheep'; break;
-            case 'egg_collecting': text = 'Collect Eggs'; break;
-            case 'wishing_well': text = 'Toss a coin in the well'; break;
-            case 'quest_board': text = 'Check the Quest Board'; break;
-            case 'spinning_wheel': text = 'Use Spinning Wheel'; break;
-            case 'water_source': text = activity.name; break;
-            case 'interactive_dialogue': text = `Talk to ${activity.dialogue[activity.startNode].npcName}`; break;
+        return (
+            <ActionableButton
+                key={`${activity.type}-${index}`}
+                activity={activity}
+                index={index}
+                handleActivityClick={handleActivityClick}
+                setContextMenu={setContextMenu}
+                ui={ui}
+                onDepositBackpack={onDepositBackpack}
+                tutorialStage={tutorialStage}
+                advanceTutorial={advanceTutorial}
+                isTouchDevice={isTouchDevice}
+                worldActions={worldActions}
+            />
+        );
+    }
+
+    const renderInteractQuestActivity = () => {
+        if (!activeRepeatableQuest || activeRepeatableQuest.generatedQuest.type !== 'interact') return null;
+        
+        const quest = activeRepeatableQuest.generatedQuest;
+        if (quest.locationPoiId !== poi.id) return null;
+        
+        if (activeCleanup && activeCleanup.quest.questId === activeRepeatableQuest.questId) {
+            return (
+                <CleanupProgress
+                    startTime={activeCleanup.startTime}
+                    duration={activeCleanup.duration}
+                    title={quest.title}
+                    onCancel={onCancelInteractQuest}
+                />
+            );
         }
 
-        const isFurnace = activity.type === 'furnace';
-        const isAnvil = activity.type === 'anvil';
-        const isBank = activity.type === 'bank';
-
         return (
-            <Button
-                key={`${activity.type}-${index}`}
-                data-tutorial-id={tutorialId}
-                onClick={() => handleActivityClick(activity)}
-                onContextMenu={
-                    isFurnace ? createFurnaceContextMenu :
-                    isAnvil ? createAnvilContextMenu :
-                    isBank ? createBankContextMenu :
-                    undefined
-                }
-            >
-                {text}
+            <Button onClick={() => onStartInteractQuest(activeRepeatableQuest)} variant="primary" disabled={!!activeCleanup}>
+                Start Task: {quest.title}
             </Button>
-        );
+        )
     }
 
     const renderTravelOption = (item: GridItem) => {
@@ -477,7 +531,7 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
             const hasRequiredItems = requirement.items ? hasItems(requirement.items) : true;
 
             return (
-                <div key={toPoiId} className="w-full text-center p-1 border border-dashed border-gray-600 rounded">
+                <div key={toPoiId} className="w-full h-full flex flex-col justify-center text-center p-1 border border-dashed border-gray-600 rounded">
                     <p className="text-xs text-gray-400 mb-1">
                         To {destinationPoi?.name ?? 'an unknown area'}:
                     </p>
@@ -495,43 +549,83 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
 
         const connectedPoi = item as POI;
         const isLocked = !unlockedPois.includes(connectedPoi.id);
+
+        const isEnteringDungeon = REGIONS[poi.regionId]?.type !== 'dungeon' && REGIONS[connectedPoi.regionId]?.type === 'dungeon';
+        const buttonExtraClass = isEnteringDungeon ? 'dungeon-entrance-highlight' : '';
+
+        const buttonProps: any = {};
+        if (isEnteringDungeon) {
+            const region = REGIONS[connectedPoi.regionId];
+            if (region) {
+                buttonProps.onMouseEnter = (e: React.MouseEvent) => {
+                    const tooltipContent = (
+                        <div>
+                            <p className="font-bold text-red-400">{region.name}</p>
+                            {region.description && <p className="text-sm text-gray-300 italic my-1">{region.description}</p>}
+                            {region.recommendedCombatLevel && <p className="text-sm mt-2">Recommended Level: <span className="font-semibold text-white">{region.recommendedCombatLevel}+</span></p>}
+                        </div>
+                    );
+                    setTooltip({ content: tooltipContent, position: { x: e.clientX, y: e.clientY } });
+                };
+                buttonProps.onMouseLeave = () => setTooltip(null);
+            }
+        }
+
         return (
-            <Button key={connectedPoi.id} onClick={() => onNavigate(connectedPoi.id)} disabled={isLocked} variant={connectedPoi.type === 'internal' ? 'internal' : 'primary'} data-tutorial-id={`navigation-button-${connectedPoi.id}`} className="w-full">
+            <Button 
+                key={connectedPoi.id} 
+                onClick={() => onNavigate(connectedPoi.id)} 
+                disabled={isLocked} 
+                variant={connectedPoi.type === 'internal' ? 'internal' : 'primary'} 
+                data-tutorial-id={`navigation-button-${connectedPoi.id}`} 
+                className={`w-full h-full ${buttonExtraClass}`}
+                {...buttonProps}
+            >
                 {connectedPoi.name} {isLocked ? '(Locked)' : ''}
             </Button>
         );
     };
 
     return (
-        <div className="flex flex-col h-full text-gray-200">
-            <h1 className="text-3xl font-bold text-yellow-400 mb-2">{poi.name}</h1>
-            <p className="text-lg italic mb-6 border-b-2 border-gray-600 pb-4">{poi.description}</p>
+        <div className="flex flex-col h-full text-gray-200 min-h-0">
+            <h1 onClick={() => setIsDescriptionVisible(v => !v)} className="text-2xl md:text-3xl font-bold text-yellow-400 mb-2 cursor-pointer select-none">{poi.name}</h1>
+            {isDescriptionVisible && <p className="text-base md:text-lg italic mb-6 border-b-2 border-gray-600 pb-4 animate-fade-in">{poi.description}</p>}
             
-            <div className="flex-grow grid grid-cols-2 gap-4">
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-yellow-300">Actions</h3>
-                    <div className="flex flex-col gap-2">
-                        {poi.activities.map(getActivityButton)}
-                        {renderInteractQuestActivity()}
-                    </div>
-                </div>
-                <div>
-                    <h3 className="text-xl font-bold mb-2 text-yellow-300">Travel</h3>
-                     <div className="grid grid-cols-3 grid-rows-3 gap-2 h-full">
-                        {gridItems.map((cellItems, index) => (
-                            <div key={index} className="bg-black/20 rounded-md p-2 flex flex-col items-center justify-center gap-2 min-h-[6rem]">
-                               {index === 4 && cellItems.length > 0 ? (
-                                    cellItems.map(renderTravelOption)
-                                ) : index === 4 ? (
-                                    <div className="flex flex-col items-center text-gray-500">
-                                        <img src="https://api.iconify.design/game-icons:world.svg" alt="Current Location" className="w-8 h-8 opacity-50 filter invert" />
-                                        <span className="text-xs font-semibold">Here</span>
-                                    </div>
-                                ) : (
-                                    cellItems.map(renderTravelOption)
-                                )}
+            <div className="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
+                <div className="flex flex-col min-h-0">
+                    <h3 className="text-xl font-semibold mb-2 text-yellow-300 cursor-pointer select-none flex-shrink-0" onClick={() => setAreActionsVisible(v => !v)}>
+                        Actions <span className={`inline-block transition-transform duration-200 ${areActionsVisible ? 'rotate-180' : ''}`}>▼</span>
+                    </h3>
+                    {areActionsVisible && (
+                         <div className="overflow-y-auto pr-1 animate-fade-in">
+                            <div className="grid grid-cols-3 gap-2">
+                                {poi.activities.map(getActivityButton)}
+                                {renderInteractQuestActivity()}
                             </div>
-                        ))}
+                        </div>
+                    )}
+                </div>
+                <div className="flex flex-col min-h-0">
+                    <h3 className="text-xl font-bold mb-2 text-yellow-300 flex-shrink-0">Travel</h3>
+                    <div className="flex-grow flex items-center justify-center">
+                        <div className="w-full max-w-[280px] lg:w-2/3 lg:max-w-none">
+                            <div className="grid grid-cols-3 gap-2">
+                                {gridItems.map((cellItems, index) => (
+                                    <div key={index} className="aspect-square bg-black/20 rounded-md p-1 flex flex-col items-center justify-center gap-1">
+                                    {index === 4 && cellItems.length > 0 ? (
+                                            cellItems.map(renderTravelOption)
+                                        ) : index === 4 ? (
+                                            <div className="flex flex-col items-center text-gray-500">
+                                                <img src="https://api.iconify.design/game-icons:world.svg" alt="Current Location" className="w-8 h-8 opacity-50 filter invert" />
+                                                <span className="text-xs font-semibold">Here</span>
+                                            </div>
+                                        ) : (
+                                            cellItems.map(renderTravelOption)
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

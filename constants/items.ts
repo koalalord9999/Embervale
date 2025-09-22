@@ -1,12 +1,16 @@
-// Obsolete individual files have been removed.
+
+
+// This barrel file combines all item data from the /items directory.
 
 import { Item } from '../types';
-import { armor } from './armor';
+import { armor } from './items/armor';
 import { foodAndPotions } from './items/foodAndPotions';
-import { misc } from './misc';
-import { resources } from './resources';
-import { weaponsAndTools } from './weaponsAndTools';
-import { herbloreItems } from './herbloreItems';
+import { misc } from './items/misc';
+import { resources } from './items/resources';
+import { weaponsAndTools } from './items/weaponsAndTools';
+import { herbloreItems } from './items/herbloreItems';
+import { runes } from './items/runes';
+import { talismans } from './items/talismans';
 
 const allItemsUnsorted: Item[] = [
     ...armor,
@@ -15,17 +19,9 @@ const allItemsUnsorted: Item[] = [
     ...resources,
     ...weaponsAndTools,
     ...herbloreItems,
+    ...runes,
+    ...talismans,
 ];
-
-// Add Tinderbox
-allItemsUnsorted.push({
-    id: 'tinderbox',
-    name: 'Tinderbox',
-    description: 'Used to light fires.',
-    stackable: false,
-    value: 1,
-    iconUrl: 'https://api.iconify.design/game-icons:flint-and-steel.svg',
-});
 
 // Sort the array alphabetically by item name for deterministic order if needed elsewhere
 allItemsUnsorted.sort((a, b) => a.name.localeCompare(b.name));

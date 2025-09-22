@@ -1,9 +1,12 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Monster, PlayerSkill, SkillName, Equipment, CombatStance, WeaponType, MonsterType } from '../../types';
-import { MONSTERS, ITEMS, rollOnLootTable } from '../../constants';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { Monster, PlayerSkill, SkillName, Equipment, CombatStance, WeaponType, MonsterType, InventorySlot, WeightedDrop, Spell } from '../../types';
+import { MONSTERS, ITEMS, rollOnLootTable, REGIONS } from '../../constants';
+import { POIS } from '../../data/pois';
 import Button from '../common/Button';
 import ProgressBar from '../common/ProgressBar';
 import { ActiveBuff } from '../../hooks/useCharacter';
+import AttackAnimationEngine from '../game/AttackAnimationEngine';
+import { useInventory } from '../../hooks/useInventory';
 
 interface CombatViewProps {
     monsterQueue: string[];
@@ -16,15 +19,18 @@ interface CombatViewProps {
     setPlayerHp: React.Dispatch<React.SetStateAction<number>>;
     onCombatEnd: () => void;
     addXp: (skill: SkillName, amount: number) => void;
-    addLoot: (itemId: string, quantity: number) => void;
+    addLoot: (itemId: string, quantity: number) => void; // For auto-banking
+    onDropLoot: (item: InventorySlot) => void; // For ground drops
+    isAutoBankOn: boolean;
     addLog: (message: string) => void;
     onPlayerDeath: () => void;
     onKill: (uniqueInstanceId: string) => void;
     onConsumeAmmo: () => void;
     activeBuffs: ActiveBuff[];
     combatSpeedMultiplier: number;
-    activeCombatStyleHighlight?: CombatStance | null;
     advanceTutorial: (condition: string) => void;
+    autocastSpell: Spell | null;
+    inv: ReturnType<typeof useInventory>;
 }
 
 interface MonsterStatusEffect {
@@ -33,9 +39,9 @@ interface MonsterStatusEffect {
     ticksLeft: number;
 }
 
-const HitSplat: React.FC<{ damage: number | 'miss', isPoison?: boolean }> = ({ damage, isPoison = false }) => {
+const HitSplat: React.FC<{ damage: number | 'miss', isPoison?: boolean, isMagic?: boolean }> = ({ damage, isPoison = false, isMagic = false }) => {
     const isMiss = damage === 'miss';
-    const color = isMiss ? 'text-white' : (isPoison ? 'text-green-400' : 'text-yellow-400');
+    const color = isMiss ? 'text-white' : (isPoison ? 'text-green-400' : (isMagic ? 'text-blue-400' : 'text-yellow-400'));
     const text = isMiss ? 'Miss' : damage;
     const [style, setStyle] = useState({ top: '50%', left: '50%', opacity: 0, transform: 'translate(-50%, -50%) scale(0.5)' });
 
@@ -90,14 +96,35 @@ const SmoothCombatCooldownBar: React.FC<{ label: string, nextAttackTime: number,
     );
 };
 
+const rollOnWeightedTable = (table: WeightedDrop[]): WeightedDrop | null => {
+    if (!table || table.length === 0) return null;
 
-const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, playerSkills, playerHp, equipment, combatStance, setCombatStance, setPlayerHp, onCombatEnd, addXp, addLoot, addLog, onPlayerDeath, onKill, onConsumeAmmo, activeBuffs, combatSpeedMultiplier, activeCombatStyleHighlight, advanceTutorial }) => {
+    const totalWeight = table.reduce((sum, item) => sum + item.chance, 0);
+    const nothingWeight = Math.max(0, 1000 - totalWeight);
+    const roll = Math.random() * (totalWeight + nothingWeight);
+
+    if (roll >= totalWeight) {
+        return null; // Nothing dropped
+    }
+    
+    let cumulativeWeight = 0;
+    for (const item of table) {
+        cumulativeWeight += item.chance;
+        if (roll < cumulativeWeight) {
+            return item;
+        }
+    }
+    return null; // Should not be reached
+};
+
+
+const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, playerSkills, playerHp, equipment, combatStance, setCombatStance, setPlayerHp, onCombatEnd, addXp, addLoot, onDropLoot, isAutoBankOn, addLog, onPlayerDeath, onKill, onConsumeAmmo, activeBuffs, combatSpeedMultiplier, advanceTutorial, autocastSpell, inv }) => {
     const [currentMonsterIndex, setCurrentMonsterIndex] = useState(0);
     const currentInstanceId = monsterQueue[currentMonsterIndex];
     const monsterId = currentInstanceId.split(':')[1];
     const [monster, setMonster] = useState<Monster | null>(null);
     const [monsterHp, setMonsterHp] = useState(0);
-    const [hitSplats, setHitSplats] = useState<{ id: number; damage: number | 'miss'; target: 'player' | 'monster', isPoison?: boolean }[]>([]);
+    const [hitSplats, setHitSplats] = useState<{ id: number; damage: number | 'miss'; target: 'player' | 'monster', isPoison?: boolean, isMagic?: boolean }[]>([]);
     const [playerAttacking, setPlayerAttacking] = useState(false);
     const [monsterAttacking, setMonsterAttacking] = useState(false);
     const [monsterStatus, setMonsterStatus] = useState<MonsterStatusEffect[]>([]);
@@ -105,6 +132,10 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
     const [nextPlayerAttackTime, setNextPlayerAttackTime] = useState(0);
     const [nextMonsterAttackTime, setNextMonsterAttackTime] = useState(0);
     const [isPreparing, setIsPreparing] = useState(true);
+    
+    const playerRef = useRef<HTMLDivElement>(null);
+    const monsterRef = useRef<HTMLDivElement>(null);
+    const [animationTriggers, setAnimationTriggers] = useState<any[]>([]);
 
     const gameTickMs = 600 / combatSpeedMultiplier;
 
@@ -116,7 +147,72 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
         }
         return { speed: 4, type: WeaponType.Unarmed };
     }, [equipment.weapon]);
-    const isRangedWeapon = playerWeapon.type === WeaponType.Bow;
+    
+    const handleLootDistribution = useCallback(() => {
+        if (!monster) return;
+
+        // 1. Guaranteed Drops
+        monster.guaranteedDrops?.forEach(drop => {
+            const quantity = Math.floor(Math.random() * (drop.maxQuantity - drop.minQuantity + 1)) + drop.minQuantity;
+            if (drop.itemId) {
+                if (isAutoBankOn) addLoot(drop.itemId, quantity);
+                else onDropLoot({ itemId: drop.itemId, quantity });
+            }
+        });
+    
+        // 2. Main Drops (single roll)
+        if (monster.mainDrops) {
+            const drop = rollOnWeightedTable(monster.mainDrops);
+            if (drop) {
+                if (drop.tableId) {
+                    const itemFromTable = rollOnLootTable(drop.tableId);
+                    if (itemFromTable) {
+                        if (isAutoBankOn) addLoot(itemFromTable, 1);
+                        else onDropLoot({ itemId: itemFromTable, quantity: 1 });
+                    }
+                } else if (drop.itemId) {
+                    const quantity = Math.floor(Math.random() * (drop.maxQuantity - drop.minQuantity + 1)) + drop.minQuantity;
+                    if (isAutoBankOn) addLoot(drop.itemId, quantity);
+                    else onDropLoot({ itemId: drop.itemId, quantity });
+                }
+            }
+        }
+    
+        // 3. Tertiary Drops
+        monster.tertiaryDrops?.forEach(drop => {
+            if (Math.random() < drop.chance) {
+                if (drop.itemId) {
+                    const quantity = Math.floor(Math.random() * (drop.maxQuantity - drop.minQuantity + 1)) + drop.minQuantity;
+                    if (isAutoBankOn) addLoot(drop.itemId, quantity);
+                    else onDropLoot({ itemId: drop.itemId, quantity });
+                }
+            }
+        });
+
+        // 4. Global Rare Drop Table
+        let rareDropChance = 0;
+        if (monster.level >= 80) rareDropChance = 1 / 128;
+        else if (monster.level >= 40) rareDropChance = 1 / 200;
+        else if (monster.level >= 10) rareDropChance = 1 / 500;
+    
+        if (rareDropChance > 0 && Math.random() < rareDropChance) {
+            const rareDropId = rollOnLootTable('global_gem_and_key_table');
+            if (rareDropId) {
+                let itemToDrop = rareDropId;
+                if (rareDropId === 'talisman_drop') {
+                    const poiId = currentInstanceId.split(':')[0];
+                    const poi = POIS[poiId];
+                    const region = poi ? REGIONS[poi.regionId] : null;
+                    const isUnderground = region?.type === 'dungeon' || region?.type === 'underground';
+                    itemToDrop = isUnderground ? 'flux_talisman' : 'verdant_talisman';
+                }
+                if (isAutoBankOn) addLoot(itemToDrop, 1);
+                else onDropLoot({ itemId: itemToDrop, quantity: 1 });
+                addLog(`You find a rare item: ${ITEMS[itemToDrop].name}!`);
+            }
+        }
+
+    }, [monster, isAutoBankOn, addLoot, onDropLoot, addLog, currentInstanceId]);
 
     useEffect(() => {
         const monsterData = MONSTERS[monsterId];
@@ -129,14 +225,15 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
 
             const preparationTimer = setTimeout(() => {
                 const now = Date.now();
-                setNextPlayerAttackTime(now + playerWeapon.speed * gameTickMs);
-                setNextMonsterAttackTime(now + monsterData.attackSpeed * gameTickMs);
+                const currentTickMs = 600 / combatSpeedMultiplier;
+                setNextPlayerAttackTime(now + playerWeapon.speed * currentTickMs);
+                setNextMonsterAttackTime(now + monsterData.attackSpeed * currentTickMs);
                 setIsPreparing(false);
             }, 500);
 
             return () => clearTimeout(preparationTimer);
         }
-    }, [currentInstanceId, playerWeapon.speed, addLog, isMandatory, monsterQueue.length, currentMonsterIndex, gameTickMs]);
+    }, [currentInstanceId, playerWeapon.speed, addLog, isMandatory, monsterQueue.length, currentMonsterIndex, combatSpeedMultiplier]);
 
     const playerStats = useMemo(() => {
         const totals = {
@@ -168,9 +265,9 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
         return totals;
     }, [equipment]);
     
-    const addHitSplat = (damage: number | 'miss', target: 'player' | 'monster', isPoison: boolean = false) => {
+    const addHitSplat = (damage: number | 'miss', target: 'player' | 'monster', isPoison: boolean = false, isMagic: boolean = false) => {
         const id = Date.now() + Math.random();
-        setHitSplats(splats => [...splats, { id, damage, target, isPoison }]);
+        setHitSplats(splats => [...splats, { id, damage, target, isPoison, isMagic }]);
         setTimeout(() => setHitSplats(splats => splats.filter(splat => splat.id !== id)), 1500);
     };
 
@@ -197,33 +294,58 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                 setTimeout(() => setPlayerAttacking(false), 300);
                 let playerDamage = 0;
                 let successfulHit = false;
+                let isMagicAttack = false;
                 
                 const speedBuff = activeBuffs.find(b => b.type === 'attack_speed_boost');
                 let effectiveSpeed = playerWeapon.speed;
                 if (speedBuff) effectiveSpeed = Math.max(1, effectiveSpeed + speedBuff.value);
         
-                if (isRangedWeapon) {
-                    if (!equipment.ammo) { addLog("You have no arrows equipped."); setNextPlayerAttackTime(now + effectiveSpeed * gameTickMs); } 
+                const isStaff = playerWeapon.type === WeaponType.Staff;
+                isMagicAttack = isStaff && autocastSpell && (combatStance === CombatStance.Autocast || combatStance === CombatStance.DefensiveAutocast);
+                const isRangedWeapon = playerWeapon.type === WeaponType.Bow;
+
+                if (isMagicAttack) {
+                    const spell = autocastSpell!;
+                    const equippedStaff = equipment.weapon ? ITEMS[equipment.weapon.itemId] : null;
+                    const providedRune = equippedStaff?.equipment?.providesRune;
+                    const runesNeeded = spell.runes.filter(r => r.itemId !== providedRune);
+
+                    if (!inv.hasItems(runesNeeded)) {
+                        addLog(`You don't have enough runes to cast ${spell.name}.`);
+                    } else {
+                        runesNeeded.forEach(r => inv.modifyItem(r.itemId, -r.quantity, true));
+                        let effectiveMagic = playerSkills.find(s => s.name === SkillName.Magic)?.currentLevel ?? 1;
+                        const totalMagicAttack = effectiveMagic + playerStats.magicAttack;
+                        const accuracy = calculateAccuracy(totalMagicAttack, monster.magicDefence);
+                        const maxHit = spell.maxHit ?? 0;
+                        if (Math.random() < accuracy) { 
+                            playerDamage = Math.floor(Math.random() * (maxHit + 1));
+                            successfulHit = true;
+                        }
+                    }
+                } else if (isRangedWeapon) {
+                    if (!equipment.ammo) { addLog("You have no arrows equipped."); } 
                     else {
                         let effectiveRanged = playerSkills.find(s => s.name === SkillName.Ranged)?.currentLevel ?? 1;
                         if (combatStance === CombatStance.RangedAccurate) effectiveRanged += 3;
                         if (combatStance === CombatStance.RangedRapid) effectiveSpeed = Math.max(1, effectiveSpeed - 1);
                         const totalRangedAttack = effectiveRanged + playerStats.rangedAttack;
                         const accuracy = calculateAccuracy(totalRangedAttack, monster.rangedDefence);
-                        const maxHit = Math.floor(effectiveRanged / 10 + playerStats.rangedStrength / 8);
+                        const rangedStrengthBonus = playerStats.rangedStrength;
+                        const maxHit = Math.ceil(0.5 + effectiveRanged * ((rangedStrengthBonus + 64) / 640));
                         if (Math.random() < accuracy) { 
                             playerDamage = Math.floor(Math.random() * (maxHit + 1));
                             successfulHit = true;
                         }
                         onConsumeAmmo();
                     }
-                } else {
+                } else { // Melee (including staff melee)
                     let effectiveAttack = playerSkills.find(s => s.name === SkillName.Attack)?.currentLevel ?? 1;
                     let effectiveStrength = playerSkills.find(s => s.name === SkillName.Strength)?.currentLevel ?? 1;
                     if (combatStance === CombatStance.Accurate) effectiveAttack += 3;
                     if (combatStance === CombatStance.Aggressive) effectiveStrength += 3;
 
-                    let playerAttackStyle: 'stab' | 'slash' | 'crush' = 'crush'; // default
+                    let playerAttackStyle: 'stab' | 'slash' | 'crush' = 'crush';
                     switch (playerWeapon.type) {
                         case WeaponType.Dagger: playerAttackStyle = 'stab'; break;
                         case WeaponType.Sword: playerAttackStyle = 'slash'; break;
@@ -233,23 +355,15 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                         case WeaponType.Mace: playerAttackStyle = 'crush'; break;
                         case WeaponType.Warhammer: playerAttackStyle = 'crush'; break;
                         case WeaponType.Unarmed: playerAttackStyle = 'crush'; break;
+                        case WeaponType.Staff: playerAttackStyle = 'crush'; break;
                     }
 
                     let attackBonus = 0;
                     let monsterDefence = 0;
                     switch (playerAttackStyle) {
-                        case 'stab':
-                            attackBonus = playerStats.stabAttack;
-                            monsterDefence = monster.stabDefence;
-                            break;
-                        case 'slash':
-                            attackBonus = playerStats.slashAttack;
-                            monsterDefence = monster.slashDefence;
-                            break;
-                        case 'crush':
-                            attackBonus = playerStats.crushAttack;
-                            monsterDefence = monster.crushDefence;
-                            break;
+                        case 'stab': attackBonus = playerStats.stabAttack; monsterDefence = monster.stabDefence; break;
+                        case 'slash': attackBonus = playerStats.slashAttack; monsterDefence = monster.slashDefence; break;
+                        case 'crush': attackBonus = playerStats.crushAttack; monsterDefence = monster.crushDefence; break;
                     }
                     const accuracyBuff = activeBuffs.find(b => b.type === 'accuracy_boost' && (b.style === 'melee' || b.style === 'all'));
                     const totalAttack = effectiveAttack + attackBonus;
@@ -260,88 +374,50 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                         playerDamage = Math.floor(Math.random() * (maxHit + 1));
                         successfulHit = true;
                     }
-                }
-
-                if (successfulHit && monsterId === 'training_dummy') {
-                    if (combatStance === CombatStance.Aggressive) advanceTutorial('hit-dummy-aggressive');
-                    if (combatStance === CombatStance.Defensive) advanceTutorial('hit-dummy-defensive');
-
-                    if (playerDamage === 0) {
-                        if (isRangedWeapon) addXp(SkillName.Ranged, 1);
-                        else {
-                            if (combatStance === CombatStance.Accurate) addXp(SkillName.Attack, 1);
-                            if (combatStance === CombatStance.Aggressive) addXp(SkillName.Strength, 1);
-                            if (combatStance === CombatStance.Defensive) addXp(SkillName.Defence, 1);
-                        }
-                        addXp(SkillName.Hitpoints, 1);
+                    if (successfulHit) {
+                        setAnimationTriggers(prev => [...prev, {
+                            id: Date.now() + Math.random(),
+                            type: isRangedWeapon ? 'ranged' : playerAttackStyle,
+                            source: 'player',
+                            target: 'monster',
+                            options: { arrowType: isRangedWeapon && equipment.ammo ? ITEMS[equipment.ammo.itemId].material : null }
+                        }]);
                     }
                 }
 
-                let isCrushingBlow = false;
-                if (playerDamage > 0 && playerWeapon.type === WeaponType.Mace && monster.monsterType === MonsterType.Armored) {
-                    if (Math.random() < 0.25) { // 25% chance
-                        isCrushingBlow = true;
-                        playerDamage = Math.floor(playerDamage * 1.5);
-                    }
-                }
-
-                const flatDamageBuff = activeBuffs.find(b => b.type === 'flat_damage');
-                if (flatDamageBuff && playerDamage > 0) {
-                    playerDamage += flatDamageBuff.value;
-                }
-                const damageOnHitBuff = activeBuffs.find(b => b.type === 'damage_on_hit');
-                if (damageOnHitBuff && playerDamage > 0) {
-                    playerDamage += damageOnHitBuff.value;
+                if (successfulHit && isMagicAttack) {
+                    const spell = autocastSpell!;
+                    const spellTier = spell.level > 80 ? 5 : spell.level > 60 ? 4 : spell.level > 40 ? 3 : spell.level > 20 ? 2 : 1;
+                    setAnimationTriggers(prev => [...prev, {
+                        id: Date.now() + Math.random(),
+                        type: 'magic', source: 'player', target: 'monster',
+                        options: { spellTier }
+                    }]);
                 }
                 
-                const poisonBuff = activeBuffs.find(b => b.type === 'poison_on_hit');
-                if (poisonBuff && playerDamage > 0 && Math.random() < (poisonBuff.chance ?? 1)) {
-                    setMonsterStatus(prev => {
-                        if (prev.some(e => e.type === 'poison')) return prev; // Don't stack poison
-                        addLog(`You envenom the ${monster.name}!`);
-                        return [...prev, { type: 'poison', damagePerTick: poisonBuff.value, ticksLeft: poisonBuff.duration / gameTickMs }];
-                    });
+                if (playerDamage > 0) {
+                    addXp(SkillName.Hitpoints, playerDamage * 1.33);
+                    if (isMagicAttack) {
+                        if (combatStance === CombatStance.Autocast) addXp(SkillName.Magic, playerDamage * 4);
+                        else { addXp(SkillName.Magic, playerDamage * 2); addXp(SkillName.Defence, playerDamage * 2); }
+                    } else if (isRangedWeapon) {
+                        if (combatStance === CombatStance.RangedDefence) { addXp(SkillName.Ranged, playerDamage * 2); addXp(SkillName.Defence, playerDamage * 2); }
+                        else addXp(SkillName.Ranged, playerDamage * 4);
+                    } else { // Melee
+                        if (combatStance === CombatStance.Accurate) addXp(SkillName.Attack, playerDamage * 4);
+                        else if (combatStance === CombatStance.Aggressive) addXp(SkillName.Strength, playerDamage * 4);
+                        else if (combatStance === CombatStance.Defensive) { addXp(SkillName.Attack, playerDamage * 2); addXp(SkillName.Defence, playerDamage * 2); }
+                    }
                 }
-
+                
                 const newMonsterHp = Math.max(0, monsterHp - playerDamage);
                 setMonsterHp(newMonsterHp);
-                addHitSplat(playerDamage > 0 ? playerDamage : 'miss', 'monster');
-
-                if (playerDamage > 0) {
-                    if (isCrushingBlow) {
-                        addLog(`Your mace lands a crushing blow on the ${monster.name} for ${playerDamage} damage!`);
-                    } else {
-                        addLog(`You hit the ${monster.name} for ${playerDamage} damage.`);
-                    }
-                    if (isRangedWeapon) addXp(SkillName.Ranged, playerDamage * 4);
-                    else {
-                        if (combatStance === CombatStance.Accurate) addXp(SkillName.Attack, playerDamage * 4);
-                        if (combatStance === CombatStance.Aggressive) addXp(SkillName.Strength, playerDamage * 4);
-                        if (combatStance === CombatStance.Defensive) addXp(SkillName.Defence, playerDamage * 4);
-                    }
-                    addXp(SkillName.Hitpoints, playerDamage * 1.33);
-                } else if (successfulHit && monsterId === 'training_dummy') {
-                    addLog(`You hit the ${monster.name} for 0 damage.`);
-                } else {
-                    addLog(`You miss the ${monster.name}.`);
-                }
+                addHitSplat(playerDamage > 0 ? playerDamage : 'miss', 'monster', false, isMagicAttack);
         
                 if (newMonsterHp <= 0) {
-                    addLog(`You have defeated the ${monster.name}!`);
                     onKill(currentInstanceId);
-                    monster.drops.forEach(drop => {
-                        if (Math.random() < drop.chance) {
-                            if (drop.tableId) {
-                                const itemFromTable = rollOnLootTable(drop.tableId);
-                                if (itemFromTable) {
-                                    addLoot(itemFromTable, 1);
-                                }
-                            } else if (drop.itemId) {
-                                const quantity = Math.floor(Math.random() * (drop.maxQuantity! - drop.minQuantity! + 1)) + drop.minQuantity!;
-                                addLoot(drop.itemId, quantity);
-                            }
-                        }
-                    });
+                    handleLootDistribution();
+                    
                     if (currentMonsterIndex + 1 < monsterQueue.length) setCurrentMonsterIndex(prev => prev + 1);
                     else { if(monsterQueue.length > 1) addLog("You have cleared the area!"); onCombatEnd(); }
                 }
@@ -352,31 +428,46 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                 setMonsterAttacking(true);
                 setTimeout(() => setMonsterAttacking(false), 300);
                 let effectiveDefence = playerSkills.find(s => s.name === SkillName.Defence)?.currentLevel ?? 1;
-                if (combatStance === CombatStance.Defensive || combatStance === CombatStance.RangedDefence) effectiveDefence += 3;
+                if ([CombatStance.Defensive, CombatStance.RangedDefence, CombatStance.DefensiveAutocast].includes(combatStance)) effectiveDefence += 3;
                 
                 let playerDefenceBonus = 0;
+                let monsterAttackStat = monster.attack;
+
                 switch(monster.attackStyle) {
-                    case 'stab': playerDefenceBonus = playerStats.stabDefence; break;
-                    case 'slash': playerDefenceBonus = playerStats.slashDefence; break;
-                    case 'crush': playerDefenceBonus = playerStats.crushDefence; break;
-                    case 'ranged': playerDefenceBonus = playerStats.rangedDefence; break;
-                    case 'magic': playerDefenceBonus = playerStats.magicDefence; break;
+                    case 'stab': playerDefenceBonus = playerStats.stabDefence; monsterAttackStat = monster.attack; break;
+                    case 'slash': playerDefenceBonus = playerStats.slashDefence; monsterAttackStat = monster.attack; break;
+                    case 'crush': playerDefenceBonus = playerStats.crushDefence; monsterAttackStat = monster.attack; break;
+                    case 'ranged': playerDefenceBonus = playerStats.rangedDefence; monsterAttackStat = monster.ranged ?? monster.attack; break;
+                    case 'magic': playerDefenceBonus = playerStats.magicDefence; monsterAttackStat = monster.magic ?? monster.attack; break;
                 }
                 
                 const evasionBuff = activeBuffs.find(b => b.type === 'evasion_boost');
                 let totalDefence = effectiveDefence + Math.floor(playerDefenceBonus * 0.5);
                 if (evasionBuff) totalDefence = Math.floor(totalDefence * (1 + evasionBuff.value / 100));
 
-                const monsterAccuracy = calculateAccuracy(monster.attack, totalDefence);
-                const monsterMaxHit = monster.customMaxHit != null ? monster.customMaxHit : Math.floor(monster.attack / 4) + 1;
+                const monsterAccuracy = calculateAccuracy(monsterAttackStat, totalDefence);
+                const monsterMaxHit = monster.customMaxHit != null ? monster.customMaxHit : Math.floor(monsterAttackStat / 4) + 1;
                 let monsterDamage = 0;
+                let monsterHit = false;
                 if (Math.random() < monsterAccuracy) {
+                    monsterHit = true;
                     monsterDamage = Math.floor(Math.random() * (monsterMaxHit + 1));
                     const specialAttack = monster.specialAttacks?.[0];
                     if (specialAttack && Math.random() < specialAttack.chance) {
                         addLog(`The ${monster.name} uses ${specialAttack.name}!`);
                         if (specialAttack.effect === 'damage_multiplier') monsterDamage = Math.floor(monsterDamage * specialAttack.value);
                     }
+                }
+                 if(monsterHit) {
+                    setAnimationTriggers(prev => [...prev, {
+                        id: Date.now() + Math.random(),
+                        type: monster.attackStyle,
+                        source: 'monster',
+                        target: 'player',
+                        options: {
+                            spellTier: monster.level > 30 ? 3 : (monster.level > 10 ? 2 : 1) // Example logic for magic
+                        }
+                    }]);
                 }
 
                 const reductionBuff = activeBuffs.find(b => b.type === 'damage_reduction');
@@ -388,8 +479,15 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                 setPlayerHp(newPlayerHp);
                 addHitSplat(monsterDamage > 0 ? monsterDamage : 'miss', 'player');
                 if (monsterDamage > 0) {
-                    addLog(`The ${monster.name} hits you for ${monsterDamage} damage.`);
-                    if (combatStance !== CombatStance.RangedDefence) addXp(SkillName.Defence, monsterDamage * 2);
+                    if (combatStance === CombatStance.RangedDefence) {
+                        addXp(SkillName.Ranged, monsterDamage * 2);
+                        addXp(SkillName.Defence, monsterDamage * 2);
+                    } else if (combatStance === CombatStance.DefensiveAutocast) {
+                        addXp(SkillName.Magic, monsterDamage * 2);
+                        addXp(SkillName.Defence, monsterDamage * 2);
+                    } else if (combatStance !== CombatStance.Defensive) { // Defensive melee shares XP
+                         addXp(SkillName.Defence, monsterDamage * 4);
+                    }
 
                     const isMeleeAttack = monster.attackStyle === 'stab' || monster.attackStyle === 'slash' || monster.attackStyle === 'crush';
                     const hasSpikedCape = equipment.cape?.itemId === 'spiked_cape';
@@ -411,17 +509,10 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                         setMonsterHp(monsterHpAfterRecoil);
                         addHitSplat(recoilDamage, 'monster');
                         addLog(`${recoilSource} recoils, dealing ${recoilDamage} damage to the ${monster.name}!`);
-                        addXp(SkillName.Defence, recoilDamage * 4);
 
                         if (monsterHpAfterRecoil <= 0) {
-                            addLog(`You have defeated the ${monster.name}!`);
                             onKill(currentInstanceId);
-                            monster.drops.forEach(drop => {
-                                if (Math.random() < drop.chance) {
-                                    const quantity = Math.floor(Math.random() * (drop.maxQuantity! - drop.minQuantity! + 1)) + drop.minQuantity!;
-                                    addLoot(drop.itemId!, quantity);
-                                }
-                            });
+                            handleLootDistribution();
                             if (currentMonsterIndex + 1 < monsterQueue.length) {
                                 setCurrentMonsterIndex(prev => prev + 1);
                             } else {
@@ -430,40 +521,9 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                             }
                         }
                     }
-                } else { addLog(`The ${monster.name} misses you.`); }
+                }
                 if (newPlayerHp <= 0) onPlayerDeath();
                 setNextMonsterAttackTime(now + monster.attackSpeed * gameTickMs);
-            }
-
-            // Apply monster status effects
-            if (monsterStatus.length > 0 && monsterHp > 0) {
-                const newEffects: MonsterStatusEffect[] = [];
-                let totalPoisonDamage = 0;
-
-                for (const effect of monsterStatus) {
-                    if (effect.type === 'poison') {
-                        totalPoisonDamage += effect.damagePerTick;
-                        effect.ticksLeft--;
-                        if (effect.ticksLeft > 0) {
-                            newEffects.push(effect);
-                        }
-                    }
-                }
-
-                if (totalPoisonDamage > 0) {
-                    const monsterHpAfterPoison = Math.max(0, monsterHp - totalPoisonDamage);
-                    setMonsterHp(monsterHpAfterPoison);
-                    addHitSplat(totalPoisonDamage, 'monster', true);
-                    addLog(`The ${monster.name} takes ${totalPoisonDamage} poison damage.`);
-                    if (monsterHpAfterPoison <= 0) {
-                        addLog(`The poison was fatal. You have defeated the ${monster.name}!`);
-                        onKill(currentInstanceId);
-                        monster.drops.forEach(drop => { if (Math.random() < drop.chance) { addLoot(drop.itemId!, 1); } });
-                        if (currentMonsterIndex + 1 < monsterQueue.length) setCurrentMonsterIndex(prev => prev + 1);
-                        else onCombatEnd();
-                    }
-                }
-                setMonsterStatus(newEffects);
             }
 
             combatFrameId = requestAnimationFrame(combatLoop);
@@ -471,12 +531,11 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
 
         combatFrameId = requestAnimationFrame(combatLoop);
         return () => cancelAnimationFrame(combatFrameId);
-    }, [isPreparing, monster, playerHp, monsterHp, equipment, combatStance, playerSkills, addXp, addLog, onCombatEnd, onKill, onConsumeAmmo, isRangedWeapon, playerWeapon.speed, playerStats, monsterQueue, currentMonsterIndex, nextPlayerAttackTime, nextMonsterAttackTime, activeBuffs, monsterStatus, gameTickMs]);
+    }, [isPreparing, monster, playerHp, monsterHp, equipment, combatStance, playerSkills, addXp, addLog, onCombatEnd, onKill, onConsumeAmmo, playerWeapon.speed, playerStats, monsterQueue, currentMonsterIndex, nextPlayerAttackTime, nextMonsterAttackTime, activeBuffs, monsterStatus, gameTickMs, addLoot, onDropLoot, isAutoBankOn, handleLootDistribution, autocastSpell, inv]);
 
     if (!monster) return <div>Loading combat...</div>;
 
     const maxHp = playerSkills.find(s => s.name === SkillName.Hitpoints)?.level ?? 10;
-    const availableStances = isRangedWeapon ? [CombatStance.RangedAccurate, CombatStance.RangedRapid, CombatStance.RangedDefence] : [CombatStance.Accurate, CombatStance.Aggressive, CombatStance.Defensive];
 
     return (
         <div className={`flex flex-col items-center justify-between h-full text-center animate-fade-in relative`}>
@@ -485,15 +544,21 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                     <h2 className="text-3xl font-bold text-red-500 animate-pulse">PREPARE FOR BATTLE!</h2>
                 </div>
             )}
-            <h2 className="text-2xl font-bold text-red-500">
+            <AttackAnimationEngine 
+                triggers={animationTriggers} 
+                playerRef={playerRef} 
+                monsterRef={monsterRef}
+                onAnimationComplete={(id) => setAnimationTriggers(prev => prev.filter(t => t.id !== id))}
+            />
+            <h2 className="text-xl md:text-2xl font-bold text-red-500">
                 Fighting: {monster.name} (Lvl {monster.level})
                 {monsterQueue.length > 1 && ` (${currentMonsterIndex + 1}/${monsterQueue.length})`}
             </h2>
             
             <div className="flex justify-around items-center w-full">
-                <div className="flex flex-col items-center w-48">
-                    <div className="relative">
-                        <img src="https://api.iconify.design/game-icons:person.svg" alt="Player" className={`w-32 h-32 p-2 bg-gray-900 border-4 border-gray-600 rounded-lg filter invert transition-transform duration-150 pixelated-image ${playerAttacking ? 'scale-110' : 'scale-100'}`} />
+                <div className="flex flex-col items-center w-32 md:w-48">
+                    <div ref={playerRef} className="relative">
+                        <img src="https://api.iconify.design/game-icons:person.svg" alt="Player" className={`w-24 h-24 md:w-32 md:h-32 p-2 bg-gray-900 border-4 border-gray-600 rounded-lg filter invert transition-transform duration-150 pixelated-image ${playerAttacking ? 'scale-110' : 'scale-100'}`} />
                          {hitSplats.filter(s => s.target === 'player').map(splat => <HitSplat key={splat.id} damage={splat.damage} />)}
                     </div>
                     <span className="font-bold mt-2">You</span>
@@ -503,12 +568,12 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                     </div>
                 </div>
 
-                <span className="text-4xl font-extrabold text-gray-500 animate-pulse">VS</span>
+                <span className="text-2xl md:text-4xl font-extrabold text-gray-500 animate-pulse">VS</span>
 
-                <div className="flex flex-col items-center w-48">
-                    <div className="relative">
-                        <img src={monster.iconUrl} alt={monster.name} className={`w-32 h-32 p-2 bg-gray-900 border-4 border-gray-600 rounded-lg transition-transform duration-150 pixelated-image ${monsterAttacking ? 'scale-110' : 'scale-100'}`} />
-                        {hitSplats.filter(s => s.target === 'monster').map(splat => <HitSplat key={splat.id} damage={splat.damage} isPoison={splat.isPoison} />)}
+                <div className="flex flex-col items-center w-32 md:w-48">
+                    <div ref={monsterRef} className="relative">
+                        <img src={monster.iconUrl} alt={monster.name} className={`w-24 h-24 md:w-32 md:h-32 p-2 bg-gray-900 border-4 border-gray-600 rounded-lg transition-transform duration-150 pixelated-image ${monsterAttacking ? 'scale-110' : 'scale-100'}`} />
+                        {hitSplats.filter(s => s.target === 'monster').map(splat => <HitSplat key={splat.id} damage={splat.damage} isPoison={splat.isPoison} isMagic={splat.isMagic} />)}
                     </div>
                     <span className="font-bold mt-2">{monster.name}</span>
                     <div className="relative w-full mt-1">
@@ -523,20 +588,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                 <SmoothCombatCooldownBar label="Monster Next Attack" nextAttackTime={nextMonsterAttackTime} attackSpeedTicks={monster.attackSpeed} combatSpeedMultiplier={combatSpeedMultiplier} />
             </div>
             
-            <div className="flex flex-col items-center gap-4">
-                 <div className="flex gap-2">
-                    {availableStances.map(stance => (
-                        <Button
-                            key={stance}
-                            size="sm"
-                            variant={combatStance === stance ? 'primary' : 'secondary'}
-                            onClick={() => setCombatStance(stance)}
-                            className={activeCombatStyleHighlight === stance ? 'tutorial-highlight-target' : ''}
-                        >
-                            {stance.replace('Ranged ', '')}
-                        </Button>
-                    ))}
-                </div>
+            <div className="flex flex-col items-center gap-4 mt-2">
                 <Button onClick={() => onCombatEnd()} variant="secondary" disabled={isMandatory || isPreparing}>
                     {isMandatory ? 'Cannot Flee' : 'Flee'}
                 </Button>

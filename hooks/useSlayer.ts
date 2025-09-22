@@ -1,5 +1,4 @@
 
-
 import { useState, useCallback } from 'react';
 import { PlayerSlayerTask, SkillName } from '../types';
 import { MONSTERS } from '../constants';
@@ -7,6 +6,7 @@ import { MONSTERS } from '../constants';
 interface SlayerDependencies {
     addLog: (message: string) => void;
     addXp: (skill: SkillName, amount: number) => void;
+    modifyItem: (itemId: string, quantity: number) => void;
     combatLevel: number;
 }
 
@@ -30,7 +30,7 @@ const getAssignableMonsters = (combatLevel: number): string[] => {
 
 export const useSlayer = (initialTask: PlayerSlayerTask | null, deps: SlayerDependencies) => {
     const [slayerTask, setSlayerTask] = useState<PlayerSlayerTask | null>(initialTask);
-    const { addLog, addXp, combatLevel } = deps;
+    const { addLog, addXp, modifyItem, combatLevel } = deps;
 
     const getTask = useCallback(() => {
         const assignable = getAssignableMonsters(combatLevel);
@@ -55,32 +55,44 @@ export const useSlayer = (initialTask: PlayerSlayerTask | null, deps: SlayerDepe
             getTask();
         } else if (slayerTask.isComplete) {
             const monster = MONSTERS[slayerTask.monsterId];
-            const xpReward = monster.maxHp * slayerTask.requiredCount;
-            addLog(`You report your success to Kaelen. Well done! You've earned ${xpReward} Slayer XP.`);
-            addXp(SkillName.Slayer, xpReward);
+            const coinReward = Math.floor(monster.level * slayerTask.requiredCount * 1.5);
+            
+            if (coinReward > 0) {
+                addLog(`You report your success to Kaelen. Well done! You've earned ${coinReward} coins for your efforts.`);
+                modifyItem('coins', coinReward);
+            } else {
+                addLog(`You report your success to Kaelen. Well done!`);
+            }
+            
             setSlayerTask(null);
-            // Optionally chain into getting a new task
+            // Chain into getting a new task
             getTask();
         } else {
             const monster = MONSTERS[slayerTask.monsterId];
             const remaining = slayerTask.requiredCount - slayerTask.progress;
             addLog(`Kaelen tells you: "You still need to slay ${remaining} more ${monster.name}s."`);
         }
-    }, [slayerTask, getTask, addLog, addXp]);
+    }, [slayerTask, getTask, addLog, modifyItem]);
     
     const checkKill = useCallback((monsterId: string) => {
         setSlayerTask(prev => {
             if (prev && prev.monsterId === monsterId && !prev.isComplete) {
+                const monster = MONSTERS[monsterId];
+                if (monster) {
+                    const xpReward = monster.maxHp;
+                    addXp(SkillName.Slayer, xpReward);
+                }
+
                 const newProgress = prev.progress + 1;
                 if (newProgress >= prev.requiredCount) {
-                    addLog(`You have completed your slayer task! Return to Kaelen in Silverhaven for your reward.`);
+                    addLog(`You have completed your slayer task! Return to a Slayer Master for a new one.`);
                     return { ...prev, progress: newProgress, isComplete: true };
                 }
                 return { ...prev, progress: newProgress };
             }
             return prev;
         });
-    }, [addLog]);
+    }, [addLog, addXp]);
 
     return {
         slayerTask,

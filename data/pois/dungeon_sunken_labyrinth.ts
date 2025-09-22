@@ -1,4 +1,3 @@
-
 import { POI, SkillName } from '../../types';
 
 export const sunkenLabyrinthPois: Record<string, POI> = {
@@ -9,7 +8,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['forgotten_temple_courtyard', 'laby_flooded_hall_1'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 700, y: 2150,
     },
     laby_flooded_hall_1: {
         id: 'laby_flooded_hall_1',
@@ -20,7 +19,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'deep_lurker' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 700, y: 2250,
     },
     laby_armory_ruins: {
         id: 'laby_armory_ruins',
@@ -31,30 +30,30 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'ancient_sentinel' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 500, y: 2250,
     },
     laby_crossroads_1: {
         id: 'laby_crossroads_1',
         name: 'Algae-Covered Crossroads',
         description: 'A four-way intersection. The path is slick with a strange, glowing algae.',
-        connections: ['laby_flooded_hall_1', 'laby_golem_hall', 'laby_whispering_stream', 'laby_archive_hall'],
+        connections: ['laby_flooded_hall_1', 'laby_golem_hall', 'laby_whispering_stream', 'laby_archive_hall', 'laby_flooded_passage_east'],
         activities: [
             { type: 'combat', monsterId: 'coral_golem' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 700, y: 2350,
     },
     laby_golem_hall: {
         id: 'laby_golem_hall',
         name: 'Golem Hall',
         description: 'This long hall is lined with alcoves containing dormant, coral-encrusted golems. Some of them seem to be active.',
-        connections: ['laby_crossroads_1', 'laby_crystal_vein_1'],
+        connections: ['laby_crossroads_1', 'laby_crystal_vein_1', 'laby_bone_pit'],
         activities: [
             { type: 'combat', monsterId: 'coral_golem' },
             { type: 'combat', monsterId: 'coral_golem' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 500, y: 2350,
     },
     laby_crystal_vein_1: {
         id: 'laby_crystal_vein_1',
@@ -63,18 +62,18 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_golem_hall'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 300, y: 2350,
     },
     laby_whispering_stream: {
         id: 'laby_whispering_stream',
         name: 'Whispering Stream',
         description: 'An underground stream flows through this passage. Faint, incoherent whispers seem to echo from the water.',
-        connections: ['laby_crossroads_1', 'laby_lurker_nest', 'laby_waterfall_chamber'],
+        connections: ['laby_crossroads_1', 'laby_lurker_nest', 'laby_waterfall_chamber', 'laby_fungal_cavern'],
         activities: [
             { type: 'combat', monsterId: 'deep_lurker' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 700, y: 2450,
     },
     laby_lurker_nest: {
         id: 'laby_lurker_nest',
@@ -87,18 +86,18 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'deep_lurker' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 900, y: 2450,
     },
     laby_archive_hall: {
         id: 'laby_archive_hall',
         name: 'Archive Hall',
         description: 'Shelves carved into the walls once held countless scrolls, now just piles of rotten pulp. A few stone tablets remain.',
-        connections: ['laby_crossroads_1', 'laby_scriptorium', 'laby_sentinel_chamber_1'],
+        connections: ['laby_crossroads_1', 'laby_scriptorium', 'laby_sentinel_chamber_1', 'laby_hidden_passage'],
         activities: [
             { type: 'combat', monsterId: 'ancient_sentinel' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 700, y: 2550,
     },
     laby_scriptorium: {
         id: 'laby_scriptorium',
@@ -107,7 +106,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_archive_hall'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 700, y: 2650,
     },
     laby_sentinel_chamber_1: {
         id: 'laby_sentinel_chamber_1',
@@ -118,7 +117,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'ancient_sentinel' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 500, y: 2550,
     },
     laby_flooded_library: {
         id: 'laby_flooded_library',
@@ -129,7 +128,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'deep_lurker' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 300, y: 2550,
     },
     laby_gears_room: {
         id: 'laby_gears_room',
@@ -138,7 +137,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_sentinel_chamber_1', 'laby_maintenance_tunnel_1', 'laby_hub_2'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 500, y: 2650,
     },
     laby_maintenance_tunnel_1: {
         id: 'laby_maintenance_tunnel_1',
@@ -149,7 +148,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
              { type: 'combat', monsterId: 'deep_lurker' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 500, y: 2750,
     },
     laby_collapsed_passage_1: {
         id: 'laby_collapsed_passage_1',
@@ -158,7 +157,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_armory_ruins', 'laby_maintenance_tunnel_1'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 500, y: 2850,
     },
     laby_waterfall_chamber: {
         id: 'laby_waterfall_chamber',
@@ -167,37 +166,37 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_whispering_stream', 'laby_hub_2', 'laby_crystal_cave_2'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 700, y: 2750,
     },
     laby_crystal_cave_2: {
         id: 'laby_crystal_cave_2',
         name: 'Glimmering Cave',
-        description: 'The walls of this dead-end cave are covered in shimmering, salt-like crystals. The rich vein of ore here has been mined out.',
+        description: 'A dead-end cave where a large vein of shimmering crystal is exposed. It seems to have been mined out.',
         connections: ['laby_waterfall_chamber'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 500, y: 2750,
     },
     laby_hub_2: {
         id: 'laby_hub_2',
         name: 'Second Hub',
         description: 'Another large, central chamber. The water is deeper here, and the architecture more ornate.',
-        connections: ['laby_gears_room', 'laby_waterfall_chamber', 'laby_offering_chamber', 'laby_sleeping_quarters'],
+        connections: ['laby_gears_room', 'laby_waterfall_chamber', 'laby_offering_chamber', 'laby_sleeping_quarters', 'laby_water_control_room'],
         activities: [
             { type: 'combat', monsterId: 'coral_golem' },
             { type: 'combat', monsterId: 'ancient_sentinel' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 700, y: 2850,
     },
     laby_sleeping_quarters: {
         id: 'laby_sleeping_quarters',
         name: 'Sleeping Quarters',
         description: 'Rows of stone beds line this long chamber. It is eerily silent.',
-        connections: ['laby_hub_2', 'laby_storage_room'],
+        connections: ['laby_hub_2', 'laby_storage_room', 'laby_forgotten_tomb', 'laby_meditation_chamber', 'laby_kitchen_ruins'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 500, y: 2850,
     },
     laby_storage_room: {
         id: 'laby_storage_room',
@@ -206,7 +205,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_sleeping_quarters'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 300, y: 2850,
     },
     laby_offering_chamber: {
         id: 'laby_offering_chamber',
@@ -218,7 +217,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'deep_lurker' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 900, y: 2850,
     },
     laby_central_bridge_north: {
         id: 'laby_central_bridge_north',
@@ -227,7 +226,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_offering_chamber', 'laby_central_bridge_south'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 900, y: 2950,
     },
     laby_central_bridge_south: {
         id: 'laby_central_bridge_south',
@@ -236,19 +235,19 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_central_bridge_north', 'laby_hub_3'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 900, y: 3050,
     },
     laby_hub_3: {
         id: 'laby_hub_3',
         name: 'Third Hub',
         description: 'The air is noticeably colder here. The architecture is grander, suggesting you are approaching an important area.',
-        connections: ['laby_central_bridge_south', 'laby_hall_of_echoes', 'laby_colonnade_of_the_ancients', 'laby_cracked_chamber'],
+        connections: ['laby_central_bridge_south', 'laby_hall_of_echoes', 'laby_colonnade_of_the_ancients', 'laby_cracked_chamber', 'laby_spiral_staircase'],
         activities: [
             { type: 'combat', monsterId: 'ancient_sentinel' },
             { type: 'combat', monsterId: 'ancient_sentinel' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 900, y: 3150,
     },
     laby_cracked_chamber: {
         id: 'laby_cracked_chamber',
@@ -259,16 +258,16 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
              { type: 'combat', monsterId: 'coral_golem' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 700, y: 3150,
     },
     laby_hall_of_echoes: {
         id: 'laby_hall_of_echoes',
         name: 'Hall of Echoes',
         description: 'Every drop of water in this vast hall echoes endlessly, creating a disorienting cacophony.',
-        connections: ['laby_hub_3', 'laby_lurker_spawning_pool'],
+        connections: ['laby_hub_3', 'laby_lurker_spawning_pool', 'laby_murky_pool'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 1100, y: 3150,
     },
     laby_lurker_spawning_pool: {
         id: 'laby_lurker_spawning_pool',
@@ -281,18 +280,18 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'deep_lurker' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 1100, y: 3250,
     },
     laby_colonnade_of_the_ancients: {
         id: 'laby_colonnade_of_the_ancients',
         name: 'Colonnade of the Ancients',
         description: 'A long hallway supported by massive pillars carved into the likenesses of ancient kings.',
-        connections: ['laby_hub_3', 'laby_antechamber', 'laby_treasure_vault_1'],
+        connections: ['laby_hub_3', 'laby_antechamber', 'laby_treasure_vault_1', 'laby_great_hall_west'],
         activities: [
             { type: 'combat', monsterId: 'ancient_sentinel' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 900, y: 3250,
     },
     laby_treasure_vault_1: {
         id: 'laby_treasure_vault_1',
@@ -301,7 +300,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_colonnade_of_the_ancients'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 700, y: 3250,
     },
     laby_antechamber: {
         id: 'laby_antechamber',
@@ -313,7 +312,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
              { type: 'combat', monsterId: 'coral_golem' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 900, y: 3350,
     },
     laby_central_altar: {
         id: 'laby_central_altar',
@@ -321,24 +320,148 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         description: 'The heart of the labyrinth. A massive, intricately carved altar stands on a raised dais, free of the water. It pulses with a dark energy.',
         connections: ['laby_antechamber'],
         activities: [
-            { type: 'npc', name: 'Altar of the Depths', icon: '/assets/npcChatHeads/altar_of_depths.png', dialogue: ["..."] }
+            { 
+                type: 'npc', 
+                name: 'Altar of the Depths', 
+                icon: '/assets/npcChatHeads/altar_of_depths.png', 
+                dialogue: {
+                    start: {
+                        npcName: 'Altar of the Depths',
+                        npcIcon: '/assets/npcChatHeads/altar_of_depths.png',
+                        text: "...",
+                        responses: []
+                    }
+                },
+                startNode: 'start'
+            }
         ],
         regionId: 'sunken_labyrinth',
-        x: 0, y: 0,
+        x: 900, y: 3450,
     },
-    // Adding more rooms to reach the 40+ goal
-    laby_flooded_passage_east: { id: 'laby_flooded_passage_east', name: 'Flooded Passage', description: 'A long, straight corridor filled with knee-deep water.', connections: ['laby_crossroads_1', 'laby_flooded_intersection'], activities: [{type: 'combat', monsterId: 'deep_lurker'}], regionId: 'sunken_labyrinth', x: 0, y: 0 },
-    laby_flooded_intersection: { id: 'laby_flooded_intersection', name: 'Flooded Intersection', description: 'The passage splits here. A strong current flows from one direction.', connections: ['laby_flooded_passage_east', 'laby_grotto_1', 'laby_water_control_room'], activities: [], regionId: 'sunken_labyrinth', x: 0, y: 0 },
-    laby_grotto_1: { id: 'laby_grotto_1', name: 'Sunken Grotto', description: 'A small, beautiful grotto where glowing moss illuminates a small, clear pool.', connections: ['laby_flooded_intersection'], activities: [], regionId: 'sunken_labyrinth', x: 0, y: 0 },
-    laby_water_control_room: { id: 'laby_water_control_room', name: 'Water Control', description: 'A room filled with immense, rusted levers and valves, all frozen in place.', connections: ['laby_flooded_intersection', 'laby_hub_2'], activities: [{type: 'combat', monsterId: 'ancient_sentinel'}], regionId: 'sunken_labyrinth', x: 0, y: 0 },
-    laby_forgotten_tomb: { id: 'laby_forgotten_tomb', name: 'Forgotten Tomb', description: 'A side-chamber containing a single, unadorned sarcophagus.', connections: ['laby_sleeping_quarters'], activities: [], regionId: 'sunken_labyrinth', x: 0, y: 0 },
-    laby_spiral_staircase: { id: 'laby_spiral_staircase', name: 'Spiral Staircase', description: 'A stone staircase spirals down into darkness. It ends in a flooded dead-end.', connections: ['laby_hub_3'], activities: [], regionId: 'sunken_labyrinth', x: 0, y: 0 },
-    laby_great_hall_west: { id: 'laby_great_hall_west', name: 'Great Hall (West)', description: 'The western end of a once-magnificent hall, now collapsed and impassable to the east.', connections: ['laby_colonnade_of_the_ancients'], activities: [{type: 'combat', monsterId: 'coral_golem'}], regionId: 'sunken_labyrinth', x: 0, y: 0 },
-    laby_meditation_chamber: { id: 'laby_meditation_chamber', name: 'Meditation Chamber', description: 'A small, quiet room that seems to absorb all sound. It feels peaceful.', connections: ['laby_sleeping_quarters'], activities: [], regionId: 'sunken_labyrinth', x: 0, y: 0 },
-    laby_kitchen_ruins: { id: 'laby_kitchen_ruins', name: 'Kitchen Ruins', description: 'This chamber contains the remains of ancient cooking hearths and stone tables.', connections: ['laby_sleeping_quarters'], activities: [], regionId: 'sunken_labyrinth', x: 0, y: 0 },
-    laby_murky_pool: { id: 'laby_murky_pool', name: 'Murky Pool', description: 'A deep, dark pool fills this dead-end chamber. Something might be hiding in its depths.', connections: ['laby_hall_of_echoes'], activities: [{type: 'combat', monsterId: 'deep_lurker'}], regionId: 'sunken_labyrinth', x: 0, y: 0 },
-    laby_hidden_passage: { id: 'laby_hidden_passage', name: 'Hidden Passage', description: 'A narrow crack in the wall leads to this tight, secret passage.', connections: ['laby_archive_hall', 'laby_treasure_vault_2'], activities: [], regionId: 'sunken_labyrinth', x: 0, y: 0 },
-    laby_treasure_vault_2: { id: 'laby_treasure_vault_2', name: 'Secret Vault', description: 'A hidden vault! It seems undisturbed. A single, ornate chest sits in the middle of the room.', connections: ['laby_hidden_passage'], activities: [], regionId: 'sunken_labyrinth', x: 0, y: 0 },
-    laby_fungal_cavern: { id: 'laby_fungal_cavern', name: 'Fungal Cavern', description: 'This entire cave is filled with giant, glowing mushrooms.', connections: ['laby_whispering_stream'], activities: [], regionId: 'sunken_labyrinth', x: 0, y: 0 },
-    laby_bone_pit: { id: 'laby_bone_pit', name: 'Bone Pit', description: 'A deep pit in the center of this room is filled with bones of all shapes and sizes.', connections: ['laby_golem_hall'], activities: [], regionId: 'sunken_labyrinth', x: 0, y: 0 },
+    laby_flooded_passage_east: { 
+        id: 'laby_flooded_passage_east', 
+        name: 'Flooded Passage', 
+        description: 'A long, straight corridor filled with knee-deep water.', 
+        connections: ['laby_crossroads_1', 'laby_flooded_intersection'], 
+        activities: [{type: 'combat', monsterId: 'deep_lurker'}], 
+        regionId: 'sunken_labyrinth', 
+        x: 900, y: 2350 
+    },
+    laby_flooded_intersection: { 
+        id: 'laby_flooded_intersection', 
+        name: 'Flooded Intersection', 
+        description: 'The passage splits here. A strong current flows from one direction.', 
+        connections: ['laby_flooded_passage_east', 'laby_grotto_1', 'laby_water_control_room'], 
+        activities: [], 
+        regionId: 'sunken_labyrinth', 
+        x: 1100, y: 2350 
+    },
+    laby_grotto_1: { 
+        id: 'laby_grotto_1', 
+        name: 'Sunken Grotto', 
+        description: 'A small, beautiful grotto where glowing moss illuminates a small, clear pool.', 
+        connections: ['laby_flooded_intersection'], 
+        activities: [], 
+        regionId: 'sunken_labyrinth', 
+        x: 1100, y: 2250 
+    },
+    laby_water_control_room: { 
+        id: 'laby_water_control_room', 
+        name: 'Water Control', 
+        description: 'A room filled with immense, rusted levers and valves, all frozen in place.', 
+        connections: ['laby_flooded_intersection', 'laby_hub_2'], 
+        activities: [{type: 'combat', monsterId: 'ancient_sentinel'}], 
+        regionId: 'sunken_labyrinth', 
+        x: 900, y: 2750 
+    },
+    laby_forgotten_tomb: { 
+        id: 'laby_forgotten_tomb', 
+        name: 'Forgotten Tomb', 
+        description: 'A side-chamber containing a single, unadorned sarcophagus.', 
+        connections: ['laby_sleeping_quarters'], 
+        activities: [], 
+        regionId: 'sunken_labyrinth', 
+        x: 400, y: 2950 
+    },
+    laby_spiral_staircase: { 
+        id: 'laby_spiral_staircase', 
+        name: 'Spiral Staircase', 
+        description: 'A stone staircase spirals down into darkness. It ends in a flooded dead-end.', 
+        connections: ['laby_hub_3'], 
+        activities: [], 
+        regionId: 'sunken_labyrinth', 
+        x: 1100, y: 3150 
+    },
+    laby_great_hall_west: { 
+        id: 'laby_great_hall_west', 
+        name: 'Great Hall (West)', 
+        description: 'The western end of a once-magnificent hall, now collapsed and impassable to the east.', 
+        connections: ['laby_colonnade_of_the_ancients'], 
+        activities: [{type: 'combat', monsterId: 'coral_golem'}], 
+        regionId: 'sunken_labyrinth', 
+        x: 700, y: 3250 
+    },
+    laby_meditation_chamber: { 
+        id: 'laby_meditation_chamber', 
+        name: 'Meditation Chamber', 
+        description: 'A small, quiet room that seems to absorb all sound. It feels peaceful.', 
+        connections: ['laby_sleeping_quarters'], 
+        activities: [], 
+        regionId: 'sunken_labyrinth', 
+        x: 500, y: 2950 
+    },
+    laby_kitchen_ruins: { 
+        id: 'laby_kitchen_ruins', 
+        name: 'Kitchen Ruins', 
+        description: 'This chamber contains the remains of ancient cooking hearths and stone tables.', 
+        connections: ['laby_sleeping_quarters'], 
+        activities: [], 
+        regionId: 'sunken_labyrinth', 
+        x: 500, y: 3050 
+    },
+    laby_murky_pool: { 
+        id: 'laby_murky_pool', 
+        name: 'Murky Pool', 
+        description: 'A deep, dark pool fills this dead-end chamber. Something might be hiding in its depths.', 
+        connections: ['laby_hall_of_echoes'], 
+        activities: [{type: 'combat', monsterId: 'deep_lurker'}], 
+        regionId: 'sunken_labyrinth', 
+        x: 1300, y: 3150 
+    },
+    laby_hidden_passage: { 
+        id: 'laby_hidden_passage', 
+        name: 'Hidden Passage', 
+        description: 'A narrow crack in the wall leads to this tight, secret passage.', 
+        connections: ['laby_archive_hall', 'laby_treasure_vault_2'], 
+        activities: [], 
+        regionId: 'sunken_labyrinth', 
+        x: 500, y: 2550 
+    },
+    laby_treasure_vault_2: { 
+        id: 'laby_treasure_vault_2', 
+        name: 'Secret Vault', 
+        description: 'A hidden vault! It seems undisturbed. A single, ornate chest sits in the middle of the room.', 
+        connections: ['laby_hidden_passage'], 
+        activities: [], 
+        regionId: 'sunken_labyrinth', 
+        x: 300, y: 2550 
+    },
+    laby_fungal_cavern: { 
+        id: 'laby_fungal_cavern', 
+        name: 'Fungal Cavern', 
+        description: 'This entire cave is filled with giant, glowing mushrooms.', 
+        connections: ['laby_whispering_stream'], 
+        activities: [], 
+        regionId: 'sunken_labyrinth', 
+        x: 800, y: 2550 
+    },
+    laby_bone_pit: { 
+        id: 'laby_bone_pit', 
+        name: 'Bone Pit', 
+        description: 'A deep pit in the center of this room is filled with bones of all shapes and sizes.', 
+        connections: ['laby_golem_hall'], 
+        activities: [], 
+        regionId: 'sunken_labyrinth', 
+        x: 400, y: 2450 
+    },
 };

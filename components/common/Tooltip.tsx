@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 
 interface TooltipProps {
@@ -18,7 +19,7 @@ const Tooltip: React.FC<TooltipProps> = ({ content, position }) => {
         if (tooltipRef.current) {
             const tooltipWidth = tooltipRef.current.offsetWidth;
             const tooltipHeight = tooltipRef.current.offsetHeight;
-            const gameContainer = document.querySelector('.w-\\[1024px\\]');
+            const gameContainer = document.querySelector('.game-container');
 
             // Default position (bottom-right of cursor)
             let x = position.x + 15;

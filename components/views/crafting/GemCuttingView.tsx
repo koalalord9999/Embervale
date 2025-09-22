@@ -1,24 +1,25 @@
+
 import React from 'react';
 import { InventorySlot, PlayerSkill, SkillName } from '../../../types';
 import { GEM_CUTTING_RECIPES, ITEMS, getIconClassName } from '../../../constants';
 import Button from '../../common/Button';
 import { ContextMenuOption } from '../../common/ContextMenu';
-import { MakeXPrompt } from '../../../hooks/useUIState';
+import { MakeXPrompt, ContextMenuState } from '../../../hooks/useUIState';
 
 interface GemCuttingViewProps {
-    inventory: InventorySlot[];
+    inventory: (InventorySlot | null)[];
     skills: PlayerSkill[];
     onCut: (cutId: string, quantity: number) => void;
     onExit: () => void;
-    setContextMenu: (menu: { options: ContextMenuOption[]; position: { x: number; y: number; } } | null) => void;
+    setContextMenu: (menu: ContextMenuState | null) => void;
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
 }
 
 const GemCuttingView: React.FC<GemCuttingViewProps> = ({ inventory, skills, onCut, onExit, setContextMenu, setMakeXPrompt }) => {
     const craftingLevel = skills.find(s => s.name === SkillName.Crafting)?.level ?? 1;
 
-    const getItemCount = (itemId: string) => inventory.filter(slot => slot.itemId === itemId).length;
-    const hasChisel = inventory.some(slot => slot.itemId === 'chisel');
+    const getItemCount = (itemId: string) => inventory.filter(slot => slot && slot.itemId === itemId).length;
+    const hasChisel = inventory.some(slot => slot && slot.itemId === 'chisel');
 
     const createContextMenu = (e: React.MouseEvent, recipe: typeof GEM_CUTTING_RECIPES[0]) => {
         e.preventDefault();
@@ -39,7 +40,7 @@ const GemCuttingView: React.FC<GemCuttingViewProps> = ({ inventory, skills, onCu
                 disabled: !hasLevel || maxCut < 1 || !hasChisel
             },
         ];
-        setContextMenu({ options, position: { x: e.clientX, y: e.clientY } });
+        setContextMenu({ options, event: e, isTouchInteraction: false });
     };
 
     return (

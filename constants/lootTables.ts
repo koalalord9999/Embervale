@@ -20,6 +20,20 @@ const LOOT_TABLES: Record<string, LootTable> = {
         { itemId: 'grimy_wyrmfire_petal', chance: 1 },
         { itemId: 'grimy_duskshade', chance: 0.75 },
         { itemId: 'grimy_stonebloom', chance: 0.5 },
+    ],
+    global_gem_and_key_table: [
+        { itemId: 'uncut_sapphire', chance: 500 },
+        { itemId: 'uncut_emerald', chance: 300 },
+        { itemId: 'uncut_ruby', chance: 150 },
+        { itemId: 'uncut_diamond', chance: 40 },
+        { itemId: 'strange_key_loop', chance: 5 },
+        { itemId: 'strange_key_tooth', chance: 5 },
+        { itemId: 'talisman_drop', chance: 10 },
+    ],
+    robes_of_power_table: [
+        { itemId: 'robe_of_power_hat', chance: 32 },
+        { itemId: 'robe_of_power_top', chance: 32 },
+        { itemId: 'robe_of_power_bottoms', chance: 32 },
     ]
 };
 

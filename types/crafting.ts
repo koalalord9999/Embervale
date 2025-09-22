@@ -1,4 +1,3 @@
-
 // A new type to define the context for the unified crafting modal.
 // This tells the CraftingView what UI and recipes to display.
 export type CraftingContext =
@@ -9,4 +8,5 @@ export type CraftingContext =
   | { type: 'leatherworking' } // From using needle on leather
   | { type: 'gem_cutting' }    // From using chisel on gem
   | { type: 'jewelry' }        // From using a furnace to craft jewelry
-  | { type: 'fletching'; logId: string }; // From using knife on logs
+  | { type: 'fletching'; logId: string } // From using knife on logs
+  | { type: 'dough_making' }; // From using water on flour

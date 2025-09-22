@@ -1,22 +1,21 @@
-
 import React, { useState, useEffect } from 'react';
 import { InventorySlot, PlayerSkill, PlayerQuestState, SkillName, WeaponType } from '../../../types';
 import { SMITHING_RECIPES, ITEMS, getIconClassName } from '../../../constants';
 import Button from '../../common/Button';
 import { ContextMenuOption } from '../../common/ContextMenu';
-import { MakeXPrompt } from '../../../hooks/useUIState';
+import { MakeXPrompt, ContextMenuState } from '../../../hooks/useUIState';
 
-type BarType = 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'silver_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar';
+type BarType = 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'silver_bar' | 'gold_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar';
 
 interface SmithingViewProps {
     smithingType: 'anvil' | 'furnace';
-    inventory: InventorySlot[];
+    inventory: (InventorySlot | null)[];
     skills: PlayerSkill[];
     playerQuests: PlayerQuestState[];
     onSmithBar: (barType: BarType, quantity: number) => void;
     onSmithItem: (itemId: string, quantity: number) => void;
     onExit: () => void;
-    setContextMenu: (menu: { options: ContextMenuOption[]; position: { x: number; y: number; } } | null) => void;
+    setContextMenu: (menu: ContextMenuState | null) => void;
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
 }
 
@@ -28,9 +27,9 @@ const SmithingView: React.FC<SmithingViewProps> = ({ smithingType, inventory, sk
         const item = ITEMS[itemId];
         if (!item) return 0;
         if (item.stackable) {
-            return inventory.find(slot => slot.itemId === itemId)?.quantity ?? 0;
+            return inventory.find(slot => slot && slot.itemId === itemId)?.quantity ?? 0;
         }
-        return inventory.filter(slot => slot.itemId === itemId).length;
+        return inventory.filter(slot => slot && slot.itemId === itemId).length;
     };
 
     const bronzeBarCount = getItemCount('bronze_bar');
@@ -39,18 +38,21 @@ const SmithingView: React.FC<SmithingViewProps> = ({ smithingType, inventory, sk
     const mithrilBarCount = getItemCount('mithril_bar');
     const adamantiteBarCount = getItemCount('adamantite_bar');
     const runicBarCount = getItemCount('runic_bar');
+    const goldBarCount = getItemCount('gold_bar');
+
 
     useEffect(() => {
         if (smithingType === 'anvil') {
             if (runicBarCount > 0) setSelectedBar('runic_bar');
             else if (adamantiteBarCount > 0) setSelectedBar('adamantite_bar');
             else if (mithrilBarCount > 0) setSelectedBar('mithril_bar');
+            else if (goldBarCount > 0) setSelectedBar('gold_bar');
             else if (steelBarCount > 0) setSelectedBar('steel_bar');
             else if (ironBarCount > 0) setSelectedBar('iron_bar');
             else if (bronzeBarCount > 0) setSelectedBar('bronze_bar');
             else setSelectedBar(null);
         }
-    }, [smithingType, bronzeBarCount, ironBarCount, steelBarCount, mithrilBarCount, adamantiteBarCount, runicBarCount]);
+    }, [smithingType, bronzeBarCount, ironBarCount, steelBarCount, mithrilBarCount, adamantiteBarCount, runicBarCount, goldBarCount]);
 
     const createSmithingContextMenu = (e: React.MouseEvent, recipe: typeof SMITHING_RECIPES[0]) => {
         e.preventDefault();
@@ -71,7 +73,7 @@ const SmithingView: React.FC<SmithingViewProps> = ({ smithingType, inventory, sk
                 disabled: !hasLevel || maxSmith < 1 
             },
         ];
-        setContextMenu({ options, position: { x: e.clientX, y: e.clientY } });
+        setContextMenu({ options, event: e, isTouchInteraction: false });
     };
 
     const smeltingRecipes = [
@@ -79,6 +81,7 @@ const SmithingView: React.FC<SmithingViewProps> = ({ smithingType, inventory, sk
         { barType: 'iron_bar', level: 15, xp: 12.5, ingredients: [{ itemId: 'iron_ore', quantity: 1 }] },
         { barType: 'silver_bar', level: 20, xp: 13.7, ingredients: [{ itemId: 'silver_ore', quantity: 1 }] },
         { barType: 'steel_bar', level: 30, xp: 17.5, ingredients: [{ itemId: 'iron_ore', quantity: 1 }, { itemId: 'coal', quantity: 2 }] },
+        { barType: 'gold_bar', level: 40, xp: 22.5, ingredients: [{ itemId: 'gold_ore', quantity: 1 }] },
         { barType: 'mithril_bar', level: 50, xp: 30, ingredients: [{ itemId: 'mithril_ore', quantity: 1 }, { itemId: 'coal', quantity: 4 }] },
         { barType: 'adamantite_bar', level: 65, xp: 37.5, ingredients: [{ itemId: 'adamantite_ore', quantity: 1 }, { itemId: 'coal', quantity: 6 }] },
         { barType: 'runic_bar', level: 80, xp: 50, ingredients: [{ itemId: 'titanium_ore', quantity: 1 }, { itemId: 'coal', quantity: 8 }] },
@@ -105,8 +108,17 @@ const SmithingView: React.FC<SmithingViewProps> = ({ smithingType, inventory, sk
                 disabled: !hasLevel || maxSmelt < 1 
             },
         ];
-        setContextMenu({ options, position: { x: e.clientX, y: e.clientY } });
+        setContextMenu({ options, event: e, isTouchInteraction: false });
     };
+
+    const warhammerQuestComplete = playerQuests.some(q => q.questId === 'art_of_the_warhammer' && q.isComplete);
+    const visibleRecipes = SMITHING_RECIPES.filter(recipe => {
+        const item = ITEMS[recipe.itemId];
+        if (item?.equipment?.weaponType === WeaponType.Warhammer) {
+            return warhammerQuestComplete;
+        }
+        return true;
+    });
 
     const renderFurnace = () => (
         <div className="flex-grow overflow-y-auto pr-2">
@@ -145,15 +157,6 @@ const SmithingView: React.FC<SmithingViewProps> = ({ smithingType, inventory, sk
         </div>
     );
 
-    const warhammerQuestComplete = playerQuests.some(q => q.questId === 'art_of_the_warhammer' && q.isComplete);
-    const visibleRecipes = SMITHING_RECIPES.filter(recipe => {
-        const item = ITEMS[recipe.itemId];
-        if (item?.equipment?.weaponType === WeaponType.Warhammer) {
-            return warhammerQuestComplete;
-        }
-        return true;
-    });
-
     const renderAnvil = () => (
         <div className="flex-grow overflow-y-auto pr-2">
             <div className="flex gap-2 mb-4 flex-wrap">
@@ -163,6 +166,7 @@ const SmithingView: React.FC<SmithingViewProps> = ({ smithingType, inventory, sk
                 <Button onClick={() => setSelectedBar('mithril_bar')} disabled={mithrilBarCount === 0} variant={selectedBar === 'mithril_bar' ? 'primary' : 'secondary'} size="sm">Mithril ({mithrilBarCount})</Button>
                 <Button onClick={() => setSelectedBar('adamantite_bar')} disabled={adamantiteBarCount === 0} variant={selectedBar === 'adamantite_bar' ? 'primary' : 'secondary'} size="sm">Adamantite ({adamantiteBarCount})</Button>
                 <Button onClick={() => setSelectedBar('runic_bar')} disabled={runicBarCount === 0} variant={selectedBar === 'runic_bar' ? 'primary' : 'secondary'} size="sm">Runic ({runicBarCount})</Button>
+                <Button onClick={() => setSelectedBar('gold_bar')} disabled={goldBarCount === 0} variant={selectedBar === 'gold_bar' ? 'primary' : 'secondary'} size="sm">Gold ({goldBarCount})</Button>
             </div>
 
             {selectedBar ? (

@@ -1,4 +1,4 @@
-import { SkillName } from './enums';
+import { SkillName, InventorySlot } from './';
 import { DialogueNode } from './quests';
 
 export interface SkillRequirement {
@@ -13,18 +13,19 @@ export interface SkillRequirement {
 export interface Region {
   id: string;
   name: string;
-  type: 'city' | 'region' | 'dungeon';
+  type: 'city' | 'region' | 'dungeon' | 'underground';
   entryPoiId: string;
   x: number; // World map x
   y: number; // World map y
+  description?: string;
+  recommendedCombatLevel?: number;
 }
 
 export type POIActivity =
-  | { type: 'skilling'; id: string; name?: string; skill: SkillName; requiredLevel: number; loot: { itemId: string; chance: number; xp: number; requiredLevel?: number }[]; resourceCount: { min: number, max: number }; respawnTime: number; gatherTime: number; }
+  | { type: 'skilling'; id: string; name?: string; skill: SkillName; requiredLevel: number; loot: { itemId: string; chance: number; xp: number; requiredLevel?: number }[]; resourceCount: { min: number, max: number }; respawnTime: number; gatherTime: number; harvestBoost?: number; }
   | { type: 'combat'; monsterId: string }
   | { type: 'shop'; shopId: string }
-  | { type: 'quest_start'; questId: string }
-  | { type: 'npc'; name: string; icon: string; dialogue: string[] }
+  | { type: 'npc'; name: string; icon: string; dialogue: Record<string, DialogueNode>; startNode: string; actions?: any[]; dialogueType?: 'random'; questCondition?: { questId: string; stage?: number; stages?: number[] }; }
   | { type: 'cooking_range' }
   | { type: 'furnace' }
   | { type: 'anvil' }
@@ -37,6 +38,12 @@ export type POIActivity =
   | { type: 'blimp_travel'; requiredSlayerLevel: number; }
   | { type: 'slayer_master'; name: string; icon: string; }
   | { type: 'water_source', name: string }
+  | { type: 'milking' }
+  | { type: 'windmill' }
+  | { type: 'runecrafting_altar'; runeId: string; }
+  | { type: 'ancient_chest'; name: string; }
+  // FIX: Added quest_start and interactive_dialogue to the POIActivity type.
+  | { type: 'quest_start'; questId: string }
   | { type: 'interactive_dialogue'; dialogue: Record<string, DialogueNode>; startNode: string; };
 
 export interface POI {
@@ -48,14 +55,30 @@ export interface POI {
   unlockRequirement?: { type: 'quest'; questId: string; stage: number }
   connectionRequirements?: Record<string, SkillRequirement>; // Key is the destination POI id
   regionId: string;
-  x: number; // Percentage from left
-  y: number; // Percentage from top
+  x: number; // Coordinate for its own map (world or internal)
+  y: number; // Coordinate for its own map (world or internal)
   type?: 'internal';
   cityMapX?: number; // X coordinate for display on a city map, if this is an exit
   cityMapY?: number; // Y coordinate for display on a city map, if this is an exit
+  internalX?: number; // Optional separate coordinate for internal navigation if it differs
+  internalY?: number; // Optional separate coordinate for internal navigation if it differs
 }
 
 export interface ResourceNodeState {
     resources: number;
     respawnTimer: number; // in ms
+}
+
+export interface GroundItem {
+  item: InventorySlot;
+  dropTime: number;
+  uniqueId: number;
+}
+
+export interface MapFeature {
+  id: string;
+  type: 'river' | 'mountain_range';
+  path: string; // SVG path data "d" attribute
+  strokeColor: string;
+  strokeWidth: number;
 }

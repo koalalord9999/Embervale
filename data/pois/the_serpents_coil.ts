@@ -1,5 +1,4 @@
 
-
 import { POI, SkillName } from '../../types';
 
 export const theSerpentsCoilPois: Record<string, POI> = {
@@ -7,12 +6,12 @@ export const theSerpentsCoilPois: Record<string, POI> = {
         id: 'serpents_coil_entrance',
         name: "Serpent's Coil Entrance",
         description: 'Beyond the gate, the swamp transforms into a confusing delta of murky waterways and dense mangrove thickets. The air is heavy and smells of salt and decay.',
-        connections: ['serpents_coil_gate', 'mangrove_thicket_west', 'murky_channel_east'],
+        connections: ['serpents_coil_gate', 'mangrove_thicket_west', 'murky_channel_east', 'flooded_crypt_chamber'],
         activities: [
             { type: 'combat', monsterId: 'giant_toad' },
         ],
         regionId: 'serpents_coil',
-        x: 1600, y: 1140
+        x: 1551, y: 1263
     },
     mangrove_thicket_west: {
         id: 'mangrove_thicket_west',
@@ -23,7 +22,7 @@ export const theSerpentsCoilPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'bog_serpent' },
         ],
         regionId: 'serpents_coil',
-        x: 1560, y: 1100
+        x: 1524, y: 1255
     },
     serpent_nesting_ground: {
         id: 'serpent_nesting_ground',
@@ -35,7 +34,7 @@ export const theSerpentsCoilPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'bog_serpent' },
         ],
         regionId: 'serpents_coil',
-        x: 1520, y: 1100
+        x: 1499, y: 1225
     },
     flooded_forest: {
         id: 'flooded_forest',
@@ -44,7 +43,7 @@ export const theSerpentsCoilPois: Record<string, POI> = {
         connections: ['serpent_nesting_ground', 'sunken_temple_approach'],
         activities: [],
         regionId: 'serpents_coil',
-        x: 1480, y: 1080
+        x: 1517, y: 1195
     },
     murky_channel_east: {
         id: 'murky_channel_east',
@@ -55,7 +54,7 @@ export const theSerpentsCoilPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'bog_serpent' },
         ],
         regionId: 'serpents_coil',
-        x: 1640, y: 1180
+        x: 1595, y: 1259
     },
     isolated_islet: {
         id: 'isolated_islet',
@@ -63,10 +62,10 @@ export const theSerpentsCoilPois: Record<string, POI> = {
         description: 'A small patch of solid ground, barely large enough for a single, gnarled tree.',
         connections: ['murky_channel_east', 'shipwreck_shallows'],
         activities: [
-            { type: 'skilling', id: 'isolated_islet_willow', name: 'Chop Willow Tree', skill: SkillName.Woodcutting, requiredLevel: 30, loot: [{ itemId: 'willow_logs', chance: 1, xp: 90 }], resourceCount: { min: 14, max: 30 }, respawnTime: 30000, gatherTime: 3500 },
+            { type: 'skilling', id: 'isolated_islet_willow', name: 'Chop Willow Tree', skill: SkillName.Woodcutting, requiredLevel: 30, loot: [{ itemId: 'willow_logs', chance: 1, xp: 90 }], resourceCount: { min: 14, max: 1619 }, respawnTime: 30000, gatherTime: 3500 },
         ],
         regionId: 'serpents_coil',
-        x: 1680, y: 1220
+        x: 1680, y: 1234
     },
     shipwreck_shallows: {
         id: 'shipwreck_shallows',
@@ -87,13 +86,13 @@ export const theSerpentsCoilPois: Record<string, POI> = {
                     { itemId: 'willow_logs', chance: 0.606, xp: 90 },
                     { itemId: 'treasure_chest', chance: 0.01, xp: 250 }
                 ],
-                resourceCount: { min: 60, max: 60 },
+                resourceCount: { min: 60, max: 1601 },
                 respawnTime: 120000,
                 gatherTime: 3500
             }
         ],
         regionId: 'serpents_coil',
-        x: 1600, y: 1260
+        x: 1600, y: 1209
     },
     sunken_temple_approach: {
         id: 'sunken_temple_approach',
@@ -105,7 +104,7 @@ export const theSerpentsCoilPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'bog_serpent' },
         ],
         regionId: 'serpents_coil',
-        x: 1540, y: 1160
+        x: 1558, y: 1192
     },
     sunken_temple_altar: {
         id: 'sunken_temple_altar',
@@ -118,6 +117,6 @@ export const theSerpentsCoilPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'bog_serpent' },
         ],
         regionId: 'serpents_coil',
-        x: 1540, y: 1220
+        x: 1569, y: 1171
     },
 };

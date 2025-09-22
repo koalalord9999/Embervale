@@ -1,7 +1,6 @@
 import { SkillName } from './enums';
 import { InventorySlot } from './entities';
 
-// FIX: Added missing PlayerQuestState interface.
 export interface PlayerQuestState {
   questId: string;
   currentStage: number;
@@ -33,7 +32,8 @@ export interface QuestStage {
 export interface DialogueResponse {
     text: string;
     next?: string; // Key of the next DialogueNode
-    action?: 'accept_quest' | 'close' | 'custom';
+    action?: 'accept_quest' | 'close' | 'custom' | 'complete_stage';
+    questId?: string;
     customActionId?: string;
 }
 
@@ -48,15 +48,16 @@ export interface Quest {
   id:string;
   name: string;
   description: string;
-  startPoi: string;
   stages: QuestStage[];
   rewards: { xp?: { skill: SkillName; amount: number }[]; items?: InventorySlot[]; coins?: number };
   isHidden?: boolean;
-  dialogue?: Record<string, DialogueNode>;
-  startDialogueNode?: string;
+  dialogue?: Record<string, DialogueNode>; // This is now primarily for reference and will be stored in POI data
+  startDialogueNode?: string; // This is now primarily for reference and will be stored in POI data
   startHint: string;
   playerStagePerspectives: string[];
   completionSummary: string;
+  // FIX: Added optional startPoi property to Quest interface
+  startPoi?: string;
 }
 
 export interface RepeatableQuest {

@@ -1,5 +1,4 @@
 
-
 import { POI, SkillName } from '../../types';
 
 export const sunkenLandsPois: Record<string, POI> = {
@@ -90,7 +89,7 @@ export const sunkenLandsPois: Record<string, POI> = {
         id: 'sunken_ruins',
         name: 'Sunken Ruins',
         description: 'The crumbling stone ruins of an ancient structure jut out from the muck. A palpable aura of dread hangs over the area.',
-        connections: ['witchs_hut', 'submerged_pathway'],
+        connections: ['submerged_pathway'],
         activities: [
             { type: 'combat', monsterId: 'swamp_horror' },
             { type: 'skilling', id: 'sunken_ruins_adamantite_1', name: 'Mine Adamantite Rock', skill: SkillName.Mining, requiredLevel: 65, loot: [{ itemId: 'adamantite_ore', chance: 1, xp: 120 }], resourceCount: { min: 1, max: 1 }, respawnTime: 50000, gatherTime: 5000 },
@@ -128,36 +127,24 @@ export const sunkenLandsPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'swamp_horror' },
         ],
         regionId: 'sunken_lands',
-        x: 1400, y: 1460
-    },
-    witchs_hut: {
-        id: 'witchs_hut',
-        name: "Witch's Hut",
-        description: "A small, dilapidated hut built on stilts above the swamp water. Strange herbs hang from the rafters, and a cauldron bubbles ominously.",
-        connections: ['sunken_ruins'],
-        activities: [
-            {
-                type: 'npc',
-                name: 'Morwen the Witch',
-                icon: '/assets/npcChatHeads/morwen_the_witch.png',
-                dialogue: [
-                    "Hee hee... another lost soul comes to my doorstep.",
-                    "Be careful what you touch in here, dearie. Some things have... consequences.",
-                    "This swamp was not always so. It was a beautiful forest, before the Serpent Queen poisoned the waters.",
-                    "She sleeps in her sunken temple, waiting. Her scales are said to be worth a fortune, if you could get them."
-                ]
-            }
-        ],
-        regionId: 'sunken_lands',
-        x: 1440, y: 1400
+        x: 1450, y: 1370
     },
     serpents_coil_gate: {
         id: 'serpents_coil_gate',
         name: "Serpent's Coil Gate",
-        description: "A huge, rusted iron gate blocks the path deeper into the swamp. The bars are shaped like writhing serpents.",
+        description: "A heavy, stone gate covered in serpent carvings. It is rusted shut and hums with a faint energy.",
         connections: ['flooded_crypt_chamber', 'serpents_coil_entrance'],
         activities: [],
+        connectionRequirements: {
+            serpents_coil_entrance: {
+                skill: SkillName.Strength,
+                level: 50,
+                xp: 100,
+                description: "The gate is heavy and rusted shut. You might be able to force it open with enough strength.",
+                actionText: "Pushing open the rusted gates",
+            }
+        },
         regionId: 'sunken_lands',
-        x: 1460, y: 1460
-    },
+        x: 1500, y: 1300,
+    }
 };

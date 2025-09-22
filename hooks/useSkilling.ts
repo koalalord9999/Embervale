@@ -1,8 +1,7 @@
 
-
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { POIActivity, ResourceNodeState, SkillName, PlayerSkill, InventorySlot, ToolType, Equipment, Item } from '../types';
-import { INVENTORY_CAPACITY, ITEMS } from '../constants';
+import { INVENTORY_CAPACITY, ITEMS, rollOnLootTable } from '../constants';
 import { POIS } from '../data/pois';
 
 type SkillingActivity = Extract<POIActivity, { type: 'skilling' }>;
@@ -24,6 +23,8 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
     const [skillingTick, setSkillingTick] = useState(0);
 
     const getSuccessChance = useCallback((activity: SkillingActivity): number => {
+        const boost = activity.harvestBoost ?? 0;
+
         if (activity.skill === SkillName.Woodcutting || activity.skill === SkillName.Mining) {
             const skillingSkill = skills.find(s => s.name === activity.skill);
             if (!skillingSkill) return 0;
@@ -51,14 +52,18 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
             const skillLevel = skillingSkill.currentLevel;
             const resourceLevel = activity.requiredLevel;
 
-            // Success chance formula: min 5%, max 99%. Base chance scales with level difference and tool power.
-            const chance = Math.min(99, Math.max(5, -10 + ((skillLevel - resourceLevel) * 0.8) + (toolPower * 1.5)));
-            return chance;
+            // Base chance formula: min 5%, max 99%. Scales with level difference and tool power.
+            const baseChance = Math.min(99, Math.max(5, -10 + ((skillLevel - resourceLevel) * 0.8) + (toolPower * 1.5)));
+            // Apply the flat boost, still capped at 99%
+            const finalChance = Math.min(99, baseChance + boost);
+            return finalChance;
         } else { // Fallback for other skills like fishing
             const skill = skills.find(s => s.name === activity.skill);
             if (!skill) return 0;
-            const successChance = Math.min(0.98, 0.6 + ((skill?.currentLevel ?? 1) - activity.requiredLevel) * 0.02);
-            return successChance * 100;
+            // Base chance is 60%, +2% for each level above requirement, capped at 98%.
+            const baseChance = Math.min(98, 60 + ((skill.currentLevel - activity.requiredLevel) * 2));
+            const finalChance = Math.min(99, baseChance + boost);
+            return finalChance;
         }
     }, [skills, inventory, equipment]);
 
@@ -86,7 +91,7 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
             stopSkilling();
         } else {
             const skill = skills.find(s => s.name === activity.skill);
-            if (!skill || skill.level < activity.requiredLevel) {
+            if (!skill || skill.currentLevel < activity.requiredLevel) {
                 addLog(`You need a ${activity.skill} level of ${activity.requiredLevel} to do that.`);
                 return;
             }
@@ -109,7 +114,6 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
                 return;
             }
             setActiveSkilling({ nodeId: activity.id, activity });
-            addLog(`You begin to ${activity.skill.toLowerCase().replace('cutting', 'cut')}...`);
         }
     }, [activeSkilling, skills, addLog, inventory, equipment, stopSkilling]);
 
@@ -127,6 +131,22 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
             }
 
             const { nodeId, activity } = activeSkilling;
+
+            // Gem finding logic for mining happens on every swing, not just on success.
+            if (activity.skill === SkillName.Mining) {
+                if (Math.random() < 0.001) { // 1 in 1000 chance
+                    const gemId = rollOnLootTable('gem_table');
+                    if (gemId) {
+                        // Re-check inventory space as this is a bonus item.
+                        if (inventory.filter(Boolean).length < INVENTORY_CAPACITY) {
+                           modifyItem(gemId, 1);
+                           addLog(`As you swing your pickaxe, a gem flies from the rock!`);
+                        } else {
+                           addLog("You would have found a gem, but your inventory is full!");
+                        }
+                    }
+                }
+            }
             
             setSkillingTick(t => t + 1); // Trigger animation tick regardless of success
             
@@ -149,7 +169,6 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
                             const newResources = node.resources - 1;
                             if (newResources <= 0) {
                                 setActiveSkilling(null);
-                                addLog("The resource has been depleted.");
                                 return { ...prev, [nodeId]: { resources: 0, respawnTimer: activity.respawnTime } };
                             }
                             return { ...prev, [nodeId]: { ...node, resources: newResources } };

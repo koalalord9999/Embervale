@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { InventorySlot, PlayerSkill, SkillName } from '../../../types';
 import { FLETCHING_RECIPES, ITEMS, getIconClassName } from '../../../constants';
@@ -7,7 +8,7 @@ import { MakeXPrompt } from '../../../hooks/useUIState';
 
 interface FletchingViewProps {
     logId: string;
-    inventory: InventorySlot[];
+    inventory: (InventorySlot | null)[];
     skills: PlayerSkill[];
     onFletch: (action: { type: 'carve'; payload: any }, quantity: number) => void;
     onExit: () => void;
@@ -18,7 +19,7 @@ const FletchingView: React.FC<FletchingViewProps> = ({ logId, inventory, skills,
     const fletchingLevel = skills.find(s => s.name === SkillName.Fletching)?.level ?? 1;
     const logName = ITEMS[logId].name;
     const recipes = FLETCHING_RECIPES.carving[logId] ?? [];
-    const logCount = inventory.filter(s => s.itemId === logId).length;
+    const logCount = inventory.filter(s => s && s.itemId === logId).length;
 
     return (
         <div className="flex flex-col h-full text-gray-200">

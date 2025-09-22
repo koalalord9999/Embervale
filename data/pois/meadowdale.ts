@@ -1,5 +1,5 @@
-
 import { POI, SkillName } from '../../types';
+import { CIVILLIAN_DIALOGUE } from '../../constants';
 
 export const meadowdalePois: Record<string, POI> = {
     meadowdale_south_gate: {
@@ -90,14 +90,102 @@ export const meadowdalePois: Record<string, POI> = {
         connections: ['north_meadow_street', 'east_meadow_street', 'south_meadow_street', 'west_meadow_street', 'meadowdale_bank'],
         activities: [
             { type: 'shop', shopId: 'general_store' },
-            { type: 'water_source', name: 'Fill Vials at Fountain' },
+            { type: 'water_source', name: 'Collect Water' },
             {
                 type: 'npc',
                 name: 'Old Man Fitzwilliam',
                 icon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
-                dialogue: ["Hmph. Another adventurer. Don't go stirring up trouble, now."]
+                dialogue: {
+                    default_dialogue: {
+                        npcName: 'Old Man Fitzwilliam',
+                        npcIcon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
+                        text: "Hmph. Another adventurer, clogging up the square. Don't you have some dragons to slay or something?",
+                        responses: [
+                            { text: "You seem troubled. What's on your mind?", next: 'quest_intro_goblin_menace' },
+                            { text: "Just passing through, old-timer.", action: 'close' },
+                        ]
+                    },
+                    quest_intro_goblin_menace: {
+                        npcName: 'Old Man Fitzwilliam',
+                        npcIcon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
+                        text: "Troubled? I'm beyond troubled! I'm incensed! It's this dreadful racket coming from the Stonebreak Mine. Day and night, clang, clang, bash! A man can't get a moment's peace!",
+                        responses: [
+                            { text: "What kind of racket?", next: 'situation_goblin_menace' },
+                            { text: "Have you tried earplugs?", action: 'close' },
+                        ]
+                    },
+                    situation_goblin_menace: {
+                        npcName: 'Old Man Fitzwilliam',
+                        npcIcon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
+                        text: "It can only be one thing: goblins. They're probably banging rocks together and calling it music. It's scaring the birds, it's wilting my prize-winning petunias, and I haven't had a decent afternoon nap in a week!",
+                        responses: [
+                            { text: "What do you want me to do about it?", next: 'job_goblin_menace' },
+                        ]
+                    },
+                    job_goblin_menace: {
+                        npcName: 'Old Man Fitzwilliam',
+                        npcIcon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
+                        text: "I want you to go in there and give them a taste of their own medicine! A little 'persuasion', if you will. Silence five of those noisy little brutes, and I'll make it worth your while. My sanity is a valuable thing, you know.",
+                        responses: [
+                            { text: "Alright, I'll restore the peace. For a price.", action: 'accept_quest', questId: 'goblin_menace' },
+                            { text: "Sounds dangerous. Not my problem.", action: 'close' },
+                        ]
+                    },
+                    in_progress_goblin_menace_0: {
+                        npcName: 'Old Man Fitzwilliam',
+                        npcIcon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
+                        text: "What are you waiting for? My ears are still ringing! Get over to that mine and sort out those noisy goblins!",
+                        responses: []
+                    },
+                    complete_stage_goblin_menace_1: {
+                        npcName: 'Old Man Fitzwilliam',
+                        npcIcon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
+                        text: "Ah, the sweet sound of... blessed silence! You've done it! My head feels clearer already. The birds are singing again! Here's your reward, well-earned.",
+                        responses: [
+                            { text: "Glad I could help.", action: 'complete_stage', questId: 'goblin_menace' }
+                        ]
+                    },
+                    post_quest_goblin_menace: {
+                        npcName: 'Old Man Fitzwilliam',
+                        npcIcon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
+                        text: "Ah, adventurer! It's so peaceful now, I can finally hear myself think. Thank you again for taking care of that goblin nuisance.",
+                        responses: []
+                    }
+                },
+                startNode: 'default_dialogue'
             },
-            { type: 'quest_start', questId: 'goblin_menace'}
+            {
+                type: 'npc',
+                name: 'Townsman',
+                icon: '/assets/npcChatHeads/tavern_regular.png',
+                dialogue: {
+                    start: {
+                        npcName: 'Townsman',
+                        npcIcon: '/assets/npcChatHeads/tavern_regular.png',
+                        text: CIVILLIAN_DIALOGUE.meadowdale.join('\n\n'),
+                        responses: []
+                    }
+                },
+                startNode: 'start',
+                dialogueType: 'random',
+                actions: [{ label: 'Pickpocket', disabled: true }]
+            },
+            {
+                type: 'npc',
+                name: 'Townswoman',
+                icon: '/assets/npcChatHeads/elara.png',
+                dialogue: {
+                     start: {
+                        npcName: 'Townswoman',
+                        npcIcon: '/assets/npcChatHeads/elara.png',
+                        text: CIVILLIAN_DIALOGUE.meadowdale.join('\n\n'),
+                        responses: []
+                    }
+                },
+                startNode: 'start',
+                dialogueType: 'random',
+                actions: [{ label: 'Pickpocket', disabled: true }]
+            },
         ],
         regionId: 'meadowdale',
         x: 250, y: 250,
@@ -116,10 +204,107 @@ export const meadowdalePois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Valerius the Master Smith',
                 icon: '/assets/npcChatHeads/valerius_the_master_smith.png',
-                dialogue: [
-                    "Welcome to my smithy. The forge is always hot, and the anvil is always ready.",
-                    "Bring me good metal, and I can make you something worthy of a true warrior."
-                ]
+                dialogue: {
+                    default_dialogue: {
+                        npcName: 'Valerius the Master Smith',
+                        npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                        text: "Welcome to my smithy. The forge is always hot, and the anvil is always ready. Can I help you with something?",
+                        responses: [
+                            { text: "I'm looking for work. Can I help you?", next: 'quest_intro_a_smiths_apprentice' },
+                            { text: "Just looking around.", action: 'close' },
+                        ]
+                    },
+                    // --- A Smith's Apprentice ---
+                    quest_intro_a_smiths_apprentice: {
+                        npcName: 'Valerius the Master Smith',
+                        npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                        text: "Help? You look like you're not afraid of a bit of hard work. I could use some, and you could learn a valuable skill. Interested?",
+                        responses: [
+                            { text: "What do you need help with?", next: 'details_a_smiths_apprentice' },
+                            { text: "I'm not interested, thanks.", action: 'close' },
+                        ],
+                    },
+                    details_a_smiths_apprentice: {
+                        npcName: 'Valerius the Master Smith',
+                        npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                        text: "I need ore. The foundation of all good smithing is good metal. The local mine is full of Copper and Tin. Bring me one of each, and I'll show you the first step of turning rock into a weapon.",
+                        responses: [
+                            { text: "I'll be back with your ore.", action: 'accept_quest', questId: 'a_smiths_apprentice' },
+                        ],
+                    },
+                    in_progress_a_smiths_apprentice_0: {
+                        npcName: 'Valerius the Master Smith',
+                        npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                        text: "The forge doesn't wait forever, you know. Have you gathered that Copper and Tin ore for me yet?",
+                        responses: []
+                    },
+                    complete_stage_a_smiths_apprentice_1: {
+                        npcName: 'Valerius the Master Smith',
+                        npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                        text: "Ah, you've returned! Let's have a look at that ore... Perfect! Now, for your first lesson. Take this bronze bar. I made it from the ore you brought. Now, go to the anvil and smith it into a Bronze Dagger.",
+                        responses: [
+                            { text: "Thank you, I'll get to it.", action: 'complete_stage', questId: 'a_smiths_apprentice' }
+                        ]
+                    },
+                    in_progress_a_smiths_apprentice_2: {
+                        npcName: 'Valerius the Master Smith',
+                        npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                        text: "Don't just stand there holding that bar, the anvil is right over there! Turn that metal into something useful.",
+                        responses: []
+                    },
+                    complete_stage_a_smiths_apprentice_3: {
+                        npcName: 'Valerius the Master Smith',
+                        npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                        text: "Let me see that dagger... Not bad, not bad at all for a first try! You've got potential. Keep practicing, and you'll be a fine smith. Here's something for your trouble.",
+                        responses: [
+                            { text: "Thank you for the lesson!", action: 'complete_stage', questId: 'a_smiths_apprentice' }
+                        ]
+                    },
+                    post_quest_a_smiths_apprentice: {
+                        npcName: 'Valerius the Master Smith',
+                        npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                        text: "Good to see you again, apprentice. Remember what I taught you, and you'll go far.",
+                        responses: []
+                    },
+                    // --- An Ancient Blade ---
+                    item_trigger_ancient_blade: {
+                        npcName: 'Valerius the Master Smith',
+                        npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                        text: "By the forge... where did you get that rusty sword? It's ancient, but the balance... the craftsmanship is remarkable. I could restore this blade, but I'll need some materials.",
+                        responses: [
+                            { text: "What do you need?", next: 'details_ancient_blade' }
+                        ]
+                    },
+                    details_ancient_blade: {
+                        npcName: 'Valerius the Master Smith',
+                        npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                        text: "The core is iron. I'll need 5 Iron Ores to reforge the blade and draw out its true strength. Bring them to me, and I'll see what I can do. It would be a crime to let a blade like this turn to dust.",
+                        responses: [
+                            { text: "I'll get the ore for you.", action: 'accept_quest', questId: 'ancient_blade' }
+                        ]
+                    },
+                    in_progress_ancient_blade_1: {
+                        npcName: 'Valerius the Master Smith',
+                        npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                        text: "Have you gathered those 5 Iron Ores yet? That old sword is practically humming, waiting to be reborn.",
+                        responses: []
+                    },
+                    complete_stage_ancient_blade_2: {
+                        npcName: 'Valerius the Master Smith',
+                        npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                        text: "Excellent! With this ore, I can restore the blade. Give me a moment... There! Good as new. A fine Iron Sword for your troubles. Take good care of it.",
+                        responses: [
+                            { text: "Thank you, Valerius!", action: 'complete_stage', questId: 'ancient_blade' }
+                        ]
+                    },
+                    post_quest_ancient_blade: {
+                        npcName: 'Valerius the Master Smith',
+                        npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                        text: "How's that old blade holding up? A fine piece of work, if I do say so myself.",
+                        responses: []
+                    }
+                },
+                startNode: 'default_dialogue',
             }
         ],
         regionId: 'meadowdale',
@@ -149,19 +334,59 @@ export const meadowdalePois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Barkeep Grimley',
                 icon: '/assets/npcChatHeads/barkeep_grimley.png',
-                dialogue: [
-                    "What'll it be, adventurer? Or are you just here to track mud on me clean floors?",
-                    "We've got rooms to let, if you're weary from your travels."
-                ]
+                dialogue: {
+                    start: {
+                        npcName: 'Barkeep Grimley',
+                        npcIcon: '/assets/npcChatHeads/barkeep_grimley.png',
+                        text: "Welcome to The Rusty Flagon. What can I get for you?",
+                        responses: [
+                            { text: "Here for a drink!", next: 'buy_drink_intro' },
+                            { text: "Looking for a room.", next: 'rent_room_intro' },
+                        ]
+                    },
+                    buy_drink_intro: {
+                        npcName: 'Barkeep Grimley',
+                        npcIcon: '/assets/npcChatHeads/barkeep_grimley.png',
+                        text: "You've got good taste! I import the best beer in the region, all the way from Silverhaven. None of that watered-down rubbish you get elsewhere. Fancy a pint? It's only 2 coins.",
+                        responses: [
+                            { text: "Yes please.", action: 'custom', customActionId: 'buy_beer' },
+                            { text: "No thanks, I'm not much of a drinker.", action: 'close' },
+                        ]
+                    },
+                    rent_room_intro: {
+                        npcName: 'Barkeep Grimley',
+                        npcIcon: '/assets/npcChatHeads/barkeep_grimley.png',
+                        text: "A wise choice. A good night's rest can make all the difference. I keep this place nice and tidy, you know. Sometimes I even post odd jobs on the adventurer's board to keep it that way.",
+                        responses: [
+                            { text: "(Continue)", next: 'rent_room_confirm' },
+                        ]
+                    },
+                    rent_room_confirm: {
+                        npcName: 'Barkeep Grimley',
+                        npcIcon: '/assets/npcChatHeads/barkeep_grimley.png',
+                        text: "A room for the night will cost you 10 coins. It'll restore your health and make you feel right as rain. What do you say?",
+                        responses: [
+                            { text: "Yea, sure. I'll take a room.", action: 'custom', customActionId: 'rent_room' },
+                            { text: "Nah, I like sleeping on the streets.", action: 'close' },
+                        ]
+                    }
+                },
+                startNode: 'start',
             },
             {
                 type: 'npc',
                 name: 'Tavern Regular',
                 icon: '/assets/npcChatHeads/tavern_regular.png',
-                dialogue: [
-                    "Hear the goblins in the mines are getting bolder. They say their king is building a throne of junk and stolen goods.",
-                    "Some say the Whispering Woods got their name 'cause the trees themselves are alive... others say it's just the wind. I know what I believe."
-                ]
+                dialogue: {
+                    start: {
+                        npcName: 'Tavern Regular',
+                        npcIcon: '/assets/npcChatHeads/tavern_regular.png',
+                        text: "Hear the goblins in the mines are getting bolder. They say their king is building a throne of junk and stolen goods.\n\nSome say the Whispering Woods got their name 'cause the trees themselves are alive... others say it's just the wind. I know what I believe.",
+                        responses: []
+                    }
+                },
+                startNode: 'start',
+                dialogueType: 'random',
             }
         ],
         regionId: 'meadowdale',
@@ -178,12 +403,143 @@ export const meadowdalePois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Librarian Elara',
                 icon: '/assets/npcChatHeads/librarian_elara.png',
-                dialogue: [
-                    "Shh! This is a place of learning, not a tavern.",
-                    "Feel free to browse, but do it quietly. The knowledge of ages rests on these shelves.",
-                    "This town was founded on the ruins of an older settlement from before the Age of Kings. No one knows who built the original foundations.",
-                    "The road south to Oakhaven used to be a major trade route. Now, with the bandits, it's a shadow of its former self."
-                ]
+                dialogue: {
+                    start: {
+                        npcName: 'Librarian Elara',
+                        npcIcon: '/assets/npcChatHeads/librarian_elara.png',
+                        text: "Shh! This is a place of learning, not a tavern.\n\nFeel free to browse, but do it quietly. The knowledge of ages rests on these shelves.\n\nThis town was founded on the ruins of an older settlement from before the Age of Kings. No one knows who built the original foundations.\n\nThe road south to Oakhaven used to be a major trade route. Now, with the bandits, it's a shadow of its former self.",
+                        responses: []
+                    }
+                },
+                startNode: 'start',
+                dialogueType: 'random',
+            },
+            {
+                type: 'npc',
+                name: 'Wizard Elmsworth',
+                icon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                dialogue: {
+                    default_dialogue: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "Ah, an adventurer! Perfect. You have the look of someone not easily startled. I've made a discovery of some significance, but I require... a test subject.",
+                        responses: [
+                            { text: "What kind of discovery?", next: 'quest_intro_magical_runestone_discovery' },
+                            { text: "I'm not interested in being a test subject.", action: 'close' },
+                        ]
+                    },
+                    quest_intro_magical_runestone_discovery: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "A magical one! I've been researching ancient teleportation magics. I believe I've perfected a spell that can transport a person to a location keyed to a specific magical resonance. I've found such a resonance, but I've yet to test it on a living being.",
+                        responses: [
+                            { text: "You want to teleport me somewhere?", next: 'details_magical_runestone_discovery' },
+                        ]
+                    },
+                    details_magical_runestone_discovery: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "Precisely! It should be perfectly safe. Mostly. The resonance points to a location deep within the mountains. If you'd be willing, I could send you there to investigate. Who knows what you might find!",
+                        responses: [
+                            { text: "Alright, I'll do it. For the sake of science!", action: 'accept_quest', questId: 'magical_runestone_discovery' },
+                            { text: "'Mostly' safe isn't good enough for me.", action: 'close' },
+                        ]
+                    },
+                    in_progress_magical_runestone_discovery_0: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "Excellent! Before I can teleport you, I must first perform an attunement spell to unlock the destination. Shall I proceed?",
+                        responses: [
+                            { text: "Yes, perform the attunement.", action: 'complete_stage', questId: 'magical_runestone_discovery' },
+                            { text: "Not just yet.", action: 'close' },
+                        ]
+                    },
+                    in_progress_magical_runestone_discovery_1: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "The attunement is complete! You will find a temporary projection of myself there. I don't know how long I can keep it active, so you best hurry along. Now for the teleport. Hold still... *Materia Translocatus!*",
+                        responses: [
+                            { text: "(You feel a strange pulling sensation...)", action: 'custom', customActionId: 'teleport_to_rune_mine' },
+                        ]
+                    },
+                    in_progress_magical_runestone_discovery_2: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "Have you returned from that strange cavern? Did you manage to mine five chunks of that pulsating rock for me?",
+                        responses: [
+                            { text: "Yes, I have them right here.", action: 'complete_stage', questId: 'magical_runestone_discovery' },
+                            { text: "Not yet, I came back for supplies.", next: 'offer_teleport_back' }
+                        ]
+                    },
+                    offer_teleport_back: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "Ah, I see. Well, no sense in walking all that way again. I can send you straight back to the cavern if you're ready. Shall I?",
+                        responses: [
+                            { text: "Yes, please send me back.", action: 'custom', customActionId: 'teleport_to_rune_mine' },
+                            { text: "No thanks, I'll walk.", action: 'close' },
+                        ]
+                    },
+                    complete_stage_magical_runestone_discovery_3: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "You have them! Wonderful! Now... what in the blazes? My trinket! The one I keep in my pocket for good luck... it's vibrating like a bee in a jam jar now that you're near with those rocks! It's a peculiar thing I found on my travels. It always seemed to pull faintly to the north, but I could never investigate. The path through the Murky Riverbank is blocked, and they only let seasoned adventurers who've dealt with the town's goblin problem pass. Ahem.",
+                        responses: [
+                            { text: "So what now?", next: 'mrd_3_c' }
+                        ]
+                    },
+                    mrd_3_c: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "Since you're a seasoned adventurer, perhaps you can find where it leads! Here, take the trinket. And keep the rock chunks, they seem to be the key! Find what this trinket is pulling towards, and report back to me immediately!",
+                        responses: [
+                            { text: "I'll see what I can find.", action: 'complete_stage', questId: 'magical_runestone_discovery' }
+                        ]
+                    },
+                    in_progress_magical_runestone_discovery_4: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "Any luck finding the source of that trinket's pull? It seemed to be attracted north of the Whispering Woods.",
+                        responses: []
+                    },
+                    complete_stage_magical_runestone_discovery_5: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "You're back! Did you find where the trinket was leading you?",
+                        responses: [
+                            { text: "Yes, it led me to an ancient altar in the lower mountains.", next: 'mrd_5_b' }
+                        ]
+                    },
+                    mrd_5_b: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "An altar! Of course! The resonance... the energy... it all makes sense! I believe the trinket and the stones are meant to be used together *at* the altar. You must go back and place them upon it!",
+                        responses: [
+                            { text: "Alright, I'll go back and try it.", action: 'complete_stage', questId: 'magical_runestone_discovery' }
+                        ]
+                    },
+                    in_progress_magical_runestone_discovery_6: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "Don't delay! We could be on the verge of a monumental discovery! Take the trinket and the essence back to that altar!",
+                        responses: []
+                    },
+                    complete_stage_magical_runestone_discovery_7: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "You have them! Actual runes! And you made them yourself! By my beard, you've done it! You've rediscovered the lost art of Runecrafting! The trinket must be a Talisman, and these stones... this 'Rune Essence'... they are the key! This changes everything! The study of magic will be advanced by centuries. Thank you, adventurer. Please, take this for your invaluable contribution to science! I have another talisman you might find useful.",
+                        responses: [
+                            { text: "It was a pleasure.", action: 'complete_stage', questId: 'magical_runestone_discovery' }
+                        ]
+                    },
+                    post_quest_magical_runestone_discovery: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "Ah, my star pupil! How goes the runecrafting? Made any new discoveries of your own?",
+                        responses: []
+                    },
+                },
+                startNode: 'default_dialogue',
             }
         ],
         regionId: 'meadowdale',
@@ -200,12 +556,65 @@ export const meadowdalePois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Clerk Augustus',
                 icon: '/assets/npcChatHeads/clerk_augustus.png',
-                dialogue: [
-                    "State your business. We have important matters to attend to here in Meadowdale.",
-                    "No loitering, please."
-                ]
-            },
-            { type: 'quest_start', questId: 'bandit_toll' }
+                dialogue: {
+                    default_dialogue: {
+                        npcName: 'Clerk Augustus',
+                        npcIcon: '/assets/npcChatHeads/clerk_augustus.png',
+                        text: "State your business. We have important matters to attend to here in Meadowdale. Please, no loitering.",
+                        responses: [
+                            { text: "I'm an adventurer. Do you have any work for me?", next: 'quest_intro_bandit_toll' },
+                            { text: "I understand. I'll be on my way.", action: 'close' },
+                        ]
+                    },
+                    quest_intro_bandit_toll: {
+                        npcName: 'Clerk Augustus',
+                        npcIcon: '/assets/npcChatHeads/clerk_augustus.png',
+                        text: "Work? As a matter of fact, yes! Thank the stars. I'm at my wit's end. The lifeblood of this town, our trade with Oakhaven, has been severed by a pack of audacious thugs on the southern road. They're calling it a 'toll'.",
+                        responses: [
+                            { text: "What's the situation?", next: 'situation_bandit_toll' },
+                            { text: "I'm not interested in road maintenance.", action: 'close' },
+                        ],
+                    },
+                    situation_bandit_toll: {
+                        npcName: 'Clerk Augustus',
+                        npcIcon: '/assets/npcChatHeads/clerk_augustus.png',
+                        text: "Oakhaven is a town of artisans. We rely on their crafted goods, their fine leathers, their expert fletching supplies. In return, they need our food and ore. These bandits aren't just robbing travelers, they're starving our economy. I need someone to send a message... a firm, sharp message.",
+                        responses: [
+                            { text: "What's the pay?", next: 'job_bandit_toll' },
+                        ],
+                    },
+                    job_bandit_toll: {
+                        npcName: 'Clerk Augustus',
+                        npcIcon: '/assets/npcChatHeads/clerk_augustus.png',
+                        text: "The Meadowdale council has authorized a significant bounty. Remove five of these roadblocks—permanently—and you will be rewarded not just with coin, but with the gratitude of two towns. The road to Oakhaven simply must be reopened. Can you do this?",
+                        responses: [
+                            { text: "Consider it done. I'll clear the road.", action: 'accept_quest', questId: 'bandit_toll' },
+                            { text: "I'd rather not get my hands dirty.", action: 'close' },
+                        ],
+                    },
+                    in_progress_bandit_toll_0: {
+                        npcName: 'Clerk Augustus',
+                        npcIcon: '/assets/npcChatHeads/clerk_augustus.png',
+                        text: "Every moment you delay, another merchant considers taking their business elsewhere. Are the roads clear yet? My ledgers are starting to look grim.",
+                        responses: []
+                    },
+                    complete_stage_bandit_toll_1: {
+                        npcName: 'Clerk Augustus',
+                        npcIcon: '/assets/npcChatHeads/clerk_augustus.png',
+                        text: "You have? Truly? I can hear the sound of commerce returning already! You've done a great service not just to Meadowdale, but to Oakhaven as well. On behalf of the council, please accept this bounty. You've more than earned it.",
+                        responses: [
+                            { text: "A pleasure doing business.", action: 'complete_stage', questId: 'bandit_toll' }
+                        ]
+                    },
+                    post_quest_bandit_toll: {
+                        npcName: 'Clerk Augustus',
+                        npcIcon: '/assets/npcChatHeads/clerk_augustus.png',
+                        text: "Thanks to you, adventurer, commerce with Oakhaven is flowing once more! The whole town is grateful. The markets are bustling again.",
+                        responses: []
+                    }
+                },
+                startNode: 'default_dialogue',
+            }
         ],
         regionId: 'meadowdale',
         x: 300, y: 150,
@@ -213,7 +622,7 @@ export const meadowdalePois: Record<string, POI> = {
     },
     meadowdale_bank: {
         id: 'meadowdale_bank',
-        name: 'Bank of Embervale',
+        name: 'Bank of Embrune',
         description: 'A grand building with polished counters and secure vaults, accessed from the town square. A stern-looking banker watches over the main hall.',
         connections: ['meadowdale_square'],
         activities: [
@@ -222,7 +631,15 @@ export const meadowdalePois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Banker Theron',
                 icon: '/assets/npcChatHeads/banker_theron.png',
-                dialogue: ["Welcome to the Bank of Embervale. Your items are safe with us."]
+                dialogue: {
+                    start: {
+                        npcName: 'Banker Theron',
+                        npcIcon: '/assets/npcChatHeads/banker_theron.png',
+                        text: "Welcome to the Bank of Embrune. Your items are safe with us.",
+                        responses: []
+                    }
+                },
+                startNode: 'start'
             }
         ],
         regionId: 'meadowdale',

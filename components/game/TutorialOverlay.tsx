@@ -1,20 +1,25 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { TUTORIAL_SCRIPT, ITEMS } from '../../constants';
 import Button from '../common/Button';
 import { InventorySlot } from '../../types';
+import { useIsTouchDevice } from '../../hooks/useIsTouchDevice';
 
 interface TutorialOverlayProps {
     stage: number;
     advanceTutorial: (condition: string) => void;
     overrideGuideText?: string | null;
     inventory: (InventorySlot | null)[];
+    logMessage: string | null;
+    clearLogMessage: () => void;
+    isTouchSimulationEnabled: boolean;
 }
 
-const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ stage, advanceTutorial, overrideGuideText, inventory }) => {
+const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ stage, advanceTutorial, overrideGuideText, inventory, logMessage, clearLogMessage, isTouchSimulationEnabled }) => {
     const [isFadingOut, setIsFadingOut] = useState(false);
+    const [isMinimized, setIsMinimized] = useState(false);
     const prevStage = useRef(stage);
     const highlightedElementsRef = useRef<Element[]>([]);
+    const isTouchDevice = useIsTouchDevice(isTouchSimulationEnabled);
 
     const step = TUTORIAL_SCRIPT[stage];
 
@@ -22,7 +27,7 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ stage, advanceTutoria
         if (!step) return;
 
         let targetIds: string[] = [];
-        if (stage === 14) { // Special conditional logic for the mining stage
+        if (stage === 15) { // Special conditional logic for the mining stage
             const hasCopper = inventory.some(i => i?.itemId === 'copper_ore');
             const hasTin = inventory.some(i => i?.itemId === 'tin_ore');
             if (!hasCopper) targetIds.push('activity-button-0'); // Copper ore
@@ -78,18 +83,18 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ stage, advanceTutoria
 
     if (!step) return null;
 
-    if (stage === 0) {
-        return <div className="absolute inset-0 bg-black/50 z-40 pointer-events-none"></div>;
-    }
-
-    const handleContinue = () => {
-        advanceTutorial('continue');
+    const handleButtonClick = () => {
+        if (step.completionCondition) {
+            advanceTutorial(step.completionCondition);
+        }
     };
+    
+    const instructionText = isTouchDevice ? "Long-press" : "Right-click";
     
     const renderObjective = () => {
         if (!step.objective) return null;
 
-        if (stage === 14) { // Mine ores
+        if (stage === 15) { // Mine ores
             const hasCopper = inventory.some(i => i && i.itemId === 'copper_ore');
             const hasTin = inventory.some(i => i && i.itemId === 'tin_ore');
             return (
@@ -98,28 +103,72 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ stage, advanceTutoria
                 </p>
             );
         }
-        return <p className="font-semibold text-center text-lg">{step.objective}</p>;
+        return <p className="font-semibold text-center text-lg">{step.objective.replace('{ACTION}', instructionText)}</p>;
     }
+
+    const renderContent = () => {
+        if (logMessage) {
+            return (
+                <div className="flex flex-col justify-between items-center w-full md:w-1/2 bg-black/50 p-2 rounded-md border border-gray-700">
+                    <div className="flex-grow flex items-center">
+                        <p className="font-semibold text-center text-lg">{logMessage}</p>
+                    </div>
+                    <div className="mt-auto pt-1">
+                        <button
+                            onClick={clearLogMessage}
+                            className="text-yellow-400 hover:text-yellow-300 underline text-sm"
+                        >
+                            (Click to continue)
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div className="flex flex-col justify-between items-center w-full md:w-1/2 bg-black/50 p-2 rounded-md border border-gray-700">
+                <div className="flex-grow flex items-center">
+                    {renderObjective()}
+                </div>
+                {(step.completionCondition === 'continue' || step.completionCondition === 'depart') && (
+                    <div className="mt-auto pt-1">
+                        <Button onClick={handleButtonClick} size="sm">
+                            {step.completionCondition === 'depart' ? 'Depart' : 'Continue'}
+                        </Button>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    const guideText = overrideGuideText || step.guideText.replace('{ACTION}', instructionText);
+    
+    const handleToggleMinimize = () => setIsMinimized(prev => !prev);
 
     return (
         <div className="absolute inset-0 z-50 pointer-events-none">
             {/* Dialogue/Instruction Box */}
-            <div className={`absolute bottom-4 left-4 w-full max-w-xl bg-gray-900/90 border-2 border-yellow-700 rounded-lg shadow-2xl p-4 pointer-events-auto transition-opacity duration-300 ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}>
-                <div className="flex items-center gap-4 mb-3">
-                    <img src="/assets/npcChatHeads/tavern_regular.png" alt="Leo the Guide" className="w-16 h-16 bg-gray-800 border-2 border-gray-600 rounded-full flex-shrink-0" />
-                    <div>
-                        <h3 className="text-xl font-bold text-yellow-400">Leo the Guide</h3>
-                        <p className="text-gray-300 italic">"{overrideGuideText || step.guideText}"</p>
+            <div className={`absolute bottom-2 left-2 right-2 md:left-4 md:right-auto md:w-[calc(75%-2.25rem)] ${isMinimized ? 'h-auto' : 'h-auto md:h-52'} bg-gray-900/90 border-2 border-yellow-700 rounded-lg shadow-2xl p-3 pointer-events-auto transition-all duration-300 ease-in-out ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}>
+                {isMinimized ? (
+                    <div onClick={handleToggleMinimize} className="flex items-center gap-3 cursor-pointer">
+                        <img src="/assets/npcChatHeads/tavern_regular.png" alt="Leo the Guide" className="w-10 h-10 bg-gray-800 border-2 border-gray-600 rounded-full flex-shrink-0" />
+                        <div>
+                            <h3 className="text-lg font-bold text-yellow-400">Leo the Guide</h3>
+                            <p className="text-xs text-gray-400">Click to expand</p>
+                        </div>
                     </div>
-                </div>
-                
-                <div className="bg-black/50 p-3 rounded-md border border-gray-700">
-                    {renderObjective()}
-                </div>
-
-                {step.completionCondition === 'continue' && (
-                    <div className="flex justify-end mt-3">
-                        <Button onClick={handleContinue}>Continue</Button>
+                ) : (
+                    <div className="flex flex-col md:flex-row h-full gap-3">
+                        {/* Left part: Guide info */}
+                        <div className="flex items-center gap-3 w-full md:w-1/2 cursor-pointer" onClick={handleToggleMinimize}>
+                            <img src="/assets/npcChatHeads/tavern_regular.png" alt="Leo the Guide" className="w-16 h-16 bg-gray-800 border-2 border-gray-600 rounded-full flex-shrink-0" />
+                            <div className="h-full overflow-y-auto pr-1">
+                                <h3 className="text-lg font-bold text-yellow-400">Leo the Guide</h3>
+                                <p className="text-base text-gray-300 italic">"{guideText}"</p>
+                            </div>
+                        </div>
+                        {/* Right part: Objective and action */}
+                        {renderContent()}
                     </div>
                 )}
             </div>

@@ -1,4 +1,3 @@
-
 import { POI, SkillName } from '../../types';
 
 export const farmlandsPois: Record<string, POI> = {
@@ -6,13 +5,22 @@ export const farmlandsPois: Record<string, POI> = {
         id: 'mcgregors_ranch',
         name: "McGregor's Ranch",
         description: "A well-kept ranch with a sturdy farmhouse and several outbuildings. The air smells of hay and livestock. A well-trodden path leads west into open fields.",
-        connections: ['meadowdale_west_gate', 'sheep_pen', 'cow_pasture', 'chicken_coop', 'mcgregors_barn', 'verdant_fields_entrance', 'flax_field'],
+        connections: ['meadowdale_west_gate', 'sheep_pen', 'cow_pasture', 'chicken_coop', 'mcgregors_barn', 'mcgregor_fields'],
         activities: [
             { 
                 type: 'npc', 
                 name: 'Rancher McGregor', 
                 icon: '/assets/npcChatHeads/rancher_mcgregor.png',
-                dialogue: ["Howdy, stranger. It's a fine day for work, ain't it?"]
+                // FIX: Converted string array to DialogueNode structure.
+                dialogue: {
+                    start: {
+                        npcName: 'Rancher McGregor',
+                        npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
+                        text: "Howdy, stranger. It's a fine day for work, ain't it?",
+                        responses: []
+                    }
+                },
+                startNode: 'start'
             },
             { type: 'quest_start', questId: 'sheep_troubles' },
             { type: 'skilling', id: 'mcgregors_ranch_tree', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 0.8, xp: 25 }], resourceCount: { min: 1, max: 3 }, respawnTime: 15000, gatherTime: 2000 },
@@ -24,12 +32,12 @@ export const farmlandsPois: Record<string, POI> = {
         id: 'flax_field',
         name: 'Flax Field',
         description: 'A field of tall, flowering flax plants.',
-        connections: ['mcgregors_ranch'],
+        connections: ['mcgregor_fields'],
         activities: [
-            { type: 'skilling', id: 'flax_field_gathering', name: 'Pick Flax', skill: SkillName.Crafting, requiredLevel: 1, loot: [{ itemId: 'flax', chance: 1, xp: 1 }], resourceCount: { min: 10, max: 20 }, respawnTime: 20000, gatherTime: 600 }
+            { type: 'skilling', id: 'flax_field_gathering', name: 'Pick Flax', skill: SkillName.Crafting, requiredLevel: 1, loot: [{ itemId: 'flax', chance: 1, xp: 1 }], resourceCount: { min: 10, max: 731 }, respawnTime: 20000, gatherTime: 600 }
         ],
         regionId: 'wilderness',
-        x: 860, y: 1200
+        x: 728, y: 1173
     },
     mcgregors_barn: {
         id: 'mcgregors_barn',
@@ -59,6 +67,7 @@ export const farmlandsPois: Record<string, POI> = {
         description: "A field of placid-looking cows, chewing their cud and staring at you with large, vacant eyes.",
         connections: ['mcgregors_ranch'],
         activities: [
+            { type: 'milking' },
             { type: 'combat', monsterId: 'cow' },
             { type: 'combat', monsterId: 'cow' },
             { type: 'combat', monsterId: 'cow' },

@@ -1,7 +1,9 @@
 
 
+
+
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { PlayerSkill, SkillName, CombatStance } from '../types';
+import { PlayerSkill, SkillName, CombatStance, Spell } from '../types';
 import { XP_TABLE } from '../constants';
 
 const getLevelForXp = (xp: number): number => {
@@ -12,6 +14,7 @@ const getLevelForXp = (xp: number): number => {
 interface CharacterCallbacks {
     addLog: (message: string) => void;
     onXpGain: (skillName: SkillName, amount: number) => void;
+    onLevelUp: (skillName: SkillName, newLevel: number) => void;
 }
 
 interface ActiveStatModifier {
@@ -21,6 +24,7 @@ interface ActiveStatModifier {
     currentValue: number;
     durationPerLevel: number;
     nextDecayAt: number;
+    baseLevelOnConsumption: number;
 }
 
 export interface ActiveBuff {
@@ -33,13 +37,14 @@ export interface ActiveBuff {
     style?: 'melee' | 'ranged' | 'all';
 }
 
-export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance: CombatStance, currentHp: number }, callbacks: CharacterCallbacks, isInCombat: boolean, combatSpeedMultiplier: number) => {
-    const { addLog, onXpGain } = callbacks;
+export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance: CombatStance, currentHp: number, autocastSpell: Spell | null }, callbacks: CharacterCallbacks, isInCombat: boolean, combatSpeedMultiplier: number, xpMultiplier: number = 1) => {
+    const { addLog, onXpGain, onLevelUp } = callbacks;
     const [skills, setSkills] = useState<PlayerSkill[]>(initialData.skills);
     const [combatStance, setCombatStance] = useState<CombatStance>(initialData.combatStance);
     const [currentHp, setCurrentHp] = useState<number>(initialData.currentHp);
     const [statModifiers, setStatModifiers] = useState<ActiveStatModifier[]>([]);
     const [activeBuffs, setActiveBuffs] = useState<ActiveBuff[]>([]);
+    const [autocastSpell, setAutocastSpell] = useState<Spell | null>(initialData.autocastSpell ?? null);
 
     const maxHp = useMemo(() => skills.find(s => s.name === SkillName.Hitpoints)?.level ?? 10, [skills]);
     
@@ -133,7 +138,10 @@ export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance:
 
     const addXp = useCallback((skillName: SkillName, amount: number) => {
       if (amount <= 0) return;
-      const roundedAmount = Math.floor(amount);
+      const multipliedAmount = amount * xpMultiplier;
+      const roundedAmount = Math.floor(multipliedAmount);
+      if (roundedAmount <= 0) return;
+      
       onXpGain(skillName, roundedAmount);
         setSkills(prevSkills => {
             const newSkills = [...prevSkills];
@@ -146,12 +154,20 @@ export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance:
                 
                 if (newLevel >= 99) {
                      newSkills[skillIndex] = { ...oldSkill, xp: newXp, level: 99 };
+                     if (newLevel > oldLevel) {
+                        addLog(`Congratulations, you just advanced a ${skillName} level! Your ${skillName} level is now ${newLevel}.`);
+                        onLevelUp(skillName, newLevel);
+                        if (skillName === SkillName.Hitpoints) {
+                            setCurrentHp(hp => hp + (newLevel - oldLevel));
+                        }
+                     }
                      return newSkills;
                 }
 
                 newSkills[skillIndex] = { ...oldSkill, xp: newXp, level: newLevel };
                 if (newLevel > oldLevel) {
                     addLog(`Congratulations, you just advanced a ${skillName} level! Your ${skillName} level is now ${newLevel}.`);
+                    onLevelUp(skillName, newLevel);
                     if (skillName === SkillName.Hitpoints) {
                         setCurrentHp(hp => hp + (newLevel - oldLevel));
                     }
@@ -159,9 +175,9 @@ export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance:
             }
             return newSkills;
         });
-    }, [addLog, onXpGain]);
+    }, [addLog, onXpGain, onLevelUp, xpMultiplier]);
     
-    const applyStatModifier = useCallback((skill: SkillName, value: number, totalDuration: number) => {
+    const applyStatModifier = useCallback((skill: SkillName, value: number, totalDuration: number, baseLevelOnConsumption: number) => {
         if (value <= 0 || totalDuration <= 0) return;
 
         const durationPerLevel = totalDuration / value;
@@ -184,6 +200,7 @@ export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance:
                     currentValue: value,
                     durationPerLevel,
                     nextDecayAt: now + durationPerLevel,
+                    baseLevelOnConsumption,
                 };
                 addLog(`You feel a surge of power, refreshing your ${skill} boost.`);
                 return [...newModifiers, newModifier];
@@ -195,6 +212,7 @@ export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance:
                     currentValue: value,
                     durationPerLevel,
                     nextDecayAt: now + durationPerLevel,
+                    baseLevelOnConsumption,
                 };
                 addLog(`You feel your ${skill} level increase.`);
                 return [...prev, newModifier];
@@ -224,13 +242,22 @@ export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance:
 
     }, [addLog]);
 
+    const clearStatModifiers = useCallback(() => {
+        setStatModifiers([]);
+    }, []);
+
     const skillsWithCurrentLevels = useMemo(() => {
         return skills.map(skill => {
-            const modifierSum = statModifiers
-                .filter(m => m.skill === skill.name)
-                .reduce((sum, m) => sum + m.currentValue, 0);
-            const currentLevel = Math.max(0, skill.level + modifierSum);
-            return { ...skill, currentLevel };
+            const modifier = statModifiers.find(m => m.skill === skill.name);
+            if (modifier) {
+                // The boosted level is anchored to the base level at the time of consumption.
+                const boostedLevel = modifier.baseLevelOnConsumption + modifier.currentValue;
+                // The current level is the higher of the player's base level or their boosted level.
+                const currentLevel = Math.max(skill.level, boostedLevel);
+                return { ...skill, currentLevel };
+            }
+            // If no modifier, current level is the base level.
+            return { ...skill, currentLevel: skill.level };
         });
     }, [skills, statModifiers]);
 
@@ -247,5 +274,8 @@ export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance:
         applyStatModifier,
         activeBuffs,
         addBuff,
+        clearStatModifiers,
+        autocastSpell,
+        setAutocastSpell,
     };
 };

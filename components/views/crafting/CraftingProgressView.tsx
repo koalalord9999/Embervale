@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { ActiveCraftingAction } from '../../../types';
 import { ITEMS, getIconClassName } from '../../../constants';
@@ -28,6 +29,27 @@ const CraftingProgressView: React.FC<CraftingProgressViewProps> = ({ action, onC
         return () => cancelAnimationFrame(frameId);
     }, [action.startTime, action.duration]);
 
+    const getActionName = (type: ActiveCraftingAction['recipeType']) => {
+        switch (type) {
+            case 'firemaking': return 'Lighting';
+            case 'cooking': return 'Cooking';
+            case 'smithing-bar': return 'Smelting';
+            case 'smithing-item': return 'Smithing';
+            case 'fletching-carve':
+            case 'fletching-string':
+            case 'fletching-headless':
+            case 'fletching-tip':
+                return 'Fletching';
+            case 'spinning': return 'Spinning';
+            case 'gem-cutting': return 'Cutting';
+            case 'herblore-unfinished':
+            case 'herblore-finished':
+                return 'Mixing';
+            case 'jewelry': return 'Crafting';
+            default: return 'Crafting';
+        }
+    };
+
     if (!item) {
         return (
             <div className="flex flex-col items-center justify-center h-full">
@@ -39,7 +61,7 @@ const CraftingProgressView: React.FC<CraftingProgressViewProps> = ({ action, onC
     
     return (
         <div className="flex flex-col items-center justify-center h-full text-center animate-fade-in">
-            <h2 className="text-2xl font-bold text-yellow-400 mb-4">Crafting: {item.name}</h2>
+            <h2 className="text-2xl font-bold text-yellow-400 mb-4">{getActionName(action.recipeType)}: {item.name}</h2>
             
             <div className="w-24 h-24 bg-gray-900 border-4 border-gray-600 rounded-lg flex items-center justify-center mb-4">
                 <img src={item.iconUrl} alt={item.name} className={`w-16 h-16 ${getIconClassName(item)}`} />

@@ -1,0 +1,79 @@
+# Embrune v0.2 - (The Arcane Awakening)
+New Skills
+- Runecrafting
+  - Added the entirety of runecraft to the game
+  - You can craft rune essence into runes at altars located around the world, use talismans to find them
+  - Mutliple runes can be crafted per essence at 7 level increments up to 6x the original amount of runes
+  - You can craft tiara's at their respective altar while having a tiara and a talisman - and using them on each other
+    - They are wearable talismans
+  - Fully added a quest to introduce you to runecrafting. It's the first fully functional quest, that feels more than a fetch this and that quest.
+- Magic
+  - The entirety of magic has been added
+  - You can now use the runes made from runecrafting to cast spells, and curses on your enemies.
+  - A plethora of enchantments have been added, allowing various operations in the game.
+  - Staves and runes have been added to a magic shop in Silverhaven.
+  - Elemental staves act as infinite sources of their corresponding rune
+  - Introduced a new panel for casting spells
+  - Introduced a new set of Staff type specific equipment stances, allowing you to use the staves as a melee weapon, or setup auto-casting to cast spells.
+  - Several new robes for magic were added to add some variety to the game
+  - There are now teleports into cities, using a Passage rune and some other runes per teleport spell.
+  - Introduced a spell typing system, for future implementation against monsters like magma imps (fire) being weak to water type spells. (NYI)
+
+New additions
+- Implemented attack animations for melee, ranged, and magic
+- Improved the Tutorial to be more cohesive for new players
+- Added a version number to the game window
+- Refactored the project to be called Embrune
+- Adjusted display settings on PC to be 16:9 aspect ratio
+- Implemented a radial minimap
+- Implemented health orb, and map orb on the minimap (with right click context menu for world map/atlas map)
+- Changed the side bar for inventory to include runescape style tab system
+- Adjusted tutorial to display new information on the updated interface
+- Tutorial now detects if you're on a touch device or pc, and changes dialog based on that to match your control scheme
+- Implemented baking (Buckets, Pots, doughs, cake tins, pie dish)
+- Implemented Decanting
+- Implemented Potion Doses
+- Implemented level based scaling for potions Weak:Normal:Super (10% + 2)(15% + 4)(20% + 6) 
+- Created a level up animation, with FIREWORKS
+- Implemented Icon based skilling windows, with detailed tooltips
+- New region - The Verdant Fields a safehaven for ranger types, many new items can be found here, and specifically unlocks a lot of ranged armor.
+  - (Level 5) Boar Hide armor - Minor increase to ranged accuracy over leather, and signifigant (in comparison) defensive bonuses.
+  - (Level 10) Wolf hide armor - Increases to ranged accuracy and defences
+  - (Level 20) Bear hide armor - Further increases to ranged accuracy and defences
+- Add pestle and mortar for breaking down solid herblore items into their dusty varients
+- Implemented a red shadow to appear over dungeon entrances signifying they are dangerous
+- Implemented varying drop tables for all mobs in the game, to include runes and talismans to them.
+- Implemented noted items
+- Implemented truncated quantitys for coins
+- Implemented colored text on items over 100k (white) and 10M (green)
+- Added a Global Gem table, that now drops the Verdant and Flux talismans. You access this table by killing monsters over level 10
+- Implemented a larger button layout for the UI, allowing for 7 units across the top, and 7 across the bottom of the inventory panel
+- New region - The Crystalline Island, a new mid-level region offering new resources, and strong higher level monsters to fight against. (WIP)
+  - This region is accessed via Silas in Silverhaven, costing 1600g to get there.
+- All items dropped, will appear in a new button, that can be opened in the bottom left of the screen. 5 minute despawn timer -- NOT SAVED ON EXIT
+  - This correctly allows items dropped by mobs to be put into this container as well.
+
+Bug Fixes
+- Fixed the loading screen to include an actual loading bar
+- Fixed Mithril, Adamantite, and Runic smithing
+- Fixed screen size, to now properly fill the entire screen
+- Adjusted all POI locations in the Sunken Labyrinth to have Coorindates for the movement system
+- Tutorial overlay now correctly displays over the activity log
+- Made the compass movement a bit tighter, now there should be no more scroll-bar
+- Removed Tutorial debug outputs
+- Stat boosting potions no longer 'level up' with you when you gain a level
+- Depositing multiple unstackable items now works with right click menu
+- Adjusted the rotation of several items to look more runescapey
+- Fixed Attack animation for events where player and mob have overlapping attacks
+
+Skill adjustments
+- Adjusted the way slayer xp works, you now gain xp per kill, instead of after turning in the task. You now gain gold when turning it in
+- Introduced several weak potion variations
+
+DevMode Adjustments
+- Introduced a more powerful Dev system. To allow better testing of certain mechanics.
+- Introduced a map editor, so I can adjust POI locations, to help prevent overlapping POIs in the travel window
+- I can now teleport to locations if a bug is found, for testing.
+- You can now scale your xp rate from 1-100 with a new toggle
+- 
+- Will be adding the normal users to use DevMode in this update, for testing new mechanics.

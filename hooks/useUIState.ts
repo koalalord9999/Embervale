@@ -1,6 +1,16 @@
 import React, { useState, useCallback } from 'react';
-import { ActivePanel, SkillName, InventorySlot, ActiveCraftingAction, DialogueNode, CraftingContext, Equipment } from '../types';
+import { ActivePanel, SkillName, InventorySlot, ActiveCraftingAction, DialogueNode, CraftingContext, Equipment, PlayerQuestState, Spell } from '../types';
 import { ContextMenuOption } from '../components/common/ContextMenu';
+
+export interface DialogueState {
+    npcName: string;
+    npcIcon: string;
+    nodes: Record<string, DialogueNode>;
+    currentNodeKey: string;
+    onEnd: () => void;
+    onAction: (action: any) => void;
+    onNavigate?: (nextNodeKey: string) => void;
+}
 
 export interface TooltipState {
     content: React.ReactNode;
@@ -9,7 +19,8 @@ export interface TooltipState {
 
 export interface ContextMenuState {
     options: ContextMenuOption[];
-    position: { x: number; y: number; };
+    event: React.MouseEvent | React.Touch;
+    isTouchInteraction: boolean;
 }
 
 export interface MakeXPrompt {
@@ -18,25 +29,14 @@ export interface MakeXPrompt {
     onConfirm: (quantity: number) => void;
 }
 
-export interface NpcDialogueState {
-    name: string;
-    icon: string;
-    dialogue: string[];
-}
-
-export interface QuestDialogueState {
-    questId: string;
-    startNode?: string;
-}
-
-export interface InteractiveDialogueState {
-    dialogue: Record<string, DialogueNode>;
-    startNode: string;
-}
-
 export interface ConfirmationPrompt {
     message: string;
     onConfirm: () => void;
+}
+
+export interface QuestDetailState {
+    questId: string;
+    playerQuests: PlayerQuestState[];
 }
 
 export const useUIState = () => {
@@ -46,27 +46,27 @@ export const useUIState = () => {
     const [activeShopId, setActiveShopId] = useState<string | null>(null);
     const [activeCraftingContext, setActiveCraftingContext] = useState<CraftingContext | null>(null);
     const [itemToUse, setItemToUse] = useState<{ item: InventorySlot, index: number } | null>(null);
+    const [spellToCast, setSpellToCast] = useState<Spell | null>(null);
     const [activeQuestBoardId, setActiveQuestBoardId] = useState<string | null>(null);
     const [activeTeleportBoardId, setActiveTeleportBoardId] = useState<string | null>(null);
     const [tooltip, setTooltip] = useState<TooltipState | null>(null);
     const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
     const [makeXPrompt, setMakeXPrompt] = useState<MakeXPrompt | null>(null);
-    const [activeQuestDialogue, setActiveQuestDialogue] = useState<QuestDialogueState | null>(null);
-    const [activeInteractiveDialogue, setActiveInteractiveDialogue] = useState<InteractiveDialogueState | null>(null);
-    const [activeNpcDialogue, setActiveNpcDialogue] = useState<NpcDialogueState | null>(null);
+    const [activeDialogue, setActiveDialogue] = useState<DialogueState | null>(null);
     const [confirmationPrompt, setConfirmationPrompt] = useState<ConfirmationPrompt | null>(null);
     const [exportData, setExportData] = useState<string | null>(null);
     const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
     const [activeSkillGuide, setActiveSkillGuide] = useState<SkillName | null>(null);
     const [activeCraftingAction, setActiveCraftingAction] = useState<ActiveCraftingAction | null>(null);
-    const [activeQuestDetailId, setActiveQuestDetailId] = useState<string | null>(null);
+    const [activeQuestDetail, setActiveQuestDetail] = useState<QuestDetailState | null>(null);
 
     // New state for equipment overlays
     const [equipmentStats, setEquipmentStats] = useState<Equipment | null>(null);
     const [isItemsOnDeathOpen, setIsItemsOnDeathOpen] = useState<boolean>(false);
-    const [isPriceCheckerOpen, setIsPriceCheckerOpen] = useState<boolean>(false);
+    const [priceCheckerInventory, setPriceCheckerInventory] = useState<(InventorySlot | null)[] | null>(null);
     const [isAtlasViewOpen, setIsAtlasViewOpen] = useState<boolean>(false);
     const [isExpandedMapViewOpen, setIsExpandedMapViewOpen] = useState<boolean>(false);
+    const [isLootViewOpen, setIsLootViewOpen] = useState<boolean>(false);
 
 
     const closeContextMenu = useCallback(() => setContextMenu(null), []);
@@ -84,23 +84,23 @@ export const useUIState = () => {
         setActiveShopId(null);
         setActiveCraftingContext(null);
         setItemToUse(null);
+        setSpellToCast(null);
         setMakeXPrompt(null);
         setActiveQuestBoardId(null);
         setActiveTeleportBoardId(null);
-        setActiveQuestDialogue(null);
-        setActiveInteractiveDialogue(null);
-        setActiveNpcDialogue(null);
+        setActiveDialogue(null);
         setConfirmationPrompt(null);
         setExportData(null);
         setIsImportModalOpen(false);
         setActiveSkillGuide(null);
         setActiveCraftingAction(null);
-        setActiveQuestDetailId(null);
+        setActiveQuestDetail(null);
         setEquipmentStats(null);
         setIsItemsOnDeathOpen(false);
-        setIsPriceCheckerOpen(false);
+        setPriceCheckerInventory(null);
         setIsAtlasViewOpen(false);
         setIsExpandedMapViewOpen(false);
+        setIsLootViewOpen(false);
     }, []);
 
     return {
@@ -110,25 +110,25 @@ export const useUIState = () => {
         activeShopId, setActiveShopId,
         activeCraftingContext,
         itemToUse, setItemToUse,
+        spellToCast, setSpellToCast,
         activeQuestBoardId, setActiveQuestBoardId,
         activeTeleportBoardId, setActiveTeleportBoardId,
         tooltip, setTooltip,
         contextMenu, setContextMenu,
         makeXPrompt, setMakeXPrompt,
-        activeQuestDialogue, setActiveQuestDialogue,
-        activeInteractiveDialogue, setActiveInteractiveDialogue,
-        activeNpcDialogue, setActiveNpcDialogue,
+        activeDialogue, setActiveDialogue,
         confirmationPrompt, setConfirmationPrompt,
         exportData, setExportData,
         isImportModalOpen, setIsImportModalOpen,
         activeSkillGuide, setActiveSkillGuide,
         activeCraftingAction, setActiveCraftingAction,
-        activeQuestDetailId, setActiveQuestDetailId,
+        activeQuestDetail, setActiveQuestDetail,
         equipmentStats, setEquipmentStats,
         isItemsOnDeathOpen, setIsItemsOnDeathOpen,
-        isPriceCheckerOpen, setIsPriceCheckerOpen,
+        priceCheckerInventory, setPriceCheckerInventory,
         isAtlasViewOpen, setIsAtlasViewOpen,
         isExpandedMapViewOpen, setIsExpandedMapViewOpen,
+        isLootViewOpen, setIsLootViewOpen,
         closeContextMenu,
         closeMakeXPrompt,
         closeConfirmationPrompt,

@@ -4,23 +4,11 @@ export const QUESTS: Record<string, Quest> = {
     tutorial_completion: {
         id: 'tutorial_completion',
         name: 'A New Adventure',
-        // FIX: Added missing 'description' property to satisfy the Quest type.
         description: "Complete your training in the enclave and venture out into the world.",
         isHidden: true,
-        startPoi: 'enclave_departure_point',
         startHint: "Complete Leo's training.",
         playerStagePerspectives: ["I'm ready to leave the enclave. I should speak to Leo one last time."],
-        completionSummary: "I completed my training with Leo and have now entered the main world of Embervale.",
-        dialogue: {
-            start: {
-                npcName: 'Leo the Guide',
-                npcIcon: '/assets/npcChatHeads/tavern_regular.png',
-                text: "You're ready. Your first stop should be Meadowdale. The smith there, Valerius, is always looking for new talent. Or, you could check the quest board in The Rusty Flagon inn for work. Good luck.",
-                responses: [
-                    { text: "Thank you, Leo. I'm ready.", action: 'accept_quest' },
-                ],
-            },
-        },
+        completionSummary: "I completed my training with Leo and have now entered the main world of Embrune.",
         stages: [
             {
                 description: "Leave the enclave and enter the world.",
@@ -29,51 +17,12 @@ export const QUESTS: Record<string, Quest> = {
         ],
         rewards: {}
     },
-    leos_lunch: {
-        id: 'leos_lunch',
-        name: "Leo's Lunch?",
-        description: "You found a rock in the sandwich Leo gave you. What is he playing at?",
-        startPoi: 'enclave_start',
-        isHidden: true,
-        startHint: "Examine the strange sandwich Leo gives you during the tutorial.",
-        playerStagePerspectives: ["I found a rock in my sandwich. I should ask Leo about this."],
-        completionSummary: "I found a rock in the sandwich Leo gave me. As a reward for my curiosity, he taught me a thing or two and gave me a better one.",
-        dialogue: {
-            start: {
-                npcName: 'Leo the Guide',
-                npcIcon: '/assets/npcChatHeads/tavern_regular.png',
-                text: "A rock? Hah! You found it! I put that there to teach you a lesson: always be aware. Adventuring is about more than just swinging a sword. It's about paying attention.",
-                responses: [
-                    { text: "That's a strange lesson.", next: 'reward' },
-                ],
-            },
-            reward: {
-                npcName: 'Leo the Guide',
-                npcIcon: '/assets/npcChatHeads/tavern_regular.png',
-                text: "Maybe so, but it's one you won't forget. For being so observant, here's a proper sandwich. And a little something for your trouble. Now, where were we?",
-                responses: [
-                    { text: "Thank you!", action: 'custom', customActionId: 'complete_leos_lunch' },
-                ],
-            }
-        },
-        stages: [
-            {
-                description: 'Talk to Leo about the rock in your sandwich.',
-                requirement: { type: 'talk', poiId: 'enclave_start', npcName: 'Leo the Guide' }
-            }
-        ],
-        rewards: {
-            xp: [{ skill: SkillName.Attack, amount: 25 }, { skill: SkillName.Strength, amount: 25 }, { skill: SkillName.Defence, amount: 25 }],
-            items: [{ itemId: 'leos_masterpiece_sandwich', quantity: 1 }]
-        }
-    },
     a_smiths_apprentice: {
         id: 'a_smiths_apprentice',
         name: "A Smith's Apprentice",
         description: "Valerius the Master Smith is looking for an extra pair of hands to help around the smithy. This could be a good opportunity to learn the craft.",
-        startPoi: 'meadowdale_smithy',
-        startDialogueNode: 'start',
         startHint: "Speak to Valerius the Master Smith in Meadowdale.",
+        startDialogueNode: 'start',
         playerStagePerspectives: [
             "Valerius needs me to bring him 1 Copper Ore and 1 Tin Ore.",
             "I should bring the ore back to Valerius.",
@@ -131,14 +80,13 @@ export const QUESTS: Record<string, Quest> = {
         id: 'goblin_menace',
         name: 'Goblin Menace',
         description: "Old Man Fitzwilliam is being driven mad by a racket coming from the Stonebreak Mine. He suspects goblins are to blame.",
-        startPoi: 'meadowdale_square',
-        startDialogueNode: 'start',
         startHint: "Speak to Old Man Fitzwilliam in the Meadowdale Square.",
+        startDialogueNode: 'start',
         playerStagePerspectives: [
             "I need to take care of 5 goblins in the Stonebreak Mine to stop the racket.",
             "I should let Old Man Fitzwilliam know the goblins have been dealt with."
         ],
-        completionSummary: "I dealt with the goblin problem in the mines. The racket has stopped, and Old Man Fitzwilliam paid me for restoring his peace and quiet.",
+        completionSummary: "I dealt with the goblin problem in the mines. The racket has stopped, and Old Man Fitzwilliam paid me for my work.",
         dialogue: {
             start: {
                 npcName: 'Old Man Fitzwilliam',
@@ -169,9 +117,8 @@ export const QUESTS: Record<string, Quest> = {
         id: 'sheep_troubles',
         name: 'Sheep Troubles',
         description: "Rancher McGregor's sheep are getting overgrown. He needs a hand shearing them and preparing the wool.",
-        startPoi: 'mcgregors_ranch',
-        startDialogueNode: 'start',
         startHint: "Speak to Rancher McGregor at his ranch, west of Meadowdale.",
+        startDialogueNode: 'start',
         playerStagePerspectives: [
             "I need to shear 10 sheep in the pen at the ranch.",
             "I need to use the spinning wheel in the barn to turn the 10 pieces of wool into balls of wool.",
@@ -229,7 +176,6 @@ export const QUESTS: Record<string, Quest> = {
         id: 'ancient_blade',
         name: 'An Ancient Blade',
         description: "A rusty sword found by chance might be restorable by a master smith.",
-        startPoi: 'meadowdale_smithy',
         isHidden: true,
         startHint: "This is a hidden quest. It is started by showing a Rusty Iron Sword to Valerius the smith.",
         playerStagePerspectives: [
@@ -261,9 +207,8 @@ export const QUESTS: Record<string, Quest> = {
         id: 'bandit_toll',
         name: 'Bandit Toll',
         description: "The road to the southern town of Oakhaven is plagued by bandits, disrupting trade. The clerk in Meadowdale's town hall is offering a reward for clearing them out.",
-        startPoi: 'town_hall',
-        startDialogueNode: 'start',
         startHint: "Speak to Clerk Augustus in the Meadowdale Town Hall about the trouble on the southern road.",
+        startDialogueNode: 'start',
         playerStagePerspectives: [
             "I need to defeat 5 of the Cloaked Bandits on the road to Oakhaven.",
             "I should return to Clerk Augustus in Meadowdale to claim my reward."
@@ -312,11 +257,71 @@ export const QUESTS: Record<string, Quest> = {
             coins: 500,
         }
     },
+    magical_runestone_discovery: {
+        id: 'magical_runestone_discovery',
+        name: "Magical Runestone Discovery",
+        description: "Wizard Elmsworth in the Meadowdale Library has made a discovery about the nature of magic and needs an adventurer to help him investigate.",
+        startHint: "Speak to Wizard Elmsworth in the Meadowdale Library.",
+        playerStagePerspectives: [
+            "I've agreed to help Wizard Elmsworth. I should speak to him again to be teleported to his discovery.",
+            "I'm at the location Wizard Elmsworth teleported me to. I should speak to him again.",
+            "I need to mine 5 chunks of Rune Essence for the wizard.",
+            "I have the essence. I should return to Wizard Elmsworth in the Meadowdale Library.",
+            "Elmsworth gave me a strange trinket that vibrates near the essence. He said it's pulling north, past the Murky Riverbank. I need to investigate where it leads.",
+            "The trinket led me to an altar! It reacted strongly. I should report this back to Wizard Elmsworth.",
+            "Elmsworth thinks the items need to be used on the altar. I should return and try it.",
+            "I've crafted runes! I should report my success to Wizard Elmsworth."
+        ],
+        completionSummary: "I assisted Wizard Elmsworth in his research. He discovered a mine filled with Rune Essence and a strange Talisman. I followed the Talisman's pull to a hidden altar, and under Elmsworth's guidance, used it to craft the essence into runes, discovering the lost art of Runecrafting.",
+        stages: [
+            {
+                description: "Agree to help Wizard Elmsworth.",
+                requirement: { type: 'talk', poiId: 'meadowdale_library', npcName: 'Wizard Elmsworth' }
+            },
+            {
+                description: "Be teleported by Wizard Elmsworth.",
+                requirement: { type: 'talk', poiId: 'meadowdale_library', npcName: 'Wizard Elmsworth' }
+            },
+            {
+                description: "Mine 5 Rune Essence chunks.",
+                requirement: { type: 'gather', itemId: 'rune_essence', quantity: 5 }
+            },
+            {
+                description: "Return to Wizard Elmsworth in Meadowdale.",
+                requirement: { type: 'talk', poiId: 'meadowdale_library', npcName: 'Wizard Elmsworth' },
+                stageRewards: {
+                    items: [{ itemId: 'gust_talisman', quantity: 1 }, { itemId: 'rune_essence', quantity: 5 }]
+                }
+            },
+            {
+                description: "Find the source of the talisman's pull.",
+                requirement: { type: 'talk', poiId: 'gust_altar', npcName: 'Approach the altar' }
+            },
+            {
+                description: "Report your findings to Wizard Elmsworth.",
+                requirement: { type: 'talk', poiId: 'meadowdale_library', npcName: 'Wizard Elmsworth' }
+            },
+            {
+                description: "Use the Talisman and Rune Essence on the Gust Altar.",
+                requirement: { type: 'talk', poiId: 'gust_altar', npcName: 'Approach the altar' }
+            },
+            {
+                description: "Return to Wizard Elmsworth with the runes.",
+                requirement: { type: 'talk', poiId: 'meadowdale_library', npcName: 'Wizard Elmsworth' }
+            }
+        ],
+        rewards: {
+            xp: [{ skill: SkillName.Runecrafting, amount: 250 }],
+            coins: 500,
+            items: [
+                { itemId: 'binding_talisman', quantity: 1 },
+            ]
+        }
+    },
     capitals_call: {
         id: 'capitals_call',
         name: "The Capital's Call",
         description: "The road to the capital, Silverhaven, is blocked. A guard captain in Oakhaven needs help reopening the route.",
-        startPoi: 'oakhaven_west_gate',
         startHint: "Speak to Guard Captain Elara at the Oakhaven West Gate about the road to the capital.",
         playerStagePerspectives: [
             "The bridge to the west is broken. I need to gather 20 Logs and 5 pieces of Rope to help repair it.",
@@ -342,7 +347,6 @@ export const QUESTS: Record<string, Quest> = {
         id: 'lost_heirloom',
         name: "Lost Heirloom",
         description: "You found a beautiful old necklace. Perhaps someone in the capital city of Silverhaven is missing it.",
-        startPoi: 'silverhaven_residential_district',
         isHidden: true,
         startHint: "This is a hidden quest. It is started by finding a special necklace and showing it to the right person.",
         playerStagePerspectives: [
@@ -355,7 +359,6 @@ export const QUESTS: Record<string, Quest> = {
                 requirement: { type: 'talk', poiId: 'silverhaven_residential_district', npcName: 'Elara' }
             }
         ],
-// FIX: The rewards object for this quest was malformed and incomplete. It has been corrected.
         rewards: {
             xp: [{ skill: SkillName.Slayer, amount: 350 }],
             coins: 1500,
@@ -363,7 +366,6 @@ export const QUESTS: Record<string, Quest> = {
     },
 };
 
-// FIX: Define and export the REPEATABLE_QUEST_POOL to resolve module export errors.
 export const REPEATABLE_QUEST_POOL: RepeatableQuest[] = [
     // --- GATHER ---
     {

@@ -1,17 +1,18 @@
 
+
 import React from 'react';
 import { InventorySlot, PlayerSkill, SkillName } from '../../../types';
 import { SPINNING_RECIPES, ITEMS, getIconClassName } from '../../../constants';
 import Button from '../../common/Button';
 import { ContextMenuOption } from '../../common/ContextMenu';
-import { MakeXPrompt } from '../../../hooks/useUIState';
+import { MakeXPrompt, ContextMenuState } from '../../../hooks/useUIState';
 
 interface SpinningViewProps {
-    inventory: InventorySlot[];
+    inventory: (InventorySlot | null)[];
     skills: PlayerSkill[];
     onSpin: (itemId: string, quantity: number) => void;
     onExit: () => void;
-    setContextMenu: (menu: { options: ContextMenuOption[]; position: { x: number; y: number; } } | null) => void;
+    setContextMenu: (menu: ContextMenuState | null) => void;
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
 }
 
@@ -21,9 +22,9 @@ const SpinningView: React.FC<SpinningViewProps> = ({ inventory, skills, onSpin, 
     const getIngredientCount = (itemId: string) => {
         const item = ITEMS[itemId];
         if (item.stackable) {
-            return inventory.find(slot => slot.itemId === itemId)?.quantity ?? 0;
+            return inventory.find(slot => slot && slot.itemId === itemId)?.quantity ?? 0;
         }
-        return inventory.filter(slot => slot.itemId === itemId).length;
+        return inventory.filter(slot => slot && slot.itemId === itemId).length;
     };
 
     const createContextMenu = (e: React.MouseEvent, recipe: typeof SPINNING_RECIPES[0]) => {
@@ -47,7 +48,7 @@ const SpinningView: React.FC<SpinningViewProps> = ({ inventory, skills, onSpin, 
                 disabled: !hasLevel || maxCraftable < 1 
             },
         ];
-        setContextMenu({ options, position: { x: e.clientX, y: e.clientY } });
+        setContextMenu({ options, event: e, isTouchInteraction: false });
     };
 
     return (

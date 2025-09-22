@@ -7,7 +7,7 @@ interface UseQuestLogicProps {
     playerQuests: PlayerQuestState[];
     setPlayerQuests: React.Dispatch<React.SetStateAction<PlayerQuestState[]>>;
     addLog: (message: string) => void;
-    modifyItem: (itemId: string, quantity: number, quiet?: boolean) => void;
+    modifyItem: (itemId: string, quantity: number, quiet?: boolean, doses?: number, options?: { noted?: boolean; bypassAutoBank?: boolean }) => void;
     addXp: (skill: SkillName, amount: number) => void;
     hasItems: (items: { itemId: string, quantity: number }[]) => boolean;
     setLockedPois: React.Dispatch<React.SetStateAction<string[]>>;
@@ -99,7 +99,9 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
             // Handle 'gather' requirements that can be fulfilled by monster drops
             else if (stage?.requirement.type === 'gather') {
                 const requiredItemId = stage.requirement.itemId;
-                if (monster.drops.some(drop => drop.itemId === requiredItemId)) {
+                // FIX: Property 'drops' does not exist on type 'Monster'. Combined all drop tables to check for the required item.
+                const allDrops = [...(monster.guaranteedDrops || []), ...(monster.mainDrops || []), ...(monster.tertiaryDrops || [])];
+                if (allDrops.some(drop => drop.itemId === requiredItemId)) {
                     // hasItems check is performed after loot is added, so it reflects the new state
                     if (hasItems([{ itemId: requiredItemId, quantity: stage.requirement.quantity }])) {
                         stageCompleted = true;
@@ -115,7 +117,7 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
                     addLog(`Congratulations! You have completed the quest: ${questData.name}!`);
                     const rewards = questData.rewards;
                     if (rewards.coins) modifyItem('coins', rewards.coins);
-                    rewards.items?.forEach(item => modifyItem(item.itemId, item.quantity));
+                    rewards.items?.forEach(item => modifyItem(item.itemId, item.quantity, false, item.doses, { bypassAutoBank: true }));
                     rewards.xp?.forEach(xpReward => addXp(xpReward.skill, xpReward.amount));
                     return { ...updatedQuest, isComplete: true };
                 } else {
@@ -150,7 +152,7 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
                         addLog(`You received ${rewards.coins} coins.`);
                     }
                     rewards.items?.forEach(item => {
-                        modifyItem(item.itemId, item.quantity);
+                        modifyItem(item.itemId, item.quantity, false, item.doses, { bypassAutoBank: true });
                         addLog(`You received ${item.quantity}x ${ITEMS[item.itemId].name}.`);
                     });
                     rewards.xp?.forEach(xpReward => {
@@ -159,20 +161,29 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
                     });
                 }
 
+                // Check for POI unlocks for the NEXT stage
+                const nextStageIndex = q.currentStage + 1;
+                Object.values(POIS).forEach(poi => {
+                    if (poi.unlockRequirement?.type === 'quest' && poi.unlockRequirement.questId === questId && poi.unlockRequirement.stage <= nextStageIndex) {
+                        setLockedPois(prev => {
+                            if (prev.includes(poi.id)) {
+                                addLog(`You have unlocked ${poi.name}!`);
+                                return prev.filter(id => id !== poi.id);
+                            }
+                            return prev;
+                        });
+                    }
+                });
+
                 const isCompletingFinalStage = q.currentStage >= questData.stages.length - 1;
 
                 if(isCompletingFinalStage) {
                     addLog(`Congratulations! You have completed the quest: ${questData.name}!`);
                     const rewards = questData.rewards;
                     if(rewards.coins) modifyItem('coins', rewards.coins);
-                    rewards.items?.forEach(item => modifyItem(item.itemId, item.quantity));
+                    rewards.items?.forEach(item => modifyItem(item.itemId, item.quantity, false, item.doses, { bypassAutoBank: true }));
                     rewards.xp?.forEach(xpReward => addXp(xpReward.skill, xpReward.amount));
-                    Object.values(POIS).forEach(poi => {
-                        if (poi.unlockRequirement?.type === 'quest' && poi.unlockRequirement.questId === questId && poi.unlockRequirement.stage <= q.currentStage +1) {
-                            setLockedPois(prev => prev.filter(id => id !== poi.id));
-                            addLog(`You have unlocked ${poi.name}!`);
-                        }
-                    });
+                    
                      // Special quest logic
                     if (questData.id === 'capitals_call') {
                         setClearedSkillObstacles(prev => [...prev, 'broken_bridge-kings_road_west_2']);
@@ -186,9 +197,6 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
                     }
                     if (questData.id === 'a_pinch_of_trouble') {
                         modifyItem('giant_crab_claw', -1);
-                    }
-                    if (questData.id === 'leos_lunch') {
-                        modifyItem('unusual_sandwich', -1, true);
                     }
                     return {...q, isComplete: true};
                 }

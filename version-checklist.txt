@@ -1,0 +1,44 @@
+# Embrune v0.2 - The Arcane Awakening
+
+## Core Systems
+- [X] Implement Magic Skill
+- [X] Implement Runecrafting Skill
+
+## Content & World Expansion
+- [X] New Region: The Crystalline Isles (Floating islands accessible via a magical bridge)
+- [ ] New Dungeon: The Grand Magus's Spire (Magic-based dungeon on the new isle)
+- [ ] New Main Quest: "The Arcane Awakening" - introduces Magic, Runecrafting, and the new region.
+- [ ] New Monsters: Arcane Elementals, Mana Wraiths, Crystal Golems.
+- [X] New Resources: Rune Essence (for Runecrafting), Starfire Ore, and Crystalwood Trees.
+
+## Magic Skill Details
+- [X] Magic Combat: Introduction of elemental staves and 4 tiers of combat spells (Strike, Bolt, Blast, Wave).
+- [ ] Utility Spells:
+    - [X] Transmutation: Convert items into coins at a loss (replaces "alching").
+    - [X] Enchantment: Enchant crafted jewelry (gold, silver, gem-tipped) to provide combat bonuses.
+    - [X] Teleportation: Unlockable teleports to major cities and discovered runic altars.
+    - [ ] Arcane Familiar: A temporary magical wisp that gathers a single resource node for you.
+    - [ ] Bind: A low-level spell to temporarily stun a monster in combat.
+
+## Runecrafting Skill Details
+- [X] Rune Essence: A new mineable resource.
+- [X] Runecrafting Altars: Hidden altars for each elemental rune, scattered across the world.
+- [X] Talismans: Items required to locate and access the Runecrafting altars.
+
+## Crafting Skill Details
+- [X] Introduce Gold Jewelry via crafting
+- [X] Introduce Gemmed Jewlery via crafting
+
+## Quality of Life & Other Additions
+- [ ] Bank Rework: Introduction of bank tabs for organization.
+- [X] Bank Rework: Introduction of noted items.
+- [X] Potion Dosing: Potions now have multiple doses and can be decanted.
+
+## Client changes
+- [X] Work on refactoring the project to allow players to play on mobile, with better scaling
+- [X] Enhance the PC game window size to take up the entire available screen. (currently it only takes like 80%)
+- [X] Update skilling windows to be uniform, and display interactable item icons, instead of text.
+    - [X] This will update the smithing window
+    - [X] This will update the fletching window
+    - [X] This will update the cooking window
+    - [X] This will update the crafting window(s)

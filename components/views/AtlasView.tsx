@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { POI, Region } from '../../types';
 import { REGIONS, MAP_DIMENSIONS } from '../../constants';
@@ -11,6 +10,7 @@ interface AtlasViewProps {
     unlockedPois: string[];
     onClose: () => void;
     setTooltip: (tooltip: TooltipState | null) => void;
+    showAllPois: boolean;
 }
 
 const getRegionColor = (regionId: string, alpha: number = 0.4) => {
@@ -73,7 +73,7 @@ const getPolygonCentroid = (points: { x: number; y: number }[]): { x: number; y:
 };
 
 
-const AtlasView: React.FC<AtlasViewProps> = ({ currentPoiId, unlockedPois, onClose, setTooltip }) => {
+const AtlasView: React.FC<AtlasViewProps> = ({ currentPoiId, unlockedPois, onClose, setTooltip, showAllPois }) => {
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const [view, setView] = useState({ x: 0, y: 0, zoom: 0.5 });
     const [isDragging, setIsDragging] = useState(false);
@@ -143,12 +143,15 @@ const AtlasView: React.FC<AtlasViewProps> = ({ currentPoiId, unlockedPois, onClo
     const zoomIn = () => setView(v => ({ ...v, zoom: Math.min(16, v.zoom * 1.5) }));
     const zoomOut = () => setView(v => ({ ...v, zoom: Math.max(0.25, v.zoom / 1.5) }));
     
-    const { regionPolygons, regionsToDisplay } = useMemo(() => {
-        const allUnlockedPois = Object.values(POIS).filter(p => unlockedPois.includes(p.id));
+    const { regionPolygons, regionsToDisplay, dungeonsToDisplay } = useMemo(() => {
+        const poisForHull = showAllPois 
+            ? Object.values(POIS)
+            : Object.values(POIS).filter(p => unlockedPois.includes(p.id));
+
         const poisByRegion: Record<string, POI[]> = {};
 
         // 1. Initial grouping of POIs by region
-        allUnlockedPois.forEach(poi => {
+        poisForHull.forEach(poi => {
             const region = REGIONS[poi.regionId];
             if (region?.type !== 'city' && region?.type !== 'dungeon') {
                 if (!poisByRegion[poi.regionId]) {
@@ -165,13 +168,13 @@ const AtlasView: React.FC<AtlasViewProps> = ({ currentPoiId, unlockedPois, onClo
         }
 
         // 3. Find connections between regions and add "bridge" points
-        allUnlockedPois.forEach(startPoi => {
+        poisForHull.forEach(startPoi => {
             const startRegion = REGIONS[startPoi.regionId];
             if (!startRegion || startRegion.type === 'city' || startRegion.type === 'dungeon') return;
 
             startPoi.connections.forEach(connId => {
                 const endPoi = POIS[connId];
-                if (!endPoi || !unlockedPois.includes(endPoi.id)) return;
+                if (!endPoi || (!showAllPois && !unlockedPois.includes(endPoi.id))) return;
 
                 const endRegion = REGIONS[endPoi.regionId];
                 if (!endRegion || endRegion.type === 'city' || endRegion.type === 'dungeon' || endRegion.id === startRegion.id) return;
@@ -206,13 +209,14 @@ const AtlasView: React.FC<AtlasViewProps> = ({ currentPoiId, unlockedPois, onClo
                     centroid,
                 };
             })
-            .filter(Boolean);
+            .filter((p): p is { regionId: string; name: string; points: string; centroid: { x: number; y: number } } => p !== null);
 
         return {
-            regionPolygons: polygons as { regionId: string; name: string; points: string; centroid: { x: number; y: number } }[],
+            regionPolygons: polygons,
             regionsToDisplay: Object.values(REGIONS).filter(r => r.type === 'city'),
+            dungeonsToDisplay: Object.values(REGIONS).filter(r => r.type === 'dungeon'),
         };
-    }, [unlockedPois]);
+    }, [unlockedPois, showAllPois]);
 
     const handleMouseEnter = (e: React.MouseEvent, item: { name: string, description?: string }) => {
         const tooltipContent = (
@@ -284,7 +288,7 @@ const AtlasView: React.FC<AtlasViewProps> = ({ currentPoiId, unlockedPois, onClo
 
                         {regionsToDisplay.map(region => {
                             const isCurrent = POIS[currentPoiId]?.regionId === region.id;
-                            const isUnlocked = unlockedPois.includes(region.entryPoiId);
+                            const isUnlocked = showAllPois || unlockedPois.includes(region.entryPoiId);
                             return (
                                  <div
                                     key={region.id}
@@ -299,6 +303,25 @@ const AtlasView: React.FC<AtlasViewProps> = ({ currentPoiId, unlockedPois, onClo
                             )
                         })}
                         
+                        {dungeonsToDisplay.map(dungeon => {
+                            const entryPoi = POIS[dungeon.entryPoiId];
+                            if (!entryPoi) return null;
+                            const isUnlocked = showAllPois || unlockedPois.includes(entryPoi.id);
+                            const coords = { x: entryPoi.x, y: entryPoi.y };
+
+                            return (
+                                 <div
+                                    key={dungeon.id}
+                                    className={`absolute transform -translate-x-1/2 -translate-y-1/2 group ${isUnlocked ? 'cursor-pointer' : 'cursor-default'}`}
+                                    style={{ top: `${coords.y}px`, left: `${coords.x}px` }}
+                                    onMouseEnter={(e) => handleMouseEnter(e, {name: dungeon.name, description: entryPoi.description})}
+                                    onMouseLeave={() => setTooltip(null)}
+                                >
+                                    <img src="https://api.iconify.design/game-icons:cave-entrance.svg" alt={dungeon.name} className={`filter invert transition-opacity ${isUnlocked ? 'opacity-80 group-hover:opacity-100' : 'opacity-30'}`} style={{width: `${40 / view.zoom}px`, height: `${40 / view.zoom}px`}} />
+                                </div>
+                            )
+                        })}
+
                         {currentPlayerPoi && (
                              <div
                                 key="current-player-location"

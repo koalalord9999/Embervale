@@ -1,11 +1,8 @@
-
-
 import { POI } from '../../types';
 import { meadowdalePois } from './meadowdale';
 import { minePois } from './mines';
 import { southernRoadPois } from './southern_road';
 import { wildernessPois } from './wilderness';
-import { farmlandsPois } from './farmlands';
 import { goblinDungeonPois } from './dungeon_goblin';
 import { oakhavenRoadPois } from './oakhaven_road';
 import { oakhavenPois } from './oakhaven';
@@ -19,6 +16,9 @@ import { banditHideoutPois } from './bandit_hideout';
 import { isleOfWhispersPois } from './isle_of_whispers';
 import { sunkenLabyrinthPois } from './dungeon_sunken_labyrinth';
 import { tutorialZonePois } from './tutorial_zone';
+import { dwarvenOutpostPois } from './dwarven_outpost';
+import { saltFlatsPois } from './salt_flats';
+import { crystallineIslesPois } from './crystalline_isles';
 
 export const POIS: Record<string, POI> = {
     ...tutorialZonePois,
@@ -26,7 +26,6 @@ export const POIS: Record<string, POI> = {
     ...wildernessPois,
     ...minePois,
     ...southernRoadPois,
-    ...farmlandsPois,
     ...goblinDungeonPois,
     ...oakhavenRoadPois,
     ...oakhavenPois,
@@ -39,4 +38,7 @@ export const POIS: Record<string, POI> = {
     ...banditHideoutPois,
     ...isleOfWhispersPois,
     ...sunkenLabyrinthPois,
+    ...dwarvenOutpostPois,
+    ...saltFlatsPois,
+    ...crystallineIslesPois,
 };
