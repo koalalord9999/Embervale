@@ -1,7 +1,8 @@
 import React, { useCallback } from 'react';
-import { POIActivity, SkillName, InventorySlot, PlayerSkill, SkillRequirement, PlayerQuestState, ActiveCraftingAction } from '../../types';
-import { ITEMS, INVENTORY_CAPACITY, rollOnLootTable } from '../../constants';
-import { MakeXPrompt } from '../../hooks/useUIState';
+import { POIActivity, SkillName, InventorySlot, PlayerSkill, SkillRequirement, PlayerQuestState, ActiveCraftingAction } from '../types';
+import { ITEMS, INVENTORY_CAPACITY, rollOnLootTable } from '../constants';
+import { POIS } from '../data/pois';
+import { MakeXPrompt } from './useUIState';
 
 interface UseWorldActionsProps {
     hasItems: (items: { itemId: string; quantity: number }[]) => boolean;
