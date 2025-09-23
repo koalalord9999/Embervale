@@ -1,32 +1,31 @@
 
-
-import { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useUIState } from './useUIState';
 import { REGIONS } from '../constants';
 import { POIS } from '../data/pois';
 import { POI, Region } from '../types';
 
 // Import all POI file objects for the map manager
-import { banditHideoutPois } from '../../data/pois/bandit_hideout';
-import { crystallineIslesPois } from '../../data/pois/crystalline_isles';
-import { goblinDungeonPois } from '../../data/pois/dungeon_goblin';
-import { sunkenLabyrinthPois } from '../../data/pois/dungeon_sunken_labyrinth';
-import { dwarvenOutpostPois } from '../../data/pois/dwarven_outpost';
-import { saltFlatsPois } from '../../data/pois/salt_flats';
-import { galeSweptPeaksPois } from '../../data/pois/gale_swept_peaks';
-import { isleOfWhispersPois } from '../../data/pois/isle_of_whispers';
-import { meadowdalePois } from '../../data/pois/meadowdale';
-import { minePois } from '../../data/pois/mines';
-import { oakhavenPois } from '../../data/pois/oakhaven';
-import { oakhavenRoadPois } from '../../data/pois/oakhaven_road';
-import { silverhavenPois } from '../../data/pois/silverhaven';
-import { southernRoadPois } from '../../data/pois/southern_road';
-import { sunkenLandsPois } from '../../data/pois/sunken_lands';
-import { theFeywoodPois } from '../../data/pois/the_feywood';
-import { theSerpentsCoilPois } from '../../data/pois/the_serpents_coil';
-import { theVerdantFieldsPois } from '../../data/pois/the_verdant_fields';
-import { tutorialZonePois } from '../../data/pois/tutorial_zone';
-import { wildernessPois } from '../../data/pois/wilderness';
+import { banditHideoutPois } from '../data/pois/bandit_hideout';
+import { crystallineIslesPois } from '../data/pois/crystalline_isles';
+import { goblinDungeonPois } from '../data/pois/dungeon_goblin';
+import { sunkenLabyrinthPois } from '../data/pois/dungeon_sunken_labyrinth';
+import { dwarvenOutpostPois } from '../data/pois/dwarven_outpost';
+import { saltFlatsPois } from '../data/pois/salt_flats';
+import { galeSweptPeaksPois } from '../data/pois/gale_swept_peaks';
+import { isleOfWhispersPois } from '../data/pois/isle_of_whispers';
+import { meadowdalePois } from '../data/pois/meadowdale';
+import { minePois } from '../data/pois/mines';
+import { oakhavenPois } from '../data/pois/oakhaven';
+import { oakhavenRoadPois } from '../data/pois/oakhaven_road';
+import { silverhavenPois } from '../data/pois/silverhaven';
+import { southernRoadPois } from '../data/pois/southern_road';
+import { sunkenLandsPois } from '../data/pois/sunken_lands';
+import { theFeywoodPois } from '../data/pois/the_feywood';
+import { theSerpentsCoilPois } from '../data/pois/the_serpents_coil';
+import { theVerdantFieldsPois } from '../data/pois/the_verdant_fields';
+import { tutorialZonePois } from '../data/pois/tutorial_zone';
+import { wildernessPois } from '../data/pois/wilderness';
 
 interface DevModeDependencies {
     initialState: any;
