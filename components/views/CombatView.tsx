@@ -96,25 +96,29 @@ const SmoothCombatCooldownBar: React.FC<{ label: string, nextAttackTime: number,
     );
 };
 
-const rollOnWeightedTable = (table: WeightedDrop[]): WeightedDrop | null => {
+const rollOnWeightedTable = (table: WeightedDrop[], monsterIdForDebug?: string): WeightedDrop | null => {
     if (!table || table.length === 0) return null;
 
+    const DROP_RATE_BASE = 10000;
     const totalWeight = table.reduce((sum, item) => sum + item.chance, 0);
-    const nothingWeight = Math.max(0, 1000 - totalWeight);
-    const roll = Math.random() * (totalWeight + nothingWeight);
 
-    if (roll >= totalWeight) {
-        return null; // Nothing dropped
+    if (totalWeight > DROP_RATE_BASE) {
+        console.warn(
+            `[DEV WARNING] Drop table for monster "${monsterIdForDebug || 'Unknown'}" has a total chance of ${totalWeight}, which is over ${DROP_RATE_BASE}. Items past the ${DROP_RATE_BASE} threshold are unreachable.`
+        );
     }
-    
+
+    const roll = Math.random() * DROP_RATE_BASE;
     let cumulativeWeight = 0;
+
     for (const item of table) {
         cumulativeWeight += item.chance;
         if (roll < cumulativeWeight) {
             return item;
         }
     }
-    return null; // Should not be reached
+
+    return null; // Should not happen if totalWeight > 0
 };
 
 
@@ -162,7 +166,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
     
         // 2. Main Drops (single roll)
         if (monster.mainDrops) {
-            const drop = rollOnWeightedTable(monster.mainDrops);
+            const drop = rollOnWeightedTable(monster.mainDrops, monster.id);
             if (drop) {
                 if (drop.tableId) {
                     const itemFromTable = rollOnLootTable(drop.tableId);
@@ -221,7 +225,6 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
             setMonsterHp(monsterData.maxHp);
             setMonsterStatus([]);
             if (monsterQueue.length > 1) addLog(`(${currentMonsterIndex + 1}/${monsterQueue.length}) A ${monsterData.name} steps forward!`);
-            else if (!isMandatory) addLog(`You are now fighting a ${monsterData.name}!`);
 
             const preparationTimer = setTimeout(() => {
                 const now = Date.now();
@@ -308,12 +311,13 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                     const spell = autocastSpell!;
                     const equippedStaff = equipment.weapon ? ITEMS[equipment.weapon.itemId] : null;
                     const providedRune = equippedStaff?.equipment?.providesRune;
-                    const runesNeeded = spell.runes.filter(r => r.itemId !== providedRune);
+                    const runesNeeded = spell.runes.filter((r: { itemId: string; quantity: number }) => r.itemId !== providedRune);
 
                     if (!inv.hasItems(runesNeeded)) {
                         addLog(`You don't have enough runes to cast ${spell.name}.`);
                     } else {
-                        runesNeeded.forEach(r => inv.modifyItem(r.itemId, -r.quantity, true));
+                        // FIX: Explicitly type 'r' to resolve TypeScript inference issue.
+                        runesNeeded.forEach((r: {itemId: string, quantity: number}) => inv.modifyItem(r.itemId, -r.quantity, true));
                         let effectiveMagic = playerSkills.find(s => s.name === SkillName.Magic)?.currentLevel ?? 1;
                         const totalMagicAttack = effectiveMagic + playerStats.magicAttack;
                         const accuracy = calculateAccuracy(totalMagicAttack, monster.magicDefence);

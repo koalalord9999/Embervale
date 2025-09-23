@@ -145,7 +145,6 @@ export const silverhavenPois: Record<string, POI> = {
                         responses: []
                     }
                 },
-// FIX: Added missing startNode property.
                 startNode: 'start'
             }
         ],
@@ -200,7 +199,6 @@ export const silverhavenPois: Record<string, POI> = {
                         responses: []
                     }
                 },
-// FIX: Added missing startNode property.
                 startNode: 'start'
             }
         ],

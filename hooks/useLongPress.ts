@@ -1,5 +1,6 @@
 
-import { useCallback, useRef } from 'react';
+
+import React, { useCallback, useRef } from 'react';
 
 interface LongPressOptions {
     onLongPress: (event: React.MouseEvent | React.TouchEvent) => void;

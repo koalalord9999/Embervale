@@ -39,6 +39,13 @@ export interface QuestDetailState {
     playerQuests: PlayerQuestState[];
 }
 
+export interface ExportDataState {
+    data: string;
+    onCopy?: () => void;
+    title?: string;
+    copyButtonText?: string;
+}
+
 export const useUIState = () => {
     const [activePanel, setActivePanel] = useState<ActivePanel>(null);
     const [combatQueue, setCombatQueue] = useState<string[]>([]);
@@ -54,7 +61,7 @@ export const useUIState = () => {
     const [makeXPrompt, setMakeXPrompt] = useState<MakeXPrompt | null>(null);
     const [activeDialogue, setActiveDialogue] = useState<DialogueState | null>(null);
     const [confirmationPrompt, setConfirmationPrompt] = useState<ConfirmationPrompt | null>(null);
-    const [exportData, setExportData] = useState<string | null>(null);
+    const [exportData, setExportData] = useState<ExportDataState | null>(null);
     const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
     const [activeSkillGuide, setActiveSkillGuide] = useState<SkillName | null>(null);
     const [activeCraftingAction, setActiveCraftingAction] = useState<ActiveCraftingAction | null>(null);
@@ -67,6 +74,7 @@ export const useUIState = () => {
     const [isAtlasViewOpen, setIsAtlasViewOpen] = useState<boolean>(false);
     const [isExpandedMapViewOpen, setIsExpandedMapViewOpen] = useState<boolean>(false);
     const [isLootViewOpen, setIsLootViewOpen] = useState<boolean>(false);
+    const [activeMapRegionId, setActiveMapRegionId] = useState<string>('world');
 
 
     const closeContextMenu = useCallback(() => setContextMenu(null), []);
@@ -100,6 +108,7 @@ export const useUIState = () => {
         setPriceCheckerInventory(null);
         setIsAtlasViewOpen(false);
         setIsExpandedMapViewOpen(false);
+        setActiveMapRegionId('world');
         setIsLootViewOpen(false);
     }, []);
 
@@ -129,6 +138,7 @@ export const useUIState = () => {
         isAtlasViewOpen, setIsAtlasViewOpen,
         isExpandedMapViewOpen, setIsExpandedMapViewOpen,
         isLootViewOpen, setIsLootViewOpen,
+        activeMapRegionId, setActiveMapRegionId,
         closeContextMenu,
         closeMakeXPrompt,
         closeConfirmationPrompt,

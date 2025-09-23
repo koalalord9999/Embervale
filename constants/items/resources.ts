@@ -47,7 +47,7 @@ export const resources: Item[] = [
 
     // Monster Drops & Crafting Materials
     { id: 'goblin_hide', name: 'Goblin Hide', description: 'Tough hide from a goblin.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg' },
-    { id: 'rat_tail', name: 'Rat Tail', description: 'A grim trophy from a slain rodent.', stackable: true, value: 1, iconUrl: 'https://api.iconify.design/game-icons:rat.svg' },
+    { id: 'rat_tail', name: 'Rat Tail', description: 'A grim trophy from a slain rodent.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:rat.svg' },
     { id: 'spider_silk', name: 'Spider Silk', description: 'Tough, sticky silk from a giant spider.', stackable: false, value: 8, iconUrl: 'https://api.iconify.design/game-icons:spider-web.svg' },
     { id: 'wool', name: 'Wool', description: 'Raw, unspun wool from a sheep.', stackable: false, value: 2, iconUrl: 'https://api.iconify.design/game-icons:fluffy-cloud.svg' },
     { id: 'ball_of_wool', name: 'Ball of Wool', description: 'A ball of fluffy wool, ready for crafting.', stackable: false, value: 3, iconUrl: 'https://api.iconify.design/game-icons:wool.svg' },
@@ -89,4 +89,5 @@ export const resources: Item[] = [
     // New Crystalline Isles resources
     { id: 'crystal_shard', name: 'Crystal Shard', description: 'A sharp, resonating shard of pure crystal.', stackable: true, value: 75, iconUrl: 'https://api.iconify.design/game-icons:crystal-shard.svg', material: 'diamond' },
     { id: 'resonating_crystal', name: 'Resonating Crystal', description: 'A larger crystal that hums with a powerful, stored energy.', stackable: false, value: 350, iconUrl: 'https://api.iconify.design/game-icons:crystal-cluster.svg', material: 'diamond' },
+    { id: 'glimmer_thread_fiber', name: 'Glimmer-thread Fiber', description: 'A magical fiber harvested from the mane of a Glimmerhorn Stag.', stackable: true, value: 50, iconUrl: 'https://api.iconify.design/game-icons:thread.svg', material: 'rune-astral' },
 ];

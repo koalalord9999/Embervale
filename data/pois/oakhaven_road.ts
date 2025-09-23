@@ -50,19 +50,36 @@ export const oakhavenRoadPois: Record<string, POI> = {
         name: 'Broken Bridge',
         description: 'A wide chasm cuts across the road. A once-sturdy stone bridge has collapsed, leaving only shattered pillars. It is impossible to cross.',
         connections: ['kings_road_west_1', 'kings_road_west_2'],
-        activities: [],
-        regionId: 'wilderness',
-        x: 819, y: 1799,
+        activities: [
+            {
+                type: 'npc',
+                name: 'Investigate Debris',
+                icon: 'https://api.iconify.design/game-icons:magnifying-glass.svg',
+                questCondition: { questId: 'capitals_call', stage: 0 },
+                dialogue: {
+                    start: {
+                        npcName: 'Investigation',
+                        npcIcon: 'https://api.iconify.design/game-icons:magnifying-glass.svg',
+                        text: "The bridge supports look like they were cut with an axe, and there are scorch marks here. It was sabotage! You find a torn piece of cloth with a strange coiled serpent insignia nearby.",
+                        responses: [
+                            { text: "(Take the insignia)", action: 'complete_stage', questId: 'capitals_call' }
+                        ]
+                    }
+                },
+                startNode: 'start'
+            }
+        ],
         connectionRequirements: {
             kings_road_west_2: {
-                skill: SkillName.Woodcutting,
-                level: 40,
-                xp: 1000,
-                description: "The chasm is too wide to jump. With enough logs and rope, and a high enough skill level, you might be able to construct a makeshift crossing.",
-                actionText: "Repair Bridge",
-                items: [ { itemId: 'logs', quantity: 20 }, { itemId: 'rope', quantity: 5 } ]
+                skill: SkillName.Strength,
+                level: 99, // Effectively makes it impassable without quest completion
+                xp: 0,
+                description: "The bridge is out. The connection to the capital has been severed. It can only be repaired by completing 'The Capital's Call' quest.",
+                actionText: "Cross"
             }
         },
+        regionId: 'wilderness',
+        x: 819, y: 1799,
     },
     kings_road_west_2: {
         id: 'kings_road_west_2',

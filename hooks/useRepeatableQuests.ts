@@ -189,7 +189,6 @@ export const useRepeatableQuests = (
             if (quest.type === 'gather') {
                 const monster = MONSTERS[monsterId];
                 if (!monster) return currentQuest;
-                // FIX: Property 'drops' does not exist on type 'Monster'. Combined all drop tables to check for the required item.
                 const allDrops = [...(monster.guaranteedDrops || []), ...(monster.mainDrops || []), ...(monster.tertiaryDrops || [])];
                 const targetDrop = allDrops.find(d => d.itemId === quest.target.itemId);
                 if (targetDrop) {

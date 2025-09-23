@@ -25,7 +25,6 @@ export const galeSweptPeaksPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Echo of a Watchman',
                 icon: '/assets/npcChatHeads/echo_of_a_watchman.png',
-                // FIX: Converted string array to DialogueNode structure.
                 dialogue: {
                     start: {
                         npcName: 'Echo of a Watchman',
@@ -93,7 +92,6 @@ export const galeSweptPeaksPois: Record<string, POI> = {
         connections: ['goat_trail'],
         activities: [
             { type: 'npc', name: 'Borin Stonehand', icon: '/assets/npcChatHeads/prospector_gudrun.png', 
-                // FIX: Converted string array to DialogueNode structure.
                 dialogue: {
                     start: {
                         npcName: 'Borin Stonehand',

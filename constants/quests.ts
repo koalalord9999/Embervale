@@ -52,7 +52,7 @@ export const QUESTS: Record<string, Quest> = {
         stages: [
             {
                 description: "Gather 1 Copper Ore and 1 Tin Ore.",
-                requirement: { type: 'gather', itemId: 'copper_ore', quantity: 1 },
+                requirement: { type: 'gather', items: [{ itemId: 'copper_ore', quantity: 1 }, { itemId: 'tin_ore', quantity: 1 }] },
             },
             {
                 description: "Return to Valerius the Master Smith.",
@@ -191,7 +191,7 @@ export const QUESTS: Record<string, Quest> = {
             },
             {
                 description: 'Bring 5 Iron Ore to Valerius to restore the sword.',
-                requirement: { type: 'gather', itemId: 'iron_ore', quantity: 5 }
+                requirement: { type: 'gather', items: [{ itemId: 'iron_ore', quantity: 5 }] }
             },
             {
                 description: 'Talk to Valerius to receive your restored sword.',
@@ -284,7 +284,7 @@ export const QUESTS: Record<string, Quest> = {
             },
             {
                 description: "Mine 5 Rune Essence chunks.",
-                requirement: { type: 'gather', itemId: 'rune_essence', quantity: 5 }
+                requirement: { type: 'gather', items: [{ itemId: 'rune_essence', quantity: 5 }] }
             },
             {
                 description: "Return to Wizard Elmsworth in Meadowdale.",
@@ -321,26 +321,44 @@ export const QUESTS: Record<string, Quest> = {
     capitals_call: {
         id: 'capitals_call',
         name: "The Capital's Call",
-        description: "The road to the capital, Silverhaven, is blocked. A guard captain in Oakhaven needs help reopening the route.",
+        description: "The main bridge on the King's Road has collapsed under suspicious circumstances, cutting off trade with the capital. Guard Captain Elara needs help.",
         startHint: "Speak to Guard Captain Elara at the Oakhaven West Gate about the road to the capital.",
         playerStagePerspectives: [
-            "The bridge to the west is broken. I need to gather 20 Logs and 5 pieces of Rope to help repair it.",
-            "I have the supplies. I should return to Guard Captain Elara."
+            "Captain Elara is worried about a collapsed bridge on the King's Road. I need to investigate what happened.",
+            "The bridge was sabotaged! I found a strange serpent insignia. I should show this to Captain Elara.",
+            "Elara doesn't recognize the insignia, but suggested I show it to Finn the Rope-maker in the Artisan's Quarter.",
+            "Finn identified the Serpent Bandits! To fix the bridge, I need to get two special components. I need to bring 5 Glimmer-thread Fibers to Finn, and 10 Yew Logs to Alaric the Woodworker.",
+            "I have both the cable and the supports! I should bring them to Captain Elara to complete the repairs."
         ],
-        completionSummary: "The bridge on the King's Road was out, blocking the way to the capital. I gathered logs and rope for the Oakhaven guard, who were then able to repair it, reopening the path west.",
+        completionSummary: "I discovered that the bridge collapse was sabotage by the Serpent Bandits. I helped the local artisans craft new components: a reinforced cable from Finn and sturdy supports from a new woodworker, Alaric. With the materials delivered to Captain Elara, the King's Road to Silverhaven has been reopened.",
         stages: [
             {
-                description: "The bridge on the King's Road is out. Gather 20 Logs and 5 pieces of Rope to repair it.",
-                requirement: { type: 'gather', itemId: 'logs', quantity: 20 }
+                description: "Investigate the debris at the Broken Bridge.",
+                requirement: { type: 'talk', poiId: 'broken_bridge', npcName: 'Investigate Debris' },
+                stageRewards: {
+                    items: [{ itemId: 'torn_bandit_insignia', quantity: 1 }]
+                }
             },
             {
-                description: "Return to Guard Captain Elara at the Oakhaven West Gate.",
+                description: "Report back to Captain Elara in Oakhaven.",
+                requirement: { type: 'talk', poiId: 'oakhaven_west_gate', npcName: 'Guard Captain Elara' }
+            },
+            {
+                description: "Show the insignia to Finn the Rope-maker in Oakhaven's Artisan Quarter.",
+                requirement: { type: 'talk', poiId: 'oakhaven_artisans_quarter', npcName: 'Finn the Rope-maker' }
+            },
+            {
+                description: "Obtain the two components needed to repair the bridge: a Reinforced Bridge Cable from Finn and Reinforced Bridge Supports from Alaric.",
+                requirement: { type: 'gather', items: [{ itemId: 'reinforced_bridge_cable', quantity: 1 }, { itemId: 'reinforced_bridge_supports', quantity: 1 }] }
+            },
+            {
+                description: "Bring the Reinforced Bridge Cable and Supports to Guard Captain Elara.",
                 requirement: { type: 'talk', poiId: 'oakhaven_west_gate', npcName: 'Guard Captain Elara' }
             }
         ],
         rewards: {
-            xp: [{ skill: SkillName.Crafting, amount: 500 }, { skill: SkillName.Woodcutting, amount: 500 }],
-            coins: 1000,
+            xp: [{ skill: SkillName.Crafting, amount: 2000 }, { skill: SkillName.Woodcutting, amount: 2000 }],
+            coins: 2500,
         }
     },
     lost_heirloom: {

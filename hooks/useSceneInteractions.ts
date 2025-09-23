@@ -1,6 +1,5 @@
-
-import { useCallback } from 'react';
-import { POIActivity, PlayerQuestState, DialogueNode } from '../types';
+import React, { useCallback } from 'react';
+import { POIActivity, PlayerQuestState, DialogueNode, Quest, DialogueResponse } from '../types';
 import { QUESTS } from '../constants';
 import { DialogueState, useUIState } from './useUIState';
 
@@ -13,7 +12,7 @@ interface SceneInteractionDependencies {
     setActiveDialogue: React.Dispatch<React.SetStateAction<DialogueState | null>>;
     tutorialStage: number;
     advanceTutorial: (condition: string) => void;
-    handleDialogueAction: (action: { type: string; questId?: string; actionId?: string }) => void;
+    handleDialogueAction: (action: any) => boolean;
 }
 
 export const useSceneInteractions = (poiId: string, deps: SceneInteractionDependencies) => {
@@ -39,14 +38,39 @@ export const useSceneInteractions = (poiId: string, deps: SceneInteractionDepend
                 JSON.stringify(dialogue).includes(q.id)
             );
 
-            let highestPriorityNode: string | null = null;
-            let priority = 0; // 5: Trigger Hidden, 4: Turn-in, 3: In Progress, 2: Post-Quest, 1: Start Quest
-
+            interface QuestDialogueEntryPoint {
+                nodeKey: string;
+                quest: Quest;
+                priority: number;
+            }
+            const activeQuestEntryPoints: QuestDialogueEntryPoint[] = [];
+            
+            // Pass 1: Collect all active entry points (triggers, completions, in-progress)
             for (const quest of associatedQuests) {
                 const playerQuestState = playerQuests.find(q => q.questId === quest.id);
 
-                // Priority 5: Hidden Quest Item Trigger
-                if (!playerQuestState && quest.isHidden && priority < 5) {
+                if (playerQuestState && !playerQuestState.isComplete) {
+                    const stage = quest.stages[playerQuestState.currentStage];
+                    if (stage?.requirement.type === 'talk' && stage.requirement.npcName === name && stage.requirement.poiId === poiId) {
+                        const key = `complete_stage_${quest.id}_${playerQuestState.currentStage}`;
+                        if (dialogue[key]) {
+                            activeQuestEntryPoints.push({ nodeKey: key, quest, priority: 4 });
+                        }
+                    }
+                    
+                    let stageKey = `in_progress_${quest.id}_${playerQuestState.currentStage}`;
+                    if (quest.id === 'magical_runestone_discovery' && playerQuestState.currentStage === 2 && name === 'Wizard Elmsworth (Projection)') {
+                        if (hasItems([{ itemId: 'rune_essence', quantity: 5 }])) {
+                            stageKey = 'in_progress_magical_runestone_discovery_2_complete';
+                        }
+                    }
+                    const questKey = `in_progress_${quest.id}`;
+                    if (dialogue[stageKey]) {
+                        activeQuestEntryPoints.push({ nodeKey: stageKey, quest, priority: 3 });
+                    } else if (dialogue[questKey]) {
+                        activeQuestEntryPoints.push({ nodeKey: questKey, quest, priority: 3 });
+                    }
+                } else if (!playerQuestState && quest.isHidden) {
                     let triggerNode: string | undefined;
                     if (quest.id === 'ancient_blade' && hasItems([{ itemId: 'rusty_iron_sword', quantity: 1 }])) {
                         triggerNode = 'item_trigger_ancient_blade';
@@ -54,67 +78,55 @@ export const useSceneInteractions = (poiId: string, deps: SceneInteractionDepend
                         triggerNode = 'item_trigger_lost_heirloom';
                     }
                     if (triggerNode && dialogue[triggerNode]) {
-                        highestPriorityNode = triggerNode;
-                        priority = 5;
+                        activeQuestEntryPoints.push({ nodeKey: triggerNode, quest, priority: 5 });
                     }
                 }
+            }
+            
+            // Now, decide what to do based on the collected entry points
+            if (activeQuestEntryPoints.length > 1) {
+                const hubNodeKey = 'dynamic_quest_hub';
+                const hubResponses: DialogueResponse[] = activeQuestEntryPoints
+                    .sort((a, b) => b.priority - a.priority)
+                    .map(entry => ({
+                        text: `About '${entry.quest.name}'...`,
+                        next: entry.nodeKey
+                    }));
+                
+                hubResponses.push({ text: "Something else...", action: 'close' });
 
-                // Special logic for the Gust Altar NPC during MRD quest
-                if (quest.id === 'magical_runestone_discovery' && name === 'Gust Altar' && playerQuestState && !playerQuestState.isComplete) {
-                    if (playerQuestState.currentStage === 4 && priority < 4) {
-                        highestPriorityNode = 'in_progress_magical_runestone_discovery_4';
-                        priority = 4;
-                    } else if (playerQuestState.currentStage === 6 && priority < 4) {
-                        highestPriorityNode = 'in_progress_magical_runestone_discovery_6';
-                        priority = 4;
-                    }
-                }
-
-                // Priority 4: Stage Turn-in
-                if (playerQuestState && !playerQuestState.isComplete && priority < 4) {
-                    const stage = quest.stages[playerQuestState.currentStage];
-                    if (stage?.requirement.type === 'talk' && stage.requirement.npcName === name && stage.requirement.poiId === poiId) {
-                        const key = `complete_stage_${quest.id}_${playerQuestState.currentStage}`;
-                        if (dialogue[key]) {
-                            highestPriorityNode = key;
-                            priority = 4;
-                        }
+                const hubNode: DialogueNode = {
+                    npcName: name,
+                    npcIcon: icon,
+                    text: dialogue.default_dialogue?.text || "What can I help you with?",
+                    responses: hubResponses
+                };
+                finalDialogue[hubNodeKey] = hubNode;
+                finalStartNode = hubNodeKey;
+                
+            } else if (activeQuestEntryPoints.length === 1) {
+                finalStartNode = activeQuestEntryPoints[0].nodeKey;
+            } else {
+                let highestPriorityNode: string | null = null;
+                let priority = 0;
+                
+                for (const quest of associatedQuests) {
+                    const playerQuestState = playerQuests.find(q => q.questId === quest.id);
+                    if (playerQuestState && playerQuestState.isComplete && priority < 2) {
+                         const key = `post_quest_${quest.id}`;
+                         if (dialogue[key]) {
+                             highestPriorityNode = key;
+                             priority = 2;
+                         }
+                    } else if (!playerQuestState && !quest.isHidden && priority < 1) {
+                        highestPriorityNode = startNode;
+                        priority = 1;
                     }
                 }
                 
-                // Priority 3: In Progress
-                if (playerQuestState && !playerQuestState.isComplete && priority < 3) {
-                    let stageKey = `in_progress_${quest.id}_${playerQuestState.currentStage}`;
-                    
-                    // Special check for MRD-2 (rune essence)
-                    if (quest.id === 'magical_runestone_discovery' && playerQuestState.currentStage === 2 && name === 'Wizard Elmsworth (Projection)') {
-                        if (hasItems([{ itemId: 'rune_essence', quantity: 5 }])) {
-                            stageKey = 'in_progress_magical_runestone_discovery_2_complete';
-                        }
-                    }
-                    
-                    const questKey = `in_progress_${quest.id}`;
-                    if (dialogue[stageKey]) {
-                        highestPriorityNode = stageKey;
-                        priority = 3;
-                    } else if (dialogue[questKey]) {
-                        highestPriorityNode = questKey;
-                        priority = 3;
-                    }
+                if (highestPriorityNode) {
+                    finalStartNode = highestPriorityNode;
                 }
-
-                // Priority 2: Post-Quest
-                if (playerQuestState && playerQuestState.isComplete && priority < 2) {
-                     const key = `post_quest_${quest.id}`;
-                     if (dialogue[key]) {
-                         highestPriorityNode = key;
-                         priority = 2;
-                     }
-                }
-            }
-
-            if (highestPriorityNode) {
-                finalStartNode = highestPriorityNode;
             }
 
             if (dialogueType === 'random') {
@@ -133,8 +145,14 @@ export const useSceneInteractions = (poiId: string, deps: SceneInteractionDepend
                 currentNodeKey: finalStartNode,
                 onEnd: () => setActiveDialogue(null),
                 onAction: (action) => {
-                    handleDialogueAction(action);
-                    setActiveDialogue(null);
+                    const success = handleDialogueAction(action);
+                    if (success) {
+                        setActiveDialogue(null);
+                    } else if (action.failureNext) {
+                         setActiveDialogue(prev => prev ? { ...prev, currentNodeKey: action.failureNext } : null);
+                    } else {
+                        setActiveDialogue(null);
+                    }
                 },
                 onNavigate: (nextNodeKey) => {
                     setActiveDialogue(prev => prev ? { ...prev, currentNodeKey: nextNodeKey } : null);

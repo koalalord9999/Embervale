@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useCallback } from 'react';
 import { InventorySlot, Equipment, CombatStance } from '../types';
 import { ITEMS, BANK_CAPACITY, INVENTORY_CAPACITY } from '../constants';

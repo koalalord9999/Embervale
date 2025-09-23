@@ -26,6 +26,8 @@ interface DevPanelProps {
     setTooltip: (tooltip: TooltipState | null) => void;
     isMapManagerEnabled: boolean;
     onToggleMapManager: (enable: boolean) => void;
+    onCommitMapChanges: () => void;
+    hasMapChanges: boolean;
     showAllPois: boolean;
     onToggleShowAllPois: () => void;
     onForcedNavigate: (poiId: string) => void;
@@ -49,7 +51,7 @@ const CheatsComponent: React.FC<Omit<DevPanelProps, 'inv' | 'setTooltip' | 'onFo
     instantRespawnCounter, setInstantRespawnCounter, isInCombat, isCurrentMonsterAggro,
     onToggleAggro, isPlayerInvisible, setIsPlayerInvisible, isAutoBankOn, setIsAutoBankOn,
     isTouchSimulationEnabled, onToggleTouchSimulation, isMapManagerEnabled, onToggleMapManager,
-    showAllPois, onToggleShowAllPois,
+    onCommitMapChanges, hasMapChanges, showAllPois, onToggleShowAllPois,
     xpMultiplier, setXpMultiplier, isXpBoostEnabled, setIsXpBoostEnabled,
 }) => (
     <div className="p-2 space-y-4">
@@ -88,6 +90,7 @@ const CheatsComponent: React.FC<Omit<DevPanelProps, 'inv' | 'setTooltip' | 'onFo
             <label className="block text-sm font-semibold mb-1">Map Manager</label>
             <div className="flex gap-2">
                 <button onClick={() => onToggleMapManager(!isMapManagerEnabled)} className={`flex-1 py-1 text-xs rounded font-bold transition-colors ${isMapManagerEnabled ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-700 hover:bg-gray-600'}`}>{isMapManagerEnabled ? 'ON' : 'OFF'}</button>
+                <Button size="sm" onClick={onCommitMapChanges} disabled={!isMapManagerEnabled || !hasMapChanges}>Commit</Button>
             </div>
         </div>
         {/* Combat Speed */}
@@ -168,7 +171,7 @@ const ItemSpawnerComponent: React.FC<{
     const handleSpawn = () => {
         if (!selectedItem || quantity <= 0) return;
         const actualQuantity = Math.min(quantity, maxQty);
-        modifyItem(selectedItem.id, actualQuantity);
+        modifyItem(selectedItem.id, actualQuantity, false, undefined, { bypassAutoBank: true });
     };
     
     const handleQuantityChange = (value: string) => {

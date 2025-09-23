@@ -16,7 +16,7 @@ export interface PlayerSlayerTask {
 }
 
 export type QuestRequirement =
-  | { type: 'gather'; itemId: string; quantity: number }
+  | ({ type: 'gather' } & ({ itemId: string; quantity: number } | { items: { itemId: string; quantity: number }[] }))
   | { type: 'kill'; monsterId: string; quantity: number }
   | { type: 'talk'; poiId: string; npcName: string }
   | { type: 'shear'; quantity: number }
@@ -35,6 +35,9 @@ export interface DialogueResponse {
     action?: 'accept_quest' | 'close' | 'custom' | 'complete_stage';
     questId?: string;
     customActionId?: string;
+    items?: InventorySlot[];
+    itemsToConsume?: { itemId: string; quantity: number }[];
+    failureNext?: string; // Key of the next DialogueNode if the action fails
 }
 
 export interface DialogueNode {
@@ -56,7 +59,6 @@ export interface Quest {
   startHint: string;
   playerStagePerspectives: string[];
   completionSummary: string;
-  // FIX: Added optional startPoi property to Quest interface
   startPoi?: string;
 }
 

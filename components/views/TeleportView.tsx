@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { TELEPORT_UNLOCK_THRESHOLD } from '../../constants';
 import { POIS } from '../../data/pois';
@@ -13,7 +14,8 @@ interface TeleportViewProps {
 
 const TeleportView: React.FC<TeleportViewProps> = ({ fromBoardId, boardCompletions, onTeleport, onClose }) => {
     const unlockedBoards = Object.entries(boardCompletions)
-        .filter(([boardId, count]) => count >= TELEPORT_UNLOCK_THRESHOLD && boardId !== fromBoardId)
+        // FIX: Add explicit types for destructuring to resolve type error on 'count'.
+        .filter(([boardId, count]: [string, number]) => count >= TELEPORT_UNLOCK_THRESHOLD && boardId !== fromBoardId)
         .map(([boardId]) => ({ id: boardId, name: POIS[boardId]?.name ?? 'Unknown Board' }));
 
     return (

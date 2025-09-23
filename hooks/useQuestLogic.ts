@@ -98,14 +98,16 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
             }
             // Handle 'gather' requirements that can be fulfilled by monster drops
             else if (stage?.requirement.type === 'gather') {
-                const requiredItemId = stage.requirement.itemId;
-                // FIX: Property 'drops' does not exist on type 'Monster'. Combined all drop tables to check for the required item.
-                const allDrops = [...(monster.guaranteedDrops || []), ...(monster.mainDrops || []), ...(monster.tertiaryDrops || [])];
-                if (allDrops.some(drop => drop.itemId === requiredItemId)) {
-                    // hasItems check is performed after loot is added, so it reflects the new state
-                    if (hasItems([{ itemId: requiredItemId, quantity: stage.requirement.quantity }])) {
-                        stageCompleted = true;
-                    }
+                const req = stage.requirement as any;
+                const itemsToGather = req.items || [{ itemId: req.itemId, quantity: req.quantity }];
+
+                const requiredItemId = itemsToGather.find((item: any) => {
+                     const allDrops = [...(monster.guaranteedDrops || []), ...(monster.mainDrops || []), ...(monster.tertiaryDrops || [])];
+                     return allDrops.some(drop => drop.itemId === item.itemId);
+                });
+               
+                if (requiredItemId && hasItems(itemsToGather)) {
+                    stageCompleted = true;
                 }
             }
     
@@ -128,6 +130,33 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
             return updatedQuest;
         }));
     }, [setPlayerQuests, addLog, modifyItem, addXp, hasItems]);
+
+    const checkGatherQuests = useCallback(() => {
+        setPlayerQuests(qs => {
+            const newQuests = qs.map(q => {
+                if (q.isComplete) return q;
+                const questData = QUESTS[q.questId];
+                if (!questData || !questData.stages[q.currentStage]) return q;
+
+                const stage = questData.stages[q.currentStage];
+                if (stage?.requirement.type === 'gather') {
+                    const req = stage.requirement as any;
+                    const itemsToGather = req.items || [{ itemId: req.itemId, quantity: req.quantity }];
+                    
+                    if (hasItems(itemsToGather)) {
+                        addLog(`Quest updated: ${questData.name} - stage completed!`);
+                        return { ...q, currentStage: q.currentStage + 1, progress: 0 };
+                    }
+                }
+                return q;
+            });
+            // Check if the array has actually changed to avoid potential infinite loops
+            if (JSON.stringify(qs) === JSON.stringify(newQuests)) {
+                return qs;
+            }
+            return newQuests;
+        });
+    }, [hasItems, addLog, setPlayerQuests]);
     
     const completeQuestStage = useCallback((questId: string) => {
         setPlayerQuests(qs => qs.map(q => {
@@ -137,11 +166,16 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
                 const currentStage = questData.stages[currentStageIndex];
                 
                 if (currentStage?.requirement.type === 'gather') {
-                     if (!hasItems([{ itemId: currentStage.requirement.itemId, quantity: currentStage.requirement.quantity }])) {
-                        addLog(`You still need to gather ${currentStage.requirement.quantity} ${ITEMS[currentStage.requirement.itemId].name}.`);
+                    const req = currentStage.requirement as any; // Cast to handle new multi-item format
+                    const itemsToGather = req.items || [{ itemId: req.itemId, quantity: req.quantity }];
+
+                     if (!hasItems(itemsToGather)) {
+                        addLog(`You still need to gather all the required items.`);
                         return q;
                     }
-                    modifyItem(currentStage.requirement.itemId, -currentStage.requirement.quantity);
+                    itemsToGather.forEach((item: { itemId: string, quantity: number }) => {
+                        modifyItem(item.itemId, -item.quantity);
+                    });
                 }
                 
                 // Grant stage-specific rewards
@@ -186,6 +220,7 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
                     
                      // Special quest logic
                     if (questData.id === 'capitals_call') {
+                        // The items are now removed from the player's inventory as part of the 'gather' requirement on the stage itself.
                         setClearedSkillObstacles(prev => [...prev, 'broken_bridge-kings_road_west_2']);
                         addLog("With the supplies delivered, the Oakhaven guard repairs the bridge. The path to Silverhaven is open!");
                     }
@@ -213,5 +248,6 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
         checkQuestProgressOnKill,
         checkQuestProgressOnSmith,
         completeQuestStage,
+        checkGatherQuests,
     };
 };

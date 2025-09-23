@@ -6,6 +6,7 @@ export const misc: Item[] = [
     { id: 'beer_glass', name: 'Beer Glass', description: 'An empty beer glass.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:beer-stein.svg' },
     
     // Quest & Key Items
+    { id: 'elaras_signet', name: "Elara's Signet", description: 'A signet ring bearing the crest of the Oakhaven Guard. Given to you by the Captain.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:seal-ring.svg', material: 'silver' },
     { id: 'rusty_iron_sword', name: 'Rusty Iron Sword', description: 'An old, corroded sword. It feels strangely balanced despite the rust.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:broken-sword.svg', equipment: { slot: EquipmentSlot.Weapon, stabAttack: 1, slashAttack: 1, crushAttack: -2, rangedAttack: 0, magicAttack: 0, stabDefence: 0, slashDefence: 0, crushDefence: 0, rangedDefence: 0, magicDefence: 0, strengthBonus: 1, rangedStrength: 0, magicDamageBonus: 0, weaponType: WeaponType.Sword, speed: 3 }, material: 'iron' },
     { id: 'lost_heirloom', name: 'Lost Heirloom', description: 'An old but beautifully crafted silver necklace. It looks like it would be very important to someone.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:necklace.svg' },
     { id: 'stolen_caravan_goods', name: 'Stolen Caravan Goods', description: 'A crate of valuable goods, stolen from a Silverhaven merchant.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:crate.svg' },
@@ -29,6 +30,9 @@ export const misc: Item[] = [
         }
     },
     { id: 'goblin_champion_scroll', name: 'Goblin Champion Scroll', description: 'A rare scroll dropped by a goblin champion. A sign of great prowess.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:scroll-unfurled.svg' },
+    { id: 'reinforced_bridge_cable', name: 'Reinforced Bridge Cable', description: 'An incredibly strong cable, specially crafted to repair a bridge.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:rope-coil.svg' },
+    { id: 'reinforced_bridge_supports', name: 'Reinforced Bridge Supports', description: 'Sturdy wooden supports crafted from Yew logs by a master woodworker.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:wood-beam.svg', material: 'wood-yew' },
+    { id: 'torn_bandit_insignia', name: 'Torn Bandit Insignia', description: 'A piece of cloth bearing the mark of a coiled serpent.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:snake-totem.svg' },
     
     // Pouches
     { id: 'grimy_coin_pouch', name: 'Grimy Coin Pouch', description: "A small, dirty pouch that jingles slightly. It's too grimy to open by hand.", stackable: false, value: 50, iconUrl: 'https://api.iconify.design/game-icons:money-stack.svg' },

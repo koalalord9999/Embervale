@@ -1,10 +1,9 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { POI, POIActivity, PlayerQuestState, SkillName, InventorySlot, ResourceNodeState, PlayerRepeatableQuest, SkillRequirement, PlayerSkill, DialogueNode, GroundItem } from '../../types';
+import { POI, POIActivity, PlayerQuestState, SkillName, InventorySlot, ResourceNodeState, PlayerRepeatableQuest, SkillRequirement, PlayerSkill, DialogueNode, GroundItem, DialogueResponse, Quest } from '../../types';
 import { MONSTERS, QUESTS, SHOPS, ITEMS, REGIONS } from '../../constants';
 import { POIS } from '../../data/pois';
 import Button from '../common/Button';
 import { ContextMenuOption } from '../common/ContextMenu';
-// FIX: Removed QuestDialogueState and InteractiveDialogueState as they are not exported or used.
 import { MakeXPrompt, TooltipState, useUIState, ContextMenuState, DialogueState } from '../../hooks/useUIState';
 import ProgressBar from '../common/ProgressBar';
 import { useSkillingAnimations } from '../../hooks/useSkillingAnimations';
@@ -45,9 +44,8 @@ interface SceneViewProps {
     onClearObstacle: (fromPoiId: string, toPoiId: string, requirement: SkillRequirement) => void;
     skills: PlayerSkill[];
     monsterRespawnTimers: Record<string, number>;
-    // FIX: Replaced obsolete setters with the unified setActiveDialogue.
     setActiveDialogue: (dialogue: DialogueState | null) => void;
-    handleDialogueAction: (action: any) => void;
+    handleDialogueAction: (action: any) => boolean;
     onDepositBackpack: () => void;
     ui: ReturnType<typeof useUIState>; // Pass the whole ui object
     tutorialStage: number;

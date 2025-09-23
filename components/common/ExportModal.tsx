@@ -1,31 +1,35 @@
 
+
 import React, { useState } from 'react';
 import Button from './Button';
+import { ExportDataState } from '../../hooks/useUIState';
 
 interface ExportModalProps {
-    data: string;
+    exportState: ExportDataState;
     onClose: () => void;
 }
 
-const ExportModal: React.FC<ExportModalProps> = ({ data, onClose }) => {
-    const [copyButtonText, setCopyButtonText] = useState('Copy to Clipboard');
+const ExportModal: React.FC<ExportModalProps> = ({ exportState, onClose }) => {
+    const { data, onCopy, title, copyButtonText: customCopyText } = exportState;
+    const [copyButtonText, setCopyButtonText] = useState(customCopyText || 'Copy to Clipboard');
 
     const handleCopy = () => {
         navigator.clipboard.writeText(data).then(() => {
             setCopyButtonText('Copied!');
-            setTimeout(() => setCopyButtonText('Copy to Clipboard'), 2000);
+            onCopy?.();
+            setTimeout(() => setCopyButtonText(customCopyText || 'Copy to Clipboard'), 2000);
         }).catch(err => {
             console.error('Failed to copy text: ', err);
             setCopyButtonText('Copy Failed!');
-            setTimeout(() => setCopyButtonText('Copy to Clipboard'), 2000);
+            setTimeout(() => setCopyButtonText(customCopyText || 'Copy to Clipboard'), 2000);
         });
     };
 
     return (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
             <div className="bg-gray-800 border-2 border-gray-600 rounded-lg shadow-xl p-6 w-full max-w-lg">
-                <h2 className="text-xl font-bold text-yellow-400 mb-4 text-center">Export Save Data</h2>
-                <p className="text-gray-300 mb-4 text-sm">Copy the text below and save it in a file on your computer. You can use this to import your progress later.</p>
+                <h2 className="text-xl font-bold text-yellow-400 mb-4 text-center">{title || 'Export Save Data'}</h2>
+                <p className="text-gray-300 mb-4 text-sm">Copy the text below and save it in a file. You can use this to import your progress later.</p>
                 <textarea
                     readOnly
                     value={data}

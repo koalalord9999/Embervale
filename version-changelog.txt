@@ -77,3 +77,15 @@ DevMode Adjustments
 - You can now scale your xp rate from 1-100 with a new toggle
 - 
 - Will be adding the normal users to use DevMode in this update, for testing new mechanics.
+
+
+
+
+v0.2 Part 2 - More updates
+- Enhanced the Capital's call quest.
+- Once again, made rat tails unstackable
+- Created more lore
+- Refactored the entire loot system again
+- Moved the Crystalline Island so its not right in the middle of the map
+- You can now click on city POI icons, to open the city view
+- Fixed the tutorial (it can be completed now)

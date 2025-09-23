@@ -49,7 +49,8 @@ interface MainViewControllerProps {
     monsterRespawnTimers: Record<string, number>;
     handlePlayerDeath: () => void;
     handleKill: (uniqueInstanceId: string) => void;
-    handleDialogueAction: (action: any) => void;
+    // Fix: Updated the return type of handleDialogueAction to boolean to match its implementation and usage in downstream hooks.
+    handleDialogueAction: (action: any) => boolean;
     combatSpeedMultiplier: number;
     advanceTutorial: (condition: string) => void;
     tutorialStage: number;
@@ -74,12 +75,13 @@ interface MainViewControllerProps {
     onTakeAllLoot: () => void;
     onItemDropped: (item: InventorySlot) => void;
     isAutoBankOn: boolean;
+    handleCombatXpGain: (skill: SkillName, amount: number) => void;
 }
 
 const MainViewController: React.FC<MainViewControllerProps> = (props) => {
     const {
         ui, addLog, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, handleDialogueAction, combatSpeedMultiplier, advanceTutorial, tutorialStage, activeCombatStyleHighlight, isTouchSimulationEnabled, showAllPois,
-        groundItemsForCurrentPoi, onPickUpItem, onTakeAllLoot, onItemDropped, isAutoBankOn
+        groundItemsForCurrentPoi, onPickUpItem, onTakeAllLoot, onItemDropped, isAutoBankOn, handleCombatXpGain
     } = props;
 
     const handleTeleport = useCallback((toBoardId: string) => {
@@ -133,7 +135,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                     ui.setCombatQueue([]);
                     ui.setIsMandatoryCombat(false);
                 }} 
-                addXp={char.addXp} 
+                addXp={handleCombatXpGain} 
                 addLoot={inv.modifyItem}
                 onDropLoot={onItemDropped}
                 isAutoBankOn={isAutoBankOn}

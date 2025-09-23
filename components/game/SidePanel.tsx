@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { useUIState } from '../../hooks/useUIState';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -56,10 +57,13 @@ interface SidePanelProps {
     setIsAutoBankOn: (isOn: boolean) => void;
     isMapManagerEnabled: boolean;
     onToggleMapManager: (enable: boolean) => void;
+    onCommitMapChanges: () => void;
+    hasMapChanges: boolean;
     showAllPois: boolean;
     onToggleShowAllPois: () => void;
     onForcedNavigate: (poiId: string) => void;
     onNavigate: (poiId: string) => void;
+    unlockedPois: string[];
     isBankOpen: boolean;
     isShopOpen: boolean;
     onDeposit: (inventoryIndex: number, quantity: number | 'all') => void;
@@ -96,7 +100,7 @@ const PlaceholderIcon: React.FC = () => (
 
 
 const SidePanel: React.FC<SidePanelProps> = (props) => {
-    const { ui, char, inv, quests, repeatableQuests, slayer, onExportGame, onImportGame, onResetGame, isDevMode, isTouchSimulationEnabled, itemActions, isBusy, handleExamine, session, addLog, activeCombatStyleHighlight, isBankOpen, isShopOpen, onDeposit, onNavigate, onCastSpell } = props;
+    const { ui, char, inv, quests, repeatableQuests, slayer, onExportGame, onImportGame, onResetGame, isDevMode, isTouchSimulationEnabled, itemActions, isBusy, handleExamine, session, addLog, activeCombatStyleHighlight, isBankOpen, isShopOpen, onDeposit, onNavigate, unlockedPois, onCastSpell } = props;
     const { activePanel, setActivePanel } = ui;
     
     const inventoryPanelProps = {
@@ -145,6 +149,8 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     ui={ui}
                     isTouchSimulationEnabled={isTouchSimulationEnabled}
                     onNavigate={onNavigate}
+                    unlockedPois={unlockedPois}
+                    addLog={addLog}
                 />
                 {/* Top row */}
                 <div className="grid grid-cols-7 gap-1 p-1 bg-black/30 border-b-2 border-gray-600">

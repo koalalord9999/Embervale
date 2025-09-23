@@ -32,7 +32,7 @@ export const beasts: Monster[] = [
             { itemId: 'bones', minQuantity: 1, maxQuantity: 1 }
         ],
         mainDrops: [
-            { itemId: 'binding_rune', chance: 50, minQuantity: 1, maxQuantity: 1 }
+            { itemId: 'binding_rune', chance: 500, minQuantity: 1, maxQuantity: 1 }
         ],
         monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 20000, aggressive: false, attackStyle: 'stab',
     },
@@ -44,8 +44,8 @@ export const beasts: Monster[] = [
             { itemId: 'spider_silk', minQuantity: 1, maxQuantity: 1 }
         ],
         mainDrops: [
-            { itemId: 'spider_eggs', chance: 500, minQuantity: 1, maxQuantity: 3 },
-            { itemId: 'binding_rune', chance: 100, minQuantity: 1, maxQuantity: 2 }
+            { itemId: 'spider_eggs', chance: 1000, minQuantity: 1, maxQuantity: 3 },
+            { itemId: 'binding_rune', chance: 200, minQuantity: 1, maxQuantity: 2 }
         ],
         monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 30000, aggressive: false, attackStyle: 'stab',
     },
@@ -70,7 +70,7 @@ export const beasts: Monster[] = [
             { itemId: 'feathers', minQuantity: 1, maxQuantity: 20 }
         ],
         mainDrops: [
-            { itemId: 'eggs', chance: 100, minQuantity: 1, maxQuantity: 1 }
+            { itemId: 'eggs', chance: 2500, minQuantity: 1, maxQuantity: 1 }
         ],
         monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 10000, aggressive: false, attackStyle: 'stab',
         customMaxHit: 0,
@@ -85,8 +85,8 @@ export const beasts: Monster[] = [
             { itemId: 'bones', minQuantity: 1, maxQuantity: 1 }
         ],
         mainDrops: [
-            { itemId: 'boar_tusk', chance: 300, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'stone_rune', chance: 200, minQuantity: 1, maxQuantity: 4 }
+            { itemId: 'boar_tusk', chance: 1500, minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'stone_rune', chance: 3000, minQuantity: 1, maxQuantity: 4 }
         ],
         monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 30000, aggressive: true, alwaysAggressive: true, attackStyle: 'crush',
     },
@@ -99,8 +99,8 @@ export const beasts: Monster[] = [
             { itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 }
         ],
         mainDrops: [
-            { itemId: 'gust_rune', chance: 300, minQuantity: 5, maxQuantity: 10 },
-            { itemId: 'stone_rune', chance: 300, minQuantity: 5, maxQuantity: 10 }
+            { itemId: 'gust_rune', chance: 4000, minQuantity: 5, maxQuantity: 10 },
+            { itemId: 'stone_rune', chance: 4000, minQuantity: 5, maxQuantity: 10 }
         ],
         monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 30000, aggressive: true, attackStyle: 'crush',
     },
@@ -113,13 +113,13 @@ export const beasts: Monster[] = [
             { itemId: 'big_bones', minQuantity: 2, maxQuantity: 2 }
         ],
         mainDrops: [
-            { itemId: 'slimy_egg_shells', chance: 900, minQuantity: 1, maxQuantity: 2 },
-            { itemId: 'serpents_egg', chance: 100, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'flux_rune', chance: 500, minQuantity: 3, maxQuantity: 8 },
-            { itemId: 'verdant_rune', chance: 400, minQuantity: 2, maxQuantity: 6 },
-            { itemId: 'nexus_rune', chance: 300, minQuantity: 1, maxQuantity: 4 },
-            { itemId: 'anima_rune', chance: 100, minQuantity: 1, maxQuantity: 2 },
-            { itemId: 'passage_rune', chance: 200, minQuantity: 2, maxQuantity: 5 },
+            { itemId: 'slimy_egg_shells', chance: 3500, minQuantity: 1, maxQuantity: 2 },
+            { itemId: 'serpents_egg', chance: 500, minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'flux_rune', chance: 2000, minQuantity: 3, maxQuantity: 8 },
+            { itemId: 'verdant_rune', chance: 1500, minQuantity: 2, maxQuantity: 6 },
+            { itemId: 'nexus_rune', chance: 1000, minQuantity: 1, maxQuantity: 4 },
+            { itemId: 'anima_rune', chance: 500, minQuantity: 1, maxQuantity: 2 },
+            { itemId: 'passage_rune', chance: 800, minQuantity: 2, maxQuantity: 5 },
             { itemId: 'affinity_gloves', chance: 100, minQuantity: 1, maxQuantity: 1 },
             { itemId: 'affinity_boots', chance: 100, minQuantity: 1, maxQuantity: 1 },
         ],
@@ -134,10 +134,10 @@ export const beasts: Monster[] = [
             { itemId: 'bones', minQuantity: 1, maxQuantity: 1 }
         ],
         mainDrops: [
-            { itemId: 'spiked_toad_skin', chance: 200, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'stone_rune', chance: 600, minQuantity: 5, maxQuantity: 15 },
-            { itemId: 'hex_rune', chance: 500, minQuantity: 3, maxQuantity: 10 },
-            { itemId: 'astral_rune', chance: 100, minQuantity: 1, maxQuantity: 3 }
+            { itemId: 'spiked_toad_skin', chance: 1000, minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'stone_rune', chance: 3000, minQuantity: 5, maxQuantity: 15 },
+            { itemId: 'hex_rune', chance: 1500, minQuantity: 3, maxQuantity: 10 },
+            { itemId: 'astral_rune', chance: 500, minQuantity: 1, maxQuantity: 3 }
         ],
         monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 30000, aggressive: true, attackStyle: 'crush',
     },
@@ -149,12 +149,12 @@ export const beasts: Monster[] = [
             { itemId: 'giant_crab_meat', minQuantity: 1, maxQuantity: 1 }
         ],
         mainDrops: [
-            { itemId: 'giant_crab_claw', chance: 200, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'aqua_rune', chance: 800, minQuantity: 10, maxQuantity: 25 },
-            { itemId: 'astral_rune', chance: 300, minQuantity: 2, maxQuantity: 6 },
-            { itemId: 'nexus_rune', chance: 500, minQuantity: 4, maxQuantity: 12 },
-            { itemId: 'anima_rune', chance: 100, minQuantity: 1, maxQuantity: 2 },
-            { itemId: 'aether_rune', chance: 10, minQuantity: 1, maxQuantity: 1 }
+            { itemId: 'giant_crab_claw', chance: 1200, minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'aqua_rune', chance: 4700, minQuantity: 10, maxQuantity: 25 },
+            { itemId: 'astral_rune', chance: 2000, minQuantity: 2, maxQuantity: 6 },
+            { itemId: 'nexus_rune', chance: 1500, minQuantity: 4, maxQuantity: 12 },
+            { itemId: 'anima_rune', chance: 500, minQuantity: 1, maxQuantity: 2 },
+            { itemId: 'aether_rune', chance: 100, minQuantity: 1, maxQuantity: 1 }
         ],
         monsterType: MonsterType.Armored, attackSpeed: 4, respawnTime: 30000, aggressive: true, alwaysAggressive: true, attackStyle: 'crush',
     },
@@ -163,10 +163,10 @@ export const beasts: Monster[] = [
         stabDefence: 45, slashDefence: 45, crushDefence: 40, rangedDefence: 30, magicDefence: 10,
         iconUrl: '/assets/npcChatHeads/tidal_crawler.png',
         mainDrops: [
-            { itemId: 'raw_eel', chance: 100, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'aqua_rune', chance: 1000, minQuantity: 20, maxQuantity: 40 },
-            { itemId: 'hex_rune', chance: 400, minQuantity: 5, maxQuantity: 10 },
-            { itemId: 'nexus_rune', chance: 600, minQuantity: 8, maxQuantity: 18 },
+            { itemId: 'raw_eel', chance: 2000, minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'aqua_rune', chance: 3400, minQuantity: 20, maxQuantity: 40 },
+            { itemId: 'hex_rune', chance: 2000, minQuantity: 5, maxQuantity: 10 },
+            { itemId: 'nexus_rune', chance: 2500, minQuantity: 8, maxQuantity: 18 },
             { itemId: 'affinity_top', chance: 100, minQuantity: 1, maxQuantity: 1 },
         ],
         monsterType: MonsterType.Armored, attackSpeed: 5, respawnTime: 70000, aggressive: true, attackStyle: 'crush',
@@ -179,8 +179,8 @@ export const beasts: Monster[] = [
             { itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 }
         ],
         mainDrops: [
-            { itemId: 'verdant_rune', chance: 800, minQuantity: 15, maxQuantity: 30 },
-            { itemId: 'nexus_rune', chance: 500, minQuantity: 5, maxQuantity: 15 }
+            { itemId: 'verdant_rune', chance: 4000, minQuantity: 15, maxQuantity: 30 },
+            { itemId: 'nexus_rune', chance: 1500, minQuantity: 5, maxQuantity: 15 }
         ],
         monsterType: MonsterType.Standard, attackSpeed: 3, respawnTime: 100000, aggressive: true, alwaysAggressive: true, attackStyle: 'slash',
     },
@@ -200,10 +200,10 @@ export const beasts: Monster[] = [
             { itemId: 'bones', minQuantity: 1, maxQuantity: 1 }
         ],
         mainDrops: [
-            { tableId: 'herb_table', chance: 300, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'stone_rune', chance: 700, minQuantity: 8, maxQuantity: 20 },
-            { itemId: 'hex_rune', chance: 600, minQuantity: 5, maxQuantity: 12 },
-            { itemId: 'astral_rune', chance: 150, minQuantity: 2, maxQuantity: 4 }
+            { tableId: 'herb_table', chance: 1500, minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'stone_rune', chance: 4000, minQuantity: 8, maxQuantity: 20 },
+            { itemId: 'hex_rune', chance: 2500, minQuantity: 5, maxQuantity: 12 },
+            { itemId: 'astral_rune', chance: 800, minQuantity: 2, maxQuantity: 4 }
         ],
         monsterType: MonsterType.Standard,
         attackSpeed: 4,
@@ -223,7 +223,7 @@ export const beasts: Monster[] = [
             { itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 }
         ],
         mainDrops: [
-            { itemId: 'stone_rune', chance: 300, minQuantity: 2, maxQuantity: 8 }
+            { itemId: 'stone_rune', chance: 2000, minQuantity: 2, maxQuantity: 8 }
         ],
         monsterType: MonsterType.Standard, attackSpeed: 5, respawnTime: 40000, aggressive: true, attackStyle: 'crush',
     },
@@ -236,8 +236,8 @@ export const beasts: Monster[] = [
             { itemId: 'wolf_pelt', minQuantity: 1, maxQuantity: 1 }
         ],
         mainDrops: [
-            { itemId: 'frost_berries', chance: 50, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'gust_rune', chance: 200, minQuantity: 2, maxQuantity: 6 }
+            { itemId: 'frost_berries', chance: 300, minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'gust_rune', chance: 1500, minQuantity: 2, maxQuantity: 6 }
         ],
         monsterType: MonsterType.Standard, attackSpeed: 3, respawnTime: 30000, aggressive: true, alwaysAggressive: true, attackStyle: 'slash',
     },
@@ -247,10 +247,11 @@ export const beasts: Monster[] = [
         iconUrl: '/assets/npcChatHeads/glimmerhorn_stag.png',
         guaranteedDrops: [
             { itemId: 'bones', minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'glimmerhorn_antler', minQuantity: 1, maxQuantity: 1 }
+            { itemId: 'glimmerhorn_antler', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'glimmer_thread_fiber', minQuantity: 1, maxQuantity: 1 },
         ],
         mainDrops: [
-            { itemId: 'verdant_rune', chance: 200, minQuantity: 1, maxQuantity: 3 }
+            { itemId: 'verdant_rune', chance: 1000, minQuantity: 1, maxQuantity: 3 }
         ],
         monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 35000, aggressive: false, attackStyle: 'crush',
     },
@@ -262,9 +263,9 @@ export const beasts: Monster[] = [
             { itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 }
         ],
         mainDrops: [
-            { itemId: 'iron_warhammer', chance: 50, minQuantity: 1, maxQuantity: 1 },
-            { tableId: 'herb_table', chance: 200, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'stone_rune', chance: 400, minQuantity: 5, maxQuantity: 15 }
+            { itemId: 'iron_warhammer', chance: 100, minQuantity: 1, maxQuantity: 1 },
+            { tableId: 'herb_table', chance: 1000, minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'stone_rune', chance: 3000, minQuantity: 5, maxQuantity: 15 }
         ],
         monsterType: MonsterType.Standard, attackSpeed: 6, respawnTime: 60000, aggressive: true, attackStyle: 'crush',
     },
@@ -276,96 +277,8 @@ export const beasts: Monster[] = [
             { itemId: 'bones', minQuantity: 1, maxQuantity: 1 }
         ],
         mainDrops: [
-            { itemId: 'gust_rune', chance: 500, minQuantity: 10, maxQuantity: 20 }
+            { itemId: 'gust_rune', chance: 5000, minQuantity: 10, maxQuantity: 20 }
         ],
         monsterType: MonsterType.Standard, attackSpeed: 2, respawnTime: 25000, aggressive: true, alwaysAggressive: true, attackStyle: 'ranged',
-    },
-    // Salt Flats Monsters
-    {
-        id: 'salt_leaper', name: 'Salt Leaper', level: 33, maxHp: 65, attack: 30,
-        stabDefence: 25, slashDefence: 35, crushDefence: 30, rangedDefence: 20, magicDefence: 10,
-        iconUrl: '/assets/npcChatHeads/salt_leaper.png',
-        guaranteedDrops: [
-            { itemId: 'raw_shrimp', minQuantity: 3, maxQuantity: 5 }
-        ],
-        mainDrops: [
-            { itemId: 'rock_salt', chance: 800, minQuantity: 1, maxQuantity: 2 }
-        ],
-        monsterType: MonsterType.Standard, attackSpeed: 3, respawnTime: 40000, aggressive: true, attackStyle: 'slash'
-    },
-    {
-        id: 'crystal_scuttler', name: 'Crystal Scuttler', level: 38, maxHp: 80, attack: 32,
-        stabDefence: 50, slashDefence: 45, crushDefence: 60, rangedDefence: 40, magicDefence: 5,
-        iconUrl: '/assets/npcChatHeads/crystal_scuttler.png',
-        guaranteedDrops: [
-            { itemId: 'scuttler_shell_fragment', minQuantity: 1, maxQuantity: 1 }
-        ],
-        mainDrops: [
-            { itemId: 'uncut_sapphire', chance: 100, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'brine_crystal', chance: 200, minQuantity: 1, maxQuantity: 1 }
-        ],
-        monsterType: MonsterType.Armored, attackSpeed: 5, respawnTime: 60000, aggressive: true, alwaysAggressive: true, attackStyle: 'crush'
-    },
-    {
-        id: 'salt_flat_skitterer', name: 'Salt Flat Skitterer', level: 32, maxHp: 50, attack: 25,
-        stabDefence: 15, slashDefence: 20, crushDefence: 15, rangedDefence: 25, magicDefence: 10,
-        iconUrl: '/assets/npcChatHeads/salt_flat_skitterer.png',
-        guaranteedDrops: [
-            { itemId: 'rock_salt', minQuantity: 1, maxQuantity: 2 }
-        ],
-        monsterType: MonsterType.Standard, attackSpeed: 3, respawnTime: 20000, aggressive: false, attackStyle: 'stab'
-    },
-    {
-        id: 'crystalline_tortoise', name: 'Crystalline Tortoise', level: 35, maxHp: 70, attack: 20,
-        stabDefence: 80, slashDefence: 80, crushDefence: 70, rangedDefence: 50, magicDefence: 20,
-        iconUrl: '/assets/npcChatHeads/crystalline_tortoise.png',
-        guaranteedDrops: [
-            { itemId: 'crystalline_shell_shard', minQuantity: 1, maxQuantity: 2 }
-        ],
-        mainDrops: [
-            { itemId: 'uncut_sapphire', chance: 200, minQuantity: 1, maxQuantity: 1 }
-        ],
-        monsterType: MonsterType.Armored, attackSpeed: 8, respawnTime: 60000, aggressive: false, attackStyle: 'crush'
-    },
-    {
-        id: 'salt_preserved_vulture', name: 'Salt-preserved Vulture', level: 34, maxHp: 60, attack: 30,
-        stabDefence: 10, slashDefence: 15, crushDefence: 10, rangedDefence: 12, magicDefence: 5,
-        iconUrl: '/assets/npcChatHeads/salt_preserved_vulture.png',
-        guaranteedDrops: [
-            { itemId: 'feathers', minQuantity: 15, maxQuantity: 40 },
-            { itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 }
-        ],
-        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 35000, aggressive: false, attackStyle: 'slash'
-    },
-    {
-        id: 'sand_scrabbler', name: 'Sand Scrabbler', level: 36, maxHp: 75, attack: 35,
-        stabDefence: 25, slashDefence: 20, crushDefence: 30, rangedDefence: 15, magicDefence: 10,
-        iconUrl: '/assets/npcChatHeads/sand_scrabbler.png',
-        mainDrops: [
-            { itemId: 'scuttler_shell_fragment', chance: 500, minQuantity: 1, maxQuantity: 1 }
-        ],
-        monsterType: MonsterType.Armored, attackSpeed: 4, respawnTime: 45000, aggressive: true, attackStyle: 'stab'
-    },
-    {
-        id: 'ancient_ammonite', name: 'Ancient Ammonite', level: 48, maxHp: 200, attack: 50,
-        stabDefence: 100, slashDefence: 100, crushDefence: 80, rangedDefence: 120, magicDefence: 40,
-        iconUrl: '/assets/npcChatHeads/ancient_ammonite.png',
-        guaranteedDrops: [
-            { itemId: 'ancient_fossil', minQuantity: 1, maxQuantity: 1 }
-        ],
-        mainDrops: [
-            { itemId: 'uncut_diamond', chance: 100, minQuantity: 1, maxQuantity: 1 }
-        ],
-        monsterType: MonsterType.Armored, attackSpeed: 7, respawnTime: 300000, aggressive: false, attackStyle: 'crush'
-    },
-    // New Crystalline Isles Monsters
-    {
-        id: 'crystal_grazer', name: 'Crystal Grazer', level: 40, maxHp: 90, attack: 25,
-        stabDefence: 40, slashDefence: 40, crushDefence: 35, rangedDefence: 30, magicDefence: 25,
-        iconUrl: 'https://api.iconify.design/game-icons:crystal-beast.svg',
-        guaranteedDrops: [
-            { itemId: 'crystal_shard', minQuantity: 1, maxQuantity: 3 }
-        ],
-        monsterType: MonsterType.Standard, attackSpeed: 5, respawnTime: 50000, aggressive: false, attackStyle: 'crush'
     },
 ];

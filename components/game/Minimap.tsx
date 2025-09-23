@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { POIS } from '../../data/pois';
 import { useUIState } from '../../hooks/useUIState';
@@ -11,6 +12,8 @@ interface MinimapProps {
     ui: ReturnType<typeof useUIState>;
     isTouchSimulationEnabled: boolean;
     onNavigate: (poiId: string) => void;
+    unlockedPois: string[];
+    addLog: (message: string) => void;
 }
 
 const HpOrb: React.FC<{ currentHp: number, maxHp: number }> = ({ currentHp, maxHp }) => {
@@ -46,7 +49,7 @@ const HpOrb: React.FC<{ currentHp: number, maxHp: number }> = ({ currentHp, maxH
     );
 };
 
-const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, ui, isTouchSimulationEnabled, onNavigate }) => {
+const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, ui, isTouchSimulationEnabled, onNavigate, unlockedPois, addLog }) => {
     const currentPoi = POIS[currentPoiId];
     const isTouchDevice = useIsTouchDevice(isTouchSimulationEnabled);
 
@@ -86,6 +89,10 @@ const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, ui, i
                     {currentPoi.connections.map(connId => {
                         const connPoi = POIS[connId];
                         if (!connPoi) return null;
+                        
+                        const isUnlocked = unlockedPois.includes(connId);
+                        const dotColorClass = isUnlocked ? "bg-gray-300 hover:bg-yellow-300" : "bg-gray-700";
+                        const cursorClass = isUnlocked ? "cursor-pointer" : "cursor-not-allowed";
 
                         const dx = connPoi.x - currentPoi.x;
                         const dy = connPoi.y - currentPoi.y;
@@ -98,11 +105,22 @@ const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, ui, i
                         return (
                             <div 
                                 key={connId} 
-                                className="absolute w-4 h-4 bg-gray-300 rounded-full border-2 border-black cursor-pointer hover:bg-yellow-300 transition-colors" 
+                                className={`absolute w-4 h-4 rounded-full border-2 border-black transition-colors ${dotColorClass} ${cursorClass}`}
                                 style={{ left, top }} 
-                                onClick={() => onNavigate(connId)}
+                                onClick={() => {
+                                    if (isUnlocked) {
+                                        onNavigate(connId);
+                                    } else {
+                                        addLog("You can't get there from here.");
+                                    }
+                                }}
                                 onMouseEnter={(e) => ui.setTooltip({
-                                    content: <p className="font-bold">{POIS[connId].name}</p>,
+                                    content: (
+                                        <div>
+                                            <p className="font-bold">{POIS[connId].name}</p>
+                                            {!isUnlocked && <p className="text-sm text-red-400">Locked</p>}
+                                        </div>
+                                    ),
                                     position: { x: e.clientX, y: e.clientY }
                                 })}
                                 onMouseLeave={() => ui.setTooltip(null)}

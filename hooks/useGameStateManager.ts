@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect, useCallback } from 'react';
 import { saveGameState, loadGameState, deleteGameState } from '../db';
 import { ALL_SKILLS, REPEATABLE_QUEST_POOL, ITEMS, MONSTERS, SPELLS } from '../constants';
@@ -169,7 +170,7 @@ export const useGameStateManager = (ui: ReturnType<typeof useUIState>) => {
     const handleExportSave = useCallback((gameState: object) => {
         try {
             const dataStr = JSON.stringify(gameState, null, 2);
-            ui.setExportData(dataStr);
+            ui.setExportData({ data: dataStr });
         } catch (error) {
             console.error("Failed to serialize save data:", error);
         }
@@ -235,7 +236,6 @@ export const useGameStateManager = (ui: ReturnType<typeof useUIState>) => {
         gameKey,
         handleExportSave,
         handleImportSave,
-// @FIX: Expose parseSaveData so it can be used in other components.
         parseSaveData,
         startNewGame,
         updateUsernameAndSave,

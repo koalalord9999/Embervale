@@ -42,7 +42,6 @@ export type POIActivity =
   | { type: 'windmill' }
   | { type: 'runecrafting_altar'; runeId: string; }
   | { type: 'ancient_chest'; name: string; }
-  // FIX: Added quest_start and interactive_dialogue to the POIActivity type.
   | { type: 'quest_start'; questId: string }
   | { type: 'interactive_dialogue'; dialogue: Record<string, DialogueNode>; startNode: string; };
 

@@ -44,9 +44,10 @@ const QuestBoardView: React.FC<QuestBoardViewProps> = ({ boardId, boardQuests, a
     };
 
     const boardName = POIS[boardId]?.name ?? "Quest Board";
-    const completionCount = boardCompletions[boardId] || 0;
+    const completionCount = Number(boardCompletions[boardId] || 0);
     const isTeleportUnlocked = completionCount >= TELEPORT_UNLOCK_THRESHOLD;
-    const canTeleport = isTeleportUnlocked && Object.values(boardCompletions).filter(c => c >= TELEPORT_UNLOCK_THRESHOLD).length > 1;
+    // FIX: Explicitly type 'c' as a number to resolve type inference issue with Object.values.
+    const canTeleport = isTeleportUnlocked && Object.values(boardCompletions).filter((c: number) => c >= TELEPORT_UNLOCK_THRESHOLD).length > 1;
 
     return (
         <div className="flex flex-col h-full text-gray-200">

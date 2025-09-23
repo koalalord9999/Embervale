@@ -49,13 +49,20 @@ const DialogueOverlay: React.FC<DialogueOverlayProps> = ({ dialogue }) => {
     const handleResponseClick = useCallback((response: DialogueResponse) => {
         if (response.next && onNavigate) {
             onNavigate(response.next);
-        } else if (response.action === 'accept_quest' && response.questId) {
-            onAction({ type: 'accept_quest', questId: response.questId });
-        } else if (response.action === 'complete_stage' && response.questId) {
-            onAction({ type: 'complete_stage', questId: response.questId });
-        } else if (response.action === 'custom' && response.customActionId) {
-            onAction({ type: 'custom', actionId: response.customActionId });
-        } else if (!response.action || response.action === 'close') {
+        } else if (response.action) {
+            if (response.action === 'close') {
+                onEnd();
+            } else {
+                onAction({
+                    type: response.action,
+                    questId: response.questId,
+                    actionId: response.customActionId,
+                    items: response.items,
+                    itemsToConsume: response.itemsToConsume,
+                    failureNext: response.failureNext,
+                } as any);
+            }
+        } else {
             onEnd();
         }
     }, [onAction, onEnd, onNavigate]);
