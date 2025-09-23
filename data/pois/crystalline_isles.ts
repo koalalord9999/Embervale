@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 
 export const crystallineIslesPois: Record<string, POI> = {
@@ -26,7 +27,7 @@ export const crystallineIslesPois: Record<string, POI> = {
             }
         ],
         regionId: 'crystalline_isles',
-        x: 1000, y: 1100
+        x: 1869, y: 1030
     },
     // Outer Loop
     crystalline_path_1: {
@@ -38,7 +39,7 @@ export const crystallineIslesPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'crystal_grazer' },
         ],
         regionId: 'crystalline_isles',
-        x: 900, y: 1050
+        x: 1870, y: 985
     },
     crystalline_path_2: {
         id: 'crystalline_path_2',
@@ -49,7 +50,7 @@ export const crystallineIslesPois: Record<string, POI> = {
              { type: 'skilling', id: 'ci_maple_1', name: 'Chop Maple Tree', skill: SkillName.Woodcutting, requiredLevel: 45, loot: [{ itemId: 'maple_logs', chance: 1, xp: 100 }], resourceCount: { min: 1, max: 2 }, respawnTime: 30000, gatherTime: 4000 },
         ],
         regionId: 'crystalline_isles',
-        x: 850, y: 950
+        x: 1678, y: 947
     },
     crystalline_path_3: {
         id: 'crystalline_path_3',
@@ -60,7 +61,7 @@ export const crystallineIslesPois: Record<string, POI> = {
              { type: 'combat', monsterId: 'shard_golem' },
         ],
         regionId: 'crystalline_isles',
-        x: 875, y: 850
+        x: 1569, y: 802
     },
     crystalline_path_4: {
         id: 'crystalline_path_4',
@@ -71,7 +72,7 @@ export const crystallineIslesPois: Record<string, POI> = {
             { type: 'skilling', id: 'ci_coal_1', name: 'Mine Coal', skill: SkillName.Mining, requiredLevel: 30, loot: [{ itemId: 'coal', chance: 1, xp: 50 }], resourceCount: { min: 2, max: 5 }, respawnTime: 12000, gatherTime: 3500 },
         ],
         regionId: 'crystalline_isles',
-        x: 950, y: 775
+        x: 1560, y: 696
     },
     crystalline_path_5: {
         id: 'crystalline_path_5',
@@ -83,7 +84,7 @@ export const crystallineIslesPois: Record<string, POI> = {
              { type: 'skilling', id: 'ci_maple_2', name: 'Chop Maple Tree', skill: SkillName.Woodcutting, requiredLevel: 45, loot: [{ itemId: 'maple_logs', chance: 1, xp: 100 }], resourceCount: { min: 1, max: 2 }, respawnTime: 30000, gatherTime: 4000 },
         ],
         regionId: 'crystalline_isles',
-        x: 1050, y: 750
+        x: 1648, y: 544
     },
     crystalline_path_6: {
         id: 'crystalline_path_6',
@@ -94,7 +95,7 @@ export const crystallineIslesPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'crystal_grazer' },
         ],
         regionId: 'crystalline_isles',
-        x: 1150, y: 800
+        x: 1842, y: 499
     },
     crystalline_path_7: {
         id: 'crystalline_path_7',
@@ -105,7 +106,7 @@ export const crystallineIslesPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'shard_golem' },
         ],
         regionId: 'crystalline_isles',
-        x: 1200, y: 900
+        x: 2054, y: 582
     },
     crystalline_path_8: {
         id: 'crystalline_path_8',
@@ -116,7 +117,7 @@ export const crystallineIslesPois: Record<string, POI> = {
              { type: 'skilling', id: 'ci_coal_2', name: 'Mine Coal', skill: SkillName.Mining, requiredLevel: 30, loot: [{ itemId: 'coal', chance: 1, xp: 50 }], resourceCount: { min: 2, max: 5 }, respawnTime: 12000, gatherTime: 3500 },
         ],
         regionId: 'crystalline_isles',
-        x: 1150, y: 1000
+        x: 2139, y: 753
     },
     crystalline_path_9: {
         id: 'crystalline_path_9',
@@ -127,7 +128,7 @@ export const crystallineIslesPois: Record<string, POI> = {
              { type: 'combat', monsterId: 'crystal_grazer' },
         ],
         regionId: 'crystalline_isles',
-        x: 1100, y: 1075
+        x: 2053, y: 882
     },
     // Inner Paths (No activities yet)
     inner_path_A1: {
@@ -137,7 +138,7 @@ export const crystallineIslesPois: Record<string, POI> = {
         connections: ['crystalline_path_2', 'inner_path_A2'],
         activities: [],
         regionId: 'crystalline_isles',
-        x: 900, y: 925
+        x: 1682, y: 812
     },
     inner_path_A2: {
         id: 'inner_path_A2',
@@ -146,7 +147,7 @@ export const crystallineIslesPois: Record<string, POI> = {
         connections: ['inner_path_A1', 'inner_path_A3', 'inner_path_B2'],
         activities: [],
         regionId: 'crystalline_isles',
-        x: 950, y: 900
+        x: 1789, y: 880
     },
     inner_path_A3: {
         id: 'inner_path_A3',
@@ -155,7 +156,7 @@ export const crystallineIslesPois: Record<string, POI> = {
         connections: ['inner_path_A2', 'the_heartcrystal'],
         activities: [],
         regionId: 'crystalline_isles',
-        x: 1000, y: 925
+        x: 1892, y: 859
     },
     inner_path_B1: {
         id: 'inner_path_B1',
@@ -164,7 +165,7 @@ export const crystallineIslesPois: Record<string, POI> = {
         connections: ['crystalline_path_4', 'inner_path_B2'],
         activities: [],
         regionId: 'crystalline_isles',
-        x: 975, y: 825
+        x: 1671, y: 747
     },
     inner_path_B2: {
         id: 'inner_path_B2',
@@ -173,7 +174,7 @@ export const crystallineIslesPois: Record<string, POI> = {
         connections: ['inner_path_B1', 'inner_path_A2'],
         activities: [],
         regionId: 'crystalline_isles',
-        x: 975, y: 875
+        x: 1790, y: 728
     },
     inner_path_C1: {
         id: 'inner_path_C1',
@@ -182,7 +183,7 @@ export const crystallineIslesPois: Record<string, POI> = {
         connections: ['crystalline_path_7', 'inner_path_C2'],
         activities: [],
         regionId: 'crystalline_isles',
-        x: 1150, y: 925
+        x: 1888, y: 615
     },
     inner_path_C2: {
         id: 'inner_path_C2',
@@ -191,7 +192,7 @@ export const crystallineIslesPois: Record<string, POI> = {
         connections: ['inner_path_C1', 'the_heartcrystal'],
         activities: [],
         regionId: 'crystalline_isles',
-        x: 1075, y: 950
+        x: 1865, y: 727
     },
     the_heartcrystal: {
         id: 'the_heartcrystal',
@@ -200,6 +201,6 @@ export const crystallineIslesPois: Record<string, POI> = {
         connections: ['inner_path_A3', 'inner_path_C2'],
         activities: [],
         regionId: 'crystalline_isles',
-        x: 1025, y: 975
+        x: 1954, y: 767
     },
 };
