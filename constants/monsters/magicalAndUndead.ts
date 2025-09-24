@@ -54,6 +54,7 @@ export const magicalAndUndead: Monster[] = [
             { itemId: 'gust_rune', minQuantity: 10, maxQuantity: 20 },
         ],
         mainDrops: [
+            { itemId: 'harpy_talon', chance: 800, minQuantity: 1, maxQuantity: 1 },
             { itemId: 'harpy_feather', chance: 1000, minQuantity: 1, maxQuantity: 1 },
         ],
         monsterType: MonsterType.Standard, attackSpeed: 3, respawnTime: 40000, attackStyle: 'ranged', aggressive: true, alwaysAggressive: true
@@ -89,6 +90,7 @@ export const magicalAndUndead: Monster[] = [
         stabDefence: 32, slashDefence: 32, crushDefence: 32, rangedDefence: 40, magicDefence: 40,
         iconUrl: '/assets/npcChatHeads/shipwreck_specter.png',
         mainDrops: [
+            { itemId: 'eldritch_pearl', chance: 250, minQuantity: 1, maxQuantity: 1 },
             { itemId: 'driftwood_logs', chance: 1500, minQuantity: 1, maxQuantity: 3 },
             { itemId: 'nexus_rune', chance: 5000, minQuantity: 10, maxQuantity: 20 },
             { itemId: 'anima_rune', chance: 1500, minQuantity: 2, maxQuantity: 5 },
@@ -105,6 +107,7 @@ export const magicalAndUndead: Monster[] = [
             { itemId: 'aqua_rune', minQuantity: 30, maxQuantity: 50 },
         ],
         mainDrops: [
+            { itemId: 'eldritch_pearl', chance: 300, minQuantity: 1, maxQuantity: 1 },
             { itemId: 'astral_rune', chance: 2000, minQuantity: 5, maxQuantity: 12 },
             { itemId: 'anima_rune', chance: 1200, minQuantity: 3, maxQuantity: 8 },
             { itemId: 'affinity_bottoms', chance: 100, minQuantity: 1, maxQuantity: 1 },
@@ -122,11 +125,6 @@ export const magicalAndUndead: Monster[] = [
         ],
         mainDrops: [
             { itemId: 'uncut_ruby', chance: 200, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'aquatite_sword', chance: 20, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'aquatite_full_helm', chance: 20, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'aquatite_platebody', chance: 20, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'aquatite_platelegs', chance: 20, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'aquatite_kiteshield', chance: 20, minQuantity: 1, maxQuantity: 1 },
         ],
         monsterType: MonsterType.Armored, attackSpeed: 5, respawnTime: 150000, aggressive: true, alwaysAggressive: true, attackStyle: 'crush',
     },
@@ -136,11 +134,6 @@ export const magicalAndUndead: Monster[] = [
         iconUrl: '/assets/npcChatHeads/deep_lurker.png',
         mainDrops: [
             { itemId: 'raw_eel', chance: 2000, minQuantity: 1, maxQuantity: 2 },
-            { itemId: 'aquatite_sword', chance: 10, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'aquatite_full_helm', chance: 10, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'aquatite_platebody', chance: 10, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'aquatite_platelegs', chance: 10, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'aquatite_kiteshield', chance: 10, minQuantity: 1, maxQuantity: 1 },
             { itemId: 'nexus_rune', chance: 4000, minQuantity: 20, maxQuantity: 35 },
             { itemId: 'anima_rune', chance: 1500, minQuantity: 8, maxQuantity: 15 },
             { itemId: 'aether_rune', chance: 250, minQuantity: 2, maxQuantity: 5 },
@@ -156,11 +149,6 @@ export const magicalAndUndead: Monster[] = [
         ],
         mainDrops: [
             { itemId: 'wyrmscale', chance: 1000, minQuantity: 1, maxQuantity: 2 },
-            { itemId: 'aquatite_sword', chance: 50, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'aquatite_full_helm', chance: 50, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'aquatite_platebody', chance: 50, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'aquatite_platelegs', chance: 50, minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'aquatite_kiteshield', chance: 50, minQuantity: 1, maxQuantity: 1 },
             { itemId: 'passage_rune', chance: 4000, minQuantity: 15, maxQuantity: 25 },
             { itemId: 'astral_rune', chance: 2000, minQuantity: 10, maxQuantity: 20 },
         ],

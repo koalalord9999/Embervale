@@ -29,6 +29,7 @@ export type POIActivity =
   | { type: 'cooking_range' }
   | { type: 'furnace' }
   | { type: 'anvil' }
+  | { type: 'bookbinding_workbench' }
   | { type: 'shearing'; loot: { itemId: 'wool'; chance: 1 } }
   | { type: 'egg_collecting'; loot: { itemId: 'eggs'; chance: 1 } }
   | { type: 'wishing_well' }

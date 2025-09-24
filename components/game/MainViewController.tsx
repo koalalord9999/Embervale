@@ -1,4 +1,3 @@
-
 import React, { useCallback } from 'react';
 import { useUIState } from '../../hooks/useUIState';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -102,6 +101,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
         else if (activity.type === 'cooking_range') ui.openCraftingView({ type: 'cooking_range' });
         else if (activity.type === 'furnace') ui.openCraftingView({ type: 'furnace' });
         else if (activity.type === 'anvil') ui.openCraftingView({ type: 'anvil' });
+        else if (activity.type === 'bookbinding_workbench') ui.openCraftingView({ type: 'bookbinding' });
         else if (activity.type === 'spinning_wheel') ui.openCraftingView({ type: 'spinning_wheel' });
         else if (activity.type === 'wishing_well') worldActions.handleWishingWell();
         else if (activity.type === 'water_source') worldActions.handleCollectWater();
@@ -148,6 +148,8 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 advanceTutorial={advanceTutorial}
                 autocastSpell={char.autocastSpell}
                 inv={inv}
+                // FIX: Pass the 'ui' prop to CombatView as it is required.
+                ui={ui}
             />;
         }
         if (ui.activeTeleportBoardId) {

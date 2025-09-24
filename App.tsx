@@ -1,5 +1,3 @@
-
-
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useUIState } from './hooks/useUIState';
 import { useGameStateManager } from './hooks/useGameStateManager';
@@ -38,6 +36,7 @@ const App: React.FC = () => {
     const [promptReason, setPromptReason] = useState<PromptReason>(null);
     const [pendingImportState, setPendingImportState] = useState<any | null>(null);
     const [version, setVersion] = useState<string>('');
+    const [isCtrlPressed, setIsCtrlPressed] = useState(false);
     const [isDevModeEnabled, setIsDevModeEnabled] = useState<boolean>(false);
 
     useEffect(() => {
@@ -71,6 +70,20 @@ const App: React.FC = () => {
 
         return () => {
             document.removeEventListener('contextmenu', handleContextMenu);
+        };
+    }, []);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => e.key === 'Control' && setIsCtrlPressed(true);
+        const handleKeyUp = (e: KeyboardEvent) => e.key === 'Control' && setIsCtrlPressed(false);
+        
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+        window.addEventListener('blur', () => setIsCtrlPressed(false));
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
         };
     }, []);
     
@@ -235,7 +248,7 @@ const App: React.FC = () => {
             
             {initialState && (
                 <>
-                    {ui.tooltip && <Tooltip content={ui.tooltip.content} position={ui.tooltip.position} />}
+                    {ui.tooltip && <Tooltip tooltipState={ui.tooltip} isCtrlPressed={isCtrlPressed} />}
                     {ui.contextMenu && <ContextMenu options={ui.contextMenu.options} triggerEvent={ui.contextMenu.event} isTouchInteraction={ui.contextMenu.isTouchInteraction} onClose={ui.closeContextMenu} />}
                     {ui.makeXPrompt && <MakeXModal title={ui.makeXPrompt.title} maxQuantity={ui.makeXPrompt.max} onConfirm={ui.makeXPrompt.onConfirm} onCancel={ui.closeMakeXPrompt} />}
                     {ui.confirmationPrompt && <ConfirmationModal message={ui.confirmationPrompt.message} onConfirm={ui.confirmationPrompt.onConfirm} onCancel={ui.closeConfirmationPrompt} />}
@@ -244,7 +257,7 @@ const App: React.FC = () => {
                     {ui.activeSkillGuide && <SkillGuideView activeSkill={ui.activeSkillGuide} setActiveSkill={ui.setActiveSkillGuide} onClose={ui.closeSkillGuide} playerSkills={initialState.skills as any[]} />}
                     {ui.activeQuestDetail && <QuestDetailView questId={ui.activeQuestDetail.questId} playerQuests={ui.activeQuestDetail.playerQuests} onClose={() => ui.setActiveQuestDetail(null)} />}
                     {ui.equipmentStats && <EquipmentStatsView equipment={ui.equipmentStats} onClose={() => ui.setEquipmentStats(null)} />}
-                    {ui.isItemsOnDeathOpen && <ItemsOnDeathView coins={initialState.coins} onClose={() => ui.setIsItemsOnDeathOpen(false)} />}
+                    {ui.isItemsOnDeathOpen && <ItemsOnDeathView inventory={initialState.inventory} equipment={initialState.equipment} coins={initialState.coins} onClose={() => ui.setIsItemsOnDeathOpen(false)} />}
                     {ui.priceCheckerInventory && <PriceCheckerView inventory={ui.priceCheckerInventory} onClose={() => ui.setPriceCheckerInventory(null)} setTooltip={ui.setTooltip} />}
                 </>
             )}

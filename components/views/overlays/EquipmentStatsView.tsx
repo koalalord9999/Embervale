@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Equipment, WeaponType } from '../../../types';
 import { ITEMS } from '../../../constants';
@@ -29,19 +28,19 @@ const EquipmentStatsView: React.FC<EquipmentStatsViewProps> = ({ equipment, onCl
                 const itemData = ITEMS[itemSlot.itemId];
                 if (itemData?.equipment) {
                     const eq = itemData.equipment;
-                    totals.stabAttack += eq.stabAttack;
-                    totals.slashAttack += eq.slashAttack;
-                    totals.crushAttack += eq.crushAttack;
-                    totals.magicAttack += eq.magicAttack;
-                    totals.rangedAttack += eq.rangedAttack;
-                    totals.stabDefence += eq.stabDefence;
-                    totals.slashDefence += eq.slashDefence;
-                    totals.crushDefence += eq.crushDefence;
-                    totals.magicDefence += eq.magicDefence;
-                    totals.rangedDefence += eq.rangedDefence;
-                    totals.strengthBonus += eq.strengthBonus;
-                    totals.rangedStrength += eq.rangedStrength;
-                    totals.magicDamageBonus += eq.magicDamageBonus;
+                    totals.stabAttack += eq.stabAttack ?? 0;
+                    totals.slashAttack += eq.slashAttack ?? 0;
+                    totals.crushAttack += eq.crushAttack ?? 0;
+                    totals.magicAttack += eq.magicAttack ?? 0;
+                    totals.rangedAttack += eq.rangedAttack ?? 0;
+                    totals.stabDefence += eq.stabDefence ?? 0;
+                    totals.slashDefence += eq.slashDefence ?? 0;
+                    totals.crushDefence += eq.crushDefence ?? 0;
+                    totals.magicDefence += eq.magicDefence ?? 0;
+                    totals.rangedDefence += eq.rangedDefence ?? 0;
+                    totals.strengthBonus += eq.strengthBonus ?? 0;
+                    totals.rangedStrength += eq.rangedStrength ?? 0;
+                    totals.magicDamageBonus += eq.magicDamageBonus ?? 0;
                     if (slot === 'weapon' && eq.speed) {
                         totals.speed = eq.speed;
                     }

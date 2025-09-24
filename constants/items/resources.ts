@@ -61,6 +61,7 @@ export const resources: Item[] = [
     { id: 'flax', name: 'Flax', description: 'A plant that can be spun into a bow string.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:flax.svg' },
     { id: 'bow_string', name: 'Bow String', description: 'A string for a bow.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:whiplash.svg' },
     { id: 'rope', name: 'Rope', description: 'A sturdy length of rope.', stackable: false, value: 15, iconUrl: 'https://api.iconify.design/game-icons:rope-coil.svg' },
+    { id: 'mystic_page', name: 'Mystic Page', description: 'A page from an arcane text, humming with magical potential.', stackable: true, value: 200, iconUrl: 'https://api.iconify.design/game-icons:written-scroll.svg' },
     { id: 'harpy_feather', name: 'Harpy Feather', description: 'A large, sharp feather from a harpy. Could be used in fletching.', stackable: true, value: 50, iconUrl: 'https://api.iconify.design/game-icons:feather.svg', material: 'uncut-sapphire' },
     { id: 'golem_core', name: 'Golem Core', description: 'A faintly glowing stone that was the heart of a stone golem. Can be shattered with a hammer.', stackable: false, value: 500, iconUrl: 'https://api.iconify.design/game-icons:glowing-artifact.svg' },
     { id: 'straw', name: 'Straw', description: 'A bundle of dry straw. It smells faintly of hay and old magic.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:hay-bale.svg' },
@@ -75,6 +76,9 @@ export const resources: Item[] = [
     { id: 'wolf_leather', name: 'Wolf Leather', description: 'Tanned pelt from a wolf, ready for crafting.', stackable: false, value: 35, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg', material: 'leather' },
     { id: 'bear_pelt', name: 'Bear Pelt', description: 'The thick fur of a bear. It needs to be tanned.', stackable: false, value: 40, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg' },
     { id: 'bear_leather', name: 'Bear Leather', description: 'Tanned pelt from a bear, ready for crafting.', stackable: false, value: 60, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg', material: 'leather' },
+    { id: 'harpy_talon', name: 'Harpy Talon', description: 'A sharp, resilient talon from a harpy. It seems to resonate with a strange energy.', stackable: false, value: 250, iconUrl: 'https://api.iconify.design/game-icons:bird-claw.svg' },
+    { id: 'crystalline_chitin', name: 'Crystalline Chitin', description: 'A fragment of exoskeleton from a Salt Flats creature, encrusted with shimmering salt crystals.', stackable: false, value: 400, iconUrl: 'https://api.iconify.design/game-icons:insect-jaws.svg', material: 'silver' },
+    { id: 'eldritch_pearl', name: 'Eldritch Pearl', description: 'A swirling, dark pearl that seems to whisper secrets when held to the ear. It feels ancient.', stackable: false, value: 1200, iconUrl: 'https://api.iconify.design/game-icons:orb-pearl.svg', material: 'rune-nexus' },
     // New baking resources
     { id: 'wheat', name: 'Wheat', description: 'A stalk of wheat.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:wheat.svg' },
     { id: 'flour', name: 'Sack of Flour', description: 'A sack filled with finely milled flour.', stackable: false, value: 3, iconUrl: 'https://api.iconify.design/game-icons:flour.svg' },

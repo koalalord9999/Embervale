@@ -1,4 +1,5 @@
 import { Item } from './entities';
+import { SkillName } from './enums';
 
 export interface Shop {
     id: string;
@@ -24,8 +25,10 @@ export interface CookingRecipe {
 
 export interface CraftingRecipe {
     itemId: string;
-    level: number;
-    xp: number;
+    level?: number;
+    xp?: number;
+    requiredSkills?: { skill: SkillName; level: number }[];
+    xpRewards?: { skill: SkillName; amount: number }[];
     ingredients: { itemId: string; quantity: number }[];
 }
 

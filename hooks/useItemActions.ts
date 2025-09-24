@@ -1,6 +1,7 @@
+
 import React, { useCallback } from 'react';
 import { InventorySlot, PlayerSkill, SkillName, ActiveCraftingAction, Item, CraftingContext, POIActivity, EquipmentSlot } from '../types';
-import { ITEMS, FLETCHING_RECIPES, HERBLORE_RECIPES, HERBS, INVENTORY_CAPACITY, rollOnLootTable } from '../constants';
+import { ITEMS, FLETCHING_RECIPES, HERBLORE_RECIPES, HERBS, INVENTORY_CAPACITY, rollOnLootTable, LootRollResult } from '../constants';
 import { POIS } from '../data/pois';
 import { MakeXPrompt } from './useUIState';
 
@@ -79,7 +80,12 @@ export const useItemActions = (props: UseItemActionsProps) => {
             for (let i = 0; i < 3; i++) {
                 const herb = rollOnLootTable('herb_table');
                 if (herb) {
-                    modifyItem(herb, 1, true, undefined, { bypassAutoBank: true });
+                    // FIX: Handle both string and LootRollResult return types from rollOnLootTable.
+                    if (typeof herb === 'string') {
+                        modifyItem(herb, 1, true, undefined, { bypassAutoBank: true });
+                    } else {
+                        modifyItem(herb.itemId, herb.quantity, true, undefined, { bypassAutoBank: true, noted: herb.noted });
+                    }
                 }
             }
         

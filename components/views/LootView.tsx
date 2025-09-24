@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GroundItem, InventorySlot } from '../../types';
+import { GroundItem, InventorySlot, Item } from '../../types';
 import { ITEMS, getIconClassName } from '../../constants';
 import Button from '../common/Button';
 import { TooltipState } from '../../hooks/useUIState';
@@ -60,16 +60,7 @@ const LootSlot: React.FC<{
     if (!itemData) return null;
 
     const handleMouseEnter = (e: React.MouseEvent) => {
-        const tooltipContent = (
-            <div>
-                <p className="font-bold text-yellow-300">{getDisplayName(item)}</p>
-                <p className="text-sm text-gray-300">{itemData.description}</p>
-                {itemData.stackable && item.quantity > 999 && (
-                    <p className="text-sm mt-1 text-gray-400">Quantity: {item.quantity.toLocaleString()}</p>
-                )}
-            </div>
-        );
-        setTooltip({ content: tooltipContent, position: { x: e.clientX, y: e.clientY } });
+        setTooltip({ item: itemData, slot: item, position: { x: e.clientX, y: e.clientY } });
     };
     
     const totalDuration = 5 * 60 * 1000;

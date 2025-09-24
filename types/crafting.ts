@@ -9,4 +9,5 @@ export type CraftingContext =
   | { type: 'gem_cutting' }    // From using chisel on gem
   | { type: 'jewelry' }        // From using a furnace to craft jewelry
   | { type: 'fletching'; logId: string } // From using knife on logs
-  | { type: 'dough_making' }; // From using water on flour
+  | { type: 'dough_making' }
+  | { type: 'bookbinding' }; // From using the new workbench

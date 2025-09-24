@@ -1,29 +1,81 @@
-
 import { useCallback } from 'react';
-import { Spell, SkillName } from '../types';
+import { Spell, SkillName, InventorySlot } from '../types';
 import { useCharacter } from './useCharacter';
 import { useInventory } from './useInventory';
 import { useNavigation } from './useNavigation';
+import { useUIState } from './useUIState';
+import { ITEMS } from '../constants';
 
 interface SpellcastingDependencies {
     char: ReturnType<typeof useCharacter>;
     inv: ReturnType<typeof useInventory>;
     addLog: (message: string) => void;
     navigation: ReturnType<typeof useNavigation>;
+    ui: ReturnType<typeof useUIState>;
 }
 
+const ENCHANTMENT_MAP: Record<string, string> = {
+    'sapphire_ring': 'ring_of_prospecting',
+    'emerald_ring': 'ring_of_the_woodsman',
+    'ruby_ring': 'ring_of_the_forge',
+    'diamond_ring': 'ring_of_mastery',
+    'sapphire_necklace': 'necklace_of_binding',
+    'emerald_necklace': 'necklace_of_the_angler',
+    'ruby_necklace': 'necklace_of_passage_ruby',
+    'diamond_necklace': 'necklace_of_passage_diamond',
+    'sapphire_amulet': 'amulet_of_magic',
+    'emerald_amulet': 'amulet_of_ranging',
+    'ruby_amulet': 'amulet_of_strength',
+    'diamond_amulet': 'amulet_of_power'
+};
+
 export const useSpellcasting = (deps: SpellcastingDependencies) => {
-    const { char, inv, addLog, navigation } = deps;
+    const { char, inv, addLog, navigation, ui } = deps;
+
+    const onSpellOnItem = useCallback((spell: Spell, target: { item: InventorySlot, index: number }) => {
+        ui.setSpellToCast(null);
+
+        const isTargetValid = spell.targetItems?.includes(target.item.itemId) || spell.targetItems?.includes('all');
+        if (!isTargetValid) {
+            return;
+        }
+
+        if (!inv.hasItems(spell.runes)) {
+            addLog("You do not have enough runes to cast this spell.");
+            return;
+        }
+
+        spell.runes.forEach(rune => inv.modifyItem(rune.itemId, -rune.quantity, true));
+        char.addXp(SkillName.Magic, spell.xp);
+
+        if (spell.type === 'utility-enchant') {
+            const enchantedItemId = ENCHANTMENT_MAP[target.item.itemId];
+            if (enchantedItemId) {
+                inv.modifyItem(target.item.itemId, -1, true);
+                inv.modifyItem(enchantedItemId, 1, false, undefined, { bypassAutoBank: true });
+                addLog(`You enchant the ${ITEMS[target.item.itemId].name}.`);
+            }
+        }
+    }, [char, inv, addLog, ui]);
 
     const onCastSpell = useCallback((spell: Spell) => {
+        if (ui.isBusy) {
+            addLog("You are busy.");
+            return;
+        }
+        
         const magicLevel = char.skills.find(s => s.name === SkillName.Magic)?.currentLevel ?? 1;
 
-        if (spell.type === 'combat' && spell.autocastable) {
-            if (magicLevel < spell.level) {
-                addLog(`You need a Magic level of ${spell.level} to set this as your autocast spell.`);
+        if (magicLevel < spell.level) {
+            addLog(`You need a Magic level of ${spell.level} to cast this spell.`);
+            return;
+        }
+
+        if (ui.isSelectingAutocastSpell) {
+            if (!spell.autocastable || spell.type !== 'combat') {
+                addLog("You can only autocast combat spells.");
                 return;
             }
-            
             const isCurrentlyAutocasting = char.autocastSpell?.id === spell.id;
             
             if (!isCurrentlyAutocasting) {
@@ -33,14 +85,30 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
                 char.setAutocastSpell(null);
                 addLog('Autocast spell cleared.');
             }
+            ui.setIsSelectingAutocastSpell(false);
             return;
         }
-    
-        if (magicLevel < spell.level) {
-            addLog(`You need a Magic level of ${spell.level} to cast this spell.`);
+
+        if (spell.type === 'combat') {
+            if (ui.combatQueue.length === 0) {
+                addLog("You can only cast this spell in combat.");
+                return;
+            }
+            ui.setManualCastTrigger(spell);
             return;
         }
         
+        if (['utility-enchant', 'utility-alchemy', 'utility-processing'].includes(spell.type)) {
+            if (!inv.hasItems(spell.runes)) {
+                addLog("You do not have enough runes to cast this spell.");
+                return;
+            }
+            addLog(`You begin to cast ${spell.name}... Select an item from your inventory.`);
+            ui.setSpellToCast(spell);
+            ui.setActivePanel('inventory');
+            return;
+        }
+    
         if (!inv.hasItems(spell.runes)) {
             addLog("You do not have enough runes to cast this spell.");
             return;
@@ -65,7 +133,7 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
             addLog(`You cast ${spell.name}.`);
         }
     
-    }, [char.skills, char.autocastSpell, char.setAutocastSpell, addLog, inv.modifyItem, char.addXp, navigation.handleForcedNavigate, inv.hasItems]);
+    }, [char, addLog, inv, navigation, ui]);
 
-    return { onCastSpell };
+    return { onCastSpell, onSpellOnItem };
 };

@@ -1,4 +1,3 @@
-
 import { POI, SkillName } from '../../types';
 
 export const crystallineIslesPois: Record<string, POI> = {
@@ -130,13 +129,15 @@ export const crystallineIslesPois: Record<string, POI> = {
         regionId: 'crystalline_isles',
         x: 2053, y: 882
     },
-    // Inner Paths (No activities yet)
+    // Inner Paths
     inner_path_A1: {
         id: 'inner_path_A1',
         name: 'Jagged Shard Pass',
         description: 'The path is narrow and flanked by sharp crystal shards. It feels much more dangerous here.',
         connections: ['crystalline_path_2', 'inner_path_A2'],
-        activities: [],
+        activities: [
+            { type: 'combat', monsterId: 'crystal_scuttler' },
+        ],
         regionId: 'crystalline_isles',
         x: 1682, y: 812
     },
@@ -145,7 +146,10 @@ export const crystallineIslesPois: Record<string, POI> = {
         name: 'Fractured Plain',
         description: 'A wide, flat area of cracked crystal. The path splits here.',
         connections: ['inner_path_A1', 'inner_path_A3', 'inner_path_B2'],
-        activities: [],
+        activities: [
+            { type: 'combat', monsterId: 'crystalline_tortoise' },
+            { type: 'combat', monsterId: 'crystal_scuttler' },
+        ],
         regionId: 'crystalline_isles',
         x: 1789, y: 880
     },
@@ -163,7 +167,9 @@ export const crystallineIslesPois: Record<string, POI> = {
         name: 'Resonant Rise',
         description: 'The path climbs steeply. The air vibrates with a low hum.',
         connections: ['crystalline_path_4', 'inner_path_B2'],
-        activities: [],
+        activities: [
+            { type: 'combat', monsterId: 'crystal_scuttler' },
+        ],
         regionId: 'crystalline_isles',
         x: 1671, y: 747
     },
@@ -172,7 +178,10 @@ export const crystallineIslesPois: Record<string, POI> = {
         name: 'Central Plateau',
         description: 'A large, open plateau in the island\'s interior.',
         connections: ['inner_path_B1', 'inner_path_A2'],
-        activities: [],
+        activities: [
+            { type: 'combat', monsterId: 'shard_golem' },
+            { type: 'combat', monsterId: 'crystalline_tortoise' },
+        ],
         regionId: 'crystalline_isles',
         x: 1790, y: 728
     },
@@ -199,7 +208,9 @@ export const crystallineIslesPois: Record<string, POI> = {
         name: 'The Heartcrystal',
         description: 'The center of the Crystalline Isles. A single, gigantic crystal pulses with a brilliant, internal light, the source of the island\'s power.',
         connections: ['inner_path_A3', 'inner_path_C2'],
-        activities: [],
+        activities: [
+            { type: 'combat', monsterId: 'ancient_ammonite' },
+        ],
         regionId: 'crystalline_isles',
         x: 1954, y: 767
     },

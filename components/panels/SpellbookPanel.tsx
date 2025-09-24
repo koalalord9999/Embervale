@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Spell, PlayerSkill, SkillName, InventorySlot } from '../../types';
 import { SPELLS, ITEMS, getIconClassName } from '../../constants';
-import { TooltipState } from '../../hooks/useUIState';
+import { TooltipState, useUIState } from '../../hooks/useUIState';
 import { useCharacter } from '../../hooks/useCharacter';
 
 interface SpellbookPanelProps {
@@ -10,6 +10,7 @@ interface SpellbookPanelProps {
     onCastSpell: (spell: Spell) => void;
     setTooltip: (tooltip: TooltipState | null) => void;
     autocastSpell: Spell | null;
+    ui: ReturnType<typeof useUIState>;
 }
 
 const getSpellIconUrl = (spell: Spell): string => {
@@ -87,8 +88,16 @@ const getSpellIconClassName = (spell: Spell): string => {
     return 'filter invert';
 };
 
-const SpellbookPanel: React.FC<SpellbookPanelProps> = ({ skills, inventory, onCastSpell, setTooltip, autocastSpell }) => {
+const SpellbookPanel: React.FC<SpellbookPanelProps> = ({ skills, inventory, onCastSpell, setTooltip, autocastSpell, ui }) => {
     const magicLevel = skills.find(s => s.name === SkillName.Magic)?.currentLevel ?? 1;
+
+    const spellsToDisplay = useMemo(() => {
+        const sorted = [...SPELLS].sort((a, b) => a.level - b.level);
+        if (ui.isSelectingAutocastSpell) {
+            return sorted.filter(spell => spell.autocastable && spell.type === 'combat');
+        }
+        return sorted;
+    }, [ui.isSelectingAutocastSpell]);
 
     const renderSpell = (spell: Spell) => {
         const isAutocasting = autocastSpell?.id === spell.id;
@@ -130,14 +139,12 @@ const SpellbookPanel: React.FC<SpellbookPanelProps> = ({ skills, inventory, onCa
         );
     };
     
-    const sortedSpells = [...SPELLS].sort((a, b) => a.level - b.level);
-
     return (
         <div className="flex flex-col h-full text-gray-300">
-            <h3 className="text-lg font-bold text-center mb-2 text-yellow-400">Spellbook</h3>
+            <h3 className="text-lg font-bold text-center mb-2 text-yellow-400">{ui.isSelectingAutocastSpell ? 'Select Autocast Spell' : 'Spellbook'}</h3>
             <div className="flex-grow overflow-y-auto pr-1">
                 <div className="grid grid-cols-5 gap-2">
-                    {sortedSpells.map(renderSpell)}
+                    {spellsToDisplay.map(renderSpell)}
                 </div>
             </div>
         </div>

@@ -102,6 +102,7 @@ export const SHOPS: Record<string, Shop> = {
         id: 'silverhaven_magic_shop',
         name: 'Silverhaven Arcane Wares',
         inventory: [
+            { itemId: 'mystic_page', quantity: 10000, priceModifier: 1.0 },
             { itemId: 'staff_of_gusts', quantity: 5, priceModifier: 1.2 },
             { itemId: 'staff_of_aqua', quantity: 5, priceModifier: 1.2 },
             { itemId: 'staff_of_stone', quantity: 5, priceModifier: 1.2 },

@@ -1,6 +1,5 @@
-
 import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
-import { POI, Region } from '../../types';
+import { POI, Region, WorldState } from '../../types';
 import { REGIONS, MAP_FEATURES } from '../../constants';
 import { POIS } from '../../data/pois';
 import { MAP_DIMENSIONS, CITY_MAP_DIMENSIONS } from '../../constants';
@@ -12,9 +11,17 @@ interface WorldMapViewProps {
     onNavigate: (poiId: string) => void;
     setTooltip: (tooltip: TooltipState | null) => void;
     activeMapRegionId: string;
+    deathMarker: WorldState['deathMarker'];
 }
 
-const WorldMapView: React.FC<WorldMapViewProps> = ({ currentPoiId, unlockedPois, onNavigate, setTooltip, activeMapRegionId }) => {
+const formatTime = (ms: number) => {
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+};
+
+const WorldMapView: React.FC<WorldMapViewProps> = ({ currentPoiId, unlockedPois, onNavigate, setTooltip, activeMapRegionId, deathMarker }) => {
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const [view, setView] = useState({ x: 0, y: 0, zoom: 1 });
     const [isDragging, setIsDragging] = useState(false);
@@ -351,6 +358,25 @@ const WorldMapView: React.FC<WorldMapViewProps> = ({ currentPoiId, unlockedPois,
                             />
                         </div>
                     ))}
+                    {deathMarker && isWorldView && POIS[deathMarker.poiId] && (
+                        <div
+                            key="death-marker"
+                            className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                            style={{ top: `${POIS[deathMarker.poiId].y}px`, left: `${POIS[deathMarker.poiId].x}px` }}
+                            onMouseEnter={(e) => setTooltip({
+                                content: (
+                                    <div>
+                                        <p className="font-bold text-red-400">Death Pile</p>
+                                        <p>Disappears in: {formatTime(deathMarker.timeRemaining)}</p>
+                                    </div>
+                                ),
+                                position: { x: e.clientX, y: e.clientY }
+                            })}
+                            onMouseLeave={() => setTooltip(null)}
+                        >
+                            <img src="https://api.iconify.design/game-icons:tombstone.svg" alt="Death Location" className="filter invert opacity-90" style={{ width: `${32 / view.zoom}px`, height: `${32 / view.zoom}px` }} />
+                        </div>
+                    )}
                 </div>
             </div>
             <div className="absolute bottom-2 right-2 flex flex-col gap-1 z-10">

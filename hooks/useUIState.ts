@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { ActivePanel, SkillName, InventorySlot, ActiveCraftingAction, DialogueNode, CraftingContext, Equipment, PlayerQuestState, Spell } from '../types';
+import React, { useState, useCallback, useMemo } from 'react';
+import { ActivePanel, SkillName, InventorySlot, ActiveCraftingAction, DialogueNode, CraftingContext, Equipment, PlayerQuestState, Spell, Item } from '../types';
 import { ContextMenuOption } from '../components/common/ContextMenu';
 
 export interface DialogueState {
@@ -13,7 +13,9 @@ export interface DialogueState {
 }
 
 export interface TooltipState {
-    content: React.ReactNode;
+    content?: React.ReactNode;
+    item?: Item;
+    slot?: InventorySlot;
     position: { x: number; y: number; };
 }
 
@@ -66,6 +68,9 @@ export const useUIState = () => {
     const [activeSkillGuide, setActiveSkillGuide] = useState<SkillName | null>(null);
     const [activeCraftingAction, setActiveCraftingAction] = useState<ActiveCraftingAction | null>(null);
     const [activeQuestDetail, setActiveQuestDetail] = useState<QuestDetailState | null>(null);
+    const [isSelectingAutocastSpell, setIsSelectingAutocastSpell] = useState<boolean>(false);
+    const [manualCastTrigger, setManualCastTrigger] = useState<Spell | null>(null);
+
 
     // New state for equipment overlays
     const [equipmentStats, setEquipmentStats] = useState<Equipment | null>(null);
@@ -75,6 +80,47 @@ export const useUIState = () => {
     const [isExpandedMapViewOpen, setIsExpandedMapViewOpen] = useState<boolean>(false);
     const [isLootViewOpen, setIsLootViewOpen] = useState<boolean>(false);
     const [activeMapRegionId, setActiveMapRegionId] = useState<string>('world');
+
+    // FIX: Define isBusy based on whether any modal or blocking UI is active.
+    const isBusy = useMemo(() => !!(
+        activeShopId ||
+        activeCraftingContext ||
+        activeQuestBoardId ||
+        activeTeleportBoardId ||
+        makeXPrompt ||
+        activeDialogue ||
+        confirmationPrompt ||
+        exportData ||
+        isImportModalOpen ||
+        activeSkillGuide ||
+        activeCraftingAction ||
+        activeQuestDetail ||
+        equipmentStats ||
+        isItemsOnDeathOpen ||
+        priceCheckerInventory ||
+        isAtlasViewOpen ||
+        isExpandedMapViewOpen ||
+        isLootViewOpen
+    ), [
+        activeShopId,
+        activeCraftingContext,
+        activeQuestBoardId,
+        activeTeleportBoardId,
+        makeXPrompt,
+        activeDialogue,
+        confirmationPrompt,
+        exportData,
+        isImportModalOpen,
+        activeSkillGuide,
+        activeCraftingAction,
+        activeQuestDetail,
+        equipmentStats,
+        isItemsOnDeathOpen,
+        priceCheckerInventory,
+        isAtlasViewOpen,
+        isExpandedMapViewOpen,
+        isLootViewOpen
+    ]);
 
 
     const closeContextMenu = useCallback(() => setContextMenu(null), []);
@@ -110,6 +156,8 @@ export const useUIState = () => {
         setIsExpandedMapViewOpen(false);
         setActiveMapRegionId('world');
         setIsLootViewOpen(false);
+        setIsSelectingAutocastSpell(false);
+        setManualCastTrigger(null);
     }, []);
 
     return {
@@ -139,6 +187,9 @@ export const useUIState = () => {
         isExpandedMapViewOpen, setIsExpandedMapViewOpen,
         isLootViewOpen, setIsLootViewOpen,
         activeMapRegionId, setActiveMapRegionId,
+        isSelectingAutocastSpell, setIsSelectingAutocastSpell,
+        manualCastTrigger, setManualCastTrigger,
+        isBusy,
         closeContextMenu,
         closeMakeXPrompt,
         closeConfirmationPrompt,

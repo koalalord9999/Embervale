@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { MONSTERS } from '../constants';
 import { POIS } from '../data/pois';
-import { POIActivity } from '../types';
+import { POIActivity, Equipment } from '../types';
 
 export const useAggression = (
     currentPoiId: string,
@@ -12,7 +12,9 @@ export const useAggression = (
     addLog: (message: string) => void,
     monsterRespawnTimers: Record<string, number>,
     devAggroIds: string[],
-    isPlayerInvisible: boolean
+    isPlayerInvisible: boolean,
+    equipment: Equipment,
+    setEquipment: React.Dispatch<React.SetStateAction<Equipment>>
 ) => {
     useEffect(() => {
         if (!isGameLoaded || isBusy || isPlayerInvisible) return;
@@ -32,7 +34,6 @@ export const useAggression = (
                 return { monster, uniqueInstanceId };
             })
             .filter(({ monster, uniqueInstanceId }) => {
-                // Dev aggro overrides ALL normal behavior, including respawn timers.
                 if (devAggroIds.includes(uniqueInstanceId)) {
                     return true;
                 }
@@ -46,11 +47,24 @@ export const useAggression = (
 
                 if (monster.alwaysAggressive) return true;
                 return playerCombatLevel < monster.level * 2;
-            })
-            .map(({ uniqueInstanceId }) => uniqueInstanceId);
+            });
         
         if (aggressiveMonsterInstances.length > 0) {
-            startCombat(aggressiveMonsterInstances);
+            const necklace = equipment.necklace;
+            if (necklace?.itemId === 'necklace_of_shadows' && (necklace.charges ?? 0) > 0) {
+                // Player is invisible, consume a charge and do not start combat.
+                const newCharges = (necklace.charges ?? 1) - 1;
+                if (newCharges > 0) {
+                    setEquipment(prev => ({ ...prev, necklace: { ...necklace, charges: newCharges } }));
+                } else {
+                    addLog("Your Necklace of Shadows has run out of charges and fades away.");
+                    setEquipment(prev => ({ ...prev, necklace: null }));
+                }
+                // Do NOT call startCombat
+            } else {
+                // Player is not invisible, start combat as normal
+                startCombat(aggressiveMonsterInstances.map(m => m.uniqueInstanceId));
+            }
         }
-    }, [currentPoiId, isGameLoaded, isBusy, playerCombatLevel, startCombat, addLog, monsterRespawnTimers, devAggroIds, isPlayerInvisible]);
+    }, [currentPoiId, isGameLoaded, isBusy, playerCombatLevel, startCombat, addLog, monsterRespawnTimers, devAggroIds, isPlayerInvisible, equipment, setEquipment]);
 };

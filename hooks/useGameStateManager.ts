@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect, useCallback } from 'react';
 import { saveGameState, loadGameState, deleteGameState } from '../db';
 import { ALL_SKILLS, REPEATABLE_QUEST_POOL, ITEMS, MONSTERS, SPELLS } from '../constants';
@@ -34,7 +32,7 @@ const defaultState = {
     },
     slayerTask: null as PlayerSlayerTask | null,
     tutorialStage: 0,
-    worldState: { windmillFlour: 0 } as WorldState,
+    worldState: { windmillFlour: 0, deathMarker: null } as WorldState,
     autocastSpell: null as Spell | null,
 };
 
@@ -143,8 +141,13 @@ const validateAndMergeState = (parsedData: any): GameState => {
     }
 
     if (parsedData.slayerTask) validatedState.slayerTask = parsedData.slayerTask;
-    if (parsedData.worldState && typeof parsedData.worldState.windmillFlour === 'number') {
-        validatedState.worldState = parsedData.worldState;
+    if (parsedData.worldState) {
+        if (typeof parsedData.worldState.windmillFlour === 'number') {
+            validatedState.worldState.windmillFlour = parsedData.worldState.windmillFlour;
+        }
+        if (parsedData.worldState.deathMarker) {
+             validatedState.worldState.deathMarker = parsedData.worldState.deathMarker;
+        }
     }
 
     return validatedState;
@@ -156,21 +159,67 @@ export const useGameStateManager = (ui: ReturnType<typeof useUIState>) => {
 
     const parseSaveData = useCallback((data: string): GameState | null => {
         try {
-            const parsedData = JSON.parse(data);
-            if (!parsedData.skills || !parsedData.inventory || typeof parsedData.coins === 'undefined') {
-                throw new Error("Invalid save file format.");
+            const trimmedData = data.trim();
+            // New "SAVE" prefixed format
+            if (trimmedData.startsWith('SAVE')) {
+                const base64Data = trimmedData.substring(4);
+                try {
+                    const jsonString = atob(base64Data); // Decode from Base64
+                    const parsedData = JSON.parse(jsonString);
+                    if (!parsedData.skills || !parsedData.inventory || typeof parsedData.coins === 'undefined') {
+                        throw new Error("Invalid save file format.");
+                    }
+                    return validateAndMergeState(parsedData);
+                } catch (error) {
+                    console.error("Failed to parse obfuscated save data:", error);
+                    return null;
+                }
+            } 
+            // Legacy plain JSON format for backward compatibility
+            else if (trimmedData.startsWith('{')) {
+                try {
+                    const parsedData = JSON.parse(trimmedData);
+                    if (!parsedData.skills || !parsedData.inventory || typeof parsedData.coins === 'undefined') {
+                        throw new Error("Invalid save file format.");
+                    }
+                    return validateAndMergeState(parsedData);
+                } catch (error) {
+                    console.error("Failed to parse legacy JSON save data:", error);
+                    return null;
+                }
             }
-            return validateAndMergeState(parsedData);
+            // Handle the bugged `s4Ve` prefix from a previous version, just in case.
+            else if (trimmedData.startsWith('s4Ve')) {
+                 const base64Data = trimmedData.substring(4);
+                try {
+                    const jsonString = atob(base64Data); // Decode from Base64
+                    const parsedData = JSON.parse(jsonString);
+                    if (!parsedData.skills || !parsedData.inventory || typeof parsedData.coins === 'undefined') {
+                        throw new Error("Invalid save file format.");
+                    }
+                    return validateAndMergeState(parsedData);
+                } catch (error) {
+                    console.error("Failed to parse old obfuscated save data:", error);
+                    return null;
+                }
+            }
+            else {
+                 console.error("Unknown save format.");
+                 return null;
+            }
         } catch (error) {
             console.error("Failed to parse save data:", error);
             return null;
         }
     }, []);
+    
 
     const handleExportSave = useCallback((gameState: object) => {
         try {
             const dataStr = JSON.stringify(gameState, null, 2);
-            ui.setExportData({ data: dataStr });
+            const base64Str = btoa(dataStr); // Encode to Base64
+            const finalExportStr = 'SAVE' + base64Str; // Prepend "SAVE"
+            ui.setExportData({ data: finalExportStr });
         } catch (error) {
             console.error("Failed to serialize save data:", error);
         }

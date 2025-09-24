@@ -1,4 +1,4 @@
-import { CookingRecipe, CraftingRecipe, JewelryRecipe } from '../types';
+import { CookingRecipe, CraftingRecipe, JewelryRecipe, SkillName } from '../types';
 
 export const SMITHING_RECIPES = [
   // Bronze
@@ -144,11 +144,11 @@ export const CRAFTING_RECIPES: CraftingRecipe[] = [
     { itemId: 'bear_hide_chaps', level: 34, xp: 145, ingredients: [{ itemId: 'bear_leather', quantity: 2 }, { itemId: 'thread', quantity: 1 }] },
     { itemId: 'bear_hide_body', level: 36, xp: 240, ingredients: [{ itemId: 'bear_leather', quantity: 3 }, { itemId: 'thread', quantity: 1 }] },
     // Tomes
-    { itemId: 'tome_of_warding', level: 10, xp: 50, ingredients: [{ itemId: 'leather', quantity: 5 }, { itemId: 'thread', quantity: 10 }, { itemId: 'gust_rune', quantity: 20 }] },
-    { itemId: 'tome_of_focus', level: 20, xp: 100, ingredients: [{ itemId: 'leather', quantity: 8 }, { itemId: 'thread', quantity: 20 }, { itemId: 'aqua_rune', quantity: 40 }] },
-    { itemId: 'tome_of_power', level: 30, xp: 150, ingredients: [{ itemId: 'boar_leather', quantity: 5 }, { itemId: 'thread', quantity: 30 }, { itemId: 'stone_rune', quantity: 60 }] },
-    { itemId: 'tome_of_the_arcane', level: 40, xp: 200, ingredients: [{ itemId: 'wolf_leather', quantity: 5 }, { itemId: 'thread', quantity: 40 }, { itemId: 'ember_rune', quantity: 80 }] },
-    { itemId: 'tome_of_the_master', level: 50, xp: 250, ingredients: [{ itemId: 'bear_leather', quantity: 5 }, { itemId: 'thread', quantity: 50 }, { itemId: 'flux_rune', quantity: 100 }] },
+    { itemId: 'tome_of_warding', level: 10, xp: 50, requiredSkills: [{skill: SkillName.Runecrafting, level: 7}], xpRewards: [{skill: SkillName.Runecrafting, amount: 25}], ingredients: [{ itemId: 'leather', quantity: 5 }, { itemId: 'thread', quantity: 10 }, { itemId: 'gust_rune', quantity: 20 }, { itemId: 'mystic_page', quantity: 5 }] },
+    { itemId: 'tome_of_focus', level: 20, xp: 110, requiredSkills: [{skill: SkillName.Runecrafting, level: 19}], xpRewards: [{skill: SkillName.Runecrafting, amount: 55}], ingredients: [{ itemId: 'boar_leather', quantity: 5 }, { itemId: 'thread', quantity: 20 }, { itemId: 'aqua_rune', quantity: 40 }, { itemId: 'mystic_page', quantity: 12 }] },
+    { itemId: 'tome_of_power', level: 30, xp: 175, requiredSkills: [{skill: SkillName.Runecrafting, level: 32}], xpRewards: [{skill: SkillName.Runecrafting, amount: 88}], ingredients: [{ itemId: 'harpy_talon', quantity: 5 }, { itemId: 'thread', quantity: 30 }, { itemId: 'stone_rune', quantity: 60 }, { itemId: 'mystic_page', quantity: 25 }] },
+    { itemId: 'tome_of_the_arcane', level: 40, xp: 250, requiredSkills: [{skill: SkillName.Runecrafting, level: 44}], xpRewards: [{skill: SkillName.Runecrafting, amount: 125}], ingredients: [{ itemId: 'crystalline_chitin', quantity: 5 }, { itemId: 'thread', quantity: 40 }, { itemId: 'ember_rune', quantity: 80 }, { itemId: 'mystic_page', quantity: 50 }] },
+    { itemId: 'tome_of_the_master', level: 50, xp: 350, requiredSkills: [{skill: SkillName.Runecrafting, level: 58}], xpRewards: [{skill: SkillName.Runecrafting, amount: 175}], ingredients: [{ itemId: 'eldritch_pearl', quantity: 3 }, { itemId: 'thread', quantity: 50 }, { itemId: 'flux_rune', quantity: 100 }, { itemId: 'mystic_page', quantity: 200 }] },
 ];
 
 export const JEWELRY_CRAFTING_RECIPES: JewelryRecipe[] = [

@@ -281,4 +281,104 @@ export const beasts: Monster[] = [
         ],
         monsterType: MonsterType.Standard, attackSpeed: 2, respawnTime: 25000, aggressive: true, alwaysAggressive: true, attackStyle: 'ranged',
     },
+    {
+        id: 'salt_leaper', name: 'Salt Leaper', level: 35, maxHp: 55, attack: 28,
+        stabDefence: 25, slashDefence: 25, crushDefence: 30, rangedDefence: 20, magicDefence: 10,
+        iconUrl: 'https://api.iconify.design/game-icons:jumping-spider.svg',
+        guaranteedDrops: [{ itemId: 'bones', minQuantity: 1, maxQuantity: 1 }],
+        mainDrops: [
+            { itemId: 'crystalline_chitin', chance: 1000, minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'rock_salt', chance: 2000, minQuantity: 1, maxQuantity: 2 },
+            { itemId: 'gust_rune', chance: 1500, minQuantity: 10, maxQuantity: 20 },
+        ],
+        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 30000, aggressive: true, attackStyle: 'stab'
+    },
+    {
+        id: 'salt_flat_skitterer', name: 'Salt Flat Skitterer', level: 32, maxHp: 48, attack: 25,
+        stabDefence: 20, slashDefence: 20, crushDefence: 25, rangedDefence: 18, magicDefence: 8,
+        iconUrl: 'https://api.iconify.design/game-icons:spider-bot.svg',
+        guaranteedDrops: [{ itemId: 'bones', minQuantity: 1, maxQuantity: 1 }],
+        mainDrops: [
+            { itemId: 'rock_salt', chance: 2200, minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'stone_rune', chance: 1800, minQuantity: 8, maxQuantity: 18 },
+        ],
+        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 28000, aggressive: true, attackStyle: 'slash'
+    },
+    {
+        id: 'salt_preserved_vulture', name: 'Salt-Preserved Vulture', level: 34, maxHp: 50, attack: 26,
+        stabDefence: 22, slashDefence: 22, crushDefence: 25, rangedDefence: 20, magicDefence: 10,
+        iconUrl: 'https://api.iconify.design/game-icons:vulture.svg',
+        guaranteedDrops: [
+            { itemId: 'bones', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'feathers', minQuantity: 5, maxQuantity: 15 },
+        ],
+        mainDrops: [
+            { itemId: 'rock_salt', chance: 1800, minQuantity: 1, maxQuantity: 2 },
+            { itemId: 'gust_rune', chance: 2000, minQuantity: 12, maxQuantity: 22 },
+        ],
+        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 35000, aggressive: true, attackStyle: 'slash'
+    },
+    {
+        id: 'sand_scrabbler', name: 'Sand Scrabbler', level: 33, maxHp: 45, attack: 24,
+        stabDefence: 25, slashDefence: 25, crushDefence: 30, rangedDefence: 20, magicDefence: 10,
+        iconUrl: 'https://api.iconify.design/game-icons:sand-snake.svg',
+        guaranteedDrops: [{ itemId: 'bones', minQuantity: 1, maxQuantity: 1 }],
+        mainDrops: [
+            { itemId: 'rock_salt', chance: 2500, minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'stone_rune', chance: 1500, minQuantity: 10, maxQuantity: 20 },
+        ],
+        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 32000, aggressive: true, attackStyle: 'stab'
+    },
+    {
+        id: 'crystalline_tortoise', name: 'Crystalline Tortoise', level: 38, maxHp: 70, attack: 30,
+        stabDefence: 40, slashDefence: 40, crushDefence: 45, rangedDefence: 35, magicDefence: 20,
+        iconUrl: 'https://api.iconify.design/game-icons:tortoise.svg',
+        guaranteedDrops: [{ itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 }],
+        mainDrops: [
+            { itemId: 'crystalline_shell_shard', chance: 1500, minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'hex_rune', chance: 1000, minQuantity: 5, maxQuantity: 10 },
+        ],
+        monsterType: MonsterType.Armored, attackSpeed: 6, respawnTime: 60000, aggressive: false, attackStyle: 'crush'
+    },
+    {
+        id: 'crystal_scuttler', name: 'Crystal Scuttler', level: 40, maxHp: 65, attack: 32,
+        stabDefence: 45, slashDefence: 45, crushDefence: 50, rangedDefence: 40, magicDefence: 25,
+        iconUrl: 'https://api.iconify.design/game-icons:trilobite.svg',
+        guaranteedDrops: [
+            { itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'scuttler_shell_fragment', minQuantity: 1, maxQuantity: 1 },
+        ],
+        mainDrops: [
+            { itemId: 'crystalline_chitin', chance: 1200, minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'astral_rune', chance: 1200, minQuantity: 3, maxQuantity: 8 },
+        ],
+        monsterType: MonsterType.Armored, attackSpeed: 4, respawnTime: 50000, aggressive: true, attackStyle: 'stab'
+    },
+    {
+        id: 'ancient_ammonite', name: 'Ancient Ammonite', level: 48, maxHp: 110, attack: 40,
+        stabDefence: 60, slashDefence: 60, crushDefence: 65, rangedDefence: 55, magicDefence: 30,
+        iconUrl: 'https://api.iconify.design/game-icons:ammonite.svg',
+        guaranteedDrops: [
+            { itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'ancient_fossil', minQuantity: 1, maxQuantity: 1 },
+        ],
+        mainDrops: [
+            { itemId: 'uncut_diamond', chance: 100, minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'anima_rune', chance: 1500, minQuantity: 5, maxQuantity: 10 },
+        ],
+        monsterType: MonsterType.Armored, attackSpeed: 5, respawnTime: 180000, aggressive: true, attackStyle: 'crush'
+    },
+    {
+        id: 'crystal_grazer', name: 'Crystal Grazer', level: 43, maxHp: 60, attack: 30,
+        stabDefence: 35, slashDefence: 35, crushDefence: 35, rangedDefence: 30, magicDefence: 30,
+        iconUrl: 'https://api.iconify.design/game-icons:crystal-deer.svg',
+        guaranteedDrops: [
+            { itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 },
+        ],
+        mainDrops: [
+            { itemId: 'crystal_shard', chance: 3000, minQuantity: 1, maxQuantity: 2 },
+            { itemId: 'resonating_crystal', chance: 200, minQuantity: 1, maxQuantity: 1 },
+        ],
+        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 40000, aggressive: false, attackStyle: 'crush',
+    },
 ];

@@ -14,4 +14,5 @@ export interface Spell {
     element?: SpellElement;
     targetItems?: string[]; // For enchant, alchemy, processing
     autocastable: boolean;
+    castTime?: number; // in game ticks
 }

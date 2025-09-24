@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { InventorySlot, PlayerSkill, Item } from '../../types';
+import { InventorySlot, PlayerSkill, Item, Spell } from '../../types';
 import { INVENTORY_CAPACITY } from '../../constants';
 import { ConfirmationPrompt, ContextMenuState, MakeXPrompt } from '../../hooks/useUIState';
 import InventorySlotDisplay from './InventorySlot';
@@ -34,6 +33,8 @@ interface InventoryPanelProps {
     isTouchSimulationEnabled: boolean;
     isShopOpen?: boolean;
     onSell?: (itemId: string, quantity: number | 'all', inventoryIndex?: number) => void;
+    spellToCast: Spell | null;
+    onSpellOnItem: (spell: Spell, target: { item: InventorySlot, index: number }) => void;
 }
 
 const formatCoins = (quantity: number): string => {
@@ -53,7 +54,7 @@ const getCoinColor = (quantity: number): string => {
 };
 
 const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
-    const { inventory, coins, onMoveItem, itemToUse, setTooltip } = props;
+    const { inventory, coins, onMoveItem, itemToUse, setTooltip, spellToCast } = props;
     const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -116,7 +117,7 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
 
     return (
         <div 
-            className={`flex flex-col h-full text-gray-300 ${itemToUse ? 'cursor-crosshair' : ''}`}
+            className={`flex flex-col h-full text-gray-300 ${itemToUse || spellToCast ? 'cursor-crosshair' : ''}`}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
         >

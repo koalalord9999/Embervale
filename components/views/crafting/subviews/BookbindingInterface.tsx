@@ -5,25 +5,30 @@ import { CraftingViewProps } from '../CraftingView';
 import { useLongPress } from '../../../../hooks/useLongPress';
 import { useIsTouchDevice } from '../../../../hooks/useIsTouchDevice';
 
-const LeatherworkingSlot: React.FC<{
+const BookbindingSlot: React.FC<{
     recipe: typeof CRAFTING_RECIPES[0];
     craftingLevel: number;
+    skills: CraftingViewProps['skills'];
     getIngredientCount: (itemId: string) => number;
     onCraftItem: (itemId: string, quantity: number) => void;
     setContextMenu: CraftingViewProps['setContextMenu'];
     setMakeXPrompt: CraftingViewProps['setMakeXPrompt'];
     setTooltip: CraftingViewProps['setTooltip'];
     isTouchDevice: boolean;
-}> = ({ recipe, craftingLevel, getIngredientCount, onCraftItem, setContextMenu, setMakeXPrompt, setTooltip, isTouchDevice }) => {
+}> = ({ recipe, craftingLevel, skills, getIngredientCount, onCraftItem, setContextMenu, setMakeXPrompt, setTooltip, isTouchDevice }) => {
     const item = ITEMS[recipe.itemId];
     if (!item) return null;
 
-    const hasLevel = craftingLevel >= recipe.level;
+    const hasLevels = (recipe.requiredSkills ?? [{ skill: SkillName.Crafting, level: recipe.level ?? 1 }]).every(req => {
+        const playerSkill = skills.find(s => s.name === req.skill);
+        return playerSkill && playerSkill.currentLevel >= req.level;
+    });
+
     const maxCraftable = Math.min(
         ...recipe.ingredients.map(ing => Math.floor(getIngredientCount(ing.itemId) / ing.quantity))
     );
     const hasIngredients = maxCraftable > 0;
-    const canCraft = hasLevel && hasIngredients;
+    const canCraft = hasLevels && hasIngredients;
 
     const handleSingleTap = () => { if(canCraft) onCraftItem(recipe.itemId, 1); };
 
@@ -51,12 +56,21 @@ const LeatherworkingSlot: React.FC<{
 
     const handleMouseEnter = (e: React.MouseEvent) => {
         const ingredients = recipe.ingredients.map(ing => ({ item: ITEMS[ing.itemId], quantity: ing.quantity }));
-        const leatherIngredient = recipe.ingredients.find(ing => ing.itemId.includes('leather'));
-        const craftTime = (leatherIngredient?.quantity ?? 1) * 1.2;
+        const craftTime = 1.2 * 5; // Simulating multiple items
     
         const tooltipContent = (
             <div className="text-sm text-left w-48">
                 <p className="font-bold text-yellow-300 mb-2 pb-1 border-b border-gray-600">{item.name}</p>
+                <p className="font-semibold text-gray-400 uppercase text-xs mb-1">Requirements</p>
+                <ul className="list-disc list-inside mb-2">
+                    <li className={craftingLevel >= (recipe.level ?? 1) ? 'text-green-400' : 'text-red-400'}>Crafting {recipe.level}</li>
+                    {recipe.requiredSkills?.map(req => {
+                        const playerSkill = skills.find(s => s.name === req.skill);
+                        const hasReq = playerSkill && playerSkill.currentLevel >= req.level;
+                        return <li key={req.skill} className={hasReq ? 'text-green-400' : 'text-red-400'}>{req.skill} {req.level}</li>;
+                    })}
+                </ul>
+
                 <p className="font-semibold text-gray-400 uppercase text-xs mb-1">Materials</p>
                 <ul className="list-disc list-inside mb-2">
                     {ingredients.map(ing => {
@@ -67,9 +81,16 @@ const LeatherworkingSlot: React.FC<{
                 <p className="font-semibold text-gray-400 uppercase text-xs mb-1">Output</p>
                 <p className="mb-2 text-gray-300">{item.name} x1</p>
                 
+                <p className="font-semibold text-gray-400 uppercase text-xs mb-1">Rewards</p>
                 <div className="grid grid-cols-2 gap-x-4 text-xs">
                     <span className="text-gray-400">{SkillName.Crafting} XP:</span>
-                    <span className="font-semibold text-right">{recipe.xp.toLocaleString()}</span>
+                    <span className="font-semibold text-right">{recipe.xp?.toLocaleString()}</span>
+                    {recipe.xpRewards?.map(reward => (
+                        <React.Fragment key={reward.skill}>
+                            <span className="text-gray-400">{reward.skill} XP:</span>
+                            <span className="font-semibold text-right">{reward.amount.toLocaleString()}</span>
+                        </React.Fragment>
+                    ))}
                     <span className="text-gray-400">Craft Time:</span>
                     <span className="font-semibold text-right">{craftTime.toFixed(1)}s</span>
                 </div>
@@ -78,6 +99,9 @@ const LeatherworkingSlot: React.FC<{
     
         setTooltip({ content: tooltipContent, position: { x: e.clientX, y: e.clientY } });
     };
+    
+    const primarySkillReq = { skill: SkillName.Crafting, level: recipe.level ?? 1 };
+    const hasPrimaryLevel = craftingLevel >= primarySkillReq.level;
 
     return (
         <div 
@@ -86,8 +110,8 @@ const LeatherworkingSlot: React.FC<{
             onMouseEnter={handleMouseEnter}
             onMouseLeave={() => setTooltip(null)}
         >
-            <div className={`crafting-slot-level ${hasLevel ? 'met' : 'unmet'}`}>
-                Lvl {recipe.level}
+            <div className={`crafting-slot-level ${hasPrimaryLevel ? 'met' : 'unmet'}`}>
+                Lvl {primarySkillReq.level}
             </div>
             <img src={item.iconUrl} alt={item.name} className={`crafting-slot-icon ${getIconClassName(item)}`} />
             <div className="crafting-slot-ingredients">
@@ -102,7 +126,7 @@ const LeatherworkingSlot: React.FC<{
     );
 };
 
-const LeatherworkingInterface: React.FC<CraftingViewProps> = ({ inventory, skills, onCraftItem, setContextMenu, setMakeXPrompt, setTooltip }) => {
+const BookbindingInterface: React.FC<CraftingViewProps> = ({ inventory, skills, onCraftItem, setContextMenu, setMakeXPrompt, setTooltip }) => {
     const craftingLevel = skills.find(s => s.name === SkillName.Crafting)?.currentLevel ?? 1;
     const isTouchDevice = useIsTouchDevice(false);
 
@@ -114,17 +138,18 @@ const LeatherworkingInterface: React.FC<CraftingViewProps> = ({ inventory, skill
             return total;
         }, 0);
     };
-
-    const leatherRecipes = CRAFTING_RECIPES.filter(recipe => !recipe.itemId.startsWith('tome_'));
+    
+    const tomeRecipes = CRAFTING_RECIPES.filter(recipe => recipe.itemId.startsWith('tome_'));
 
     return (
         <div className="flex-grow overflow-y-auto pr-2">
             <div className="crafting-grid">
-                {leatherRecipes.map((recipe) => (
-                    <LeatherworkingSlot
+                {tomeRecipes.map((recipe) => (
+                    <BookbindingSlot
                         key={recipe.itemId}
                         recipe={recipe}
                         craftingLevel={craftingLevel}
+                        skills={skills}
                         getIngredientCount={getIngredientCount}
                         onCraftItem={onCraftItem}
                         setContextMenu={setContextMenu}
@@ -138,4 +163,4 @@ const LeatherworkingInterface: React.FC<CraftingViewProps> = ({ inventory, skill
     );
 };
 
-export default LeatherworkingInterface;
+export default BookbindingInterface;

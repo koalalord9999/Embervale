@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { InventorySlot } from '../../types';
+import { InventorySlot, Item } from '../../types';
 import { ITEMS, BANK_CAPACITY, getIconClassName } from '../../constants';
 import Button from '../common/Button';
 import { ContextMenuOption } from '../common/ContextMenu';
@@ -118,15 +118,9 @@ const BankSlot: React.FC<{
         <div
             {...combinedHandlers}
             onMouseEnter={(e) => {
-                if (!slot || !item) return;
-                const tooltipContent = (
-                    <div>
-                        <p className="font-bold text-yellow-300">{getDisplayName(slot)}</p>
-                        <p className="text-sm text-gray-300">{item.description}</p>
-                        <p className="text-sm mt-1 text-gray-400">Quantity: {slot.quantity.toLocaleString()}</p>
-                    </div>
-                );
-                setTooltip({ content: tooltipContent, position: { x: e.clientX, y: e.clientY } });
+                if (item && slot) {
+                    setTooltip({ item, slot, content: <p className="text-sm mt-1 text-gray-400">Quantity: {slot.quantity.toLocaleString()}</p>, position: { x: e.clientX, y: e.clientY } });
+                }
             }}
             onMouseLeave={() => setTooltip(null)}
         >

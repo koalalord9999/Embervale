@@ -159,6 +159,7 @@ export const silverhavenPois: Record<string, POI> = {
         connections: ['silverhaven_artisans_quarter'],
         activities: [
             { type: 'shop', shopId: 'silverhaven_magic_shop' },
+            { type: 'bookbinding_workbench' },
             {
                 type: 'npc',
                 name: 'Archmage Theron',
@@ -232,7 +233,7 @@ export const silverhavenPois: Record<string, POI> = {
             }
         ],
         regionId: 'silverhaven',
-        x: 250, y: 400,
+        x: 307, y: 394,
         type: 'internal',
     },
     silverhaven_fish_market: {
@@ -244,7 +245,7 @@ export const silverhavenPois: Record<string, POI> = {
             { type: 'shop', shopId: 'silverhaven_fishing' }
         ],
         regionId: 'silverhaven',
-        x: 310, y: 400,
+        x: 307, y: 370,
         type: 'internal',
     },
      silverhaven_residential_district: {
@@ -291,7 +292,7 @@ export const silverhavenPois: Record<string, POI> = {
             }
         ],
         regionId: 'silverhaven',
-        x: 190, y: 400,
+        x: 250, y: 280,
         type: 'internal',
     },
     silverhaven_castle_approach: {

@@ -1,8 +1,11 @@
 import React from 'react';
-import { Equipment, InventorySlot } from '../../types';
+import { Equipment, InventorySlot, Item } from '../../types';
 import { ITEMS, getIconClassName } from '../../constants';
-import { TooltipState } from '../../hooks/useUIState';
-import { useUIState } from '../../hooks/useUIState';
+// Fix: Import ContextMenuOption from its source file instead of re-exporting.
+import { ContextMenuState, TooltipState, useUIState } from '../../hooks/useUIState';
+import { ContextMenuOption } from '../common/ContextMenu';
+import { useLongPress } from '../../hooks/useLongPress';
+import { useIsTouchDevice } from '../../hooks/useIsTouchDevice';
 
 interface EquipmentPanelProps {
     equipment: Equipment;
@@ -10,6 +13,9 @@ interface EquipmentPanelProps {
     onUnequip: (slot: keyof Equipment) => void;
     setTooltip: (tooltip: TooltipState | null) => void;
     ui: ReturnType<typeof useUIState>;
+    addLog: (message: string) => void;
+    onExamine: (item: Item) => void;
+    isTouchSimulationEnabled: boolean;
 }
 
 const SLOT_PLACEHOLDERS: Record<keyof Equipment, string> = {
@@ -26,16 +32,23 @@ const SLOT_PLACEHOLDERS: Record<keyof Equipment, string> = {
     ring: 'https://api.iconify.design/game-icons:ring.svg',
 };
 
-const EquipmentSlotDisplay: React.FC<{
+interface EquipmentSlotDisplayProps {
     slotKey: keyof Equipment;
     itemSlot: InventorySlot | null;
     onUnequip: (slot: keyof Equipment) => void;
     setTooltip: (tooltip: TooltipState | null) => void;
-}> = ({ slotKey, itemSlot, onUnequip, setTooltip }) => {
+    setContextMenu: (menu: ContextMenuState | null) => void;
+    addLog: (message: string) => void;
+    onExamine: (item: Item) => void;
+    isTouchSimulationEnabled: boolean;
+}
+
+const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, itemSlot, onUnequip, setTooltip, setContextMenu, addLog, onExamine, isTouchSimulationEnabled }) => {
     const item = itemSlot ? ITEMS[itemSlot.itemId] : null;
+    const isTouchDevice = useIsTouchDevice(isTouchSimulationEnabled);
 
     const handleMouseEnter = (e: React.MouseEvent) => {
-        if (!item?.equipment || !itemSlot) {
+        if (!item || !itemSlot) {
             const slotName = slotKey.charAt(0).toUpperCase() + slotKey.slice(1);
             setTooltip({
                 content: <p className="font-bold text-yellow-300">{slotName} Slot</p>,
@@ -43,45 +56,7 @@ const EquipmentSlotDisplay: React.FC<{
             });
             return;
         }
-
-        const { equipment } = item;
-
-        const tooltipContent = (
-            <div>
-                <p className="font-bold text-yellow-300">{item.name}</p>
-                <p className="text-sm text-gray-300">{item.description}</p>
-                {item.stackable && itemSlot.quantity > 999 && (
-                    <p className="text-sm mt-1 text-gray-400">Quantity: {itemSlot.quantity.toLocaleString()}</p>
-                )}
-                 <div className="mt-2 pt-2 border-t border-gray-600 text-xs grid grid-cols-2 gap-x-4">
-                    <span>Stab Atk:</span><span className="font-semibold text-right">{equipment.stabAttack}</span>
-                    <span>Slash Atk:</span><span className="font-semibold text-right">{equipment.slashAttack}</span>
-                    <span>Crush Atk:</span><span className="font-semibold text-right">{equipment.crushAttack}</span>
-                    <span>Ranged Atk:</span><span className="font-semibold text-right">{equipment.rangedAttack}</span>
-                    <span>Magic Atk:</span><span className="font-semibold text-right">{equipment.magicAttack}</span>
-                    
-                    <span>Stab Def:</span><span className="font-semibold text-right">{equipment.stabDefence}</span>
-                    <span>Slash Def:</span><span className="font-semibold text-right">{equipment.slashDefence}</span>
-                    <span>Crush Def:</span><span className="font-semibold text-right">{equipment.crushDefence}</span>
-                    <span>Ranged Def:</span><span className="font-semibold text-right">{equipment.rangedDefence}</span>
-                    <span>Magic Def:</span><span className="font-semibold text-right">{equipment.magicDefence}</span>
-
-                    <span>Strength:</span><span className="font-semibold text-right">{equipment.strengthBonus}</span>
-                    <span>Ranged Str:</span><span className="font-semibold text-right">{equipment.rangedStrength}</span>
-                </div>
-                 {item.equipment?.requiredLevels && (
-                    <div className="mt-2 pt-2 border-t border-gray-600 text-xs space-y-0.5">
-                        <p className="font-semibold">Requirements:</p>
-                        {item.equipment.requiredLevels.map(req => (
-                            <p key={req.skill} className="text-gray-400">
-                                {req.level} {req.skill}
-                            </p>
-                        ))}
-                    </div>
-                )}
-            </div>
-        );
-        setTooltip({ content: tooltipContent, position: { x: e.clientX, y: e.clientY } });
+        setTooltip({ item, slot: itemSlot, position: { x: e.clientX, y: e.clientY } });
     };
 
     const handleUnequip = () => {
@@ -90,12 +65,45 @@ const EquipmentSlotDisplay: React.FC<{
             setTooltip(null);
         }
     };
+    
+    const handleContextMenu = (e: React.MouseEvent | React.TouchEvent) => {
+        if (!item || !itemSlot) return;
+        e.preventDefault();
+        const event = 'touches' in e ? e.touches[0] : e;
+        
+        const options: ContextMenuOption[] = [];
+        
+        const performAction = (action: () => void) => {
+            action();
+            setTooltip(null);
+            setContextMenu(null);
+        };
+        
+        options.push({ label: 'Unequip', onClick: () => performAction(handleUnequip) });
+        
+        const charges = itemSlot.charges ?? item.charges;
+        if (charges !== undefined) {
+            options.push({
+                label: 'Inspect',
+                onClick: () => performAction(() => addLog(`Your ${item.name} has ${charges} charges left.`))
+            });
+        }
+        
+        options.push({ label: 'Examine', onClick: () => performAction(() => onExamine(item)) });
+        
+        setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
+    };
+
+    const longPressHandlers = useLongPress({
+        onLongPress: handleContextMenu,
+        onClick: handleUnequip,
+    });
 
     return (
         <div
             data-tutorial-id={`equipment-slot-${slotKey}`}
             className="w-full aspect-square bg-gray-900 border-2 border-gray-600 rounded-md flex items-center justify-center p-1 relative transition-colors cursor-pointer hover:border-yellow-400"
-            onClick={handleUnequip}
+            {...longPressHandlers}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={() => setTooltip(null)}
         >
@@ -117,7 +125,7 @@ const EquipmentSlotDisplay: React.FC<{
 
 const EmptySlot = () => <div className="w-full aspect-square" />;
 
-const EquipmentPanel: React.FC<EquipmentPanelProps> = ({ equipment, inventory, onUnequip, setTooltip, ui }) => {
+const EquipmentPanel: React.FC<EquipmentPanelProps> = ({ equipment, inventory, onUnequip, setTooltip, ui, addLog, onExamine, isTouchSimulationEnabled }) => {
     return (
         <div className="flex flex-col h-full text-gray-300">
             <h3 className="text-lg font-bold text-center mb-3 text-yellow-400">Equipment</h3>
@@ -125,24 +133,24 @@ const EquipmentPanel: React.FC<EquipmentPanelProps> = ({ equipment, inventory, o
             <div className="flex-grow flex flex-col justify-center items-center">
                 <div className="grid grid-cols-3 gap-2 w-full max-w-[200px]">
                     <EmptySlot />
-                    <EquipmentSlotDisplay slotKey="head" itemSlot={equipment.head} onUnequip={onUnequip} setTooltip={setTooltip} />
+                    <EquipmentSlotDisplay slotKey="head" itemSlot={equipment.head} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
                     <EmptySlot />
 
-                    <EquipmentSlotDisplay slotKey="cape" itemSlot={equipment.cape} onUnequip={onUnequip} setTooltip={setTooltip} />
-                    <EquipmentSlotDisplay slotKey="necklace" itemSlot={equipment.necklace} onUnequip={onUnequip} setTooltip={setTooltip} />
-                    <EquipmentSlotDisplay slotKey="ammo" itemSlot={equipment.ammo} onUnequip={onUnequip} setTooltip={setTooltip} />
+                    <EquipmentSlotDisplay slotKey="cape" itemSlot={equipment.cape} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
+                    <EquipmentSlotDisplay slotKey="necklace" itemSlot={equipment.necklace} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
+                    <EquipmentSlotDisplay slotKey="ammo" itemSlot={equipment.ammo} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
 
-                    <EquipmentSlotDisplay slotKey="weapon" itemSlot={equipment.weapon} onUnequip={onUnequip} setTooltip={setTooltip} />
-                    <EquipmentSlotDisplay slotKey="body" itemSlot={equipment.body} onUnequip={onUnequip} setTooltip={setTooltip} />
-                    <EquipmentSlotDisplay slotKey="shield" itemSlot={equipment.shield} onUnequip={onUnequip} setTooltip={setTooltip} />
+                    <EquipmentSlotDisplay slotKey="weapon" itemSlot={equipment.weapon} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
+                    <EquipmentSlotDisplay slotKey="body" itemSlot={equipment.body} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
+                    <EquipmentSlotDisplay slotKey="shield" itemSlot={equipment.shield} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
 
                     <EmptySlot />
-                    <EquipmentSlotDisplay slotKey="legs" itemSlot={equipment.legs} onUnequip={onUnequip} setTooltip={setTooltip} />
+                    <EquipmentSlotDisplay slotKey="legs" itemSlot={equipment.legs} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
                     <EmptySlot />
 
-                    <EquipmentSlotDisplay slotKey="gloves" itemSlot={equipment.gloves} onUnequip={onUnequip} setTooltip={setTooltip} />
-                    <EquipmentSlotDisplay slotKey="boots" itemSlot={equipment.boots} onUnequip={onUnequip} setTooltip={setTooltip} />
-                    <EquipmentSlotDisplay slotKey="ring" itemSlot={equipment.ring} onUnequip={onUnequip} setTooltip={setTooltip} />
+                    <EquipmentSlotDisplay slotKey="gloves" itemSlot={equipment.gloves} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
+                    <EquipmentSlotDisplay slotKey="boots" itemSlot={equipment.boots} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
+                    <EquipmentSlotDisplay slotKey="ring" itemSlot={equipment.ring} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
                 </div>
             </div>
             

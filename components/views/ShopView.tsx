@@ -1,5 +1,5 @@
 import React from 'react';
-import { InventorySlot, ShopStates } from '../../types';
+import { InventorySlot, ShopStates, Item } from '../../types';
 import { SHOPS, ITEMS, getIconClassName } from '../../constants';
 import Button from '../common/Button';
 import { ContextMenuOption } from '../common/ContextMenu';
@@ -65,36 +65,15 @@ const ShopSlot: React.FC<{
     };
 
     const handleMouseEnter = (e: React.MouseEvent) => {
-        const { equipment } = item;
-        const tooltipContent = (
-            <div>
-                <p className="font-bold text-yellow-300">{getDisplayName(slot)}</p>
-                <p className="text-sm text-gray-300">{item.description}</p>
+        const priceInfo = (
+            <>
                 {item.stackable && stock && stock > 999 && (
                     <p className="text-sm mt-1 text-gray-400">Stock: {stock.toLocaleString()}</p>
                 )}
                  <p className="text-sm mt-2">Buy Price: <span className="font-semibold">{price} coins</span></p>
-                {equipment && (
-                    <div className="mt-2 pt-2 border-t border-gray-600 text-xs grid grid-cols-2 gap-x-4">
-                        <span>Stab Atk:</span><span className="font-semibold text-right">{equipment.stabAttack}</span>
-                        <span>Slash Atk:</span><span className="font-semibold text-right">{equipment.slashAttack}</span>
-                        <span>Crush Atk:</span><span className="font-semibold text-right">{equipment.crushAttack}</span>
-                        <span>Ranged Atk:</span><span className="font-semibold text-right">{equipment.rangedAttack}</span>
-                        <span>Magic Atk:</span><span className="font-semibold text-right">{equipment.magicAttack}</span>
-                        
-                        <span>Stab Def:</span><span className="font-semibold text-right">{equipment.stabDefence}</span>
-                        <span>Slash Def:</span><span className="font-semibold text-right">{equipment.slashDefence}</span>
-                        <span>Crush Def:</span><span className="font-semibold text-right">{equipment.crushDefence}</span>
-                        <span>Ranged Def:</span><span className="font-semibold text-right">{equipment.rangedDefence}</span>
-                        <span>Magic Def:</span><span className="font-semibold text-right">{equipment.magicDefence}</span>
-
-                        <span>Strength:</span><span className="font-semibold text-right">{equipment.strengthBonus}</span>
-                        <span>Ranged Str:</span><span className="font-semibold text-right">{equipment.rangedStrength}</span>
-                    </div>
-                )}
-            </div>
+            </>
         );
-        setTooltip({ content: tooltipContent, position: { x: e.clientX, y: e.clientY } });
+        setTooltip({ item, slot, content: priceInfo, position: { x: e.clientX, y: e.clientY } });
     };
 
     return (

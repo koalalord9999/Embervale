@@ -1,5 +1,3 @@
-
-
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { CombatStance, PlayerSlayerTask, ShopStates, SkillName, POIActivity, InventorySlot, ActivePanel, Item, Region, POI, WorldState, GroundItem, Spell, GeneratedRepeatableQuest } from '../../types';
 import { useActivityLog } from '../../hooks/useActivityLog';
@@ -61,7 +59,7 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
     // Dev Mode Hook
     const devMode = useDevMode({ initialState, devModeOverride, isInCombat: ui.combatQueue.length > 0, ui, addLog: originalAddLog });
     
-    const isBusy = !!ui.activeCraftingAction;
+    const isBusy = ui.isBusy;
     const effectiveXpMultiplier = devMode.isDevMode && devMode.isXpBoostEnabled ? devMode.xpMultiplier : 1;
 
     // World & Quest State Hooks
@@ -119,15 +117,27 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
     const char = useCharacter(charInitialData, charCallbacks, ui.combatQueue.length > 0, devMode.combatSpeedMultiplier, effectiveXpMultiplier);
 
     const invRef = useRef<ReturnType<typeof useInventory> | null>(null);
-    const groundItems = useGroundItems({ session, invRef, addLog, ui });
+    // Fix: Initialize worldState and pass it and its setter to useGroundItems.
+    const [worldState, setWorldState] = useState<WorldState>(initialState.worldState);
+    const groundItems = useGroundItems({ session, invRef, addLog, ui, worldState, setWorldState });
     const [bank, setBank] = useState<(InventorySlot | null)[]>(padBank(initialState.bank));
     const bankOptions = useMemo(() => ({ isAutoBankOn: devMode.isAutoBankOn, bank, setBank, onItemDropped: groundItems.onItemDropped, setCombatStance: char.setCombatStance }), [devMode.isAutoBankOn, bank, setBank, groundItems.onItemDropped, char.setCombatStance]);
     const invInitialData = useMemo(() => ({ inventory: initialState.inventory, coins: initialState.coins, equipment: initialState.equipment }), [initialState]);
     const inv = useInventory(invInitialData, addLog, tutorial.advanceTutorial, bankOptions);
+
+    useEffect(() => {
+        invRef.current = inv;
+    }, [inv]);
     
     const [clearedSkillObstacles, setClearedSkillObstacles] = useState(initialState.clearedSkillObstacles);
     const [monsterRespawnTimers, setMonsterRespawnTimers] = useState(initialState.monsterRespawnTimers);
-    const [windmillFlour, setWindmillFlour] = useState(initialState.worldState?.windmillFlour ?? 0);
+    // Fix: Remove separate windmillFlour state; it's now managed within worldState.
+    const setWindmillFlour = useCallback((updater: React.SetStateAction<number>) => {
+        setWorldState(prev => {
+            const newFlour = typeof updater === 'function' ? updater(prev.windmillFlour) : updater;
+            return { ...prev, windmillFlour: newFlour };
+        });
+    }, []);
 
     // Logic Hooks
     const questLogic = useQuestLogic({ playerQuests: quests.playerQuests, setPlayerQuests: quests.setPlayerQuests, addLog, modifyItem: inv.modifyItem, addXp: char.addXp, hasItems: inv.hasItems, setLockedPois: quests.setLockedPois, setClearedSkillObstacles });
@@ -139,12 +149,12 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
     const repeatableQuests = useRepeatableQuests(initialState.repeatableQuestsState, addLog, inv, char);
     const bankLogic = useBank({ bank, setBank }, { addLog, ...inv, ...char, setCombatStance: char.setCombatStance });
     const shops = useShops(initialState.shopStates, inv.coins, inv.modifyItem, addLog);
-    const skilling = useSkilling(initialState.resourceNodeStates, { addLog, skills: char.skills, addXp: (skill, amount) => { char.addXp(skill, amount); if(skill === SkillName.Woodcutting) tutorial.advanceTutorial('chop-log'); }, inventory: inv.inventory, modifyItem: inv.modifyItem, equipment: inv.equipment });
+    const skilling = useSkilling(initialState.resourceNodeStates, { addLog, skills: char.skills, addXp: (skill, amount) => { char.addXp(skill, amount); if(skill === SkillName.Woodcutting) tutorial.advanceTutorial('chop-log'); }, inventory: inv.inventory, modifyItem: inv.modifyItem, equipment: inv.equipment, setEquipment: inv.setEquipment });
     const interactQuest = useInteractQuest({ addLog, activePlayerQuest: repeatableQuests.activePlayerQuest, handleTurnInRepeatableQuest: repeatableQuests.handleTurnInRepeatableQuest });
-    const crafting = useCrafting({ skills: char.skills, hasItems: inv.hasItems, addLog, activeCraftingAction: ui.activeCraftingAction, setActiveCraftingAction: ui.setActiveCraftingAction, inventory: inv.inventory, modifyItem: inv.modifyItem, addXp: char.addXp, checkQuestProgressOnSpin: questLogic.checkQuestProgressOnSpin, checkQuestProgressOnSmith: questLogic.checkQuestProgressOnSmith, advanceTutorial: tutorial.advanceTutorial, closeCraftingView: ui.closeCraftingView, setWindmillFlour, equipment: inv.equipment });
+    const crafting = useCrafting({ skills: char.skills, hasItems: inv.hasItems, addLog, activeCraftingAction: ui.activeCraftingAction, setActiveCraftingAction: ui.setActiveCraftingAction, inventory: inv.inventory, modifyItem: inv.modifyItem, addXp: char.addXp, checkQuestProgressOnSpin: questLogic.checkQuestProgressOnSpin, checkQuestProgressOnSmith: questLogic.checkQuestProgressOnSmith, advanceTutorial: tutorial.advanceTutorial, closeCraftingView: ui.closeCraftingView, setWindmillFlour, equipment: inv.equipment, setEquipment: inv.setEquipment });
     const navigation = useNavigation({ session, lockedPois: quests.lockedPois, clearedSkillObstacles, addLog, isBusy, isInCombat: ui.combatQueue.length > 0, ui, skilling, interactQuest });
-    const spellcasting = useSpellcasting({ char, inv, addLog, navigation });
-    const worldActions = useWorldActions({ hasItems: inv.hasItems, inventory: inv.inventory, modifyItem: inv.modifyItem, addLog, coins: inv.coins, skills: char.skills, addXp: char.addXp, setClearedSkillObstacles, playerQuests: quests.playerQuests, checkQuestProgressOnShear: questLogic.checkQuestProgressOnShear, setMakeXPrompt: ui.setMakeXPrompt, windmillFlour, setWindmillFlour, setActiveCraftingAction: ui.setActiveCraftingAction });
+    const spellcasting = useSpellcasting({ char, inv, addLog, navigation, ui });
+    const worldActions = useWorldActions({ hasItems: inv.hasItems, inventory: inv.inventory, modifyItem: inv.modifyItem, addLog, coins: inv.coins, skills: char.skills, addXp: char.addXp, setClearedSkillObstacles, playerQuests: quests.playerQuests, checkQuestProgressOnShear: questLogic.checkQuestProgressOnShear, setMakeXPrompt: ui.setMakeXPrompt, windmillFlour: worldState.windmillFlour, setWindmillFlour, setActiveCraftingAction: ui.setActiveCraftingAction });
     const dialogueActions = useDialogueActions({ quests, questLogic, navigation, inv, char, worldActions, addLog });
     
     const handleExamine = useCallback((item: Item) => {
@@ -152,7 +162,8 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
     }, [ui]);
     const itemActions = useItemActions({ addLog, currentHp: char.currentHp, maxHp: char.maxHp, setCurrentHp: char.setCurrentHp, applyStatModifier: char.applyStatModifier, setInventory: inv.setInventory, skills: char.skills, inventory: inv.inventory, activeCraftingAction: ui.activeCraftingAction, setActiveCraftingAction: ui.setActiveCraftingAction, hasItems: inv.hasItems, modifyItem: inv.modifyItem, addXp: char.addXp, openCraftingView: ui.openCraftingView, setItemToUse: ui.setItemToUse, addBuff: char.addBuff, setMakeXPrompt: ui.setMakeXPrompt, startQuest: (questId) => { quests.startQuest(questId, addLog); }, advanceTutorial: tutorial.advanceTutorial, currentPoiId: session.currentPoiId });
 
-    const { handlePlayerDeath: baseHandlePlayerDeath } = usePlayerDeath({ skilling, interactQuest, ui, session, char, inv, addLog, tutorialStage: tutorial.tutorialStage });
+    // Fix: Pass onItemDropped and setWorldState to usePlayerDeath.
+    const { handlePlayerDeath: baseHandlePlayerDeath } = usePlayerDeath({ skilling, interactQuest, ui, session, char, inv, addLog, tutorialStage: tutorial.tutorialStage, onItemDropped: groundItems.onItemDropped, setWorldState });
     const handleCombatFinish = useCallback(() => {
         if (devMode.isInstantRespawnOn && devMode.instantRespawnCounter !== null) {
             const newCount = devMode.instantRespawnCounter - 1;
@@ -165,7 +176,7 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
     const handleKill = useCallback((id) => { killHandler.handleKill(id); }, [killHandler]);
     
     const startCombat = useCallback((ids: string[]) => { ui.setCombatQueue(ids); ui.setIsMandatoryCombat(true); }, [ui]);
-    useAggression(session.currentPoiId, true, isBusy || ui.combatQueue.length > 0, char.combatLevel, startCombat, addLog, monsterRespawnTimers, devMode.configAggroIds, devMode.isPlayerInvisible);
+    useAggression(session.currentPoiId, true, isBusy || ui.combatQueue.length > 0, char.combatLevel, startCombat, addLog, monsterRespawnTimers, devMode.configAggroIds, devMode.isPlayerInvisible, inv.equipment, inv.setEquipment);
     
     // Tutorial Rewards Logic
     const tutorialRewardsGiven = useRef<Set<number>>(new Set());
@@ -214,9 +225,11 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
             boardCompletions: repeatableQuests.boardCompletions,
         },
         slayerTask: slayer.slayerTask, tutorialStage: tutorial.tutorialStage,
-        worldState: { windmillFlour },
+        // Fix: Save the entire worldState object.
+        worldState: worldState,
         autocastSpell: char.autocastSpell,
-    }), [char, inv, session.currentPoiId, quests, skilling.resourceNodeStates, shops.shopStates, repeatableQuests, bank, clearedSkillObstacles, monsterRespawnTimers, slayer.slayerTask, tutorial.tutorialStage, initialState.username, windmillFlour]);
+    // Fix: Depend on worldState instead of the now-removed windmillFlour state.
+    }), [char, inv, session.currentPoiId, quests, skilling.resourceNodeStates, shops.shopStates, repeatableQuests, bank, clearedSkillObstacles, monsterRespawnTimers, slayer.slayerTask, tutorial.tutorialStage, initialState.username, worldState]);
 
     useSaveGame(gameState);
 
@@ -266,7 +279,7 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
                 </div>
             </div>
             <div className="w-full md:w-1/5 flex flex-col">
-                <SidePanel {...{ui, initialState, char, inv, quests, repeatableQuests, slayer, onExportGame: () => onExportGame(gameState), onImportGame, onResetGame, isDevMode: devMode.isDevMode, isTouchSimulationEnabled: devMode.isTouchSimulationEnabled, onToggleTouchSimulation: devMode.onToggleTouchSimulation, itemActions, isBusy, handleExamine, session, addLog, activeCombatStyleHighlight: tutorial.activeCombatStyleHighlight, combatSpeedMultiplier: devMode.combatSpeedMultiplier, setCombatSpeedMultiplier: devMode.setCombatSpeedMultiplier, isInstantRespawnOn: devMode.isInstantRespawnOn, setIsInstantRespawnOn: devMode.setIsInstantRespawnOn, instantRespawnCounter: devMode.instantRespawnCounter, setInstantRespawnCounter: devMode.setInstantRespawnCounter, isInCombat: ui.combatQueue.length > 0, isCurrentMonsterAggro: devMode.isCurrentMonsterAggro, onToggleAggro: devMode.onToggleAggro, isPlayerInvisible: devMode.isPlayerInvisible, setIsPlayerInvisible: devMode.setIsPlayerInvisible, isAutoBankOn: devMode.isAutoBankOn, setIsAutoBankOn: devMode.setIsAutoBankOn, isMapManagerEnabled: devMode.isMapManagerEnabled, onToggleMapManager: devMode.onToggleMapManager, onCommitMapChanges: devMode.handleCommitMapChanges, hasMapChanges: devMode.modifiedPois.size > 0 || devMode.modifiedRegions.size > 0, showAllPois: devMode.showAllPois, onToggleShowAllPois: () => devMode.setShowAllPois(p => !p), onForcedNavigate: navigation.handleForcedNavigate, onNavigate: navigation.handleNavigate, unlockedPois: navigation.reachablePois, isBankOpen, isShopOpen, onDeposit: bankLogic.handleDeposit, xpMultiplier: devMode.xpMultiplier, setXpMultiplier: devMode.setXpMultiplier, isXpBoostEnabled: devMode.isXpBoostEnabled, setIsXpBoostEnabled: devMode.setIsXpBoostEnabled, devPanelState: devMode.devPanelState, updateDevPanelState: devMode.updateDevPanelState, onCastSpell: spellcasting.onCastSpell }} />
+                <SidePanel {...{ui, initialState, char, inv, quests, repeatableQuests, slayer, onExportGame: () => onExportGame(gameState), onImportGame, onResetGame, isDevMode: devMode.isDevMode, isTouchSimulationEnabled: devMode.isTouchSimulationEnabled, onToggleTouchSimulation: devMode.onToggleTouchSimulation, itemActions, isBusy, handleExamine, session, addLog, activeCombatStyleHighlight: tutorial.activeCombatStyleHighlight, combatSpeedMultiplier: devMode.combatSpeedMultiplier, setCombatSpeedMultiplier: devMode.setCombatSpeedMultiplier, isInstantRespawnOn: devMode.isInstantRespawnOn, setIsInstantRespawnOn: devMode.setIsInstantRespawnOn, instantRespawnCounter: devMode.instantRespawnCounter, setInstantRespawnCounter: devMode.setInstantRespawnCounter, isInCombat: ui.combatQueue.length > 0, isCurrentMonsterAggro: devMode.isCurrentMonsterAggro, onToggleAggro: devMode.onToggleAggro, isPlayerInvisible: devMode.isPlayerInvisible, setIsPlayerInvisible: devMode.setIsPlayerInvisible, isAutoBankOn: devMode.isAutoBankOn, setIsAutoBankOn: devMode.setIsAutoBankOn, isMapManagerEnabled: devMode.isMapManagerEnabled, onToggleMapManager: devMode.onToggleMapManager, onCommitMapChanges: devMode.handleCommitMapChanges, hasMapChanges: devMode.modifiedPois.size > 0 || devMode.modifiedRegions.size > 0, showAllPois: devMode.showAllPois, onToggleShowAllPois: () => devMode.setShowAllPois(p => !p), onForcedNavigate: navigation.handleForcedNavigate, onNavigate: navigation.handleNavigate, unlockedPois: navigation.reachablePois, isBankOpen, isShopOpen, onDeposit: bankLogic.handleDeposit, xpMultiplier: devMode.xpMultiplier, setXpMultiplier: devMode.setXpMultiplier, isXpBoostEnabled: devMode.isXpBoostEnabled, setIsXpBoostEnabled: devMode.setIsXpBoostEnabled, devPanelState: devMode.devPanelState, updateDevPanelState: devMode.updateDevPanelState, onCastSpell: spellcasting.onCastSpell, onSpellOnItem: spellcasting.onSpellOnItem }} />
             </div>
             <XpTracker drops={xpDrops} onRemoveDrop={removeXpDrop} />
             {tutorial.tutorialStage >= 0 && <TutorialOverlay {...{stage: tutorial.tutorialStage, advanceTutorial: tutorial.advanceTutorial, overrideGuideText: tutorial.tutorialOverrideText, inventory: inv.inventory, logMessage: tutorialLogMessage, clearLogMessage: () => setTutorialLogMessage(null), isTouchSimulationEnabled: devMode.isTouchSimulationEnabled}} />}
@@ -292,6 +305,8 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
                 onCommitMapChanges={devMode.handleCommitMapChanges} 
                 activeMapRegionId={ui.activeMapRegionId}
                 setActiveMapRegionId={ui.setActiveMapRegionId}
+                // Fix: Pass the deathMarker from worldState to the ExpandedMapView.
+                deathMarker={worldState.deathMarker}
             />}
         </>
     );

@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { InventorySlot, PlayerSkill, Item } from '../../types';
+import { InventorySlot, PlayerSkill, Item, Spell } from '../../types';
 import { ITEMS, INVENTORY_CAPACITY, getIconClassName } from '../../constants';
 import { ContextMenuOption } from '../common/ContextMenu';
 import { ConfirmationPrompt, ContextMenuState, MakeXPrompt } from '../../hooks/useUIState';
@@ -53,7 +52,7 @@ interface InventorySlotProps {
     onBury: (itemId: string, index: number) => void;
     onEmpty: (itemId: string, index: number) => void;
     onDivine: (itemId: string, index: number) => void;
-    setTooltip: (tooltip: { content: React.ReactNode; position: { x: number; y: number; } } | null) => void;
+    setTooltip: (tooltip: { content?: React.ReactNode; item?: Item; slot?: InventorySlot; position: { x: number; y: number; } } | null) => void;
     setContextMenu: (menu: ContextMenuState | null) => void;
     addLog: (message: string) => void;
     isBankOpen?: boolean;
@@ -78,10 +77,12 @@ interface InventorySlotProps {
     isTouchSimulationEnabled: boolean;
     isShopOpen?: boolean;
     onSell?: (itemId: string, quantity: number | 'all', inventoryIndex?: number) => void;
+    spellToCast: Spell | null;
+    onSpellOnItem: (spell: Spell, target: { item: InventorySlot, index: number }) => void;
 }
 
 const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
-    const { index, slot, inventory, skills, onEquip, onConsume, onDropItem, onBury, onEmpty, setTooltip, setContextMenu, addLog, isBankOpen = false, onDeposit = () => {}, itemToUse, setItemToUse, onUseItemOn, isBusy = false, setConfirmationPrompt, tutorialStage, advanceTutorial, onTutorialAction, onExamine, draggingIndex, setDraggingIndex, dragOverIndex, setDragOverIndex, onDrop, isTouchSimulationEnabled, onDivine, isShopOpen = false, onSell = () => {} } = props;
+    const { index, slot, inventory, skills, onEquip, onConsume, onDropItem, onBury, onEmpty, setTooltip, setContextMenu, addLog, isBankOpen = false, onDeposit = () => {}, itemToUse, setItemToUse, onUseItemOn, isBusy = false, setConfirmationPrompt, tutorialStage, advanceTutorial, onTutorialAction, onExamine, draggingIndex, setDraggingIndex, dragOverIndex, setDragOverIndex, onDrop, isTouchSimulationEnabled, onDivine, isShopOpen = false, onSell = () => {}, spellToCast, onSpellOnItem } = props;
 
     const isTouchDevice = useIsTouchDevice(isTouchSimulationEnabled);
 
@@ -115,6 +116,11 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
 
         if (tutorialStage === 5 && slot.itemId === 'bronze_axe' && onTutorialAction) {
             onTutorialAction('left_click_axe');
+            return;
+        }
+
+        if (spellToCast && slot) {
+            onSpellOnItem(spellToCast, { item: slot, index: index });
             return;
         }
 
@@ -298,9 +304,9 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
     let slotClasses = 'hover:border-yellow-400';
     if (draggingIndex === index) slotClasses = 'opacity-25';
     else if (dragOverIndex === index) slotClasses = 'border-green-400 scale-105 bg-green-900/50';
-    else if (itemToUse) {
+    else if (itemToUse || spellToCast) {
         slotClasses = 'hover:border-green-400';
-        if (itemToUse.index === index) slotClasses += ' border-blue-400 animate-pulse';
+        if (itemToUse?.index === index || spellToCast) slotClasses += ' border-blue-400 animate-pulse';
     }
 
     return (
@@ -317,46 +323,9 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
             {...longPressHandlers}
             onTouchEnd={doubleTapHandlers.onTouchEnd}
             onMouseEnter={(e) => {
-                if (!item || !slot) return;
-                const { equipment } = item;
-                 const tooltipContent = (
-                    <div>
-                        <p className="font-bold text-yellow-300">{getDisplayName(slot)}</p>
-                        <p className="text-sm text-gray-300">{item.description}</p>
-                        {item.stackable && slot.quantity > 999 && (
-                            <p className="text-sm mt-1 text-gray-400">Quantity: {slot.quantity.toLocaleString()}</p>
-                        )}
-                        {equipment && (
-                            <div className="mt-2 pt-2 border-t border-gray-600 text-xs grid grid-cols-2 gap-x-4">
-                                <span>Stab Atk:</span><span className="font-semibold text-right">{equipment.stabAttack}</span>
-                                <span>Slash Atk:</span><span className="font-semibold text-right">{equipment.slashAttack}</span>
-                                <span>Crush Atk:</span><span className="font-semibold text-right">{equipment.crushAttack}</span>
-                                <span>Ranged Atk:</span><span className="font-semibold text-right">{equipment.rangedAttack}</span>
-                                <span>Magic Atk:</span><span className="font-semibold text-right">{equipment.magicAttack}</span>
-                                
-                                <span>Stab Def:</span><span className="font-semibold text-right">{equipment.stabDefence}</span>
-                                <span>Slash Def:</span><span className="font-semibold text-right">{equipment.slashDefence}</span>
-                                <span>Crush Def:</span><span className="font-semibold text-right">{equipment.crushDefence}</span>
-                                <span>Ranged Def:</span><span className="font-semibold text-right">{equipment.rangedDefence}</span>
-                                <span>Magic Def:</span><span className="font-semibold text-right">{equipment.magicDefence}</span>
-
-                                <span>Strength:</span><span className="font-semibold text-right">{equipment.strengthBonus}</span>
-                                <span>Ranged Str:</span><span className="font-semibold text-right">{equipment.rangedStrength}</span>
-                            </div>
-                        )}
-                         {item.equipment?.requiredLevels && (
-                            <div className="mt-2 pt-2 border-t border-gray-600 text-xs space-y-0.5">
-                                <p className="font-semibold">Requirements:</p>
-                                {item.equipment.requiredLevels.map(req => (
-                                    <p key={req.skill} className="text-gray-400">
-                                        {req.level} {req.skill}
-                                    </p>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                );
-                setTooltip({ content: tooltipContent, position: { x: e.clientX, y: e.clientY } });
+                if (item && slot) {
+                    setTooltip({ item, slot, position: { x: e.clientX, y: e.clientY } });
+                }
             }}
             onMouseLeave={() => setTooltip(null)}
         >

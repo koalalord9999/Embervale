@@ -1,7 +1,8 @@
 
+
 import React from 'react';
 import { useState, useCallback } from 'react';
-import { InventorySlot, Equipment, CombatStance, WeaponType, PlayerSkill } from '../types';
+import { InventorySlot, Equipment, CombatStance, WeaponType, PlayerSkill, Item } from '../types';
 import { ITEMS, INVENTORY_CAPACITY, BANK_CAPACITY } from '../constants';
 
 // Helper to ensure inventory is always a fixed-size sparse array
@@ -266,7 +267,14 @@ export const useInventory = (
         
         // Perform state updates
         const quantityToEquip = itemData.stackable ? itemToEquip.quantity : 1;
-        setEquipment(prev => ({ ...prev, ...newEquipmentChanges, [slotKey]: { itemId: itemToEquip.itemId, quantity: quantityToEquip } }));
+        
+        const newEquippedItem: InventorySlot = {
+            itemId: itemToEquip.itemId,
+            quantity: quantityToEquip,
+            charges: itemToEquip.charges ?? itemData.charges
+        };
+
+        setEquipment(prev => ({ ...prev, ...newEquipmentChanges, [slotKey]: newEquippedItem }));
         
         setInventory(prevInv => {
             const newInv = [...prevInv];

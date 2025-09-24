@@ -1,6 +1,7 @@
 import { EquipmentSlot, MonsterType, SkillName, ToolType, WeaponType } from './enums';
 import { GuaranteedDrop, WeightedDrop, TertiaryDrop } from './drops';
 import { SpellElement } from './spells';
+import { GroundItem } from './world';
 
 export interface PlayerSkill {
   name: SkillName;
@@ -10,22 +11,21 @@ export interface PlayerSkill {
 
 export interface EquipmentStats {
     // Attack Bonuses
-    stabAttack: number;
-    slashAttack: number;
-
-    crushAttack: number;
-    rangedAttack: number;
-    magicAttack: number;
+    stabAttack?: number;
+    slashAttack?: number;
+    crushAttack?: number;
+    rangedAttack?: number;
+    magicAttack?: number;
     // Defence Bonuses
-    stabDefence: number;
-    slashDefence: number;
-    crushDefence: number;
-    rangedDefence: number;
-    magicDefence: number;
+    stabDefence?: number;
+    slashDefence?: number;
+    crushDefence?: number;
+    rangedDefence?: number;
+    magicDefence?: number;
     // Other Bonuses
-    strengthBonus: number;
-    rangedStrength: number;
-    magicDamageBonus: number; // e.g. 5 for +5% damage
+    strengthBonus?: number;
+    rangedStrength?: number;
+    magicDamageBonus?: number; // e.g. 5 for +5% damage
     // Weapon Stats
     weaponType?: WeaponType;
     speed?: number; // In game ticks, lower is faster
@@ -85,6 +85,7 @@ export interface InventorySlot {
   quantity: number;
   doses?: number;
   noted?: boolean;
+  charges?: number;
 }
 
 export interface Equipment {
@@ -133,4 +134,8 @@ export interface Monster {
 
 export interface WorldState {
     windmillFlour: number;
+    deathMarker?: {
+        poiId: string;
+        timeRemaining: number; // in ms
+    } | null;
 }

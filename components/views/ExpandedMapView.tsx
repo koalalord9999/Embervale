@@ -1,6 +1,5 @@
-
 import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
-import { POI, Region } from '../../types';
+import { POI, Region, WorldState } from '../../types';
 import { REGIONS, MAP_DIMENSIONS, CITY_MAP_DIMENSIONS } from '../../constants';
 import { POIS } from '../../data/pois';
 import { TooltipState } from '../../hooks/useUIState';
@@ -23,13 +22,22 @@ interface ExpandedMapViewProps {
     onCommitMapChanges: () => void;
     activeMapRegionId: string;
     setActiveMapRegionId: (regionId: string) => void;
+    deathMarker: WorldState['deathMarker'];
 }
 
-const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlockedPois, onNavigate, onClose, setTooltip, addLog, isMapManagerEnabled = false, poiCoordinates, regionCoordinates, onUpdatePoiCoordinate, poiConnections, onUpdatePoiConnections, showAllPois, onCommitMapChanges, activeMapRegionId, setActiveMapRegionId }) => {
+const formatTime = (ms: number) => {
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+};
+
+const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlockedPois, onNavigate, onClose, setTooltip, addLog, isMapManagerEnabled = false, poiCoordinates, regionCoordinates, onUpdatePoiCoordinate, poiConnections, onUpdatePoiConnections, showAllPois, onCommitMapChanges, activeMapRegionId, setActiveMapRegionId, deathMarker }) => {
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const [view, setView] = useState({ x: 0, y: 0, zoom: 1 });
     const [isDragging, setIsDragging] = useState(false);
     const dragStart = useRef({ x: 0, y: 0 });
+    const nodeDragStart = useRef({ x: 0, y: 0 });
     const isInitialMount = useRef(true);
     const prevMapRegionId = useRef(activeMapRegionId);
     const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
@@ -373,10 +381,30 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                             const coords = isMapManagerEnabled ? regionCoordinates?.[region.id] : region;
                             if (!coords) return null;
                             return (
-                                 <div key={region.id} data-draggable={isMapManagerEnabled} className={`absolute transform -translate-x-1/2 -translate-y-1/2 group ${isMapManagerEnabled ? 'cursor-move' : 'cursor-default'} ${isUnlocked ? 'cursor-pointer' : ''}`} style={{ top: `${coords.y}px`, left: `${coords.x}px` }} 
-                                 onMouseDown={(e) => { if (isMapManagerEnabled) handleNodeMouseDown(e, region.id, true); }}
-                                 onClick={() => { if (!isMapManagerEnabled && isUnlocked && region.type === 'city') setActiveMapRegionId(region.id) }} 
-                                 onMouseEnter={(e) => handleMouseEnter(e, region)} onMouseLeave={() => setTooltip(null)} >
+                                 <div
+                                    key={region.id}
+                                    data-draggable={isMapManagerEnabled}
+                                    className={`absolute transform -translate-x-1/2 -translate-y-1/2 group ${isMapManagerEnabled ? 'cursor-move' : 'cursor-default'} ${isUnlocked ? 'cursor-pointer' : ''}`}
+                                    style={{ top: `${coords.y}px`, left: `${coords.x}px` }}
+                                    onMouseDown={(e) => {
+                                        nodeDragStart.current = { x: e.clientX, y: e.clientY };
+                                        if (isMapManagerEnabled) {
+                                            handleNodeMouseDown(e, region.id, true);
+                                        }
+                                    }}
+                                    onClick={(e) => {
+                                        const dx = Math.abs(e.clientX - nodeDragStart.current.x);
+                                        const dy = Math.abs(e.clientY - nodeDragStart.current.y);
+                                        if (isMapManagerEnabled && (dx > 5 || dy > 5)) {
+                                            return; // It was a drag, not a click
+                                        }
+                                        if (isUnlocked && region.type === 'city') {
+                                            setActiveMapRegionId(region.id);
+                                        }
+                                    }} 
+                                    onMouseEnter={(e) => handleMouseEnter(e, region)}
+                                    onMouseLeave={() => setTooltip(null)}
+                                >
                                     <img src="https://api.iconify.design/game-icons:capitol.svg" alt={region.name} className={`filter invert transition-opacity ${isUnlocked ? 'opacity-80 group-hover:opacity-100' : 'opacity-30'}`} style={{width: `${40 / view.zoom}px`, height: `${40 / view.zoom}px`}} />
                                     {isCurrent && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full rounded-full border-2 border-yellow-400 animate-pulse" style={{width: `${50/view.zoom}px`, height: `${50/view.zoom}px`}}></div>}
                                 </div>
@@ -417,6 +445,30 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                                 <img src="https://api.iconify.design/game-icons:exit-door.svg" alt={`To ${exit.displayName}`} className="filter invert opacity-80 group-hover:opacity-100 transition-opacity" style={{width: `${32 / view.zoom}px`, height: `${32 / view.zoom}px`}} />
                             </div>
                         ))}
+                        {deathMarker && POIS[deathMarker.poiId] && (
+                             <div
+                                key="death-marker"
+                                className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                                style={{ 
+                                    top: `${(isWorldView ? POIS[deathMarker.poiId].y : POIS[deathMarker.poiId].cityMapY) ?? 0}px`,
+                                    left: `${(isWorldView ? POIS[deathMarker.poiId].x : POIS[deathMarker.poiId].cityMapX) ?? 0}px`
+                                }}
+                                onMouseEnter={(e) => setTooltip({
+                                    content: (
+                                        <div>
+                                            <p className="font-bold text-red-400">Death Pile</p>
+                                            <p>Disappears in: {formatTime(deathMarker.timeRemaining)}</p>
+                                        </div>
+                                    ),
+                                    position: { x: e.clientX, y: e.clientY }
+                                })}
+                                onMouseLeave={() => setTooltip(null)}
+                            >
+                                <img src="https://api.iconify.design/game-icons:tombstone.svg" alt="Death Location"
+                                    className="filter invert opacity-90"
+                                    style={{ width: `${32 / view.zoom}px`, height: `${32 / view.zoom}px` }} />
+                            </div>
+                        )}
                     </div>
                     
                     {isMapManagerEnabled && <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20"><Button onClick={onCommitMapChanges} variant="primary">Commit Changes</Button></div>}

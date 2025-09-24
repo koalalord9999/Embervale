@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import { useUIState } from '../../hooks/useUIState';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -19,7 +17,7 @@ import QuestsPanel from '../panels/QuestsPanel';
 import SpellbookPanel from '../panels/SpellbookPanel';
 import SettingsPanel from '../panels/SettingsPanel';
 import DevPanel from '../panels/DevPanel';
-import { ActivePanel, CombatStance, Spell } from '../../types';
+import { ActivePanel, CombatStance, Spell, InventorySlot } from '../../types';
 
 interface SidePanelProps {
     ui: ReturnType<typeof useUIState>;
@@ -74,6 +72,7 @@ interface SidePanelProps {
     devPanelState: any;
     updateDevPanelState: (updates: any) => void;
     onCastSpell: (spell: Spell) => void;
+    onSpellOnItem: (spell: Spell, target: { item: InventorySlot, index: number }) => void;
 }
 
 const PanelIcon: React.FC<{ icon: string, label: string, isActive: boolean, onClick: () => void, tutorialId?: string }> = ({ icon, label, isActive, onClick, tutorialId }) => (
@@ -100,7 +99,7 @@ const PlaceholderIcon: React.FC = () => (
 
 
 const SidePanel: React.FC<SidePanelProps> = (props) => {
-    const { ui, char, inv, quests, repeatableQuests, slayer, onExportGame, onImportGame, onResetGame, isDevMode, isTouchSimulationEnabled, itemActions, isBusy, handleExamine, session, addLog, activeCombatStyleHighlight, isBankOpen, isShopOpen, onDeposit, onNavigate, unlockedPois, onCastSpell } = props;
+    const { ui, char, inv, quests, repeatableQuests, slayer, onExportGame, onImportGame, onResetGame, isDevMode, isTouchSimulationEnabled, itemActions, isBusy, handleExamine, session, addLog, activeCombatStyleHighlight, isBankOpen, isShopOpen, onDeposit, onNavigate, unlockedPois, onCastSpell, onSpellOnItem } = props;
     const { activePanel, setActivePanel } = ui;
     
     const inventoryPanelProps = {
@@ -112,16 +111,27 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
         onDeposit,
         isShopOpen,
         onSell: inv.handleSell,
+        spellToCast: ui.spellToCast,
+        onSpellOnItem: onSpellOnItem,
     };
 
     const renderActivePanel = () => {
         switch(activePanel) {
             case 'combat':
-                return <CombatStylePanel combatStance={char.combatStance} setCombatStance={char.setCombatStance} equipment={inv.equipment} combatLevel={char.combatLevel} activeCombatStyleHighlight={activeCombatStyleHighlight} />;
+                return <CombatStylePanel combatStance={char.combatStance} setCombatStance={char.setCombatStance} equipment={inv.equipment} combatLevel={char.combatLevel} activeCombatStyleHighlight={activeCombatStyleHighlight} ui={ui} />;
             case 'inventory':
                  return <InventoryPanel {...inventoryPanelProps} />;
             case 'equipment':
-                return <EquipmentPanel equipment={inv.equipment} onUnequip={(slot) => inv.handleUnequip(slot)} setTooltip={ui.setTooltip} ui={ui} inventory={inv.inventory} />;
+                return <EquipmentPanel 
+                    equipment={inv.equipment} 
+                    onUnequip={(slot) => inv.handleUnequip(slot)} 
+                    setTooltip={ui.setTooltip} 
+                    ui={ui} 
+                    inventory={inv.inventory} 
+                    addLog={addLog}
+                    onExamine={handleExamine}
+                    isTouchSimulationEnabled={isTouchSimulationEnabled}
+                />;
             case 'skills':
                 return <SkillsPanel skills={char.skills} setTooltip={ui.setTooltip} onOpenGuide={ui.setActiveSkillGuide} />;
             case 'quests':
@@ -129,7 +139,7 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
             case 'prayer':
                 return <div className="text-center text-gray-400">Prayer skill coming soon!</div>;
             case 'spellbook':
-                return <SpellbookPanel skills={char.skills} inventory={inv.inventory} onCastSpell={onCastSpell} setTooltip={ui.setTooltip} autocastSpell={char.autocastSpell} />;
+                return <SpellbookPanel skills={char.skills} inventory={inv.inventory} onCastSpell={onCastSpell} setTooltip={ui.setTooltip} autocastSpell={char.autocastSpell} ui={ui} />;
             case 'settings':
                 return <SettingsPanel onResetGame={onResetGame} onExportGame={onExportGame} onImportGame={onImportGame} isDevMode={isDevMode} onToggleDevPanel={() => setActivePanel('dev')} isTouchSimulationEnabled={isTouchSimulationEnabled} onToggleTouchSimulation={props.onToggleTouchSimulation} />;
             case 'dev':

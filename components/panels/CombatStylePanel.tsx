@@ -2,6 +2,7 @@ import React from 'react';
 import { CombatStance, Equipment, WeaponType } from '../../types';
 import { ITEMS } from '../../constants';
 import Button from '../common/Button';
+import { useUIState } from '../../hooks/useUIState';
 
 interface CombatStylePanelProps {
     combatStance: CombatStance;
@@ -9,9 +10,10 @@ interface CombatStylePanelProps {
     equipment: Equipment;
     combatLevel: number;
     activeCombatStyleHighlight?: CombatStance | null;
+    ui: ReturnType<typeof useUIState>;
 }
 
-const CombatStylePanel: React.FC<CombatStylePanelProps> = ({ combatStance, setCombatStance, equipment, combatLevel, activeCombatStyleHighlight }) => {
+const CombatStylePanel: React.FC<CombatStylePanelProps> = ({ combatStance, setCombatStance, equipment, combatLevel, activeCombatStyleHighlight, ui }) => {
     const { stanceOptions, stanceLabels } = React.useMemo(() => {
         const weaponSlot = equipment.weapon;
         const itemData = weaponSlot ? ITEMS[weaponSlot.itemId] : null;
@@ -50,6 +52,14 @@ const CombatStylePanel: React.FC<CombatStylePanelProps> = ({ combatStance, setCo
         };
     }, [equipment.weapon]);
 
+    const handleStanceChange = (stance: CombatStance) => {
+        setCombatStance(stance);
+        if (stance === CombatStance.Autocast || stance === CombatStance.DefensiveAutocast) {
+            ui.setIsSelectingAutocastSpell(true);
+            ui.setActivePanel('spellbook');
+        }
+    };
+
     return (
         <div className="flex flex-col h-full text-gray-300">
             <h3 className="text-lg font-bold text-center mb-2 text-yellow-400">Combat Styles</h3>
@@ -60,7 +70,7 @@ const CombatStylePanel: React.FC<CombatStylePanelProps> = ({ combatStance, setCo
                 {stanceOptions.map(stance => (
                     <Button
                         key={stance}
-                        onClick={() => setCombatStance(stance)}
+                        onClick={() => handleStanceChange(stance)}
                         className={`w-full ${combatStance === stance ? 'ring-2 ring-yellow-400' : ''} ${activeCombatStyleHighlight === stance ? 'tutorial-highlight-target' : ''}`}
                         variant={combatStance === stance ? 'primary' : 'secondary'}
                     >

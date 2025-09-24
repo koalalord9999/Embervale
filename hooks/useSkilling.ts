@@ -1,7 +1,8 @@
 
+
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { POIActivity, ResourceNodeState, SkillName, PlayerSkill, InventorySlot, ToolType, Equipment, Item } from '../types';
-import { INVENTORY_CAPACITY, ITEMS, rollOnLootTable } from '../constants';
+import { INVENTORY_CAPACITY, ITEMS, rollOnLootTable, LootRollResult } from '../constants';
 import { POIS } from '../data/pois';
 
 type SkillingActivity = Extract<POIActivity, { type: 'skilling' }>;
@@ -13,10 +14,11 @@ interface SkillingDependencies {
     inventory: (InventorySlot | null)[];
     modifyItem: (itemId: string, quantity: number, quiet?: boolean) => void;
     equipment: Equipment;
+    setEquipment: React.Dispatch<React.SetStateAction<Equipment>>;
 }
 
 export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>, deps: SkillingDependencies) => {
-    const { addLog, skills, addXp, inventory, modifyItem, equipment } = deps;
+    const { addLog, skills, addXp, inventory, modifyItem, equipment, setEquipment } = deps;
     
     const [resourceNodeStates, setResourceNodeStates] = useState<Record<string, ResourceNodeState>>(initialNodeStates);
     const [activeSkilling, setActiveSkilling] = useState<{ nodeId: string; activity: SkillingActivity } | null>(null);
@@ -60,8 +62,17 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
         } else { // Fallback for other skills like fishing
             const skill = skills.find(s => s.name === activity.skill);
             if (!skill) return 0;
+            
+            let bonus = 0;
+            if (activity.skill === SkillName.Fishing) {
+                const necklace = equipment.necklace;
+                if (necklace?.itemId === 'necklace_of_the_angler' && (necklace.charges ?? 0) > 0) {
+                    bonus = 30;
+                }
+            }
+            
             // Base chance is 60%, +2% for each level above requirement, capped at 98%.
-            const baseChance = Math.min(98, 60 + ((skill.currentLevel - activity.requiredLevel) * 2));
+            const baseChance = Math.min(98, 60 + ((skill.currentLevel - activity.requiredLevel) * 2) + bonus);
             const finalChance = Math.min(99, baseChance + boost);
             return finalChance;
         }
@@ -135,11 +146,14 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
             // Gem finding logic for mining happens on every swing, not just on success.
             if (activity.skill === SkillName.Mining) {
                 if (Math.random() < 0.001) { // 1 in 1000 chance
-                    const gemId = rollOnLootTable('gem_table');
-                    if (gemId) {
-                        // Re-check inventory space as this is a bonus item.
+                    const gemDropResult = rollOnLootTable('gem_table');
+                    if (gemDropResult) {
+                        const drop: LootRollResult = typeof gemDropResult === 'string' 
+                            ? { itemId: gemDropResult, quantity: 1, noted: false } 
+                            : gemDropResult;
+
                         if (inventory.filter(Boolean).length < INVENTORY_CAPACITY) {
-                           modifyItem(gemId, 1);
+                           modifyItem(drop.itemId, drop.quantity);
                            addLog(`As you swing your pickaxe, a gem flies from the rock!`);
                         } else {
                            addLog("You would have found a gem, but your inventory is full!");
@@ -163,16 +177,92 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
                         addXp(activity.skill, potentialLoot.xp);
                         modifyItem(potentialLoot.itemId, 1);
                         
-                        setResourceNodeStates(prev => {
-                            const node = prev[nodeId];
-                            if (!node) return prev;
-                            const newResources = node.resources - 1;
-                            if (newResources <= 0) {
-                                setActiveSkilling(null);
-                                return { ...prev, [nodeId]: { resources: 0, respawnTimer: activity.respawnTime } };
+                        if (activity.skill === SkillName.Fishing) {
+                            const necklace = equipment.necklace;
+                            if (necklace?.itemId === 'necklace_of_the_angler' && (necklace.charges ?? 0) > 0) {
+                                const newCharges = (necklace.charges ?? 1) - 1;
+                                if (newCharges > 0) {
+                                    setEquipment(prev => ({ ...prev, necklace: { ...necklace, charges: newCharges } }));
+                                } else {
+                                    addLog("Your Necklace of the Angler has run out of charges and dissolves into seafoam.");
+                                    setEquipment(prev => ({ ...prev, necklace: null }));
+                                }
                             }
-                            return { ...prev, [nodeId]: { ...node, resources: newResources } };
-                        });
+                        }
+
+                        let shouldDecrementResource = true;
+                        const ring = equipment.ring;
+                        const isMiningWithProspectingRing = activity.skill === SkillName.Mining && ring?.itemId === 'ring_of_prospecting' && (ring.charges ?? 0) > 0;
+                        const isWoodcuttingWithWoodsmanRing = activity.skill === SkillName.Woodcutting && ring?.itemId === 'ring_of_the_woodsman' && (ring.charges ?? 0) > 0;
+
+                        if (isMiningWithProspectingRing) {
+                            if (Math.random() < 0.20) { // 20% proc chance
+                                shouldDecrementResource = false;
+                                modifyItem(potentialLoot.itemId, 1); // Give extra ore
+                                const newCharges = (ring.charges ?? 1) - 1;
+
+                                if (newCharges > 0) {
+                                    addLog("Your Ring of Prospecting hums, preserving the rock and finding an extra ore!");
+                                    setEquipment(prev => ({
+                                        ...prev,
+                                        ring: { ...ring, charges: newCharges }
+                                    }));
+                                } else {
+                                    addLog("Your Ring of Prospecting has run out of charges and crumbles to dust.");
+                                    setEquipment(prev => ({
+                                        ...prev,
+                                        ring: null
+                                    }));
+                                }
+                            }
+                        } else if (isWoodcuttingWithWoodsmanRing) {
+                            if (Math.random() < 0.25) { // 25% proc chance
+                                shouldDecrementResource = false; // Gives a "free" log without depleting the node
+                                const newCharges = (ring.charges ?? 1) - 1;
+
+                                if (newCharges > 0) {
+                                    addLog("Your Ring of the Woodsman glows, and the tree seems to rejuvenate slightly.");
+                                    setEquipment(prev => ({
+                                        ...prev,
+                                        ring: { ...ring, charges: newCharges }
+                                    }));
+                                } else {
+                                    addLog("Your Ring of the Woodsman has run out of charges and crumbles to dust.");
+                                    setEquipment(prev => ({
+                                        ...prev,
+                                        ring: null
+                                    }));
+                                }
+                            }
+                        }
+
+                        if (ring?.itemId === 'ring_of_mastery' && (ring.charges ?? 0) > 0) {
+                            if (Math.random() < 0.15) { // 15% chance
+                                addXp(activity.skill, potentialLoot.xp); // Grant the XP again for double
+                                const newCharges = (ring.charges ?? 1) - 1;
+                        
+                                if (newCharges > 0) {
+                                    addLog("Your Ring of Mastery hums, and you feel a surge of insight, doubling your XP gain!");
+                                    setEquipment(prev => ({ ...prev, ring: { ...ring, charges: newCharges } }));
+                                } else {
+                                    addLog("Your Ring of Mastery has run out of charges and crumbles to dust.");
+                                    setEquipment(prev => ({ ...prev, ring: null }));
+                                }
+                            }
+                        }
+                        
+                        if (shouldDecrementResource) {
+                            setResourceNodeStates(prev => {
+                                const node = prev[nodeId];
+                                if (!node) return prev;
+                                const newResources = node.resources - 1;
+                                if (newResources <= 0) {
+                                    setActiveSkilling(null);
+                                    return { ...prev, [nodeId]: { resources: 0, respawnTimer: activity.respawnTime } };
+                                }
+                                return { ...prev, [nodeId]: { ...node, resources: newResources } };
+                            });
+                        }
                         break; 
                     }
                 }

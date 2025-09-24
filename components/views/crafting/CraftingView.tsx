@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { InventorySlot, PlayerSkill, PlayerQuestState, CraftingContext } from '../../../types';
 import { MakeXPrompt, ContextMenuState, TooltipState } from '../../../hooks/useUIState';
@@ -16,6 +14,7 @@ import GemCuttingInterface from './subviews/GemCuttingInterface';
 import FletchingInterface from './subviews/FletchingInterface';
 import JewelryInterface from './subviews/JewelryInterface';
 import DoughMakingInterface from './subviews/DoughMakingInterface';
+import BookbindingInterface from './subviews/BookbindingInterface';
 
 type BarType = 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'silver_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar';
 
@@ -51,6 +50,7 @@ const CraftingView: React.FC<CraftingViewProps> = (props) => {
             case 'jewelry': return 'Crafting - Jewelry';
             case 'fletching': return 'Fletching';
             case 'dough_making': return 'Make Dough';
+            case 'bookbinding': return 'Bookbinding';
             default: return 'Crafting';
         }
     };
@@ -65,6 +65,7 @@ const CraftingView: React.FC<CraftingViewProps> = (props) => {
             case 'gem_cutting': return <GemCuttingInterface {...props} />;
             case 'jewelry': return <JewelryInterface {...props} />;
             case 'dough_making': return <DoughMakingInterface {...props} />;
+            case 'bookbinding': return <BookbindingInterface {...props} />;
             case 'fletching': {
                 return <FletchingInterface {...props} />;
             }
