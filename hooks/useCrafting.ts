@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef } from 'react';
-import { PlayerSkill, SkillName, InventorySlot, ActiveCraftingAction, Equipment, WorldState } from '../../types';
+import { PlayerSkill, SkillName, InventorySlot, ActiveCraftingAction, Equipment, WorldState } from '../types';
 import { ITEMS, SMITHING_RECIPES, COOKING_RECIPES, INVENTORY_CAPACITY, CRAFTING_RECIPES, FLETCHING_RECIPES, GEM_CUTTING_RECIPES, SPINNING_RECIPES, HERBLORE_RECIPES, JEWELRY_CRAFTING_RECIPES, DOUGH_RECIPES, RUNECRAFTING_RECIPES, FIREMAKING_RECIPES } from '../constants';
 
 interface UseCraftingProps {
