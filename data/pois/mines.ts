@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 
 export const minePois: Record<string, POI> = {
@@ -72,17 +73,17 @@ export const minePois: Record<string, POI> = {
         description: 'A cavern filled with strange, floating rocks that hum with a pure, magical energy.',
         connections: ['mine_depths'],
         activities: [
-            { type: 'skilling', id: 'rune_essence_mine_1', name: 'Mine Rune Essence', skill: SkillName.Mining, requiredLevel: -100, loot: [{ itemId: 'rune_essence', chance: 1, xp: 5 }], resourceCount: { min: 10, max: 200 }, respawnTime: 5000, gatherTime: 1800 },
+            { type: 'skilling', id: 'rune_essence_mine_1', name: 'Mine Rune Essence', skill: SkillName.Mining, requiredLevel: -100, loot: [{ itemId: 'rune_essence', chance: 1, xp: 5 }], resourceCount: { min: 10, max: 200 }, respawnTime: 5000, gatherTime: 1800, questCondition: { questId: 'magical_runestone_discovery', stages: [2, 3, 4, 5, 6], visibleAfterCompletion: true } },
             {
                 type: 'npc',
                 name: 'Wizard Elmsworth (Projection)',
                 icon: '/assets/npcChatHeads/wizard_elmsworth.png',
-                questCondition: { questId: 'magical_runestone_discovery', stages: [1, 2] },
+                questCondition: { questId: 'magical_runestone_discovery', stages: [1, 2, 3] },
                 dialogue: {
                     in_progress_magical_runestone_discovery_1: {
                         npcName: 'Wizard Elmsworth (Projection)',
                         npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
-                        text: "[MRD-P1] Can you hear me? It worked! Astounding! This is a two-way communication spell, clever eh? Now, tell me, what do you see around you?",
+                        text: "Can you hear me? It worked! Astounding! This is a two-way communication spell, clever eh? Now, tell me, what do you see around you?",
                         responses: [
                             { text: "I see a big rock with a pulsating energy coming from it.", next: 'telecommune_good_response' },
                             { text: "I don't see anything of interest.", next: 'telecommune_bad_response' },
@@ -91,7 +92,7 @@ export const minePois: Record<string, POI> = {
                     telecommune_bad_response: {
                         npcName: 'Wizard Elmsworth (Projection)',
                         npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
-                        text: "[MRD-P1-BAD] Nonsense! The readings were off the charts! There must be something there. Look again, adventurer!",
+                        text: "Nonsense! The readings were off the charts! There must be something there. Look again, adventurer!",
                         responses: [
                             { text: "Alright, alright. There's a large, pulsating rock here.", next: 'telecommune_good_response' },
                         ]
@@ -99,21 +100,27 @@ export const minePois: Record<string, POI> = {
                     telecommune_good_response: {
                         npcName: 'Wizard Elmsworth (Projection)',
                         npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
-                        text: "[MRD-P1-GOOD] Fascinating! A 'pulsating rock'... this must be the source of the resonance. I need a sample! Can you mine me five chunks of that rock? If you don't have a pickaxe, you'll need to go back and get one. I've unlocked the path back to the mine depths for you.",
+                        text: "Fascinating! A 'pulsating rock'... this must be the source of the resonance. I need a sample! Can you mine me five chunks of that rock? If you don't have a pickaxe, you'll need to go back and get one. I've unlocked the path back to the mine depths for you.",
                         responses: [
-                            { text: "I'll get right on it.", action: 'complete_stage', questId: 'magical_runestone_discovery' },
+                            { text: "I'll get right on it.", actions: [{ type: 'advance_quest', questId: 'magical_runestone_discovery' }] },
                         ]
                     },
                     in_progress_magical_runestone_discovery_2: {
                          npcName: 'Wizard Elmsworth (Projection)',
                          npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
-                         text: "[MRD-P2] Have you gathered those five chunks yet? I'm practically vibrating with anticipation!",
-                         responses: [ { text: "Not yet.", action: 'close' } ]
+                         text: "Have you gathered those five chunks yet? I'm practically vibrating with anticipation!",
+                         responses: [ { text: "Not yet." } ]
                     },
                     in_progress_magical_runestone_discovery_2_complete: {
                         npcName: 'Wizard Elmsworth (Projection)',
                         npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
-                        text: "[MRD-P2-SUCCESS] Wonderful! Simply wonderful! Bring them to me in the Meadowdale library at once! I must study them! Don't dally, now!",
+                        text: "Wonderful! Simply wonderful! Bring them to me in the Meadowdale library at once! I must study them! Don't dally, now!",
+                        responses: []
+                    },
+                    in_progress_magical_runestone_discovery_3: {
+                        npcName: 'Wizard Elmsworth (Projection)',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "My... project... *fzzzt*... is destabilizing... bring the... *crackle*... samples to me in the... library... *pop*...",
                         responses: []
                     }
                 },

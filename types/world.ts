@@ -1,4 +1,4 @@
-import { SkillName, InventorySlot } from './';
+import { SkillName, InventorySlot, ToolType } from './';
 import { DialogueNode } from './quests';
 
 export interface SkillRequirement {
@@ -21,11 +21,23 @@ export interface Region {
   recommendedCombatLevel?: number;
 }
 
+export type BonfireActivity = { type: 'bonfire', uniqueId: string, logId: string, expiresAt: number };
+
+// Defines the structure for quest-based activity visibility.
+// - questId: The ID of the quest to check.
+// - stages: An array of quest stages during which this activity is visible.
+// - visibleAfterCompletion: If true, the activity becomes visible again after the quest is complete.
+export interface QuestCondition {
+    questId: string;
+    stages: number[];
+    visibleAfterCompletion?: boolean;
+}
+
 export type POIActivity =
-  | { type: 'skilling'; id: string; name?: string; skill: SkillName; requiredLevel: number; loot: { itemId: string; chance: number; xp: number; requiredLevel?: number }[]; resourceCount: { min: number, max: number }; respawnTime: number; gatherTime: number; harvestBoost?: number; }
+  | { type: 'skilling'; id: string; name?: string; skill: SkillName; requiredLevel: number; loot: { itemId: string; chance: number; xp: number; requiredLevel?: number }[]; resourceCount: { min: number, max: number }; respawnTime: number; gatherTime: number; harvestBoost?: number; requiredTool?: ToolType; treeHardness?: number; questCondition?: QuestCondition; }
   | { type: 'combat'; monsterId: string }
   | { type: 'shop'; shopId: string }
-  | { type: 'npc'; name: string; icon: string; dialogue: Record<string, DialogueNode>; startNode: string; actions?: any[]; dialogueType?: 'random'; questCondition?: { questId: string; stage?: number; stages?: number[] }; }
+  | { type: 'npc'; name: string; icon: string; dialogue: Record<string, DialogueNode>; startNode: string; actions?: any[]; dialogueType?: 'random'; questCondition?: QuestCondition; }
   | { type: 'cooking_range' }
   | { type: 'furnace' }
   | { type: 'anvil' }
@@ -41,10 +53,10 @@ export type POIActivity =
   | { type: 'water_source', name: string }
   | { type: 'milking' }
   | { type: 'windmill' }
-  | { type: 'runecrafting_altar'; runeId: string; }
+  | { type: 'runecrafting_altar'; runeId: string; questCondition?: QuestCondition; }
   | { type: 'ancient_chest'; name: string; }
   | { type: 'quest_start'; questId: string }
-  | { type: 'interactive_dialogue'; dialogue: Record<string, DialogueNode>; startNode: string; };
+  | BonfireActivity;
 
 export interface POI {
   id: string;

@@ -1,5 +1,6 @@
+
 import React, { useState, useCallback, useMemo } from 'react';
-import { ActivePanel, SkillName, InventorySlot, ActiveCraftingAction, DialogueNode, CraftingContext, Equipment, PlayerQuestState, Spell, Item } from '../types';
+import { ActivePanel, SkillName, InventorySlot, ActiveCraftingAction, DialogueNode, CraftingContext, Equipment, PlayerQuestState, Spell, Item, DialogueResponse, DialogueCheckRequirement } from '../types';
 import { ContextMenuOption } from '../components/common/ContextMenu';
 
 export interface DialogueState {
@@ -8,8 +9,9 @@ export interface DialogueState {
     nodes: Record<string, DialogueNode>;
     currentNodeKey: string;
     onEnd: () => void;
-    onAction: (action: any) => void;
+    onResponse: (response: DialogueResponse) => void;
     onNavigate?: (nextNodeKey: string) => void;
+    handleDialogueCheck?: (requirements: DialogueCheckRequirement[]) => boolean;
 }
 
 export interface TooltipState {
@@ -73,13 +75,21 @@ export const useUIState = () => {
 
 
     // New state for equipment overlays
-    const [equipmentStats, setEquipmentStats] = useState<Equipment | null>(null);
+    const [equipmentStats, _setEquipmentStats] = useState<Equipment | null>(null);
     const [isItemsOnDeathOpen, setIsItemsOnDeathOpen] = useState<boolean>(false);
     const [priceCheckerInventory, setPriceCheckerInventory] = useState<(InventorySlot | null)[] | null>(null);
     const [isAtlasViewOpen, setIsAtlasViewOpen] = useState<boolean>(false);
     const [isExpandedMapViewOpen, setIsExpandedMapViewOpen] = useState<boolean>(false);
     const [isLootViewOpen, setIsLootViewOpen] = useState<boolean>(false);
+    const [isDevPanelOpen, setIsDevPanelOpen] = useState<boolean>(false);
     const [activeMapRegionId, setActiveMapRegionId] = useState<string>('world');
+
+    const setEquipmentStats = useCallback((equipment: Equipment | null) => {
+        _setEquipmentStats(equipment);
+        if (equipment) {
+            setActivePanel('inventory');
+        }
+    }, [setActivePanel]);
 
     // FIX: Define isBusy based on whether any modal or blocking UI is active.
     const isBusy = useMemo(() => !!(
@@ -100,7 +110,8 @@ export const useUIState = () => {
         priceCheckerInventory ||
         isAtlasViewOpen ||
         isExpandedMapViewOpen ||
-        isLootViewOpen
+        isLootViewOpen ||
+        isDevPanelOpen
     ), [
         activeShopId,
         activeCraftingContext,
@@ -119,7 +130,8 @@ export const useUIState = () => {
         priceCheckerInventory,
         isAtlasViewOpen,
         isExpandedMapViewOpen,
-        isLootViewOpen
+        isLootViewOpen,
+        isDevPanelOpen
     ]);
 
 
@@ -158,6 +170,7 @@ export const useUIState = () => {
         setIsLootViewOpen(false);
         setIsSelectingAutocastSpell(false);
         setManualCastTrigger(null);
+        setIsDevPanelOpen(false);
     }, []);
 
     return {
@@ -189,6 +202,7 @@ export const useUIState = () => {
         activeMapRegionId, setActiveMapRegionId,
         isSelectingAutocastSpell, setIsSelectingAutocastSpell,
         manualCastTrigger, setManualCastTrigger,
+        isDevPanelOpen, setIsDevPanelOpen,
         isBusy,
         closeContextMenu,
         closeMakeXPrompt,

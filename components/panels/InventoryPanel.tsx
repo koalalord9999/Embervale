@@ -26,15 +26,13 @@ interface InventoryPanelProps {
     isBusy?: boolean;
     setConfirmationPrompt: (prompt: ConfirmationPrompt | null) => void;
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
-    tutorialStage?: number;
-    advanceTutorial?: (condition: string) => void;
-    onTutorialAction?: (action: 'left_click_axe') => void;
     onExamine: (item: Item) => void;
     isTouchSimulationEnabled: boolean;
     isShopOpen?: boolean;
     onSell?: (itemId: string, quantity: number | 'all', inventoryIndex?: number) => void;
     spellToCast: Spell | null;
     onSpellOnItem: (spell: Spell, target: { item: InventorySlot, index: number }) => void;
+    isEquipmentStatsOpen?: boolean;
 }
 
 const formatCoins = (quantity: number): string => {
@@ -121,8 +119,7 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
         >
-            <h3 className="text-lg font-bold text-center mb-2 text-yellow-400">Inventory</h3>
-            <div className="grid grid-cols-5 gap-2 flex-grow">
+            <div className="grid grid-cols-5 gap-1">
                 {Array.from({ length: INVENTORY_CAPACITY }).map((_, index) => (
                     <InventorySlotDisplay
                         key={index}
@@ -138,7 +135,7 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
                     />
                 ))}
             </div>
-            <div className="text-center mt-2 p-2 bg-gray-900 rounded-md border border-gray-600">
+            <div className="text-center mt-auto pt-2 p-2 bg-gray-900 rounded-md border border-gray-600">
                 <p
                     onMouseEnter={handleCoinMouseEnter}
                     onMouseLeave={handleCoinMouseLeave}

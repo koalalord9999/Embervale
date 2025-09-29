@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { InventorySlot, SkillName, WeaponType } from '../../../../types';
+import { InventorySlot, PlayerSkill, PlayerQuestState, SkillName, WeaponType } from '../../../../types';
 import { SMITHING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
 import Button from '../../../common/Button';
 import { CraftingViewProps } from '../CraftingView';
@@ -27,23 +28,24 @@ const AnvilSlot: React.FC<{
     const hasBars = maxSmith > 0;
     const canSmith = hasLevel && hasBars;
 
-    const handleSingleTap = () => { if(canSmith) onSmithItem(recipe.itemId, 1); };
+    const handleSingleTap = () => { if(canSmith) { onSmithItem(recipe.itemId, 1); setTooltip(null); } };
 
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();
         const event = 'touches' in e ? e.touches[0] : e;
         setContextMenu({
             options: [
-                { label: 'Smith 1', onClick: () => onSmithItem(recipe.itemId, 1), disabled: !canSmith },
-                { label: 'Smith 5', onClick: () => onSmithItem(recipe.itemId, 5), disabled: !canSmith || maxSmith < 5 },
-                { label: 'Smith All', onClick: () => onSmithItem(recipe.itemId, maxSmith), disabled: !canSmith },
-                {
-                    label: 'Smith X...',
+                { label: 'Smith 1', onClick: () => onSmithItem(recipe.itemId, 1), disabled: !hasLevel || maxSmith < 1 },
+                { label: 'Smith 5', onClick: () => onSmithItem(recipe.itemId, 5), disabled: !hasLevel || maxSmith < 5 },
+                { label: 'Smith All', onClick: () => onSmithItem(recipe.itemId, maxSmith), disabled: !hasLevel || maxSmith < 1 },
+                { 
+                    label: 'Smith X...', 
                     onClick: () => setMakeXPrompt({
-                        title: `Smith ${item.name}`, max: maxSmith,
+                        title: `Smith ${ITEMS[recipe.itemId].name}`,
+                        max: maxSmith,
                         onConfirm: (quantity) => onSmithItem(recipe.itemId, quantity)
-                    }),
-                    disabled: !canSmith
+                    }), 
+                    disabled: !hasLevel || maxSmith < 1 
                 },
             ], event, isTouchInteraction: isTouchDevice
         });

@@ -118,7 +118,7 @@ export const CIVILLIAN_DIALOGUE: Record<string, string[]> = {
         "Only slayers of high renown are permitted to use the blimp service. It's a fast way to travel to dangerous lands.",
         "Be careful in the residential district. Some of the nobles are... particular.",
         "I heard a merchant complaining his shipment from Oakhaven was seized by bandits on the King's Road.",
-        "The smiths here can work with the rarest metals, like Aquatite and whatever that 'runic' stuff is.",
+        "The smiths here can work with the rarest metals, like Adamantite and whatever that 'runic' stuff is.",
         "The air smells of salt and industry here. A far cry from the forests and fields.",
         "You want to make a name for yourself? Slaying a rare beast is the quickest way to do it.",
         "The whispers from the Isle... some say they can drive a man mad.",

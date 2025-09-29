@@ -1,4 +1,5 @@
-import { POI } from '../../types';
+
+import { POI, SkillName } from '../../types';
 import { CIVILLIAN_DIALOGUE } from '../../constants';
 
 export const silverhavenPois: Record<string, POI> = {
@@ -66,14 +67,28 @@ export const silverhavenPois: Record<string, POI> = {
                 name: 'Merchant Theron',
                 icon: '/assets/npcChatHeads/merchant_theron.png',
                 dialogue: {
-                    start: {
+                    default_dialogue: {
                         npcName: 'Merchant Theron',
                         npcIcon: '/assets/npcChatHeads/merchant_theron.png',
                         text: "Welcome to the grandest market in the land! What can I get for you?\n\nMy latest caravan from the south is overdue... I'm starting to worry.",
                         responses: []
+                    },
+                    in_progress_missing_shipment_0: {
+                        npcName: 'Merchant Theron',
+                        npcIcon: '/assets/npcChatHeads/merchant_theron.png',
+                        text: "My caravan goods! You found them! I thought they were lost forever. The bandits on the King's Road have been a plague on my business. Thank you, adventurer. Please, take this for your trouble.",
+                        responses: [
+                            { text: "Glad I could help.", actions: [{ type: 'give_xp', skill: SkillName.Slayer, amount: 1000 }, { type: 'give_coins', amount: 2000 }, { type: 'give_item', itemId: 'uncut_emerald', quantity: 1 }, { type: 'advance_quest', questId: 'missing_shipment' }] }
+                        ]
+                    },
+                    post_quest_missing_shipment: {
+                        npcName: 'Merchant Theron',
+                        npcIcon: '/assets/npcChatHeads/merchant_theron.png',
+                        text: "Thanks to you, my shipments are getting through again. I'm in your debt.",
+                        responses: []
                     }
                 },
-                startNode: 'start',
+                startNode: 'default_dialogue',
                 dialogueType: 'random',
             },
             {
@@ -223,11 +238,29 @@ export const silverhavenPois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
                         text: "Where can I take you today? I've got the regular ferry, and a special commission for the more... adventurous types.",
                         responses: [
-                            { text: "Take the ferry to the Isle of Whispers. (10 coins)", action: 'custom', customActionId: 'travel_to_isle_of_whispers' },
-                            { text: "Charter a skyship to the Crystalline Isles. (1600 coins)", action: 'custom', customActionId: 'travel_to_crystalline_isles' },
-                            { text: "Nowhere for now, thanks.", action: 'close' },
+                            { text: "Take the ferry to the Isle of Whispers. (10 coins)", check: { requirements: [{ type: 'coins', amount: 10 }], successNode: 'travel_whispers_success', failureNode: 'travel_fail' }, actions: [{ type: 'take_coins', amount: 10 }, { type: 'teleport', poiId: 'port_wreckage_docks' }] },
+                            { text: "Charter a skyship to the Crystalline Isles. (1600 coins)", check: { requirements: [{ type: 'coins', amount: 1600 }], successNode: 'travel_crystalline_success', failureNode: 'travel_fail' }, actions: [{ type: 'take_coins', amount: 1600 }, { type: 'teleport', poiId: 'crystalline_isles_landing' }] },
+                            { text: "Nowhere for now, thanks." },
                         ],
                     },
+                    travel_whispers_success: {
+                        npcName: 'Ferryman Silas',
+                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
+                        text: "All aboard for the Isle of Whispers! Don't say I didn't warn ya...",
+                        responses: []
+                    },
+                    travel_crystalline_success: {
+                        npcName: 'Ferryman Silas',
+                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
+                        text: "To the skies! The Crystalline Isles await!",
+                        responses: []
+                    },
+                    travel_fail: {
+                        npcName: 'Ferryman Silas',
+                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
+                        text: "Sorry, friend. Passage ain't free. Come back when you have the coin.",
+                        responses: []
+                    }
                 },
                 startNode: 'start',
             }
@@ -270,15 +303,15 @@ export const silverhavenPois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/elara.png',
                         text: "Is that... could it be? My heirloom necklace! I thought it was lost forever! Oh, thank you, thank you, kind stranger! I don't have much, but please, take this as a reward for your honesty.",
                         responses: [
-                            { text: "You're welcome. I'm glad I could return it.", action: 'accept_quest', questId: 'lost_heirloom' },
+                            { text: "You're welcome. I'm glad I could return it.", actions: [{ type: 'start_quest', questId: 'lost_heirloom' }] },
                         ]
                     },
-                    complete_stage_lost_heirloom_0: {
+                    in_progress_lost_heirloom_0: {
                         npcName: 'Elara',
                         npcIcon: '/assets/npcChatHeads/elara.png',
                         text: "You've made an old woman very happy today. Thank you again.",
                         responses: [
-                            { text: "It was my pleasure.", action: 'complete_stage', questId: 'lost_heirloom' },
+                            { text: "It was my pleasure.", actions: [{ type: 'give_xp', skill: SkillName.Slayer, amount: 350 }, { type: 'give_coins', amount: 1500 }, { type: 'advance_quest', questId: 'lost_heirloom' }] },
                         ]
                     },
                     post_quest_lost_heirloom: {

@@ -1,22 +1,14 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { DialogueNode, DialogueResponse } from '../../types';
 import Button from '../common/Button';
-
-export interface DialogueState {
-    npcName: string;
-    npcIcon: string;
-    nodes: Record<string, DialogueNode>;
-    currentNodeKey: string;
-    onEnd: () => void;
-    onAction: (action: { type: 'accept_quest', questId: string } | { type: 'complete_stage', questId: string } | { type: 'custom', actionId: string }) => void;
-}
+import { DialogueState } from '../../hooks/useUIState';
 
 interface DialogueOverlayProps {
     dialogue: DialogueState;
 }
 
 const DialogueOverlay: React.FC<DialogueOverlayProps> = ({ dialogue }) => {
-    const { npcName, npcIcon, nodes, currentNodeKey, onEnd, onAction } = dialogue;
+    const { npcName, npcIcon, nodes, currentNodeKey, onEnd, onResponse } = dialogue;
     
     const [textPage, setTextPage] = useState(0);
     const [optionPage, setOptionPage] = useState(0);
@@ -55,27 +47,23 @@ const DialogueOverlay: React.FC<DialogueOverlayProps> = ({ dialogue }) => {
     }, [textPage, paginatedText, onEnd]);
 
     const handleResponseClick = useCallback((response: DialogueResponse) => {
-        if (response.action === 'accept_quest' && response.questId) {
-            onAction({ type: 'accept_quest', questId: response.questId });
-        } else if (response.action === 'complete_stage' && response.questId) {
-            onAction({ type: 'complete_stage', questId: response.questId });
-        } else if (response.action === 'custom' && response.customActionId) {
-            onAction({ type: 'custom', actionId: response.customActionId });
-        } else if (!response.action || response.action === 'close') {
-            onEnd();
-        }
-    }, [onAction, onEnd]);
+        onResponse(response);
+    }, [onResponse]);
     
     useEffect(() => {
         const handleKeyPress = (e: KeyboardEvent) => {
+            if (!currentNode) return;
+            const isLastTextPage = textPage >= paginatedText.length - 1;
+            const hasResponses = currentNode.responses && currentNode.responses.length > 0;
+
             if (e.code === 'Space') {
                 e.preventDefault();
-                if (paginatedText.length > 1 || !currentNode.responses || currentNode.responses.length === 0) {
+                if (!hasResponses || !isLastTextPage) {
                     handleNextPage();
                 }
             }
             
-            if (textPage >= paginatedText.length - 1 && currentNode.responses.length > 0) {
+            if (isLastTextPage && hasResponses) {
                 const keyNum = parseInt(e.key, 10);
                 if (keyNum >= 1 && keyNum <= 4) {
                     e.preventDefault();
@@ -99,7 +87,6 @@ const DialogueOverlay: React.FC<DialogueOverlayProps> = ({ dialogue }) => {
 
     if (!currentNode) return null;
 
-    const isTextPaginated = paginatedText.length > 1;
     const isLastTextPage = textPage >= paginatedText.length - 1;
     const hasResponses = currentNode.responses && currentNode.responses.length > 0;
     
@@ -111,7 +98,7 @@ const DialogueOverlay: React.FC<DialogueOverlayProps> = ({ dialogue }) => {
     const displayedResponses = hasResponses ? currentNode.responses.slice(optionSliceStart, optionSliceEnd) : [];
 
     return (
-        <div className="absolute bottom-2 left-2 right-2 md:left-4 md:right-auto md:w-[calc(75%-2.25rem)] h-auto md:h-52 bg-gray-900/90 border-2 border-yellow-700 rounded-lg shadow-2xl p-3 pointer-events-auto transition-opacity duration-300 ease-in-out opacity-100 flex flex-col md:flex-row h-full gap-3">
+        <div className="absolute inset-0 bg-gray-900/90 border-2 border-yellow-700 rounded-lg shadow-2xl p-3 pointer-events-auto transition-opacity duration-300 ease-in-out opacity-100 flex flex-col md:flex-row h-full gap-3 animate-fade-in">
             {/* Left part: Guide info */}
             <div className="flex items-center gap-3 w-full md:w-1/2">
                 <img src={npcIcon} alt={npcName} className="w-16 h-16 bg-gray-800 border-2 border-gray-600 rounded-full flex-shrink-0 pixelated-image" />

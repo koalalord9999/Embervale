@@ -74,7 +74,7 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
         }));
     }, [setPlayerQuests, addLog]);
 
-    const checkQuestProgressOnKill = useCallback((monsterId: string) => {
+    const checkQuestProgressOnKill = useCallback((monsterId: string, attackStyle?: 'melee' | 'ranged' | 'magic') => {
         const monster = MONSTERS[monsterId];
         if (!monster) return;
 
@@ -89,6 +89,10 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
     
             // Handle 'kill' requirements
             if (stage?.requirement.type === 'kill' && stage.requirement.monsterId === monsterId) {
+                if (stage.requirement.style && stage.requirement.style !== attackStyle) {
+                    addLog(`You must defeat this enemy using a ${stage.requirement.style} attack for your quest.`);
+                    return q; // Return original quest state without progressing
+                }
                 const newProgress = q.progress + 1;
                 if (newProgress >= stage.requirement.quantity) {
                     stageCompleted = true;
@@ -230,9 +234,6 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
                     if (questData.id === 'missing_shipment') {
                         modifyItem('stolen_caravan_goods', -1);
                     }
-                    if (questData.id === 'a_pinch_of_trouble') {
-                        modifyItem('giant_crab_claw', -1);
-                    }
                     return {...q, isComplete: true};
                 }
                 addLog(`Quest updated: ${questData.name} - stage completed!`);
@@ -242,6 +243,58 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
         }))
     }, [setPlayerQuests, modifyItem, addXp, setLockedPois, addLog, hasItems, setClearedSkillObstacles]);
 
+    const forceCompleteQuest = useCallback((questId: string) => {
+        const questData = QUESTS[questId];
+        if (!questData) {
+            addLog(`Error: Could not find quest data for ${questId}`);
+            return;
+        }
+    
+        setPlayerQuests(qs => {
+            const questIndex = qs.findIndex(q => q.questId === questId);
+            const newQuests = [...qs];
+            
+            if (questIndex > -1) {
+                // Quest is already started, just mark it as complete
+                newQuests[questIndex] = { ...newQuests[questIndex], currentStage: questData.stages.length, isComplete: true };
+            } else {
+                // Quest wasn't started, add it as complete
+                newQuests.push({ questId, currentStage: questData.stages.length, progress: 0, isComplete: true });
+            }
+            return newQuests;
+        });
+    
+        addLog(`Quest completed: ${questData.name}!`);
+        // Special case to prevent default rewards for the tutorial quest.
+        if (questId === 'embrune_101') {
+            return;
+        }
+
+        const rewards = questData.rewards;
+        if (rewards.coins) modifyItem('coins', rewards.coins);
+        rewards.items?.forEach(item => modifyItem(item.itemId, item.quantity, false, item.doses, { bypassAutoBank: true }));
+        rewards.xp?.forEach(xpReward => addXp(xpReward.skill, xpReward.amount));
+    
+        // Unlock all POIs associated with this quest
+        Object.values(POIS).forEach(poi => {
+            if (poi.unlockRequirement?.type === 'quest' && poi.unlockRequirement.questId === questId) {
+                setLockedPois(prev => {
+                    if (prev.includes(poi.id)) {
+                        addLog(`You have unlocked ${poi.name}!`);
+                        return prev.filter(id => id !== poi.id);
+                    }
+                    return prev;
+                });
+            }
+        });
+    
+        // Clear all skill obstacles associated with this quest
+        if (questData.id === 'capitals_call') {
+            setClearedSkillObstacles(prev => [...new Set([...prev, 'broken_bridge-kings_road_west_2'])]);
+            addLog("With the supplies delivered, the Oakhaven guard repairs the bridge. The path to Silverhaven is open!");
+        }
+    }, [setPlayerQuests, addLog, modifyItem, addXp, setLockedPois, setClearedSkillObstacles]);
+
     return {
         checkQuestProgressOnShear,
         checkQuestProgressOnSpin,
@@ -249,5 +302,6 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
         checkQuestProgressOnSmith,
         completeQuestStage,
         checkGatherQuests,
+        forceCompleteQuest,
     };
 };

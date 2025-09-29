@@ -65,15 +65,15 @@ const QuestDetailView: React.FC<QuestDetailViewProps> = ({ questId, playerQuests
             <>
                 <p className="mb-4 text-gray-400 italic">{questData.description}</p>
                 <div className="space-y-2">
-                    {questData.playerStagePerspectives.map((perspective, index) => {
-                        if (index < playerQuest.currentStage) {
-                            return <p key={index} className="text-gray-500 line-through">{perspective}</p>;
-                        }
-                        if (index === playerQuest.currentStage) {
+                    {questData.playerStagePerspectives
+                        .filter((_, index) => index <= playerQuest.currentStage)
+                        .map((perspective, index) => {
+                            if (index < playerQuest.currentStage) {
+                                return <p key={index} className="text-gray-500 line-through">{perspective}</p>;
+                            }
+                            // This will now only ever be the current stage
                             return <p key={index} className="font-semibold text-yellow-300 animate-pulse">{perspective}</p>;
-                        }
-                        return <p key={index} className="text-gray-400">{perspective}</p>;
-                    })}
+                        })}
                 </div>
             </>
         );

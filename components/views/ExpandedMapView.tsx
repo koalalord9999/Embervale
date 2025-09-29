@@ -83,7 +83,7 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
         
         if (isWorldView) {
             const region = REGIONS[poi.regionId];
-            const isCity = region?.type === 'city';
+            const isCity = region?.type === 'city' || region?.type === 'dungeon';
             const effectivePoi = isMapManagerEnabled ? (isCity ? regionCoordinates?.[region.id] : poiCoordinates?.[poi.id]) : { x: isCity ? region.x : poi.x, y: isCity ? region.y : poi.y };
             if (!effectivePoi) return;
             targetX = effectivePoi.x;
@@ -119,7 +119,7 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
         
         if (isWorldView) {
             const region = REGIONS[poi.regionId];
-            const isCity = region?.type === 'city';
+            const isCity = region?.type === 'city' || region?.type === 'dungeon';
             const effectivePoi = isMapManagerEnabled ? (isCity ? regionCoordinates?.[region.id] : poiCoordinates?.[poi.id]) : { x: isCity ? region.x : poi.x, y: isCity ? region.y : poi.y };
             if (!effectivePoi) return;
             targetX = effectivePoi.x;
@@ -162,7 +162,7 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
         } else {
             panToCurrentLocation();
         }
-    }, [activeMapRegionId, currentPoiId, centerOnCurrentLocation, panToCurrentLocation, isMapManagerEnabled]);
+    }, [activeMapRegionId, currentPoiId, centerOnCurrentLocation, panToCurrentLocation, isMapManagerEnabled, mapDimensions]);
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
         if (isDragging) {
@@ -265,16 +265,21 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
     const zoomOut = () => setView(v => ({ ...v, zoom: Math.max(0.25, v.zoom / 1.5) }));
     
     const { poisToDisplay, regionsToDisplay, dungeonsToDisplay, phantomExits, mapTitle } = useMemo(() => {
+        const allPois = Object.values(POIS);
+
         if (isWorldView) {
             return {
-                poisToDisplay: Object.values(POIS).filter(p => { const region = REGIONS[p.regionId]; return region?.type !== 'city' && region?.type !== 'dungeon'; }),
+                poisToDisplay: showAllPois ? allPois : allPois.filter(p => {
+                    const region = REGIONS[p.regionId];
+                    return region?.type !== 'city' && region?.type !== 'dungeon';
+                }),
                 regionsToDisplay: Object.values(REGIONS).filter(r => r.type === 'city'),
                 dungeonsToDisplay: Object.values(REGIONS).filter(r => r.type === 'dungeon'),
                 phantomExits: [],
                 mapTitle: 'World Map'
             };
         }
-        const cityPois = Object.values(POIS).filter(p => p.regionId === activeMapRegionId);
+        const cityPois = allPois.filter(p => p.regionId === activeMapRegionId);
         const exits: { navigationId: string; gateName: string; displayName: string; x: number; y: number }[] = [];
         const addedGateIds = new Set<string>();
         cityPois.forEach(internalPoi => {
@@ -293,7 +298,7 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
             });
         });
         return { poisToDisplay: cityPois, regionsToDisplay: [], dungeonsToDisplay: [], phantomExits: exits, mapTitle: `${REGIONS[activeMapRegionId]?.name || 'Region'} Map` };
-    }, [isWorldView, activeMapRegionId]);
+    }, [isWorldView, activeMapRegionId, showAllPois]);
 
     const handleMouseEnter = (e: React.MouseEvent, item: POI | Region | { name: string, description?: string }) => {
         if (isMapManagerEnabled && draggedItemId) return;
@@ -354,7 +359,7 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                                     const endPoiData = isMapManagerEnabled ? { ...endPoi, ...poiCoordinates?.[endPoi.id] } : endPoi;
                                     const endRegion = REGIONS[endPoiData.regionId];
                                     const isEndPoiInCurrentView = poisToDisplay.some(p => p.id === endPoiData.id);
-                                    const isEndPoiACityIcon = isWorldView && endRegion?.type === 'city';
+                                    const isEndPoiACityIcon = isWorldView && (endRegion?.type === 'city' || endRegion?.type === 'dungeon');
                                     if (!isEndPoiInCurrentView && !isEndPoiACityIcon) return null;
                                     const isUnlocked = showAllPois || (unlockedPois.includes(startPoi.id) && unlockedPois.includes(endPoi.id));
                                     const endCoords = isEndPoiACityIcon ? (isMapManagerEnabled ? regionCoordinates?.[endRegion.id] : endRegion) : endPoiData;
@@ -380,27 +385,26 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                             const isUnlocked = showAllPois || unlockedPois.includes(region.entryPoiId);
                             const coords = isMapManagerEnabled ? regionCoordinates?.[region.id] : region;
                             if (!coords) return null;
+                            const canClick = isWorldView && isUnlocked;
+                            const cursorClass = isMapManagerEnabled ? 'cursor-move' : (canClick ? 'cursor-pointer' : 'cursor-default');
+
                             return (
                                  <div
                                     key={region.id}
                                     data-draggable={isMapManagerEnabled}
-                                    className={`absolute transform -translate-x-1/2 -translate-y-1/2 group ${isMapManagerEnabled ? 'cursor-move' : 'cursor-default'} ${isUnlocked ? 'cursor-pointer' : ''}`}
+                                    className={`absolute transform -translate-x-1/2 -translate-y-1/2 group ${cursorClass}`}
                                     style={{ top: `${coords.y}px`, left: `${coords.x}px` }}
                                     onMouseDown={(e) => {
                                         nodeDragStart.current = { x: e.clientX, y: e.clientY };
-                                        if (isMapManagerEnabled) {
-                                            handleNodeMouseDown(e, region.id, true);
-                                        }
+                                        if (isMapManagerEnabled) handleNodeMouseDown(e, region.id, true);
                                     }}
                                     onClick={(e) => {
-                                        const dx = Math.abs(e.clientX - nodeDragStart.current.x);
-                                        const dy = Math.abs(e.clientY - nodeDragStart.current.y);
-                                        if (isMapManagerEnabled && (dx > 5 || dy > 5)) {
-                                            return; // It was a drag, not a click
+                                        if (isMapManagerEnabled) {
+                                            const dx = Math.abs(e.clientX - nodeDragStart.current.x);
+                                            const dy = Math.abs(e.clientY - nodeDragStart.current.y);
+                                            if (dx > 5 || dy > 5) return;
                                         }
-                                        if (isUnlocked && region.type === 'city') {
-                                            setActiveMapRegionId(region.id);
-                                        }
+                                        if (canClick) setActiveMapRegionId(region.id);
                                     }} 
                                     onMouseEnter={(e) => handleMouseEnter(e, region)}
                                     onMouseLeave={() => setTooltip(null)}
@@ -417,8 +421,30 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                             const isUnlocked = showAllPois || unlockedPois.includes(entryPoi.id);
                             const coords = isMapManagerEnabled ? poiCoordinates?.[entryPoi.id] : entryPoi;
                             if (!coords) return null;
+                            const canClick = isMapManagerEnabled;
+                            const cursorClass = canClick ? 'cursor-pointer' : 'cursor-default';
+                            
                             return (
-                                 <div key={dungeon.id} data-draggable={isMapManagerEnabled} className={`absolute transform -translate-x-1/2 -translate-y-1/2 group ${isMapManagerEnabled ? 'cursor-move' : 'cursor-default'}`} style={{ top: `${coords.y}px`, left: `${coords.x}px` }} onMouseDown={(e) => handleNodeMouseDown(e, entryPoi.id, true)} onMouseEnter={(e) => handleMouseEnter(e, { ...entryPoi, name: dungeon.name })} onMouseLeave={() => setTooltip(null)} >
+                                 <div
+                                    key={dungeon.id}
+                                    data-draggable={isMapManagerEnabled}
+                                    className={`absolute transform -translate-x-1/2 -translate-y-1/2 group ${isMapManagerEnabled ? 'cursor-move' : cursorClass}`}
+                                    style={{ top: `${coords.y}px`, left: `${coords.x}px` }}
+                                    onMouseDown={(e) => {
+                                        nodeDragStart.current = { x: e.clientX, y: e.clientY };
+                                        if (isMapManagerEnabled) handleNodeMouseDown(e, entryPoi.id, false);
+                                    }}
+                                    onClick={(e) => {
+                                        if (isMapManagerEnabled) {
+                                            const dx = Math.abs(e.clientX - nodeDragStart.current.x);
+                                            const dy = Math.abs(e.clientY - nodeDragStart.current.y);
+                                            if (dx > 5 || dy > 5) return;
+                                        }
+                                        if (canClick) setActiveMapRegionId(dungeon.id);
+                                    }}
+                                    onMouseEnter={(e) => handleMouseEnter(e, { ...entryPoi, name: dungeon.name })}
+                                    onMouseLeave={() => setTooltip(null)}
+                                >
                                     <img src="https://api.iconify.design/game-icons:cave-entrance.svg" alt={dungeon.name} className={`filter invert transition-opacity ${isUnlocked ? 'opacity-80 group-hover:opacity-100' : 'opacity-30'}`} style={{width: `${40 / view.zoom}px`, height: `${40 / view.zoom}px`}} />
                                 </div>
                             )

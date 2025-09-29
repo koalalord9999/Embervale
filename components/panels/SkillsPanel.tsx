@@ -26,7 +26,6 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ skills, setTooltip, onOpenGui
 
     return (
         <div className="flex flex-col h-full text-gray-300">
-            <h3 className="text-lg font-bold text-center mb-2 text-yellow-400">Skills</h3>
             <div className="flex-grow overflow-y-auto pr-1">
                 <div className="grid grid-cols-3 gap-2">
                     {sortedSkills.map(skill => {

@@ -1,5 +1,6 @@
 
-import { InventorySlot } from '../types';
+
+import { InventorySlot, WeightedDrop } from '../types';
 
 interface LootTableItem {
     itemId?: string;

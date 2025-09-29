@@ -1,4 +1,5 @@
-import { POI, SkillName } from '../../types';
+
+import { POI, SkillName, ToolType } from '../../types';
 
 export const theVerdantFieldsPois: Record<string, POI> = {
     // From farmlands.ts
@@ -16,10 +17,10 @@ export const theVerdantFieldsPois: Record<string, POI> = {
                     default_dialogue: {
                         npcName: 'Rancher McGregor',
                         npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-                        text: "Well howdy, partner. It's a fine day for work, ain't it? Enjoying the fresh country air?",
+                        text: "Well howdy, partner. Good of you to stop by. I've got a bit of a situation here... my sheep have gotten... well, 'fluffy' is an understatement.",
                         responses: [
                             { text: "Everything alright? You look a bit frazzled.", next: 'quest_intro_sheep_troubles' },
-                            { text: "Just passing through.", action: 'close' },
+                            { text: "Just passing through." },
                         ]
                     },
                     quest_intro_sheep_troubles: {
@@ -28,7 +29,7 @@ export const theVerdantFieldsPois: Record<string, POI> = {
                         text: "Frazzled? That's putting it mildly! My sheep have gotten... well, 'fluffy' is an understatement. They're like woolly clouds with legs!",
                         responses: [
                             { text: "They do look rather spherical.", next: 'problem_sheep_troubles' },
-                            { text: "Sounds like a you problem.", action: 'close' },
+                            { text: "Sounds like a you problem." },
                         ],
                     },
                     problem_sheep_troubles: {
@@ -44,8 +45,8 @@ export const theVerdantFieldsPois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
                         text: "It needs to be spun into balls of wool. I've got a spinning wheel in the barn you can use. If you can shear ten sheep, spin the wool, and bring me back ten finished balls, I'd be mighty grateful. I'll pay you well for your trouble, of course.",
                         responses: [
-                            { text: "You've got a deal. I'll get right on it.", action: 'accept_quest', questId: 'sheep_troubles' },
-                            { text: "That sounds like a lot of work.", action: 'close' },
+                            { text: "You've got a deal. I'll get right on it.", actions: [{ type: 'start_quest', questId: 'sheep_troubles' }] },
+                            { text: "That sounds like a lot of work." },
                         ],
                     },
                     in_progress_sheep_troubles_0: {
@@ -60,12 +61,12 @@ export const theVerdantFieldsPois: Record<string, POI> = {
                         text: "That's a fine pile of wool! Now head into the barn and use the spinning wheel to turn it into balls of wool.",
                         responses: []
                     },
-                    complete_stage_sheep_troubles_2: {
+                    in_progress_sheep_troubles_2: {
                         npcName: 'Rancher McGregor',
                         npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
                         text: "Well I'll be! You've got the knack for it. These are perfect. Thank you kindly, adventurer. Here's your payment, as promised.",
                         responses: [
-                            { text: "Happy to help.", action: 'complete_stage', questId: 'sheep_troubles' },
+                            { text: "Happy to help.", actions: [{ type: 'give_xp', skill: SkillName.Crafting, amount: 150 }, { type: 'give_coins', amount: 300 }, { type: 'advance_quest', questId: 'sheep_troubles' }] },
                         ]
                     },
                     post_quest_sheep_troubles: {
@@ -77,7 +78,7 @@ export const theVerdantFieldsPois: Record<string, POI> = {
                 },
                 startNode: 'default_dialogue'
             },
-            { type: 'skilling', id: 'mcgregors_ranch_tree', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 0.8, xp: 25 }], resourceCount: { min: 1, max: 3 }, respawnTime: 15000, gatherTime: 2000 },
+            { type: 'skilling', id: 'mcgregors_ranch_tree', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 1, xp: 25 }], resourceCount: { min: 1, max: 3 }, respawnTime: 15000, gatherTime: 2000 },
         ],
         regionId: 'the_verdant_fields',
         x: 800, y: 1200
@@ -221,7 +222,7 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         description: 'A crystal clear stream flowing down from the mountains. Perfect for trout fishing.',
         connections: ['winding_brook_south'],
         activities: [
-            { type: 'skilling', id: 'clearwater_stream_fishing', name: 'Fish for Trout', skill: SkillName.Fishing, requiredLevel: 20, loot: [{itemId: 'raw_trout', xp: 50, chance: 1}, {itemId: 'raw_pike', xp: 70, chance: 0.3, requiredLevel: 30}], resourceCount: {min: 8, max: 15}, respawnTime: 15000, gatherTime: 2200 },
+            { type: 'skilling', id: 'clearwater_stream_fishing', name: 'Fly Fish', skill: SkillName.Fishing, requiredLevel: 20, loot: [{itemId: 'raw_trout', xp: 50, chance: 1}, {itemId: 'raw_pike', xp: 70, chance: 0.3, requiredLevel: 30}], resourceCount: {min: 8, max: 15}, respawnTime: 15000, gatherTime: 2200, requiredTool: ToolType.FlyFishingRod },
             { type: 'water_source', name: 'Collect Water' }
         ],
         regionId: 'the_verdant_fields',

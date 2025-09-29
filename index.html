@@ -402,6 +402,29 @@
           animation: pulse-red-shadow 2s infinite ease-in-out;
       }
 
+      @keyframes pulse-blue-orb {
+        0%, 100% {
+            transform: translate(-50%, -50%) scale(0.9);
+            opacity: 0.5;
+        }
+        50% {
+            transform: translate(-50%, -50%) scale(1.3);
+            opacity: 0.8;
+        }
+      }
+      .autocast-orb-highlight::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 80%;
+          height: 80%;
+          background-color: rgba(59, 130, 246, 0.6); /* Tailwind blue-500 */
+          border-radius: 50%;
+          z-index: -1;
+          animation: pulse-blue-orb 2s infinite ease-in-out;
+      }
+
       .pixelated-image {
         image-rendering: -moz-crisp-edges; /* Firefox */
         image-rendering: -webkit-crisp-edges; /* Webkit */
@@ -523,6 +546,9 @@
       img[src*="game-icons:broadhead-arrow"]:not(.item-note-icon) {
         transform: rotate(-90deg);
       }
+      img[src*="game-icons:key-skeleton"]:not(.item-note-icon) {
+        transform: rotate(180deg);
+      }
       
       /* Apply combined transform for noted items that need rotation */
       .item-note-icon[src*="game-icons:bone-knife"] {
@@ -536,8 +562,11 @@
       .item-note-icon[src*="game-icons:broadhead-arrow"] {
         transform: translate(-50%, -50%) rotate(-90deg);
       }
+      .item-note-icon[src*="game-icons:key-skeleton"] {
+        transform: translate(-50%, -50%) rotate(180deg);
+      }
 
-      /* Styles for Noted Items */
+      /* Styles for Noted Items & Bank Action Buttons */
       .item-note-wrapper {
           position: relative;
           width: 100%;
@@ -562,6 +591,16 @@
           left: 50%;
           transform: translate(-50%, -50%);
           z-index: 1;
+      }
+      .bank-action-bg-icon {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(2.2);
+        filter: invert(60%) sepia(80%) saturate(1500%) hue-rotate(80deg) brightness(1.0) contrast(0.9);
+        opacity: 0.9;
       }
 
       /* Item Material Colors */

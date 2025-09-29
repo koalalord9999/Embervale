@@ -1,4 +1,5 @@
 
+
 import { POI, SkillName } from '../../types';
 
 export const theSerpentsCoilPois: Record<string, POI> = {
@@ -88,7 +89,8 @@ export const theSerpentsCoilPois: Record<string, POI> = {
                 ],
                 resourceCount: { min: 60, max: 1601 },
                 respawnTime: 120000,
-                gatherTime: 3500
+                gatherTime: 3500,
+                treeHardness: 250,
             }
         ],
         regionId: 'serpents_coil',

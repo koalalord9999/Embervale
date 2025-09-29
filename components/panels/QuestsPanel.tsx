@@ -41,7 +41,6 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ playerQuests, activeRepeatabl
 
     return (
         <div className="flex flex-col h-full text-gray-300">
-            <h3 className="text-lg font-bold text-center mb-2 text-yellow-400">Quest Journal</h3>
             <div className="overflow-y-auto pr-1 space-y-4">
                 {/* Tasks Section */}
                 {(slayerTask || activeRepeatableQuest) && (

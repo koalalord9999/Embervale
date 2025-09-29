@@ -1,3 +1,4 @@
+
 import React, { useCallback } from 'react';
 import { useUIState } from '../../hooks/useUIState';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -14,7 +15,7 @@ import { useQuestLogic } from '../../hooks/useQuestLogic';
 import { useSkilling } from '../../hooks/useSkilling';
 import { useInteractQuest } from '../../hooks/useInteractQuest';
 import { useGameSession } from '../../hooks/useGameSession';
-import { SkillName, InventorySlot, CombatStance, POIActivity, GroundItem, Spell } from '../../types';
+import { SkillName, InventorySlot, CombatStance, POIActivity, GroundItem, Spell, BonfireActivity, DialogueCheckRequirement, DialogueAction } from '../../types';
 import { POIS } from '../../data/pois';
 import CraftingProgressView from '../views/crafting/CraftingProgressView';
 import CombatView from '../views/CombatView';
@@ -47,12 +48,10 @@ interface MainViewControllerProps {
     clearedSkillObstacles: string[];
     monsterRespawnTimers: Record<string, number>;
     handlePlayerDeath: () => void;
-    handleKill: (uniqueInstanceId: string) => void;
-    // Fix: Updated the return type of handleDialogueAction to boolean to match its implementation and usage in downstream hooks.
-    handleDialogueAction: (action: any) => boolean;
+    handleKill: (uniqueInstanceId: string, attackStyle?: 'melee' | 'ranged' | 'magic') => void;
+    handleDialogueAction: (actions: DialogueAction[]) => void;
+    handleDialogueCheck: (requirements: DialogueCheckRequirement[]) => boolean;
     combatSpeedMultiplier: number;
-    advanceTutorial: (condition: string) => void;
-    tutorialStage: number;
     activeCombatStyleHighlight?: CombatStance | null;
     isTouchSimulationEnabled: boolean;
     // Map Manager props
@@ -75,12 +74,20 @@ interface MainViewControllerProps {
     onItemDropped: (item: InventorySlot) => void;
     isAutoBankOn: boolean;
     handleCombatXpGain: (skill: SkillName, amount: number) => void;
+    immunityTimeLeft: number;
+    poiImmunityTimeLeft: number;
+    killTrigger: number;
+    bankPlaceholders: boolean;
+    handleToggleBankPlaceholders: () => void;
+    bonfires: BonfireActivity[];
+    onStokeBonfire: (logId: string, bonfireId: string) => void;
 }
 
 const MainViewController: React.FC<MainViewControllerProps> = (props) => {
     const {
-        ui, addLog, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, handleDialogueAction, combatSpeedMultiplier, advanceTutorial, tutorialStage, activeCombatStyleHighlight, isTouchSimulationEnabled, showAllPois,
-        groundItemsForCurrentPoi, onPickUpItem, onTakeAllLoot, onItemDropped, isAutoBankOn, handleCombatXpGain
+        ui, addLog, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, handleDialogueAction, handleDialogueCheck, combatSpeedMultiplier, activeCombatStyleHighlight, isTouchSimulationEnabled, showAllPois,
+        groundItemsForCurrentPoi, onPickUpItem, onTakeAllLoot, onItemDropped, isAutoBankOn, handleCombatXpGain, immunityTimeLeft, poiImmunityTimeLeft, killTrigger,
+        bankPlaceholders, handleToggleBankPlaceholders, bonfires, onStokeBonfire
     } = props;
 
     const handleTeleport = useCallback((toBoardId: string) => {
@@ -112,7 +119,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
     };
 
     const mainContent = (() => {
-        if (ui.activeCraftingAction) {
+        if (ui.activeCraftingAction && ui.activeCraftingAction.recipeType !== 'firemaking-stoke') {
             return <CraftingProgressView
                 action={ui.activeCraftingAction}
                 onCancel={() => {
@@ -145,11 +152,11 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 onKill={handleKill} 
                 activeBuffs={char.activeBuffs}
                 combatSpeedMultiplier={combatSpeedMultiplier}
-                advanceTutorial={advanceTutorial}
+                advanceTutorial={() => {}}
                 autocastSpell={char.autocastSpell}
                 inv={inv}
-                // FIX: Pass the 'ui' prop to CombatView as it is required.
                 ui={ui}
+                killTrigger={killTrigger}
             />;
         }
         if (ui.activeTeleportBoardId) {
@@ -170,6 +177,8 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
             setContextMenu={ui.setContextMenu}
             setMakeXPrompt={ui.setMakeXPrompt}
             setTooltip={ui.setTooltip}
+            bankPlaceholders={bankPlaceholders}
+            handleToggleBankPlaceholders={handleToggleBankPlaceholders}
         />;
         if (ui.activeShopId) return <ShopView 
             shopId={ui.activeShopId}
@@ -223,6 +232,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
         }
 
         return (
+            // FIX: Remove obsolete tutorialStage and advanceTutorial props.
             <SceneView poi={poi} unlockedPois={navigation.reachablePois} onNavigate={navigation.handleNavigate} inventory={inv.inventory}
                 onActivity={onActivity}
                 worldActions={worldActions}
@@ -243,17 +253,28 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 setTooltip={ui.setTooltip}
                 setActiveDialogue={ui.setActiveDialogue}
                 handleDialogueAction={handleDialogueAction}
+                handleDialogueCheck={handleDialogueCheck}
                 onDepositBackpack={bankLogic.handleDepositBackpack}
                 ui={ui}
-                tutorialStage={tutorialStage}
-                advanceTutorial={advanceTutorial}
                 isTouchSimulationEnabled={isTouchSimulationEnabled}
+                bonfires={bonfires}
+                onStokeBonfire={crafting.handleStokeBonfire}
             />
         );
     })();
     
     return (
         <>
+            {immunityTimeLeft > 0 && (
+                <div className="absolute top-2 left-2 bg-blue-900/80 text-blue-200 border border-blue-500 rounded-lg px-3 py-1 text-sm font-semibold animate-pulse z-20">
+                    Death Immunity: {immunityTimeLeft}s
+                </div>
+            )}
+             {poiImmunityTimeLeft > 0 && (
+                <div className="absolute top-2 left-2 bg-green-900/80 text-green-200 border border-green-500 rounded-lg px-3 py-1 text-sm font-semibold animate-pulse z-20">
+                    Room Cleared! Immunity: {poiImmunityTimeLeft}s
+                </div>
+            )}
             {mainContent}
             {ui.isLootViewOpen && (
                 <LootView

@@ -1,6 +1,14 @@
 import { Region } from '../types';
 
 export const REGIONS: Record<string, Region> = {
+    path_of_beginnings: {
+        id: 'path_of_beginnings',
+        name: 'Path of Beginnings',
+        type: 'region',
+        entryPoiId: 'tutorial_entrance',
+        x: 50,
+        y: 50,
+    },
     the_verdant_fields: {
         id: 'the_verdant_fields',
         name: 'The Verdant Fields',

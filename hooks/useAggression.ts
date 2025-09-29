@@ -1,23 +1,27 @@
 import { useEffect } from 'react';
 import { MONSTERS } from '../constants';
 import { POIS } from '../data/pois';
-import { POIActivity, Equipment } from '../types';
+import { POIActivity, Equipment, WorldState } from '../types';
 
 export const useAggression = (
     currentPoiId: string,
     isGameLoaded: boolean,
     isBusy: boolean,
+    isInCombat: boolean,
     playerCombatLevel: number,
     startCombat: (monsterIds: string[]) => void,
     addLog: (message: string) => void,
     monsterRespawnTimers: Record<string, number>,
     devAggroIds: string[],
     isPlayerInvisible: boolean,
+    isPlayerImmune: boolean,
     equipment: Equipment,
-    setEquipment: React.Dispatch<React.SetStateAction<Equipment>>
+    setEquipment: React.Dispatch<React.SetStateAction<Equipment>>,
+    worldState: WorldState
 ) => {
     useEffect(() => {
-        if (!isGameLoaded || isBusy || isPlayerInvisible) return;
+        const isPoiImmune = (worldState.poiImmunity?.[currentPoiId] ?? 0) > Date.now();
+        if (!isGameLoaded || isBusy || isInCombat || isPlayerInvisible || isPlayerImmune || isPoiImmune) return;
 
         const poi = POIS[currentPoiId];
         if (!poi) return;
@@ -66,5 +70,5 @@ export const useAggression = (
                 startCombat(aggressiveMonsterInstances.map(m => m.uniqueInstanceId));
             }
         }
-    }, [currentPoiId, isGameLoaded, isBusy, playerCombatLevel, startCombat, addLog, monsterRespawnTimers, devAggroIds, isPlayerInvisible, equipment, setEquipment]);
+    }, [currentPoiId, isGameLoaded, isBusy, isInCombat, playerCombatLevel, startCombat, addLog, monsterRespawnTimers, devAggroIds, isPlayerInvisible, isPlayerImmune, equipment, setEquipment, worldState]);
 };

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef } from 'react';
-import { PlayerSkill, SkillName, InventorySlot, ActiveCraftingAction, Equipment } from '../types';
-import { ITEMS, SMITHING_RECIPES, COOKING_RECIPES, INVENTORY_CAPACITY, CRAFTING_RECIPES, FLETCHING_RECIPES, GEM_CUTTING_RECIPES, SPINNING_RECIPES, HERBLORE_RECIPES, JEWELRY_CRAFTING_RECIPES, DOUGH_RECIPES, RUNECRAFTING_RECIPES } from '../constants';
+import { PlayerSkill, SkillName, InventorySlot, ActiveCraftingAction, Equipment, WorldState } from '../../types';
+import { ITEMS, SMITHING_RECIPES, COOKING_RECIPES, INVENTORY_CAPACITY, CRAFTING_RECIPES, FLETCHING_RECIPES, GEM_CUTTING_RECIPES, SPINNING_RECIPES, HERBLORE_RECIPES, JEWELRY_CRAFTING_RECIPES, DOUGH_RECIPES, RUNECRAFTING_RECIPES, FIREMAKING_RECIPES } from '../constants';
 
 interface UseCraftingProps {
     skills: (PlayerSkill & { currentLevel: number; })[];
@@ -18,10 +18,14 @@ interface UseCraftingProps {
     setWindmillFlour: React.Dispatch<React.SetStateAction<number>>;
     equipment: Equipment;
     setEquipment: React.Dispatch<React.SetStateAction<Equipment>>;
+    worldState: WorldState;
+    setWorldState: React.Dispatch<React.SetStateAction<WorldState>>;
+    onCreateBonfire: (logId: string) => void;
+    onRefreshBonfire: (bonfireId: string, logId: string) => void;
 }
 
 export const useCrafting = (props: UseCraftingProps) => {
-    const { skills, hasItems, addLog, setActiveCraftingAction, inventory, modifyItem, addXp, checkQuestProgressOnSpin, checkQuestProgressOnSmith, activeCraftingAction, advanceTutorial, closeCraftingView, setWindmillFlour, equipment, setEquipment } = props;
+    const { skills, hasItems, addLog, setActiveCraftingAction, inventory, modifyItem, addXp, checkQuestProgressOnSpin, checkQuestProgressOnSmith, activeCraftingAction, advanceTutorial, closeCraftingView, setWindmillFlour, equipment, setEquipment, worldState, setWorldState, onCreateBonfire, onRefreshBonfire } = props;
 
     const handleSpinning = useCallback((recipeId: string, quantity: number = 1) => {
         const recipe = SPINNING_RECIPES.find(r => r.itemId === recipeId);
@@ -40,6 +44,28 @@ export const useCrafting = (props: UseCraftingProps) => {
             duration: 1200,
         });
     }, [skills, hasItems, addLog, setActiveCraftingAction]);
+
+    const handleStokeBonfire = useCallback((logId: string, bonfireId: string) => {
+        const recipe = FIREMAKING_RECIPES.find(r => r.logId === logId);
+        if (!recipe) { addLog("You can't burn that."); return; }
+        const firemakingLevel = skills.find(s => s.name === SkillName.Firemaking)?.currentLevel ?? 1;
+        if (firemakingLevel < recipe.level) { addLog(`You need a Firemaking level of ${recipe.level} to stoke with these logs.`); return; }
+        
+        const logCount = inventory.reduce((acc, slot) => slot?.itemId === logId ? acc + slot.quantity : acc, 0);
+        if (logCount === 0) { addLog("You don't have any of those logs."); return; }
+        
+        setActiveCraftingAction({
+            recipeId: logId,
+            recipeType: 'firemaking-stoke',
+            totalQuantity: logCount,
+            completedQuantity: 0,
+            successfulQuantity: 0,
+            startTime: Date.now(),
+            duration: 1250, // 25% slower
+            payload: { bonfireId }
+        });
+
+    }, [skills, inventory, addLog, setActiveCraftingAction]);
 
     const handleCrafting = useCallback((recipeId: string, quantity: number = 1) => {
         const leatherRecipe = CRAFTING_RECIPES.find(r => r.itemId === recipeId);
@@ -335,32 +361,40 @@ export const useCrafting = (props: UseCraftingProps) => {
                     levelReq = { skill: SkillName.Cooking, level: recipe.level };
                 }
                 break;
-            case 'firemaking': {
-                if (!hasItems([{ itemId: 'logs', quantity: 1 }, { itemId: 'tinderbox', quantity: 1 }])) {
-                    return { success: false, wasItemMade: false, logMessage: "You are missing items to light the fire." };
+            case 'firemaking-light': {
+                const logId = action.recipeId;
+                const recipe = FIREMAKING_RECIPES.find(r => r.logId === logId);
+                if (!recipe) return { success: false, wasItemMade: false, logMessage: "Invalid log type." };
+                if (!hasItems([{ itemId: logId, quantity: 1 }])) {
+                    return { success: false, wasItemMade: false, logMessage: "You ran out of logs." };
                 }
-                modifyItem('logs', -1, true);
-                addXp(SkillName.Firemaking, 40);
+                modifyItem(logId, -1, true);
+                addXp(SkillName.Firemaking, recipe.xp);
+                onCreateBonfire(logId);
+                return { success: true, wasItemMade: true };
+            }
+             case 'firemaking-stoke': {
+                const logId = action.recipeId;
+                const recipe = FIREMAKING_RECIPES.find(r => r.logId === logId);
+                if (!recipe) return { success: false, wasItemMade: false, logMessage: "Invalid log type." };
+                if (!hasItems([{ itemId: logId, quantity: 1 }])) {
+                    return { success: false, wasItemMade: false, logMessage: "You ran out of logs." };
+                }
+                modifyItem(logId, -1, true);
+                addXp(SkillName.Firemaking, recipe.xp);
 
-                const necklace = equipment.necklace;
-                if (necklace?.itemId === 'necklace_of_pyromancy' && (necklace.charges ?? 0) > 0) {
-                    const newCharges = (necklace.charges ?? 1) - 1;
-                    
-                    if (Math.random() < 0.1) {
-                        const coalAmount = Math.floor(Math.random() * 2) + 1;
-                        modifyItem('coal', coalAmount, false, undefined, { bypassAutoBank: true });
-                        addLog(`Your necklace glows, and you find ${coalAmount} coal in the embers!`);
-                    }
-
-                    if (newCharges > 0) {
-                        setEquipment(prev => ({ ...prev, necklace: { ...necklace, charges: newCharges }}));
-                    } else {
-                        addLog("Your Necklace of Pyromancy has run out of charges and turns to ash.");
-                        setEquipment(prev => ({ ...prev, necklace: null }));
+                if (Math.random() < 0.25) { // 25% chance for ashes
+                    modifyItem('ashes', 1, false, undefined, { bypassAutoBank: true });
+                }
+                if (Math.random() < 0.25) { // 25% chance for HP boost
+                    const boostAmount = recipe.tier;
+                    const currentBoost = worldState.hpBoost?.amount ?? 0;
+                    if (boostAmount > currentBoost) {
+                        setWorldState(ws => ({ ...ws, hpBoost: { amount: boostAmount, expiresAt: Date.now() + 30 * 60 * 1000 } }));
+                        addLog(`The warmth of the fire invigorates you, temporarily boosting your health by ${boostAmount}!`);
                     }
                 }
-
-                advanceTutorial('light-fire');
+                onRefreshBonfire(action.payload!.bonfireId!, logId);
                 return { success: true, wasItemMade: true };
             }
             case 'smithing-bar':
@@ -666,7 +700,7 @@ export const useCrafting = (props: UseCraftingProps) => {
         }
 
         return { success: true, wasItemMade: true };
-    }, [hasItems, modifyItem, addXp, inventory, checkQuestProgressOnSpin, checkQuestProgressOnSmith, advanceTutorial, closeCraftingView, setWindmillFlour, equipment, skills, setEquipment]);
+    }, [hasItems, modifyItem, addXp, inventory, checkQuestProgressOnSpin, checkQuestProgressOnSmith, advanceTutorial, closeCraftingView, setWindmillFlour, equipment, skills, setEquipment, setWorldState, onCreateBonfire, onRefreshBonfire]);
 
     const completeCraftingItemRef = useRef(completeCraftingItem);
     useEffect(() => {
@@ -707,7 +741,7 @@ export const useCrafting = (props: UseCraftingProps) => {
                 const finalItem = ITEMS[nextAction.recipeId];
                 const successfulCount = nextAction.successfulQuantity ?? 0;
                 
-                if (activeCraftingAction.recipeType !== 'firemaking') {
+                if (activeCraftingAction.recipeType !== 'firemaking-light') {
                     if (successfulCount > 0) {
                         let totalItemsMade = successfulCount;
                         const action = activeCraftingAction;
@@ -725,7 +759,7 @@ export const useCrafting = (props: UseCraftingProps) => {
                         const quantityText = (finalItem.doseable && finalItem.initialDoses && finalItem.initialDoses > 1) ? "" : `${totalItemsMade.toLocaleString()}x `;
                         const logMessageText = (finalItem.doseable && finalItem.initialDoses && finalItem.initialDoses > 1 && successfulCount === 1) ? `You finished making a ${finalItem.name}.` : `You finished making ${quantityText}${finalItem.name}.`;
                         addLog(logMessageText);
-                    } else if (activeCraftingAction.recipeType !== 'dough-making') { // Don't log failure for instant actions
+                    } else if (activeCraftingAction.recipeType !== 'dough-making' && activeCraftingAction.recipeType !== 'firemaking-stoke') { // Don't log failure for instant/continuous actions
                         addLog(`You failed to make any ${finalItem.name}.`);
                     }
                 }
@@ -749,5 +783,6 @@ export const useCrafting = (props: UseCraftingProps) => {
         handleFletching,
         handleGemCutting,
         handleInstantRunecrafting,
+        handleStokeBonfire,
     };
 };

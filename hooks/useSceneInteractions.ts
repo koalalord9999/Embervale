@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { POIActivity, PlayerQuestState, DialogueNode, Quest, DialogueResponse } from '../types';
+import { POIActivity, PlayerQuestState, DialogueNode, Quest, DialogueResponse, DialogueCheckRequirement, DialogueAction } from '../types';
 import { QUESTS } from '../constants';
 import { DialogueState, useUIState } from './useUIState';
 
@@ -10,90 +10,146 @@ interface SceneInteractionDependencies {
     addLog: (message: string) => void;
     onActivity: (activity: POIActivity) => void;
     setActiveDialogue: React.Dispatch<React.SetStateAction<DialogueState | null>>;
-    tutorialStage: number;
-    advanceTutorial: (condition: string) => void;
-    handleDialogueAction: (action: any) => boolean;
+    handleDialogueAction: (actions: DialogueAction[]) => void;
+    handleDialogueCheck: (requirements: DialogueCheckRequirement[]) => boolean;
 }
 
 export const useSceneInteractions = (poiId: string, deps: SceneInteractionDependencies) => {
-    const { playerQuests, startQuest, hasItems, addLog, onActivity, setActiveDialogue, tutorialStage, advanceTutorial, handleDialogueAction } = deps;
+    const { playerQuests, startQuest, hasItems, addLog, onActivity, setActiveDialogue, handleDialogueAction, handleDialogueCheck } = deps;
+
+    const onResponse = useCallback((response: DialogueResponse) => {
+        if (response.check) {
+            const checkResult = handleDialogueCheck(response.check.requirements);
+            if (checkResult) {
+                if (response.actions) {
+                    handleDialogueAction(response.actions);
+                }
+                setActiveDialogue(prev => prev ? { ...prev, currentNodeKey: response.check!.successNode } : null);
+            } else {
+                setActiveDialogue(prev => prev ? { ...prev, currentNodeKey: response.check!.failureNode } : null);
+            }
+        } else {
+            if (response.actions) {
+                handleDialogueAction(response.actions);
+            }
+            if (response.next) {
+                setActiveDialogue(prev => prev ? { ...prev, currentNodeKey: response.next! } : null);
+            } else {
+                setActiveDialogue(null);
+            }
+        }
+    }, [handleDialogueCheck, handleDialogueAction, setActiveDialogue]);
 
     const handleActivityClick = useCallback((activity: POIActivity) => {
-        if (tutorialStage === 0 && activity.type === 'npc' && activity.name === 'Leo the Guide' && poiId === 'enclave_start') {
-            advanceTutorial('start-tutorial');
-        }
-        if (tutorialStage === 29 && activity.type === 'npc' && activity.name === 'Leo the Guide' && poiId === 'enclave_departure_point') {
-            advanceTutorial('talk-to-guide-final');
-            return;
-        }
-
         if (activity.type === 'npc') {
             const { name, icon, dialogue, startNode, dialogueType } = activity;
             let finalStartNode = startNode;
             let finalDialogue = { ...dialogue };
 
             const associatedQuests = Object.values(QUESTS).filter(q => 
-                JSON.stringify(q.dialogue || {}).includes(`"${name}"`) ||
-                q.stages.some(stage => stage.requirement.type === 'talk' && stage.requirement.npcName === name) ||
-                JSON.stringify(dialogue).includes(q.id)
+                JSON.stringify(dialogue).includes(q.id) ||
+                q.stages.some(stage => stage.requirement.type === 'talk' && stage.requirement.npcName === name)
             );
 
             interface QuestDialogueEntryPoint {
                 nodeKey: string;
                 quest: Quest;
-                priority: number;
+                priority: number; // 5: hidden trigger, 4: complete stage, 3: in progress, 2: post-quest, 1: quest start
             }
-            const activeQuestEntryPoints: QuestDialogueEntryPoint[] = [];
-            
-            // Pass 1: Collect all active entry points (triggers, completions, in-progress)
+            const questEntryPoints: QuestDialogueEntryPoint[] = [];
+
+            // Collect all potential entry points
             for (const quest of associatedQuests) {
                 const playerQuestState = playerQuests.find(q => q.questId === quest.id);
 
-                if (playerQuestState && !playerQuestState.isComplete) {
-                    const stage = quest.stages[playerQuestState.currentStage];
-                    if (stage?.requirement.type === 'talk' && stage.requirement.npcName === name && stage.requirement.poiId === poiId) {
-                        const key = `complete_stage_${quest.id}_${playerQuestState.currentStage}`;
+                if (playerQuestState) { // Quest is started
+                    if (!playerQuestState.isComplete) {
+                        const currentStageIndex = playerQuestState.currentStage;
+                        const currentStage = quest.stages[currentStageIndex];
+                        const nextStage = quest.stages[currentStageIndex + 1];
+                        
+                        let requirementForNextStageIsMet = false;
+                        
+                        // Check if the current stage's requirement is met
+                        if (currentStage?.requirement.type === 'gather') {
+                            const req = currentStage.requirement as any;
+                            const itemsToGather = req.items || [{ itemId: req.itemId, quantity: req.quantity }];
+                            if (hasItems(itemsToGather)) {
+                                requirementForNextStageIsMet = true;
+                            }
+                        } else if (currentStage?.requirement.type === 'kill') {
+                            if (playerQuestState.progress >= currentStage.requirement.quantity) {
+                                requirementForNextStageIsMet = true;
+                            }
+                        }
+
+                        // Priority 4: A "turn-in" happens when the current stage's objective is done AND the next stage is to talk to the current NPC.
+                        if (requirementForNextStageIsMet && nextStage?.requirement.type === 'talk' && nextStage.requirement.npcName === name && nextStage.requirement.poiId === poiId) {
+                            const key = `complete_stage_${quest.id}_${currentStageIndex + 1}`;
+                            if (dialogue[key]) {
+                                questEntryPoints.push({ nodeKey: key, quest, priority: 4 });
+                            }
+                        }
+                        
+                        // Priority 3: In-progress dialogue
+                        let stageKey = `in_progress_${quest.id}_${playerQuestState.currentStage}`;
+                        if (quest.id === 'magical_runestone_discovery' && playerQuestState.currentStage === 2 && name === 'Wizard Elmsworth (Projection)') {
+                            if (hasItems([{ itemId: 'rune_essence', quantity: 5 }])) {
+                                stageKey = 'in_progress_magical_runestone_discovery_2_complete';
+                            }
+                        }
+                        if (dialogue[stageKey]) {
+                            questEntryPoints.push({ nodeKey: stageKey, quest, priority: 3 });
+                        }
+                    } else { // Quest is complete
+                        // Priority 2: Post-quest dialogue
+                        const key = `post_quest_${quest.id}`;
                         if (dialogue[key]) {
-                            activeQuestEntryPoints.push({ nodeKey: key, quest, priority: 4 });
+                            questEntryPoints.push({ nodeKey: key, quest, priority: 2 });
                         }
                     }
-                    
-                    let stageKey = `in_progress_${quest.id}_${playerQuestState.currentStage}`;
-                    if (quest.id === 'magical_runestone_discovery' && playerQuestState.currentStage === 2 && name === 'Wizard Elmsworth (Projection)') {
-                        if (hasItems([{ itemId: 'rune_essence', quantity: 5 }])) {
-                            stageKey = 'in_progress_magical_runestone_discovery_2_complete';
+                } else { // Quest not started yet
+                    if (quest.isHidden) {
+                        // Priority 5: Hidden quest trigger
+                        let triggerNode: string | undefined;
+                        if (quest.id === 'ancient_blade' && hasItems([{ itemId: 'rusty_iron_sword', quantity: 1 }]) && !playerQuests.some(q => q.questId === 'a_smiths_apprentice' && !q.isComplete)) {
+                            triggerNode = 'item_trigger_ancient_blade';
                         }
-                    }
-                    const questKey = `in_progress_${quest.id}`;
-                    if (dialogue[stageKey]) {
-                        activeQuestEntryPoints.push({ nodeKey: stageKey, quest, priority: 3 });
-                    } else if (dialogue[questKey]) {
-                        activeQuestEntryPoints.push({ nodeKey: questKey, quest, priority: 3 });
-                    }
-                } else if (!playerQuestState && quest.isHidden) {
-                    let triggerNode: string | undefined;
-                    if (quest.id === 'ancient_blade' && hasItems([{ itemId: 'rusty_iron_sword', quantity: 1 }])) {
-                        triggerNode = 'item_trigger_ancient_blade';
-                    } else if (quest.id === 'lost_heirloom' && hasItems([{ itemId: 'lost_heirloom', quantity: 1 }])) {
-                        triggerNode = 'item_trigger_lost_heirloom';
-                    }
-                    if (triggerNode && dialogue[triggerNode]) {
-                        activeQuestEntryPoints.push({ nodeKey: triggerNode, quest, priority: 5 });
+                        // Other hidden quests...
+                         if (quest.id === 'lost_heirloom' && hasItems([{ itemId: 'lost_heirloom', quantity: 1 }])) {
+                            triggerNode = 'item_trigger_lost_heirloom';
+                        }
+                        if (triggerNode && dialogue[triggerNode]) {
+                            questEntryPoints.push({ nodeKey: triggerNode, quest, priority: 5 });
+                        }
+                    } else {
+                        // Priority 1: Regular quest start dialogue
+                        const key = `quest_intro_${quest.id}`;
+                        if(dialogue[key]) {
+                            questEntryPoints.push({ nodeKey: key, quest, priority: 1 });
+                        }
                     }
                 }
             }
             
-            // Now, decide what to do based on the collected entry points
-            if (activeQuestEntryPoints.length > 1) {
+            // Add default dialogue with lowest priority if no other entry points match.
+            if (questEntryPoints.length === 0) {
+                 questEntryPoints.push({ nodeKey: startNode, quest: {} as Quest, priority: 0 });
+            }
+
+            // Determine the highest priority entry point to use
+            questEntryPoints.sort((a, b) => b.priority - a.priority);
+            const highestPriority = questEntryPoints[0].priority;
+            const topPriorityEntries = questEntryPoints.filter(e => e.priority === highestPriority);
+            
+            if (topPriorityEntries.length > 1) {
+                // If multiple top-priority entries exist (e.g., two quests can be completed), create a hub.
                 const hubNodeKey = 'dynamic_quest_hub';
-                const hubResponses: DialogueResponse[] = activeQuestEntryPoints
-                    .sort((a, b) => b.priority - a.priority)
-                    .map(entry => ({
-                        text: `About '${entry.quest.name}'...`,
-                        next: entry.nodeKey
-                    }));
-                
-                hubResponses.push({ text: "Something else...", action: 'close' });
+                const hubResponses: DialogueResponse[] = topPriorityEntries.map(entry => ({
+                    text: `About '${entry.quest.name}'...`,
+                    next: entry.nodeKey
+                }));
+                 hubResponses.push({ text: "Something else...", next: 'default_dialogue' });
 
                 const hubNode: DialogueNode = {
                     npcName: name,
@@ -103,30 +159,10 @@ export const useSceneInteractions = (poiId: string, deps: SceneInteractionDepend
                 };
                 finalDialogue[hubNodeKey] = hubNode;
                 finalStartNode = hubNodeKey;
-                
-            } else if (activeQuestEntryPoints.length === 1) {
-                finalStartNode = activeQuestEntryPoints[0].nodeKey;
+            } else if (topPriorityEntries.length === 1) {
+                finalStartNode = topPriorityEntries[0].nodeKey;
             } else {
-                let highestPriorityNode: string | null = null;
-                let priority = 0;
-                
-                for (const quest of associatedQuests) {
-                    const playerQuestState = playerQuests.find(q => q.questId === quest.id);
-                    if (playerQuestState && playerQuestState.isComplete && priority < 2) {
-                         const key = `post_quest_${quest.id}`;
-                         if (dialogue[key]) {
-                             highestPriorityNode = key;
-                             priority = 2;
-                         }
-                    } else if (!playerQuestState && !quest.isHidden && priority < 1) {
-                        highestPriorityNode = startNode;
-                        priority = 1;
-                    }
-                }
-                
-                if (highestPriorityNode) {
-                    finalStartNode = highestPriorityNode;
-                }
+                finalStartNode = startNode; // Fallback
             }
 
             if (dialogueType === 'random') {
@@ -144,25 +180,14 @@ export const useSceneInteractions = (poiId: string, deps: SceneInteractionDepend
                 nodes: finalDialogue,
                 currentNodeKey: finalStartNode,
                 onEnd: () => setActiveDialogue(null),
-                onAction: (action) => {
-                    const success = handleDialogueAction(action);
-                    if (success) {
-                        setActiveDialogue(null);
-                    } else if (action.failureNext) {
-                         setActiveDialogue(prev => prev ? { ...prev, currentNodeKey: action.failureNext } : null);
-                    } else {
-                        setActiveDialogue(null);
-                    }
-                },
-                onNavigate: (nextNodeKey) => {
-                    setActiveDialogue(prev => prev ? { ...prev, currentNodeKey: nextNodeKey } : null);
-                }
+                onResponse: onResponse,
+                handleDialogueCheck: handleDialogueCheck,
             });
             return;
         }
         
         onActivity(activity);
-    }, [playerQuests, startQuest, hasItems, addLog, onActivity, poiId, setActiveDialogue, tutorialStage, advanceTutorial, handleDialogueAction]);
+    }, [playerQuests, startQuest, hasItems, addLog, onActivity, poiId, setActiveDialogue, handleDialogueAction, handleDialogueCheck, onResponse]);
 
     return { handleActivityClick };
 };

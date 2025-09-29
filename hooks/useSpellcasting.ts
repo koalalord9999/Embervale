@@ -45,21 +45,37 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
             return;
         }
 
-        spell.runes.forEach(rune => inv.modifyItem(rune.itemId, -rune.quantity, true));
-        char.addXp(SkillName.Magic, spell.xp);
-
         if (spell.type === 'utility-enchant') {
             const enchantedItemId = ENCHANTMENT_MAP[target.item.itemId];
             if (enchantedItemId) {
+                spell.runes.forEach(rune => inv.modifyItem(rune.itemId, -rune.quantity, true));
+                char.addXp(SkillName.Magic, spell.xp);
                 inv.modifyItem(target.item.itemId, -1, true);
                 inv.modifyItem(enchantedItemId, 1, false, undefined, { bypassAutoBank: true });
                 addLog(`You enchant the ${ITEMS[target.item.itemId].name}.`);
+            } else {
+                addLog(`You cannot enchant this item with ${spell.name}.`);
             }
+        } else if (spell.type === 'utility-alchemy') {
+            const itemData = ITEMS[target.item.itemId];
+            if (!itemData || itemData.value === 0 || target.item.noted) {
+                addLog("This item cannot be transmuted.");
+                return;
+            }
+            
+            spell.runes.forEach(rune => inv.modifyItem(rune.itemId, -rune.quantity, true));
+            char.addXp(SkillName.Magic, spell.xp);
+
+            const coinValue = Math.floor(itemData.value * (spell.id === 'greater_transmutation' ? 0.6 : 0.3));
+            inv.modifyItem(target.item.itemId, -1, true);
+            inv.modifyItem('coins', coinValue, true);
+            addLog(`You transmute the ${itemData.name} into ${coinValue} coins.`);
         }
+
     }, [char, inv, addLog, ui]);
 
     const onCastSpell = useCallback((spell: Spell) => {
-        if (ui.isBusy) {
+        if (ui.isBusy && spell.type !== 'utility-teleport') {
             addLog("You are busy.");
             return;
         }
@@ -78,15 +94,17 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
             }
             const isCurrentlyAutocasting = char.autocastSpell?.id === spell.id;
             
-            if (!isCurrentlyAutocasting) {
+            if (isCurrentlyAutocasting) {
+                // User clicked the spell that is already selected. Just close the panel.
+                ui.setIsSelectingAutocastSpell(false);
+                return;
+            } else {
+                // User clicked a new spell (or had no spell selected). Set it.
                 char.setAutocastSpell(spell);
                 addLog(`Autocast spell set to: ${spell.name}.`);
-            } else {
-                char.setAutocastSpell(null);
-                addLog('Autocast spell cleared.');
+                ui.setIsSelectingAutocastSpell(false);
+                return;
             }
-            ui.setIsSelectingAutocastSpell(false);
-            return;
         }
 
         if (spell.type === 'combat') {
@@ -108,7 +126,7 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
             ui.setActivePanel('inventory');
             return;
         }
-    
+
         if (!inv.hasItems(spell.runes)) {
             addLog("You do not have enough runes to cast this spell.");
             return;

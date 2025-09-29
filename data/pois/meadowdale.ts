@@ -102,7 +102,7 @@ export const meadowdalePois: Record<string, POI> = {
                         text: "Hmph. Another adventurer, clogging up the square. Don't you have some dragons to slay or something?",
                         responses: [
                             { text: "You seem troubled. What's on your mind?", next: 'quest_intro_goblin_menace' },
-                            { text: "Just passing through, old-timer.", action: 'close' },
+                            { text: "Just passing through, old-timer." },
                         ]
                     },
                     quest_intro_goblin_menace: {
@@ -111,7 +111,7 @@ export const meadowdalePois: Record<string, POI> = {
                         text: "Troubled? I'm beyond troubled! I'm incensed! It's this dreadful racket coming from the Stonebreak Mine. Day and night, clang, clang, bash! A man can't get a moment's peace!",
                         responses: [
                             { text: "What kind of racket?", next: 'situation_goblin_menace' },
-                            { text: "Have you tried earplugs?", action: 'close' },
+                            { text: "Have you tried earplugs?" },
                         ]
                     },
                     situation_goblin_menace: {
@@ -127,8 +127,8 @@ export const meadowdalePois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
                         text: "I want you to go in there and give them a taste of their own medicine! A little 'persuasion', if you will. Silence five of those noisy little brutes, and I'll make it worth your while. My sanity is a valuable thing, you know.",
                         responses: [
-                            { text: "Alright, I'll restore the peace. For a price.", action: 'accept_quest', questId: 'goblin_menace' },
-                            { text: "Sounds dangerous. Not my problem.", action: 'close' },
+                            { text: "Alright, I'll restore the peace. For a price.", actions: [{ type: 'start_quest', questId: 'goblin_menace' }] },
+                            { text: "Sounds dangerous. Not my problem." },
                         ]
                     },
                     in_progress_goblin_menace_0: {
@@ -137,12 +137,12 @@ export const meadowdalePois: Record<string, POI> = {
                         text: "What are you waiting for? My ears are still ringing! Get over to that mine and sort out those noisy goblins!",
                         responses: []
                     },
-                    complete_stage_goblin_menace_1: {
+                    in_progress_goblin_menace_1: {
                         npcName: 'Old Man Fitzwilliam',
                         npcIcon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
                         text: "Ah, the sweet sound of... blessed silence! You've done it! My head feels clearer already. The birds are singing again! Here's your reward, well-earned.",
                         responses: [
-                            { text: "Glad I could help.", action: 'complete_stage', questId: 'goblin_menace' }
+                            { text: "Glad I could help.", actions: [{ type: 'advance_quest', questId: 'goblin_menace' }] }
                         ]
                     },
                     post_quest_goblin_menace: {
@@ -211,7 +211,7 @@ export const meadowdalePois: Record<string, POI> = {
                         text: "Welcome to my smithy. The forge is always hot, and the anvil is always ready. Can I help you with something?",
                         responses: [
                             { text: "I'm looking for work. Can I help you?", next: 'quest_intro_a_smiths_apprentice' },
-                            { text: "Just looking around.", action: 'close' },
+                            { text: "Just looking around." },
                         ]
                     },
                     // --- A Smith's Apprentice ---
@@ -221,7 +221,7 @@ export const meadowdalePois: Record<string, POI> = {
                         text: "Help? You look like you're not afraid of a bit of hard work. I could use some, and you could learn a valuable skill. Interested?",
                         responses: [
                             { text: "What do you need help with?", next: 'details_a_smiths_apprentice' },
-                            { text: "I'm not interested, thanks.", action: 'close' },
+                            { text: "I'm not interested, thanks." },
                         ],
                     },
                     details_a_smiths_apprentice: {
@@ -229,7 +229,7 @@ export const meadowdalePois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
                         text: "I need ore. The foundation of all good smithing is good metal. The local mine is full of Copper and Tin. Bring me one of each, and I'll show you the first step of turning rock into a weapon.",
                         responses: [
-                            { text: "I'll be back with your ore.", action: 'accept_quest', questId: 'a_smiths_apprentice' },
+                            { text: "I'll be back with your ore.", actions: [{ type: 'start_quest', questId: 'a_smiths_apprentice' }] },
                         ],
                     },
                     in_progress_a_smiths_apprentice_0: {
@@ -238,12 +238,12 @@ export const meadowdalePois: Record<string, POI> = {
                         text: "The forge doesn't wait forever, you know. Have you gathered that Copper and Tin ore for me yet?",
                         responses: []
                     },
-                    complete_stage_a_smiths_apprentice_1: {
+                    in_progress_a_smiths_apprentice_1: {
                         npcName: 'Valerius the Master Smith',
                         npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
                         text: "Ah, you've returned! Let's have a look at that ore... Perfect! Now, for your first lesson. Take this bronze bar. I made it from the ore you brought. Now, go to the anvil and smith it into a Bronze Dagger.",
                         responses: [
-                            { text: "Thank you, I'll get to it.", action: 'complete_stage', questId: 'a_smiths_apprentice' }
+                            { text: "Thank you, I'll get to it.", actions: [{ type: 'advance_quest', questId: 'a_smiths_apprentice' }] }
                         ]
                     },
                     in_progress_a_smiths_apprentice_2: {
@@ -252,12 +252,12 @@ export const meadowdalePois: Record<string, POI> = {
                         text: "Don't just stand there holding that bar, the anvil is right over there! Turn that metal into something useful.",
                         responses: []
                     },
-                    complete_stage_a_smiths_apprentice_3: {
+                    in_progress_a_smiths_apprentice_3: {
                         npcName: 'Valerius the Master Smith',
                         npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
                         text: "Let me see that dagger... Not bad, not bad at all for a first try! You've got potential. Keep practicing, and you'll be a fine smith. Here's something for your trouble.",
                         responses: [
-                            { text: "Thank you for the lesson!", action: 'complete_stage', questId: 'a_smiths_apprentice' }
+                            { text: "Thank you for the lesson!", actions: [{ type: 'advance_quest', questId: 'a_smiths_apprentice' }] }
                         ]
                     },
                     post_quest_a_smiths_apprentice: {
@@ -280,7 +280,7 @@ export const meadowdalePois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
                         text: "The core is iron. I'll need 5 Iron Ores to reforge the blade and draw out its true strength. Bring them to me, and I'll see what I can do. It would be a crime to let a blade like this turn to dust.",
                         responses: [
-                            { text: "I'll get the ore for you.", action: 'accept_quest', questId: 'ancient_blade' }
+                            { text: "I'll get the ore for you.", actions: [{ type: 'start_quest', questId: 'ancient_blade' }] }
                         ]
                     },
                     in_progress_ancient_blade_1: {
@@ -289,12 +289,12 @@ export const meadowdalePois: Record<string, POI> = {
                         text: "Have you gathered those 5 Iron Ores yet? That old sword is practically humming, waiting to be reborn.",
                         responses: []
                     },
-                    complete_stage_ancient_blade_2: {
+                    in_progress_ancient_blade_2: {
                         npcName: 'Valerius the Master Smith',
                         npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
                         text: "Excellent! With this ore, I can restore the blade. Give me a moment... There! Good as new. A fine Iron Sword for your troubles. Take good care of it.",
                         responses: [
-                            { text: "Thank you, Valerius!", action: 'complete_stage', questId: 'ancient_blade' }
+                            { text: "Thank you, Valerius!", actions: [{ type: 'advance_quest', questId: 'ancient_blade' }] }
                         ]
                     },
                     post_quest_ancient_blade: {
@@ -349,9 +349,21 @@ export const meadowdalePois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/barkeep_grimley.png',
                         text: "You've got good taste! I import the best beer in the region, all the way from Silverhaven. None of that watered-down rubbish you get elsewhere. Fancy a pint? It's only 2 coins.",
                         responses: [
-                            { text: "Yes please.", action: 'custom', customActionId: 'buy_beer' },
-                            { text: "No thanks, I'm not much of a drinker.", action: 'close' },
+                            { text: "Yes please.", check: { requirements: [{ type: 'coins', amount: 2 }], successNode: 'buy_drink_success', failureNode: 'buy_drink_fail' }, actions: [{ type: 'take_coins', amount: 2 }, { type: 'give_item', itemId: 'beer', quantity: 1 }] },
+                            { text: "No thanks, I'm not much of a drinker." },
                         ]
+                    },
+                    buy_drink_success: {
+                        npcName: 'Barkeep Grimley',
+                        npcIcon: '/assets/npcChatHeads/barkeep_grimley.png',
+                        text: "Here you are. Enjoy!",
+                        responses: []
+                    },
+                    buy_drink_fail: {
+                        npcName: 'Barkeep Grimley',
+                        npcIcon: '/assets/npcChatHeads/barkeep_grimley.png',
+                        text: "Sorry, you don't have enough coins for that.",
+                        responses: []
                     },
                     rent_room_intro: {
                         npcName: 'Barkeep Grimley',
@@ -366,9 +378,15 @@ export const meadowdalePois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/barkeep_grimley.png',
                         text: "A room for the night will cost you 10 coins. It'll restore your health and make you feel right as rain. What do you say?",
                         responses: [
-                            { text: "Yea, sure. I'll take a room.", action: 'custom', customActionId: 'rent_room' },
-                            { text: "Nah, I like sleeping on the streets.", action: 'close' },
+                            { text: "Yea, sure. I'll take a room.", check: { requirements: [{ type: 'coins', amount: 10 }], successNode: 'rent_room_success', failureNode: 'buy_drink_fail' }, actions: [{ type: 'take_coins', amount: 10 }, { type: 'heal', amount: 'full' }] },
+                            { text: "Nah, I like sleeping on the streets." },
                         ]
+                    },
+                    rent_room_success: {
+                        npcName: 'Barkeep Grimley',
+                        npcIcon: '/assets/npcChatHeads/barkeep_grimley.png',
+                        text: "Excellent choice. Sweet dreams!",
+                        responses: []
                     }
                 },
                 startNode: 'start',
@@ -407,7 +425,7 @@ export const meadowdalePois: Record<string, POI> = {
                     start: {
                         npcName: 'Librarian Elara',
                         npcIcon: '/assets/npcChatHeads/librarian_elara.png',
-                        text: "Shh! This is a place of learning, not a tavern.\n\nFeel free to browse, but do it quietly. The knowledge of ages rests on these shelves.\n\nThis town was founded on the ruins of an older settlement from before the Age of Kings. No one knows who built the original foundations.\n\nThe road south to Oakhaven used to be a major trade route. Now, with the bandits, it's a shadow of its former self.",
+                        text: "Shh! This is a place of learning, not a tavern.\n\nFeel free to browse, but do it quietly. The knowledge of ages rests on these shelves.\n\nThe town was founded on the ruins of an older settlement from before the Age of Kings. No one knows who built the original foundations.\n\nThe road south to Oakhaven used to be a major trade route. Now, with the bandits, it's a shadow of its former self.",
                         responses: []
                     }
                 },
@@ -422,18 +440,34 @@ export const meadowdalePois: Record<string, POI> = {
                     default_dialogue: {
                         npcName: 'Wizard Elmsworth',
                         npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
-                        text: "Ah, an adventurer! Perfect. You have the look of someone not easily startled. I've made a discovery of some significance, but I require... a test subject.",
-                        responses: [
-                            { text: "What kind of discovery?", next: 'quest_intro_magical_runestone_discovery' },
-                            { text: "I'm not interested in being a test subject.", action: 'close' },
-                        ]
+                        text: "Ah, hello there. Fascinating research to be done, fascinating!",
+                        responses: []
                     },
                     quest_intro_magical_runestone_discovery: {
                         npcName: 'Wizard Elmsworth',
                         npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
-                        text: "A magical one! I've been researching ancient teleportation magics. I believe I've perfected a spell that can transport a person to a location keyed to a specific magical resonance. I've found such a resonance, but I've yet to test it on a living being.",
+                        text: "Ah, an adventurer! Perfect. You have the look of someone not easily startled. I've made a discovery of some significance, a magical one!",
+                        responses: [
+                            { text: "(Continue)", next: 'quest_intro_magical_runestone_discovery_b' }
+                        ]
+                    },
+                    quest_intro_magical_runestone_discovery_b: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "I've been researching ancient teleportation magics and believe I've perfected a spell to transport someone to a location keyed to a specific magical resonance. I've found such a resonance, but I've yet to test it on a living being.",
                         responses: [
                             { text: "You want to teleport me somewhere?", next: 'details_magical_runestone_discovery' },
+                            { text: "This sounds a bit complicated...", next: 'mrd_complicated_response' },
+                            { text: "I'm not interested in being a test subject." },
+                        ]
+                    },
+                    mrd_complicated_response: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "Not at all, my dear adventurer! The complex part is my research, which is already done. For you, it's quite simple: stand still, experience a brief moment of magical translocation, and then explore a new, undiscovered location! Shall we proceed?",
+                        responses: [
+                            { text: "Alright, tell me more.", next: 'details_magical_runestone_discovery' },
+                            { text: "No, I'd rather not." },
                         ]
                     },
                     details_magical_runestone_discovery: {
@@ -441,17 +475,24 @@ export const meadowdalePois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
                         text: "Precisely! It should be perfectly safe. Mostly. The resonance points to a location deep within the mountains. If you'd be willing, I could send you there to investigate. Who knows what you might find!",
                         responses: [
-                            { text: "Alright, I'll do it. For the sake of science!", action: 'accept_quest', questId: 'magical_runestone_discovery' },
-                            { text: "'Mostly' safe isn't good enough for me.", action: 'close' },
+                            { text: "Alright, I'll do it. For the sake of science!", actions: [{ type: 'start_quest', questId: 'magical_runestone_discovery' }], next: 'in_progress_magical_runestone_discovery_0' },
+                            { text: "I'm still not convinced this is a good idea.", next: 'mrd_decline_final' },
+                            { text: "'Mostly' safe isn't good enough for me." },
                         ]
+                    },
+                    mrd_decline_final: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "A pity! The pursuit of knowledge requires a certain... boldness. Perhaps another time, then. Do let me know if you change your mind.",
+                        responses: []
                     },
                     in_progress_magical_runestone_discovery_0: {
                         npcName: 'Wizard Elmsworth',
                         npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
                         text: "Excellent! Before I can teleport you, I must first perform an attunement spell to unlock the destination. Shall I proceed?",
                         responses: [
-                            { text: "Yes, perform the attunement.", action: 'complete_stage', questId: 'magical_runestone_discovery' },
-                            { text: "Not just yet.", action: 'close' },
+                            { text: "Yes, perform the attunement.", actions: [{ type: 'advance_quest', questId: 'magical_runestone_discovery' }], next: 'in_progress_magical_runestone_discovery_1' },
+                            { text: "Not just yet." },
                         ]
                     },
                     in_progress_magical_runestone_discovery_1: {
@@ -459,41 +500,91 @@ export const meadowdalePois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
                         text: "The attunement is complete! You will find a temporary projection of myself there. I don't know how long I can keep it active, so you best hurry along. Now for the teleport. Hold still... *Materia Translocatus!*",
                         responses: [
-                            { text: "(You feel a strange pulling sensation...)", action: 'custom', customActionId: 'teleport_to_rune_mine' },
+                            { text: "(You feel a strange pulling sensation...)", actions: [{ type: 'teleport', poiId: 'rune_essence_mine' }] },
                         ]
                     },
-                    in_progress_magical_runestone_discovery_2: {
+                    in_progress_magical_runestone_discovery_3: {
                         npcName: 'Wizard Elmsworth',
                         npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
-                        text: "Have you returned from that strange cavern? Did you manage to mine five chunks of that pulsating rock for me?",
+                        text: "Ah, you've returned from the essence mine! How fares the sample collection?",
+                        conditionalResponses: [
+                            {
+                                text: "I have all five chunks right here.",
+                                check: {
+                                    requirements: [{ type: 'items', items: [{ itemId: 'rune_essence', quantity: 5, operator: 'gte' }] }],
+                                    successNode: 'mrd_complete_stage_2',
+                                    failureNode: ''
+                                }
+                            },
+                            {
+                                text: "I have some of them, but not all.",
+                                check: {
+                                    requirements: [
+                                        { type: 'items', items: [{ itemId: 'rune_essence', quantity: 1, operator: 'gte' }] },
+                                        { type: 'items', items: [{ itemId: 'rune_essence', quantity: 5, operator: 'lt' }] }
+                                    ],
+                                    successNode: 'mrd_has_some_essence',
+                                    failureNode: ''
+                                }
+                            },
+                            {
+                                text: "I haven't gathered any yet.",
+                                check: {
+                                    requirements: [{ type: 'items', items: [{ itemId: 'rune_essence', quantity: 0, operator: 'eq' }] }],
+                                    successNode: 'mrd_has_no_essence',
+                                    failureNode: ''
+                                }
+                            }
+                        ],
+                        responses: []
+                    },
+                    mrd_has_some_essence: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "You've made a good start, but I need a full five samples to calibrate my instruments properly. Bring me the rest when you have them.",
                         responses: [
-                            { text: "Yes, I have them right here.", action: 'complete_stage', questId: 'magical_runestone_discovery' },
-                            { text: "Not yet, I came back for supplies.", next: 'offer_teleport_back' }
+                            { text: "(Continue)", next: 'offer_teleport_back' }
+                        ]
+                    },
+                    mrd_has_no_essence: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "You've returned empty-handed? Tsk, tsk. The discovery awaits! You must return to the mine and gather those samples.",
+                        responses: [
+                            { text: "(Continue)", next: 'offer_teleport_back' }
                         ]
                     },
                     offer_teleport_back: {
                         npcName: 'Wizard Elmsworth',
                         npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
-                        text: "Ah, I see. Well, no sense in walking all that way again. I can send you straight back to the cavern if you're ready. Shall I?",
+                        text: "No sense in walking all that way. I can send you straight back to the cavern if you're ready. Shall I?",
                         responses: [
-                            { text: "Yes, please send me back.", action: 'custom', customActionId: 'teleport_to_rune_mine' },
-                            { text: "No thanks, I'll walk.", action: 'close' },
+                            { text: "Yes, please send me back.", actions: [{ type: 'teleport', poiId: 'rune_essence_mine' }] },
+                            { text: "No thanks, I'll walk." },
                         ]
                     },
-                    complete_stage_magical_runestone_discovery_3: {
+                    mrd_complete_stage_2: {
                         npcName: 'Wizard Elmsworth',
                         npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
-                        text: "You have them! Wonderful! Now... what in the blazes? My trinket! The one I keep in my pocket for good luck... it's vibrating like a bee in a jam jar now that you're near with those rocks! It's a peculiar thing I found on my travels. It always seemed to pull faintly to the north, but I could never investigate. The path through the Murky Riverbank is blocked, and they only let seasoned adventurers who've dealt with the town's goblin problem pass. Ahem.",
+                        text: "You have them! Wonderful! Now... what in the blazes? My trinket! The one I keep in my pocket for good luck... it's vibrating like a bee in a jam jar now that you're near with those rocks!",
                         responses: [
-                            { text: "So what now?", next: 'mrd_3_c' }
+                            { text: "(Continue)", next: 'mrd_complete_stage_2_b' }
                         ]
                     },
-                    mrd_3_c: {
+                    mrd_complete_stage_2_b: {
                         npcName: 'Wizard Elmsworth',
                         npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
-                        text: "Since you're a seasoned adventurer, perhaps you can find where it leads! Here, take the trinket. And keep the rock chunks, they seem to be the key! Find what this trinket is pulling towards, and report back to me immediately!",
+                        text: "It's a peculiar thing I found on my travels. It always seemed to pull faintly to the north, but I could never investigate. Since you're a seasoned adventurer, perhaps you can find where it leads!",
                         responses: [
-                            { text: "I'll see what I can find.", action: 'complete_stage', questId: 'magical_runestone_discovery' }
+                            { text: "(Continue)", next: 'mrd_complete_stage_2_c' }
+                        ]
+                    },
+                    mrd_complete_stage_2_c: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "Here, take the trinket. And keep the rock chunks, they seem to be the key! Find what this trinket is pulling towards, and report back to me immediately!",
+                        responses: [
+                            { text: "I'll see what I can find.", actions: [{ type: 'advance_quest', questId: 'magical_runestone_discovery'}, {type: 'give_item', itemId: 'gust_talisman', quantity: 1 }] }
                         ]
                     },
                     in_progress_magical_runestone_discovery_4: {
@@ -502,7 +593,7 @@ export const meadowdalePois: Record<string, POI> = {
                         text: "Any luck finding the source of that trinket's pull? It seemed to be attracted north of the Whispering Woods.",
                         responses: []
                     },
-                    complete_stage_magical_runestone_discovery_5: {
+                    in_progress_magical_runestone_discovery_5: {
                         npcName: 'Wizard Elmsworth',
                         npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
                         text: "You're back! Did you find where the trinket was leading you?",
@@ -515,7 +606,7 @@ export const meadowdalePois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
                         text: "An altar! Of course! The resonance... the energy... it all makes sense! I believe the trinket and the stones are meant to be used together *at* the altar. You must go back and place them upon it!",
                         responses: [
-                            { text: "Alright, I'll go back and try it.", action: 'complete_stage', questId: 'magical_runestone_discovery' }
+                            { text: "Alright, I'll go back and try it.", actions: [{ type: 'advance_quest', questId: 'magical_runestone_discovery' }] }
                         ]
                     },
                     in_progress_magical_runestone_discovery_6: {
@@ -524,12 +615,28 @@ export const meadowdalePois: Record<string, POI> = {
                         text: "Don't delay! We could be on the verge of a monumental discovery! Take the trinket and the essence back to that altar!",
                         responses: []
                     },
-                    complete_stage_magical_runestone_discovery_7: {
+                    in_progress_magical_runestone_discovery_7: {
                         npcName: 'Wizard Elmsworth',
                         npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
-                        text: "You have them! Actual runes! And you made them yourself! By my beard, you've done it! You've rediscovered the lost art of Runecrafting! The trinket must be a Talisman, and these stones... this 'Rune Essence'... they are the key! This changes everything! The study of magic will be advanced by centuries. Thank you, adventurer. Please, take this for your invaluable contribution to science! I have another talisman you might find useful.",
+                        text: "You have them! Actual runes! And you made them yourself! By my beard, you've done it! You've rediscovered the lost art of Runecrafting!",
                         responses: [
-                            { text: "It was a pleasure.", action: 'complete_stage', questId: 'magical_runestone_discovery' }
+                            { text: "(Continue)", next: 'mrd_7_b' }
+                        ]
+                    },
+                    mrd_7_b: {
+                        npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "The trinket must be a Talisman, and these stones... this 'Rune Essence'... they are the key! This changes everything! The study of magic will be advanced by centuries.",
+                        responses: [
+                             { text: "(Continue)", next: 'mrd_7_c' }
+                        ]
+                    },
+                    mrd_7_c: {
+                         npcName: 'Wizard Elmsworth',
+                        npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+                        text: "Thank you, adventurer. Please, take this for your invaluable contribution to science! I have another talisman you might find useful.",
+                        responses: [
+                             { text: "It was a pleasure.", actions: [{ type: 'advance_quest', questId: 'magical_runestone_discovery' }] }
                         ]
                     },
                     post_quest_magical_runestone_discovery: {
@@ -563,7 +670,7 @@ export const meadowdalePois: Record<string, POI> = {
                         text: "State your business. We have important matters to attend to here in Meadowdale. Please, no loitering.",
                         responses: [
                             { text: "I'm an adventurer. Do you have any work for me?", next: 'quest_intro_bandit_toll' },
-                            { text: "I understand. I'll be on my way.", action: 'close' },
+                            { text: "I understand. I'll be on my way." },
                         ]
                     },
                     quest_intro_bandit_toll: {
@@ -572,7 +679,7 @@ export const meadowdalePois: Record<string, POI> = {
                         text: "Work? As a matter of fact, yes! Thank the stars. I'm at my wit's end. The lifeblood of this town, our trade with Oakhaven, has been severed by a pack of audacious thugs on the southern road. They're calling it a 'toll'.",
                         responses: [
                             { text: "What's the situation?", next: 'situation_bandit_toll' },
-                            { text: "I'm not interested in road maintenance.", action: 'close' },
+                            { text: "I'm not interested in road maintenance." },
                         ],
                     },
                     situation_bandit_toll: {
@@ -588,8 +695,8 @@ export const meadowdalePois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/clerk_augustus.png',
                         text: "The Meadowdale council has authorized a significant bounty. Remove five of these roadblocks—permanently—and you will be rewarded not just with coin, but with the gratitude of two towns. The road to Oakhaven simply must be reopened. Can you do this?",
                         responses: [
-                            { text: "Consider it done. I'll clear the road.", action: 'accept_quest', questId: 'bandit_toll' },
-                            { text: "I'd rather not get my hands dirty.", action: 'close' },
+                            { text: "Consider it done. I'll clear the road.", actions: [{ type: 'start_quest', questId: 'bandit_toll' }] },
+                            { text: "I'd rather not get my hands dirty." },
                         ],
                     },
                     in_progress_bandit_toll_0: {
@@ -598,12 +705,12 @@ export const meadowdalePois: Record<string, POI> = {
                         text: "Every moment you delay, another merchant considers taking their business elsewhere. Are the roads clear yet? My ledgers are starting to look grim.",
                         responses: []
                     },
-                    complete_stage_bandit_toll_1: {
+                    in_progress_bandit_toll_1: {
                         npcName: 'Clerk Augustus',
                         npcIcon: '/assets/npcChatHeads/clerk_augustus.png',
                         text: "You have? Truly? I can hear the sound of commerce returning already! You've done a great service not just to Meadowdale, but to Oakhaven as well. On behalf of the council, please accept this bounty. You've more than earned it.",
                         responses: [
-                            { text: "A pleasure doing business.", action: 'complete_stage', questId: 'bandit_toll' }
+                            { text: "A pleasure doing business.", actions: [{ type: 'advance_quest', questId: 'bandit_toll' }] }
                         ]
                     },
                     post_quest_bandit_toll: {

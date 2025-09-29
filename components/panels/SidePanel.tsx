@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useUIState, TooltipState } from '../../hooks/useUIState';
+import { useUIState } from '../../hooks/useUIState';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useInventory } from '../../hooks/useInventory';
 import { useQuests } from '../../hooks/useQuests';
@@ -50,44 +50,17 @@ interface SidePanelProps {
     isEquipmentStatsOpen?: boolean;
 }
 
-const PanelIcon: React.FC<{
-    icon: string;
-    label: string;
-    isActive: boolean;
-    onClick: () => void;
-    setTooltip: (tooltip: TooltipState | null) => void;
-    tutorialId?: string;
-}> = ({ icon, label, isActive, onClick, setTooltip, tutorialId }) => {
-
-    const handleMouseEnter = (e: React.MouseEvent) => {
-        setTooltip({
-            content: label,
-            position: { x: e.clientX, y: e.clientY }
-        });
-    };
-
-    const handleMouseLeave = () => {
-        setTooltip(null);
-    };
-    
-    const handleClick = () => {
-        setTooltip(null); // Close tooltip on click as requested
-        onClick();
-    };
-
-    return (
-        <button 
-            data-tutorial-id={tutorialId}
-            onClick={handleClick} 
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-            className={`p-2 rounded-md transition-colors ${isActive ? 'bg-yellow-700' : 'bg-gray-800 hover:bg-gray-700'}`}
-            aria-label={label}
-        >
-            <img src={`https://api.iconify.design/game-icons:${icon}.svg`} alt={label} className="w-6 h-6 filter invert" />
-        </button>
-    );
-};
+const PanelIcon: React.FC<{ icon: string, label: string, isActive: boolean, onClick: () => void, tutorialId?: string }> = ({ icon, label, isActive, onClick, tutorialId }) => (
+    <button 
+        data-tutorial-id={tutorialId}
+        onClick={onClick} 
+        className={`p-2 rounded-md transition-colors ${isActive ? 'bg-yellow-700' : 'bg-gray-800 hover:bg-gray-700'}`}
+        aria-label={label}
+        data-tooltip-content={label}
+    >
+        <img src={`https://api.iconify.design/game-icons:${icon}.svg`} alt={label} className="w-6 h-6 filter invert" />
+    </button>
+);
 
 const PlaceholderIcon: React.FC = () => (
     <button
@@ -166,13 +139,13 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                 />
                 {/* Top row */}
                 <div className="grid grid-cols-7 gap-1 p-1 bg-black/30 border-b-2 border-gray-600">
-                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-combat" icon="swords-emblem" label="Combat Styles" isActive={activePanel==='combat'} onClick={() => setActivePanel('combat')} />
-                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-skills" icon="podium" label="Skills" isActive={activePanel==='skills'} onClick={() => setActivePanel('skills')} />
-                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-quests" icon="eclipse-flare" label="Quest Journal" isActive={activePanel==='quests'} onClick={() => setActivePanel('quests')} />
-                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-inventory" icon="knapsack" label="Inventory" isActive={activePanel==='inventory'} onClick={() => setActivePanel('inventory')} />
-                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-equipment" icon="battle-gear" label="Equipment" isActive={activePanel==='equipment'} onClick={() => setActivePanel('equipment')} />
-                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-prayer" icon="polar-star" label="Prayer" isActive={activePanel==='prayer'} onClick={() => { setActivePanel('prayer'); addLog("Prayer skill is not yet implemented."); }} />
-                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-spellbook" icon="book-cover" label="Spellbook" isActive={activePanel==='spellbook'} onClick={() => setActivePanel('spellbook')} />
+                    <PanelIcon tutorialId="side-panel-button-combat" icon="swords-emblem" label="Combat Styles" isActive={activePanel==='combat'} onClick={() => setActivePanel('combat')} />
+                    <PanelIcon tutorialId="side-panel-button-skills" icon="podium" label="Skills" isActive={activePanel==='skills'} onClick={() => setActivePanel('skills')} />
+                    <PanelIcon tutorialId="side-panel-button-quests" icon="eclipse-flare" label="Quests" isActive={activePanel==='quests'} onClick={() => setActivePanel('quests')} />
+                    <PanelIcon tutorialId="side-panel-button-inventory" icon="knapsack" label="Inventory" isActive={activePanel==='inventory'} onClick={() => setActivePanel('inventory')} />
+                    <PanelIcon tutorialId="side-panel-button-equipment" icon="battle-gear" label="Equipment" isActive={activePanel==='equipment'} onClick={() => setActivePanel('equipment')} />
+                    <PanelIcon tutorialId="side-panel-button-prayer" icon="polar-star" label="Prayer" isActive={activePanel==='prayer'} onClick={() => { setActivePanel('prayer'); addLog("Prayer skill is not yet implemented."); }} />
+                    <PanelIcon tutorialId="side-panel-button-spellbook" icon="book-cover" label="Spellbook" isActive={activePanel==='spellbook'} onClick={() => setActivePanel('spellbook')} />
                 </div>
             </div>
             <div className="flex-grow min-h-0 p-2 overflow-y-auto">
@@ -187,7 +160,7 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     <PlaceholderIcon />
                     <PlaceholderIcon />
                     <PlaceholderIcon />
-                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-settings" icon="gears" label="Settings" isActive={activePanel==='settings'} onClick={() => setActivePanel('settings')} />
+                    <PanelIcon tutorialId="side-panel-button-settings" icon="gears" label="Settings" isActive={activePanel==='settings'} onClick={() => setActivePanel('settings')} />
                 </div>
             </div>
         </div>

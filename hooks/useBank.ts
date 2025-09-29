@@ -11,6 +11,7 @@ interface BankDependencies {
     setEquipment: React.Dispatch<React.SetStateAction<Equipment>>;
     modifyItem: (itemId: string, quantity: number, quiet?: boolean, doses?: number, options?: { noted?: boolean, bypassAutoBank?: boolean }) => void;
     setCombatStance: (stance: CombatStance) => void;
+    bankPlaceholders: boolean;
 }
 
 export const padBank = (bank: (InventorySlot | null)[]): (InventorySlot | null)[] => {
@@ -29,7 +30,7 @@ interface BankState {
 }
 
 export const useBank = (bankState: BankState, deps: BankDependencies) => {
-    const { addLog, inventory, setInventory, equipment, setEquipment, modifyItem, setCombatStance } = deps;
+    const { addLog, inventory, setInventory, equipment, setEquipment, modifyItem, setCombatStance, bankPlaceholders } = deps;
     const { bank, setBank } = bankState;
 
     const handleDeposit = useCallback((inventoryIndex: number, quantity: number | 'all') => {
@@ -107,7 +108,13 @@ export const useBank = (bankState: BankState, deps: BankDependencies) => {
         setBank(prevBank => {
             const newBank = [...prevBank];
             if (existingSlotIndex > -1) {
-                newBank[existingSlotIndex]!.quantity += qtyToDeposit;
+                const existingSlot = newBank[existingSlotIndex]!;
+                // If it's a placeholder, replace it instead of adding to quantity 0
+                if (existingSlot.quantity === 0) {
+                    newBank[existingSlotIndex] = { ...existingSlot, quantity: qtyToDeposit };
+                } else {
+                    existingSlot.quantity += qtyToDeposit;
+                }
             } else {
                 const emptySlotIndex = newBank.findIndex(s => s === null);
                 if (emptySlotIndex > -1) {
@@ -120,7 +127,7 @@ export const useBank = (bankState: BankState, deps: BankDependencies) => {
     
     const handleWithdraw = useCallback((bankIndex: number, quantity: number | 'all' | 'all-but-1', asNote: boolean) => {
         const bankSlot = bank[bankIndex];
-        if (!bankSlot) return;
+        if (!bankSlot || bankSlot.quantity === 0) return;
         const itemId = bankSlot.itemId;
         const itemData = ITEMS[itemId];
     
@@ -168,12 +175,16 @@ export const useBank = (bankState: BankState, deps: BankDependencies) => {
             if (slot) {
                 slot.quantity -= actualQtyToWithdraw;
                 if (slot.quantity <= 0) {
-                    newBank[bankIndex] = null;
+                    if (bankPlaceholders) {
+                        slot.quantity = 0;
+                    } else {
+                        newBank[bankIndex] = null;
+                    }
                 }
             }
             return newBank;
         });
-    }, [bank, inventory, modifyItem, addLog, setBank]);
+    }, [bank, inventory, modifyItem, addLog, setBank, bankPlaceholders]);
 
     const handleDepositBackpack = useCallback(() => {
         const itemsToProcess = inventory.map((slot, index) => ({ slot, index })).filter((item): item is { slot: InventorySlot; index: number; } => item.slot !== null);
@@ -205,7 +216,12 @@ export const useBank = (bankState: BankState, deps: BankDependencies) => {
                 (!itemData.doseable || s?.doses === slotData.doses)
             );
             if (existingBankIndex > -1) {
-                finalBank[existingBankIndex]!.quantity += total;
+                const existingSlot = finalBank[existingBankIndex]!;
+                if (existingSlot.quantity === 0) { // It's a placeholder
+                    existingSlot.quantity = total;
+                } else {
+                    existingSlot.quantity += total;
+                }
                 indexes.forEach(i => depositedInventoryIndexes.add(i));
             } else {
                 const emptySlotIndex = finalBank.findIndex(s => s === null);
@@ -242,7 +258,7 @@ export const useBank = (bankState: BankState, deps: BankDependencies) => {
         const depositedEquipmentKeys = new Set<keyof Equipment>();
         let weaponUnequipped = false;
 
-        // Pass 1: Merge with existing stacks
+        // Pass 1: Merge with existing stacks (including placeholders)
         itemsToProcess.forEach(({ slot, slotKey }) => {
             const itemData = ITEMS[slot.itemId];
             const existingStackIndex = finalBank.findIndex(s => 
@@ -250,7 +266,12 @@ export const useBank = (bankState: BankState, deps: BankDependencies) => {
                 (!itemData.doseable || s.doses === slot.doses)
             );
             if (existingStackIndex > -1) {
-                finalBank[existingStackIndex]!.quantity += slot.quantity;
+                const existingSlot = finalBank[existingStackIndex]!;
+                if (existingSlot.quantity === 0) {
+                    existingSlot.quantity = slot.quantity;
+                } else {
+                    existingSlot.quantity += slot.quantity;
+                }
                 depositedEquipmentKeys.add(slotKey);
             }
         });

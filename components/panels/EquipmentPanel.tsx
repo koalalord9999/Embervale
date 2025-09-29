@@ -127,11 +127,9 @@ const EmptySlot = () => <div className="w-full aspect-square" />;
 
 const EquipmentPanel: React.FC<EquipmentPanelProps> = ({ equipment, inventory, onUnequip, setTooltip, ui, addLog, onExamine, isTouchSimulationEnabled }) => {
     return (
-        <div className="flex flex-col h-full text-gray-300">
-            <h3 className="text-lg font-bold text-center mb-3 text-yellow-400">Equipment</h3>
-            
-            <div className="flex-grow flex flex-col justify-center items-center">
-                <div className="grid grid-cols-3 gap-2 w-full max-w-[200px]">
+        <div className="flex flex-col h-full text-gray-300 pt-2">
+            <div className="flex flex-col justify-center items-center">
+                <div className="grid grid-cols-3 gap-2 w-full max-w-[180px]">
                     <EmptySlot />
                     <EquipmentSlotDisplay slotKey="head" itemSlot={equipment.head} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
                     <EmptySlot />
@@ -154,7 +152,7 @@ const EquipmentPanel: React.FC<EquipmentPanelProps> = ({ equipment, inventory, o
                 </div>
             </div>
             
-            <div className="mt-4 p-2 bg-gray-900 rounded-md border border-gray-600 flex justify-around gap-2">
+            <div className="mt-auto pt-4 p-2 bg-gray-900 rounded-md border border-gray-600 flex justify-around gap-2">
                 <button onClick={() => ui.setEquipmentStats(equipment)} className="flex-1 text-center py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded border border-gray-500 transition-colors">
                     Equipment Stats
                 </button>

@@ -1,9 +1,5 @@
-
-
-
-
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { PlayerSkill, SkillName, CombatStance, Spell } from '../types';
+import { PlayerSkill, SkillName, CombatStance, Spell, WorldState } from '../types';
 import { XP_TABLE } from '../constants';
 
 const getLevelForXp = (xp: number): number => {
@@ -37,7 +33,15 @@ export interface ActiveBuff {
     style?: 'melee' | 'ranged' | 'all';
 }
 
-export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance: CombatStance, currentHp: number, autocastSpell: Spell | null }, callbacks: CharacterCallbacks, isInCombat: boolean, combatSpeedMultiplier: number, xpMultiplier: number = 1) => {
+export const useCharacter = (
+    initialData: { skills: PlayerSkill[], combatStance: CombatStance, currentHp: number, autocastSpell: Spell | null }, 
+    callbacks: CharacterCallbacks, 
+    worldState: WorldState,
+    setWorldState: React.Dispatch<React.SetStateAction<WorldState>>,
+    isInCombat: boolean, 
+    combatSpeedMultiplier: number, 
+    xpMultiplier: number = 1
+) => {
     const { addLog, onXpGain, onLevelUp } = callbacks;
     const [skills, setSkills] = useState<PlayerSkill[]>(initialData.skills);
     const [combatStance, setCombatStance] = useState<CombatStance>(initialData.combatStance);
@@ -46,7 +50,9 @@ export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance:
     const [activeBuffs, setActiveBuffs] = useState<ActiveBuff[]>([]);
     const [autocastSpell, setAutocastSpell] = useState<Spell | null>(initialData.autocastSpell ?? null);
 
-    const maxHp = useMemo(() => skills.find(s => s.name === SkillName.Hitpoints)?.level ?? 10, [skills]);
+    const baseMaxHp = useMemo(() => skills.find(s => s.name === SkillName.Hitpoints)?.level ?? 10, [skills]);
+    const hpBoost = useMemo(() => worldState.hpBoost?.amount ?? 0, [worldState.hpBoost]);
+    const maxHp = useMemo(() => baseMaxHp + hpBoost, [baseMaxHp, hpBoost]);
     
     const combatLevel = useMemo(() => {
         const get = (name: SkillName) => skills.find(s => s.name === name)?.level ?? 1;
@@ -57,20 +63,19 @@ export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance:
         const ranged = get(SkillName.Ranged);
         const magic = get(SkillName.Magic);
         const prayer = get(SkillName.Prayer);
-        const hitpoints = maxHp; // maxHp is already the HP level
+        const hitpoints = baseMaxHp; // Use base HP for combat level calculation
 
-        // This formula is inspired by classic RPGs and is balanced for a max level of ~150.
-        // It's composed of a base level from defensive stats and a bonus from the highest offensive style.
+        // This is the classic RuneScape combat level formula for a balanced progression.
         const base = 0.25 * (defence + hitpoints + Math.floor(prayer / 2));
 
-        const meleeBonus = 0.45 * (attack + strength);
-        const rangeBonus = 0.45 * (2 * ranged);
-        const mageBonus = 0.45 * (2 * magic);
+        const meleeBonus = 0.325 * (attack + strength);
+        const rangeBonus = 0.325 * Math.floor(ranged * 1.5);
+        const mageBonus = 0.325 * Math.floor(magic * 1.5);
 
         const styleBonus = Math.max(meleeBonus, rangeBonus, mageBonus);
 
         return Math.floor(base + styleBonus);
-    }, [skills, maxHp]);
+    }, [skills, baseMaxHp]);
     
     useEffect(() => {
         if (currentHp >= maxHp) {
@@ -82,6 +87,21 @@ export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance:
         }, regenerationInterval);
         return () => clearInterval(timer);
     }, [currentHp, maxHp, isInCombat, combatSpeedMultiplier]);
+
+    // HP Boost expiration check
+    useEffect(() => {
+        if (!worldState.hpBoost) return;
+
+        const checkExpiration = () => {
+            if (worldState.hpBoost && Date.now() >= worldState.hpBoost.expiresAt) {
+                setWorldState(ws => ({ ...ws, hpBoost: null }));
+                addLog("The warmth from the bonfire fades, and your health returns to normal.");
+            }
+        };
+
+        const interval = setInterval(checkExpiration, 1000);
+        return () => clearInterval(interval);
+    }, [worldState.hpBoost, setWorldState, addLog]);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -261,6 +281,21 @@ export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance:
         });
     }, [skills, statModifiers]);
 
+    const setSkillLevel = useCallback((skillName: SkillName, level: number) => {
+        const clampedLevel = Math.max(1, Math.min(99, level));
+        const newXp = XP_TABLE[clampedLevel - 1] ?? 0;
+
+        setSkills(prevSkills => prevSkills.map(skill => 
+            skill.name === skillName ? { ...skill, level: clampedLevel, xp: newXp } : skill
+        ));
+
+        if (skillName === SkillName.Hitpoints) {
+            setCurrentHp(clampedLevel);
+        }
+
+        addLog(`DEV: Set ${skillName} to level ${clampedLevel}.`);
+    }, [addLog]);
+
     return {
         skills: skillsWithCurrentLevels, 
         setSkills, 
@@ -277,5 +312,6 @@ export const useCharacter = (initialData: { skills: PlayerSkill[], combatStance:
         clearStatModifiers,
         autocastSpell,
         setAutocastSpell,
+        setSkillLevel,
     };
 };

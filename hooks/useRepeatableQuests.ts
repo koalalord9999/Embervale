@@ -1,18 +1,38 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { PlayerRepeatableQuest, GeneratedRepeatableQuest, RepeatableQuestsState, SkillName, PlayerSkill } from '../types';
 import { REPEATABLE_QUEST_POOL, MONSTERS, ITEMS, XP_TABLE, TELEPORT_UNLOCK_THRESHOLD } from '../constants';
 import { POIS } from '../data/pois';
 
-const BOARD_IDS = ['the_rusty_flagon', 'the_carved_mug'];
+const BOARD_IDS = ['the_rusty_flagon', 'the_carved_mug', 'tutorial_tavern'];
 const BOARD_RESET_INTERVAL = 30 * 60 * 1000; // 30 minutes
 
 const getTownForBoard = (boardId: string): 'meadowdale' | 'oakhaven' => {
     if (boardId === 'the_rusty_flagon') return 'meadowdale';
     if (boardId === 'the_carved_mug') return 'oakhaven';
-    return 'meadowdale';
+    return 'meadowdale'; // Default for tutorial or others
 };
 
 const generateNewQuestsForBoard = (boardId: string, playerSkills: (PlayerSkill & { currentLevel: number; })[]): GeneratedRepeatableQuest[] => {
+    if (boardId === 'tutorial_tavern') {
+        const tutorialQuest = REPEATABLE_QUEST_POOL.find(q => q.id === 'tutorial_magic_rat');
+        if (tutorialQuest) {
+            const monster = MONSTERS[tutorialQuest.target.monsterId!];
+            const requiredQuantity = 1;
+            const finalCoinReward = tutorialQuest.baseCoinReward * requiredQuantity;
+            const finalXpAmount = monster ? monster.maxHp * requiredQuantity : tutorialQuest.xpReward.amount * requiredQuantity;
+            
+            const generatedQuest: GeneratedRepeatableQuest = {
+                ...tutorialQuest,
+                requiredQuantity,
+                finalCoinReward,
+                xpReward: { ...tutorialQuest.xpReward, amount: finalXpAmount }
+            };
+            return [generatedQuest];
+        }
+        return [];
+    }
+    
     const town = getTownForBoard(boardId);
     const availableQuests = REPEATABLE_QUEST_POOL.filter(
         q => q.location === town || q.location === 'general'
@@ -63,7 +83,8 @@ export const useRepeatableQuests = (
     initialState: RepeatableQuestsState, 
     addLog: (message: string) => void,
     inv: { hasItems: (items: { itemId: string; quantity: number }[]) => boolean; modifyItem: (itemId: string, quantity: number, quiet?: boolean) => void },
-    char: { addXp: (skill: SkillName, amount: number) => void; skills: (PlayerSkill & { currentLevel: number; })[] }
+    char: { addXp: (skill: SkillName, amount: number) => void; skills: (PlayerSkill & { currentLevel: number; })[] },
+    onQuestAccepted?: (quest: GeneratedRepeatableQuest) => void
 ) => {
     const [boards, setBoards] = useState<Record<string, GeneratedRepeatableQuest[]>>(initialState.boards);
     const [activePlayerQuest, setActivePlayerQuest] = useState<PlayerRepeatableQuest | null>(initialState.activePlayerQuest);
@@ -121,7 +142,8 @@ export const useRepeatableQuests = (
             progress: 0,
         });
         addLog(`New task accepted: ${quest.title}`);
-    }, [addLog, activePlayerQuest]);
+        onQuestAccepted?.(quest);
+    }, [addLog, activePlayerQuest, onQuestAccepted]);
     
     const completeQuest = useCallback(() => {
         if (!activePlayerQuest) return;

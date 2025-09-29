@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SkillName } from '../../../../types';
 import { ITEMS, getIconClassName } from '../../../../constants';
@@ -35,7 +36,7 @@ const FurnaceSlot: React.FC<{
     const hasIngredients = maxSmelt > 0;
     const canSmelt = hasLevel && hasIngredients;
 
-    const handleSingleTap = () => { if(canSmelt) onSmithBar(recipe.barType, 1); };
+    const handleSingleTap = () => { if(canSmelt) { onSmithBar(recipe.barType, 1); setTooltip(null); } };
 
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();

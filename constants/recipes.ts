@@ -104,6 +104,10 @@ export const COOKING_RECIPES: CookingRecipe[] = [
     { itemId: 'cooked_pike', level: 30, xp: 80, ingredients: [{ itemId: 'raw_pike', quantity: 1 }], burntItemId: 'burnt_pike',},
     { itemId: 'cake', level: 35, xp: 120, ingredients: [{ itemId: 'cake_batter', quantity: 1 }], burntItemId: 'burnt_cake',},
     { itemId: 'cooked_eel', level: 38, xp: 95, ingredients: [{ itemId: 'raw_eel', quantity: 1 }], burntItemId: 'burnt_eel',},
+    { itemId: 'cooked_tuna', level: 40, xp: 100, ingredients: [{ itemId: 'raw_tuna', quantity: 1 }], burntItemId: 'burnt_tuna',},
+    { itemId: 'cooked_lobster', level: 50, xp: 120, ingredients: [{ itemId: 'raw_lobster', quantity: 1 }], burntItemId: 'burnt_lobster',},
+    { itemId: 'cooked_swordfish', level: 62, xp: 140, ingredients: [{ itemId: 'raw_swordfish', quantity: 1 }], burntItemId: 'burnt_swordfish',},
+    { itemId: 'cooked_shark', level: 76, xp: 210, ingredients: [{ itemId: 'raw_shark', quantity: 1 }], burntItemId: 'burnt_shark',},
     { itemId: 'serpent_omelet_cooked', level: 50, xp: 200, ingredients: [{ itemId: 'serpents_egg', quantity: 1 }, { itemId: 'eggs', quantity: 1 }], burntItemId: 'serpent_omelet_burnt',}
 ];
 

@@ -13,6 +13,7 @@ export * from './herblore';
 export * from './lootTables';
 export * from './spells';
 export * from '../data/regions';
-export * from '../data/tutorial';
 export * from './map_features';
 export * from './dialogue';
+export * from './firemaking';
+export * from './woodcutting';

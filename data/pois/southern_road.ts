@@ -1,4 +1,4 @@
-import { POI, SkillName } from '../../types';
+import { POI, SkillName, ToolType } from '../../types';
 
 export const southernRoadPois: Record<string, POI> = {
     south_meadow_road: {
@@ -7,8 +7,8 @@ export const southernRoadPois: Record<string, POI> = {
         description: 'A dusty road leading south from Meadowdale. A smaller path branches off towards a ranch.',
         connections: ['meadowdale_south_gate', 'dusty_crossroads'],
         activities: [
-            { type: 'skilling', id: 'south_meadow_road_tree', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 0.8, xp: 25 }], resourceCount: { min: 1, max: 2 }, respawnTime: 12000, gatherTime: 2000 },
-            { type: 'skilling', id: 'south_meadow_road_tree_2', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 0.8, xp: 25 }], resourceCount: { min: 1, max: 2 }, respawnTime: 12000, gatherTime: 2000 },
+            { type: 'skilling', id: 'south_meadow_road_tree', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 1, xp: 25 }], resourceCount: { min: 1, max: 2 }, respawnTime: 12000, gatherTime: 2000 },
+            { type: 'skilling', id: 'south_meadow_road_tree_2', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 1, xp: 25 }], resourceCount: { min: 1, max: 2 }, respawnTime: 12000, gatherTime: 2000 },
         ],
         regionId: 'wilderness',
         x: 1000, y: 1200
@@ -19,7 +19,7 @@ export const southernRoadPois: Record<string, POI> = {
         description: 'The road splits here. A weathered signpost points west to a farm, east towards a swamp, and north to Oakhaven.',
         connections: ['south_meadow_road', 'abandoned_farmstead', 'boggy_trail', 'oakhaven_road_1'],
         activities: [
-            { type: 'skilling', id: 'dusty_crossroads_tree', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 0.8, xp: 25 }], resourceCount: { min: 1, max: 2 }, respawnTime: 12000, gatherTime: 2000 },
+            { type: 'skilling', id: 'dusty_crossroads_tree', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 1, xp: 25 }], resourceCount: { min: 1, max: 2 }, respawnTime: 12000, gatherTime: 2000 },
         ],
         regionId: 'wilderness',
         x: 1000, y: 1400
@@ -62,7 +62,7 @@ export const southernRoadPois: Record<string, POI> = {
         description: 'A foul-smelling swamp stretches out before you. Croaking sounds echo across the stagnant water. There is no path forward.',
         connections: ['boggy_trail', 'lonely_cabin'],
         activities: [
-            { type: 'skilling', id: 'murkwallow_fishing', name: 'Net Sardines', skill: SkillName.Fishing, requiredLevel: 5, loot: [{ itemId: 'raw_sardine', chance: 1, xp: 20 }, { itemId: 'raw_herring', chance: 0.5, xp: 30, requiredLevel: 10 }], resourceCount: { min: 5, max: 10 }, respawnTime: 8000, gatherTime: 1800 }
+            { type: 'skilling', id: 'murkwallow_fishing', name: 'Bait Fish', skill: SkillName.Fishing, requiredLevel: 5, loot: [{ itemId: 'raw_sardine', chance: 1, xp: 20 }, { itemId: 'raw_herring', chance: 0.5, xp: 30, requiredLevel: 10 }], resourceCount: { min: 5, max: 10 }, respawnTime: 8000, gatherTime: 1800, requiredTool: ToolType.FishingRod }
         ],
         regionId: 'wilderness',
         x: 1200, y: 1460

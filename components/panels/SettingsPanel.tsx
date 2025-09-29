@@ -14,7 +14,6 @@ interface SettingsPanelProps {
 const SettingsPanel: React.FC<SettingsPanelProps> = ({ onResetGame, onExportGame, onImportGame, isDevMode, onToggleDevPanel, isTouchSimulationEnabled, onToggleTouchSimulation }) => {
     return (
         <div className="flex flex-col h-full text-gray-300">
-            <h3 className="text-lg font-bold text-center mb-4 text-yellow-400">Settings</h3>
             <div className="space-y-3">
                 <Button onClick={onExportGame} className="w-full">Export Save</Button>
                 <Button onClick={onImportGame} className="w-full">Import Save</Button>

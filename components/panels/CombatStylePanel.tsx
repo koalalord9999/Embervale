@@ -62,7 +62,6 @@ const CombatStylePanel: React.FC<CombatStylePanelProps> = ({ combatStance, setCo
 
     return (
         <div className="flex flex-col h-full text-gray-300">
-            <h3 className="text-lg font-bold text-center mb-2 text-yellow-400">Combat Styles</h3>
             <div className="text-center mb-4">
                 <p className="text-sm">Combat Level: <span className="font-bold text-yellow-300">{combatLevel}</span></p>
             </div>

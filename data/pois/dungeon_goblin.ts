@@ -96,7 +96,7 @@ export const goblinDungeonPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'goblin_brute' }
         ],
         regionId: 'goblin_dungeon',
-        x: 1640, y: 1120
+        x: 1678, y: 1084
     },
     warrens_storage_cave: {
         id: 'warrens_storage_cave',
@@ -183,7 +183,7 @@ export const goblinDungeonPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'goblin_thrower' }
         ],
         regionId: 'goblin_dungeon',
-        x: 1600, y: 1040
+        x: 1599, y: 1073
     },
     warrens_ambush_point: {
         id: 'warrens_ambush_point',
@@ -195,7 +195,7 @@ export const goblinDungeonPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'goblin_scout' }
         ],
         regionId: 'goblin_dungeon',
-        x: 1600, y: 1140
+        x: 1638, y: 1113
     },
     warrens_false_hope: {
         id: 'warrens_false_hope',
@@ -204,7 +204,7 @@ export const goblinDungeonPois: Record<string, POI> = {
         connections: ['warrens_ambush_point', 'warrens_brute_gauntlet', 'warrens_tunnel_A'], // One-way connection to tunnel_A
         activities: [],
         regionId: 'goblin_dungeon',
-        x: 1700, y: 1140
+        x: 1700, y: 1192
     },
     warrens_brute_gauntlet: {
         id: 'warrens_brute_gauntlet',

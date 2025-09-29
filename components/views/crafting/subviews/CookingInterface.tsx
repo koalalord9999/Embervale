@@ -1,3 +1,5 @@
+
+
 import React from 'react';
 import { InventorySlot, PlayerSkill, PlayerQuestState, SkillName } from '../../../../types';
 import { COOKING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
@@ -25,7 +27,7 @@ const CookingSlot: React.FC<{
     const hasIngredients = maxCook > 0;
     const canCook = hasLevel && hasIngredients;
 
-    const handleSingleTap = () => { if(canCook) onCook(recipe.itemId, 1); };
+    const handleSingleTap = () => { if(canCook) { onCook(recipe.itemId, 1); setTooltip(null); } };
     
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();

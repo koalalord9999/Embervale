@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { SkillName } from '../../../../types';
 import { JEWELRY_CRAFTING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
@@ -29,7 +30,7 @@ const JewelrySlot: React.FC<{
     const hasGem = recipe.gemId ? getItemCount(recipe.gemId) >= 1 : true;
     const canCraft = hasLevel && hasBars && hasMould && hasGem;
     
-    const handleSingleTap = () => { if (canCraft) onCraftItem(recipe.itemId, 1); };
+    const handleSingleTap = () => { if (canCraft) { onCraftItem(recipe.itemId, 1); setTooltip(null); } };
 
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();

@@ -1,4 +1,5 @@
-import { POI } from '../../types';
+
+import { POI, SkillName } from '../../types';
 import { CIVILLIAN_DIALOGUE } from '../../constants';
 
 export const oakhavenPois: Record<string, POI> = {
@@ -53,7 +54,7 @@ export const oakhavenPois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/guard_captain_elara.png',
                         text: "I need someone capable to go to the bridge and find out what really happened. An engineer's report said it was sound just last month... this feels wrong. Find out what happened to my patrol, and to the bridge. Here, take my signet. Show it to any survivors.",
                         responses: [
-                            { text: "I'll get to the bottom of this.", action: 'accept_quest', questId: 'capitals_call', items: [{ itemId: 'elaras_signet', quantity: 1 }] },
+                            { text: "I'll get to the bottom of this.", actions: [{ type: 'start_quest', questId: 'capitals_call' }, { type: 'give_item', itemId: 'elaras_signet', quantity: 1 }] },
                             { text: "This sounds too dangerous for me.", next: 'reject_capitals_call' },
                         ]
                     },
@@ -69,7 +70,7 @@ export const oakhavenPois: Record<string, POI> = {
                         text: "Be careful out there. The situation at the bridge is more dangerous than it seems. Find out what happened.",
                         responses: []
                     },
-                    complete_stage_capitals_call_1: {
+                    in_progress_capitals_call_1: {
                         npcName: 'Guard Captain Elara',
                         npcIcon: '/assets/npcChatHeads/guard_captain_elara.png',
                         text: "An insignia? This is good work, soldier. Let me see... I don't recognize this serpent mark. It's not a known bandit clan in this region. However, Oakhaven's artisans have an eye for detail. They deal with shipments from all over and might recognize the craftsmanship.",
@@ -82,7 +83,7 @@ export const oakhavenPois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/guard_captain_elara.png',
                         text: "Take this to Finn the Rope-maker in the Artisan's Quarter. If anyone has seen this mark on a shipping crate or a coil of rope, it's him. Let me know what you find.",
                         responses: [
-                            { text: "I'll see what he knows.", action: 'complete_stage', questId: 'capitals_call' }
+                            { text: "I'll see what he knows.", actions: [{ type: 'advance_quest', questId: 'capitals_call' }] }
                         ]
                     },
                     in_progress_capitals_call_2: {
@@ -114,15 +115,15 @@ export const oakhavenPois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/guard_captain_elara.png',
                         text: "No one knows. They leave no tracks. Some of the older folk have superstitions, of course. If you want to hear some stories, try talking to Bronn, the old adventurer who's always warming a stool at The Carved Mug. He's seen more of this world than I have.",
                         responses: [
-                            { text: "I'll talk to him. Thanks, Captain.", action: 'close' },
+                            { text: "I'll talk to him. Thanks, Captain." },
                         ]
                     },
-                    complete_stage_capitals_call_4: {
+                    in_progress_capitals_call_4: {
                         npcName: 'Guard Captain Elara',
                         npcIcon: '/assets/npcChatHeads/guard_captain_elara.png',
                         text: "You have them! By the forge, you've done it! With these specialized materials, my engineers can finally repair the bridge properly. You've saved this town from economic collapse. Thank you, adventurer.",
                         responses: [
-                            { text: "Happy to help restore the trade route.", action: 'complete_stage', questId: 'capitals_call', itemsToConsume: [{ itemId: 'reinforced_bridge_cable', quantity: 1 }, { itemId: 'reinforced_bridge_supports', quantity: 1 }] },
+                            { text: "Happy to help restore the trade route.", actions: [{ type: 'give_xp', skill: SkillName.Crafting, amount: 2000 }, { type: 'give_xp', skill: SkillName.Woodcutting, amount: 2000 }, { type: 'give_coins', amount: 2500 }, { type: 'advance_quest', questId: 'capitals_call' }] },
                         ]
                     },
                     post_quest_capitals_call: {
@@ -209,7 +210,7 @@ export const oakhavenPois: Record<string, POI> = {
                         text: "Welcome to my workshop. Finest rope in the kingdom, made right here. What can I do for you?",
                         responses: []
                     },
-                    complete_stage_capitals_call_2: {
+                    in_progress_capitals_call_2: {
                         npcName: 'Finn the Rope-maker',
                         npcIcon: '/assets/npcChatHeads/finn_the_rope_maker.png',
                         text: "An insignia? Let me see... By my grandfather's beard, it's the mark of the Serpent Bandits! A nasty clan known for economic sabotage. They must be behind the bridge collapse!",
@@ -230,7 +231,7 @@ export const oakhavenPois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/finn_the_rope_maker.png',
                         text: "The engineers also need new anchor supports. You'll need to speak with Alaric the Woodworker. He's the only one skilled enough to make them. He'll tell you what he needs. His shop is just around the corner in the Artisan's Quarter. Get both components, and we can save this town.",
                         responses: [
-                            { text: "I'll get the materials.", action: 'complete_stage', questId: 'capitals_call' }
+                            { text: "I'll get the materials.", actions: [{ type: 'advance_quest', questId: 'capitals_call' }] }
                         ]
                     },
                     in_progress_capitals_call_3: {
@@ -238,16 +239,22 @@ export const oakhavenPois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/finn_the_rope_maker.png',
                         text: "Have you managed to get those five Glimmer-thread Fibers? The looms are waiting.",
                         responses: [
-                            { text: "I have them right here.", action: 'custom', customActionId: 'craft_bridge_cable', itemsToConsume: [{ itemId: 'glimmer_thread_fiber', quantity: 5 }], items: [{ itemId: 'reinforced_bridge_cable', quantity: 1 }], failureNext: 'fibers_fail' },
+                            { text: "I have them right here.", check: { requirements: [{ type: 'items', items: [{ itemId: 'glimmer_thread_fiber', quantity: 5 }] }], successNode: 'craft_cable_success', failureNode: 'fibers_fail' }, actions: [{ type: 'take_item', itemId: 'glimmer_thread_fiber', quantity: 5 }, { type: 'give_item', itemId: 'reinforced_bridge_cable', quantity: 1 }] },
                             { text: "Not yet, I'm still working on it.", next: 'finn_exit_working' },
                         ]
+                    },
+                    craft_cable_success: {
+                        npcName: 'Finn the Rope-maker',
+                        npcIcon: '/assets/npcChatHeads/finn_the_rope_maker.png',
+                        text: "Wonderful! I'll get to work right away. Here is the Reinforced Bridge Cable. Now get those supports from Alaric!",
+                        responses: []
                     },
                     fibers_fail: {
                         npcName: 'Finn the Rope-maker',
                         npcIcon: '/assets/npcChatHeads/finn_the_rope_maker.png',
                         text: "Trying to pull a fast one on a craftsman, eh? I can tell Glimmer-thread from a mile away, and you don't have it. Now go get it before I tie you up with your own shoelaces.",
                         responses: [
-                            { text: "My mistake. I'll be back.", action: 'close' },
+                            { text: "My mistake. I'll be back." },
                         ]
                     },
                     finn_exit_working: {
@@ -340,20 +347,52 @@ export const oakhavenPois: Record<string, POI> = {
         connections: ['oakhaven_crafting_district'],
         activities: [
             {
-                type: 'interactive_dialogue',
+                type: 'npc',
+                name: 'Tanner Sven',
+                icon: '/assets/npcChatHeads/tanner_sven.png',
                 dialogue: {
                     start: {
                         npcName: 'Tanner Sven',
                         npcIcon: '/assets/npcChatHeads/tanner_sven.png',
                         text: "Need some hides tanned? You've come to the right place. What have you got for me?",
                         responses: [
-                            { text: "Tan Cowhide (5 coins)", action: 'custom', customActionId: 'tan_cowhide' },
-                            { text: "Tan Boar Hide (8 coins)", action: 'custom', customActionId: 'tan_boar_hide' },
-                            { text: "Tan Wolf Pelt (15 coins)", action: 'custom', customActionId: 'tan_wolf_pelt' },
-                            { text: "Tan Bear Pelt (25 coins)", action: 'custom', customActionId: 'tan_bear_pelt' },
-                            { text: "Just looking, thanks.", action: 'close' },
+                            { text: "Tan Cowhide (5 coins)", check: { requirements: [{ type: 'items', items: [{ itemId: 'cowhide', quantity: 1 }] }, { type: 'coins', amount: 5 }], successNode: 'tan_cowhide_success', failureNode: 'tan_fail' }, actions: [{ type: 'take_item', itemId: 'cowhide', quantity: 1 }, { type: 'take_coins', amount: 5 }, { type: 'give_item', itemId: 'leather', quantity: 1 }, { type: 'give_xp', skill: SkillName.Crafting, amount: 2 }] },
+                            { text: "Tan Boar Hide (8 coins)", check: { requirements: [{ type: 'items', items: [{ itemId: 'boar_hide', quantity: 1 }] }, { type: 'coins', amount: 8 }], successNode: 'tan_boar_hide_success', failureNode: 'tan_fail' }, actions: [{ type: 'take_item', itemId: 'boar_hide', quantity: 1 }, { type: 'take_coins', amount: 8 }, { type: 'give_item', itemId: 'boar_leather', quantity: 1 }, { type: 'give_xp', skill: SkillName.Crafting, amount: 4 }] },
+                            { text: "Tan Wolf Pelt (15 coins)", check: { requirements: [{ type: 'items', items: [{ itemId: 'wolf_pelt', quantity: 1 }] }, { type: 'coins', amount: 15 }], successNode: 'tan_wolf_pelt_success', failureNode: 'tan_fail' }, actions: [{ type: 'take_item', itemId: 'wolf_pelt', quantity: 1 }, { type: 'take_coins', amount: 15 }, { type: 'give_item', itemId: 'wolf_leather', quantity: 1 }, { type: 'give_xp', skill: SkillName.Crafting, amount: 8 }] },
+                            { text: "Tan Bear Pelt (25 coins)", check: { requirements: [{ type: 'items', items: [{ itemId: 'bear_pelt', quantity: 1 }] }, { type: 'coins', amount: 25 }], successNode: 'tan_bear_pelt_success', failureNode: 'tan_fail' }, actions: [{ type: 'take_item', itemId: 'bear_pelt', quantity: 1 }, { type: 'take_coins', amount: 25 }, { type: 'give_item', itemId: 'bear_leather', quantity: 1 }, { type: 'give_xp', skill: SkillName.Crafting, amount: 12 }] },
+                            { text: "Just looking, thanks." },
                         ],
                     },
+                    tan_cowhide_success: {
+                        npcName: 'Tanner Sven',
+                        npcIcon: '/assets/npcChatHeads/tanner_sven.png',
+                        text: "Here is your finished leather.",
+                        responses: []
+                    },
+                    tan_boar_hide_success: {
+                        npcName: 'Tanner Sven',
+                        npcIcon: '/assets/npcChatHeads/tanner_sven.png',
+                        text: "Here is your finished leather.",
+                        responses: []
+                    },
+                    tan_wolf_pelt_success: {
+                        npcName: 'Tanner Sven',
+                        npcIcon: '/assets/npcChatHeads/tanner_sven.png',
+                        text: "Here is your finished leather.",
+                        responses: []
+                    },
+                    tan_bear_pelt_success: {
+                        npcName: 'Tanner Sven',
+                        npcIcon: '/assets/npcChatHeads/tanner_sven.png',
+                        text: "Here is your finished leather.",
+                        responses: []
+                    },
+                    tan_fail: {
+                        npcName: 'Tanner Sven',
+                        npcIcon: '/assets/npcChatHeads/tanner_sven.png',
+                        text: "You don't seem to have what's needed for that. Come back when you do.",
+                        responses: []
+                    }
                 },
                 startNode: 'start',
             }
@@ -379,7 +418,7 @@ export const oakhavenPois: Record<string, POI> = {
                         text: "Welcome to my workshop. If it's quality woodwork you're after, you've come to the right place. What can I do for you?",
                         responses: [
                             { text: "Tell me about the woods of this land.", next: 'wood_lore_pine' },
-                            { text: "Just looking around.", action: 'close' },
+                            { text: "Just looking around." },
                         ]
                     },
                     in_progress_capitals_call_3: {
@@ -387,17 +426,23 @@ export const oakhavenPois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/artisan.png',
                         text: "Ah, an adventurer! Finn sent you, I presume? I heard about the bridge. A real shame. I can craft the supports, but I'll need the right material. Ten Yew Logs, to be exact. They're strong and flexible, perfect for the job. You'll find them up on the treacherous Gale-Swept Peaks.",
                         responses: [
-                            { text: "I have the 10 Yew Logs right here.", action: 'custom', customActionId: 'craft_bridge_supports', itemsToConsume: [{ itemId: 'yew_logs', quantity: 10 }], items: [{ itemId: 'reinforced_bridge_supports', quantity: 1 }], failureNext: 'yew_logs_fail' },
+                            { text: "I have the 10 Yew Logs right here.", check: { requirements: [{ type: 'items', items: [{ itemId: 'yew_logs', quantity: 10 }] }], successNode: 'craft_supports_success', failureNode: 'yew_logs_fail' }, actions: [{ type: 'take_item', itemId: 'yew_logs', quantity: 10 }, { type: 'give_item', itemId: 'reinforced_bridge_supports', quantity: 1 }] },
                             { text: "I'll be back when I have them.", next: 'alaric_exit_gale' },
                             { text: "Tell me more about the different woods.", next: 'wood_lore_pine' },
                         ]
+                    },
+                    craft_supports_success: {
+                        npcName: 'Alaric the Woodworker',
+                        npcIcon: '/assets/npcChatHeads/artisan.png',
+                        text: "Perfect! These will do nicely. Give me a moment... There. One set of Reinforced Bridge Supports, ready for installation. Good luck out there.",
+                        responses: []
                     },
                     yew_logs_fail: {
                         npcName: 'Alaric the Woodworker',
                         npcIcon: '/assets/npcChatHeads/artisan.png',
                         text: "Do you take me for a fool? I can tell Yew from Pine just by the smell of it, and you certainly don't have ten Yew logs on you. Don't try to pull a fast one on a master woodworker. Now go get what I need!",
                         responses: [
-                             { text: "Right. Of course. I'll be back.", action: 'close' },
+                             { text: "Right. Of course. I'll be back." },
                         ]
                     },
                     alaric_exit_gale: {
@@ -412,7 +457,7 @@ export const oakhavenPois: Record<string, POI> = {
                         text: "Good to see you again. Thanks to those supports, the bridge should hold for another hundred years. Fine work.",
                         responses: [
                             { text: "Tell me about the woods of this land.", next: 'wood_lore_pine' },
-                            { text: "Take care, Alaric.", action: 'close' },
+                            { text: "Take care, Alaric." },
                         ]
                     },
                     wood_lore_pine: {
@@ -498,12 +543,50 @@ export const oakhavenPois: Record<string, POI> = {
                     start: {
                         npcName: 'Barkeep Freya',
                         npcIcon: '/assets/npcChatHeads/barkeep_freya.png',
-                        text: "Welcome to The Carved Mug! Come in, warm yourself by the fire.\n\nFancy a pint of our finest ale?",
+                        text: "Welcome to The Carved Mug. We've got the best ale and the softest beds in Oakhaven. What can I get for you?",
+                        responses: [
+                            { text: "A pint of your finest.", next: 'buy_drink_intro' },
+                            { text: "I'd like to rent a room.", next: 'rent_room_intro' },
+                        ]
+                    },
+                    buy_drink_intro: {
+                        npcName: 'Barkeep Freya',
+                        npcIcon: '/assets/npcChatHeads/barkeep_freya.png',
+                        text: "An excellent choice! Warms the soul after a long day of crafting, eh? That'll be 3 coins.",
+                        responses: [
+                            { text: "Here you go.", check: { requirements: [{ type: 'coins', amount: 3 }], successNode: 'buy_drink_success', failureNode: 'buy_drink_fail' }, actions: [{ type: 'take_coins', amount: 3 }, { type: 'give_item', itemId: 'beer', quantity: 1 }] },
+                            { text: "A bit steep for me." },
+                        ]
+                    },
+                    buy_drink_success: {
+                        npcName: 'Barkeep Freya',
+                        npcIcon: '/assets/npcChatHeads/barkeep_freya.png',
+                        text: "Cheers!",
+                        responses: []
+                    },
+                    buy_drink_fail: {
+                        npcName: 'Barkeep Freya',
+                        npcIcon: '/assets/npcChatHeads/barkeep_freya.png',
+                        text: "Sorry, you don't have enough coin for that.",
+                        responses: []
+                    },
+                    rent_room_intro: {
+                        npcName: 'Barkeep Freya',
+                        npcIcon: '/assets/npcChatHeads/barkeep_freya.png',
+                        text: "Wise adventurer. A good night's sleep in a proper bed does wonders for your health. A room for the night is 15 coins.",
+                        responses: [
+                            { text: "I'll take it.", check: { requirements: [{ type: 'coins', amount: 15 }], successNode: 'rent_room_success', failureNode: 'buy_drink_fail' }, actions: [{ type: 'take_coins', amount: 15 }, { type: 'heal', amount: 'full' }] },
+                            { text: "I think I'll rough it." },
+                        ]
+                    },
+                    rent_room_success: {
+                        npcName: 'Barkeep Freya',
+                        npcIcon: '/assets/npcChatHeads/barkeep_freya.png',
+                        text: "Wonderful. Sleep well!",
                         responses: []
                     }
                 },
                 startNode: 'start',
-                dialogueType: 'random',
             },
             {
                 type: 'npc',

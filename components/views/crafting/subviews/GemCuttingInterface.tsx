@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { InventorySlot, PlayerSkill, SkillName } from '../../../../types';
 import { GEM_CUTTING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
@@ -25,7 +26,7 @@ const GemCuttingSlot: React.FC<{
     const hasIngredients = uncutCount > 0 && hasChisel;
     const canCut = hasLevel && hasIngredients;
 
-    const handleSingleTap = () => { if(canCut) onCut(recipe.cutId, 1); };
+    const handleSingleTap = () => { if(canCut) { onCut(recipe.cutId, 1); setTooltip(null); } };
 
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();

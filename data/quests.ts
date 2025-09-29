@@ -1,5 +1,4 @@
 
-
 import { Quest, RepeatableQuest, SkillName } from '../types';
 
 export const QUESTS: Record<string, Quest> = {
@@ -81,6 +80,25 @@ export const QUESTS: Record<string, Quest> = {
             "I've smithed the dagger. I should show it to Valerius."
         ],
         completionSummary: "I helped Valerius the smith by gathering ore for him. He taught me how to smelt it into a bar and then smith that bar into a dagger. I've learned the basics of smithing.",
+        dialogue: {
+            start: {
+                npcName: 'Valerius the Master Smith',
+                npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                text: "You there! You look like you're not afraid of a bit of hard work. I could use some help, and you could learn a valuable skill. Interested?",
+                responses: [
+                    { text: "What do you need help with?", next: 'details' },
+                    { text: "I'm not interested, thanks." },
+                ],
+            },
+            details: {
+                npcName: 'Valerius the Master Smith',
+                npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                text: "I need ore. The foundation of all good smithing is good metal. The local mine is full of Copper and Tin. Bring me one of each, and I'll show you the first step of turning rock into a weapon.",
+                responses: [
+                    { text: "I'll be back with your ore.", actions: [{ type: 'start_quest', questId: 'a_smiths_apprentice' }] },
+                ],
+            },
+        },
         stages: [
             {
                 description: "Gather 1 Copper Ore and 1 Tin Ore.",
@@ -89,6 +107,10 @@ export const QUESTS: Record<string, Quest> = {
             {
                 description: "Return to Valerius the Master Smith.",
                 requirement: { type: 'talk', poiId: 'meadowdale_smithy', npcName: 'Valerius the Master Smith' },
+                stageRewards: {
+                    items: [{ itemId: 'bronze_bar', quantity: 1 }],
+                    xp: [{ skill: SkillName.Smithing, amount: 25 }]
+                }
             },
             {
                 description: "Use the anvil to smith a Bronze Dagger.",
@@ -99,7 +121,6 @@ export const QUESTS: Record<string, Quest> = {
                 requirement: { type: 'talk', poiId: 'meadowdale_smithy', npcName: 'Valerius the Master Smith' }
             }
         ],
-        // FIX: Added missing rewards property to conform to Quest type.
         rewards: {
             xp: [{ skill: SkillName.Smithing, amount: 100 }],
             coins: 100
@@ -116,6 +137,17 @@ export const QUESTS: Record<string, Quest> = {
             "I should let Old Man Fitzwilliam know the goblins have been dealt with."
         ],
         completionSummary: "I dealt with the goblin problem in the mines. The racket has stopped, and Old Man Fitzwilliam paid me for my work.",
+        dialogue: {
+            start: {
+                npcName: 'Old Man Fitzwilliam',
+                npcIcon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
+                text: "My ears! My poor, old ears! It's an infernal racket from the Stonebreak Mine. It can only be one thing: goblins. If you can clear out a handful of them, maybe they'll get the message. I'll make it worth your while.",
+                responses: [
+                    { text: "Alright, I'll restore the peace. For a price.", actions: [{ type: 'start_quest', questId: 'goblin_menace' }] },
+                    { text: "Sounds dangerous. Not my problem." },
+                ],
+            },
+        },
         stages: [
             {
                 description: "Convince 5 goblins in the Stonebreak Mine to cease their 'musical' activities.",
@@ -126,7 +158,6 @@ export const QUESTS: Record<string, Quest> = {
                 requirement: { type: 'talk', poiId: 'meadowdale_square', npcName: 'Old Man Fitzwilliam' }
             }
         ],
-        // FIX: Added missing rewards property to conform to Quest type.
         rewards: {
             xp: [{ skill: SkillName.Attack, amount: 100 }],
             coins: 200
@@ -144,6 +175,34 @@ export const QUESTS: Record<string, Quest> = {
             "I should return the 10 balls of wool to Rancher McGregor."
         ],
         completionSummary: "I helped out Rancher McGregor with his overgrown sheep. I sheared ten of them, spun the wool in his barn, and he paid me for the finished balls of wool.",
+        dialogue: {
+            start: {
+                npcName: 'Rancher McGregor',
+                npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
+                text: "Well howdy, partner. Good of you to stop by. I've got a bit of a situation here... my sheep have gotten... well, 'fluffy' is an understatement.",
+                responses: [
+                    { text: "They do look rather spherical.", next: 'problem' },
+                    { text: "Just passing through, thanks." },
+                ],
+            },
+            problem: {
+                npcName: 'Rancher McGregor',
+                npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
+                text: "Spherical! Exactly! It's a woolly catastrophe. My usual shearer is out with a cold, and I can't keep up myself. I need someone to shear ten of 'em for me. The raw wool isn't much use on its own, though.",
+                responses: [
+                    { text: "What needs to be done with it?", next: 'solution' },
+                ],
+            },
+            solution: {
+                npcName: 'Rancher McGregor',
+                npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
+                text: "It needs to be spun into balls of wool. I've got a spinning wheel in the barn you can use. If you can shear ten sheep, spin the wool, and bring me back ten finished balls, I'd be mighty grateful. I'll pay you well for your trouble, of course.",
+                responses: [
+                    { text: "You've got a deal. I'll get right on it.", actions: [{ type: 'start_quest', questId: 'sheep_troubles' }] },
+                    { text: "That sounds like a lot of work." },
+                ],
+            },
+        },
         stages: [
             {
                 description: 'Shear 10 wool from the sheep in the pen.',
@@ -158,7 +217,6 @@ export const QUESTS: Record<string, Quest> = {
                 requirement: { type: 'talk', poiId: 'mcgregors_ranch', npcName: 'Rancher McGregor' }
             }
         ],
-        // FIX: Added missing rewards property to conform to Quest type.
         rewards: {
             xp: [{ skill: SkillName.Crafting, amount: 150 }],
             coins: 300
@@ -190,7 +248,6 @@ export const QUESTS: Record<string, Quest> = {
                 requirement: { type: 'talk', poiId: 'meadowdale_smithy', npcName: 'Valerius the Master Smith' }
             }
         ],
-        // FIX: Added missing rewards property to conform to Quest type.
         rewards: {
             xp: [{ skill: SkillName.Smithing, amount: 250 }],
             items: [{ itemId: 'iron_sword', quantity: 1 }],
@@ -207,6 +264,34 @@ export const QUESTS: Record<string, Quest> = {
             "I should return to Clerk Augustus in Meadowdale to claim my reward."
         ],
         completionSummary: "I cleared out the bandits who were blocking the road to Oakhaven. With the trade route reopened, Clerk Augustus paid me a handsome bounty.",
+        dialogue: {
+            start: {
+                npcName: 'Clerk Augustus',
+                npcIcon: '/assets/npcChatHeads/clerk_augustus.png',
+                text: "Another adventurer looking for work, I presume? The road south to Oakhaven has become impassable. A group of brazen bandits has taken up residence, demanding a 'toll' from anyone who passes.",
+                responses: [
+                    { text: "What's the situation?", next: 'situation' },
+                    { text: "I'm not interested in road maintenance." },
+                ],
+            },
+            situation: {
+                npcName: 'Clerk Augustus',
+                npcIcon: '/assets/npcChatHeads/clerk_augustus.png',
+                text: "They've choked off trade with the south. Oakhaven is a crafting town, and their goods aren't reaching us. We need someone to... persuade these thugs to move on. Violently.",
+                responses: [
+                    { text: "What's the pay?", next: 'job' },
+                ],
+            },
+            job: {
+                npcName: 'Clerk Augustus',
+                npcIcon: '/assets/npcChatHeads/clerk_augustus.png',
+                text: "The town council has authorized a bounty. Take out five of their number, and I'll see to it you're rewarded handsomely. More importantly, the road to Oakhaven will be open again. Are you up to the task?",
+                responses: [
+                    { text: "Consider it done. I'll clear the road.", actions: [{ type: 'start_quest', questId: 'bandit_toll' }] },
+                    { text: "I'd rather not get my hands dirty." },
+                ],
+            },
+        },
         stages: [
             {
                 description: 'Defeat 5 Cloaked Bandits on the road to Oakhaven.',
@@ -217,10 +302,9 @@ export const QUESTS: Record<string, Quest> = {
                 requirement: { type: 'talk', poiId: 'town_hall', npcName: 'Clerk Augustus' }
             }
         ],
-        // FIX: Added missing rewards property to conform to Quest type.
         rewards: {
             xp: [{ skill: SkillName.Strength, amount: 200 }],
-            coins: 500
+            coins: 500,
         }
     },
     magical_runestone_discovery: {
@@ -254,7 +338,7 @@ export const QUESTS: Record<string, Quest> = {
             },
             {
                 description: "Return to Wizard Elmsworth in Meadowdale.",
-                requirement: { type: 'talk', poiId: 'meadowdale_library', npcName: 'Wizard Elmsworth' },
+                requirement: { type: 'talk', poiId: 'meadowdale_library', npcName: 'Wizard Elmsworth' }
             },
             {
                 description: "Find the source of the talisman's pull.",
@@ -273,7 +357,6 @@ export const QUESTS: Record<string, Quest> = {
                 requirement: { type: 'talk', poiId: 'meadowdale_library', npcName: 'Wizard Elmsworth' }
             }
         ],
-        // FIX: Added missing rewards property to conform to Quest type.
         rewards: {
             xp: [{ skill: SkillName.Runecrafting, amount: 250 }],
             coins: 500,
@@ -299,6 +382,9 @@ export const QUESTS: Record<string, Quest> = {
             {
                 description: "Investigate the debris at the Broken Bridge.",
                 requirement: { type: 'talk', poiId: 'broken_bridge', npcName: 'Investigate Debris' },
+                stageRewards: {
+                    items: [{ itemId: 'torn_bandit_insignia', quantity: 1 }]
+                }
             },
             {
                 description: "Report back to Captain Elara in Oakhaven.",
@@ -317,7 +403,6 @@ export const QUESTS: Record<string, Quest> = {
                 requirement: { type: 'talk', poiId: 'oakhaven_west_gate', npcName: 'Guard Captain Elara' }
             }
         ],
-        // FIX: Added missing rewards property to conform to Quest type.
         rewards: {
             xp: [{ skill: SkillName.Crafting, amount: 2000 }, { skill: SkillName.Woodcutting, amount: 2000 }],
             coins: 2500,
@@ -339,7 +424,6 @@ export const QUESTS: Record<string, Quest> = {
                 requirement: { type: 'talk', poiId: 'silverhaven_residential_district', npcName: 'Elara' }
             }
         ],
-        // FIX: Added missing rewards property to conform to Quest type.
         rewards: {
             xp: [{ skill: SkillName.Slayer, amount: 350 }],
             coins: 1500,
@@ -361,7 +445,6 @@ export const QUESTS: Record<string, Quest> = {
                 requirement: { type: 'talk', poiId: 'silverhaven_trade_district', npcName: 'Merchant Theron' }
             }
         ],
-        // FIX: Added missing rewards property to conform to Quest type.
         rewards: {
             xp: [{ skill: SkillName.Slayer, amount: 1000 }],
             coins: 2000,

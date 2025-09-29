@@ -1,4 +1,4 @@
-import { POI, SkillName } from '../../types';
+import { POI, SkillName, ToolType } from '../../types';
 
 export const wildernessPois: Record<string, POI> = {
     whispering_woods: {
@@ -7,8 +7,8 @@ export const wildernessPois: Record<string, POI> = {
         description: 'A dense forest filled with tall, ancient trees. A faint whispering sound seems to follow you.',
         connections: ['meadowdale_north_gate', 'murky_riverbank', 'deep_woods'],
         activities: [
-            { type: 'skilling', id: 'whispering_woods_trees', name: 'Chop Trees', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 0.8, xp: 25 }], resourceCount: { min: 1, max: 4 }, respawnTime: 12000, gatherTime: 2000 },
-            { type: 'skilling', id: 'whispering_woods_trees_2', name: 'Chop Trees', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 0.8, xp: 25 }], resourceCount: { min: 1, max: 4 }, respawnTime: 12000, gatherTime: 2000 },
+            { type: 'skilling', id: 'whispering_woods_trees', name: 'Chop Trees', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 1, xp: 25 }], resourceCount: { min: 1, max: 4 }, respawnTime: 12000, gatherTime: 2000 },
+            { type: 'skilling', id: 'whispering_woods_trees_2', name: 'Chop Trees', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 1, xp: 25 }], resourceCount: { min: 1, max: 4 }, respawnTime: 12000, gatherTime: 2000 },
             { type: 'combat', monsterId: 'giant_rat'}
         ],
         regionId: 'wilderness',
@@ -20,7 +20,7 @@ export const wildernessPois: Record<string, POI> = {
         description: 'The bank of a slow-moving river. The water is murky, but you can see small fish darting about.',
         connections: ['whispering_woods', 'treacherous_ascent', 'windswept_clearing'],
         activities: [
-            { type: 'skilling', id: 'murky_river_fishing', name: 'Net Shrimp', skill: SkillName.Fishing, requiredLevel: 1, loot: [{ itemId: 'raw_shrimp', chance: 1, xp: 10 }, { itemId: 'raw_sardine', chance: 0.4, xp: 20, requiredLevel: 5 }], resourceCount: { min: 5, max: 10 }, respawnTime: 8000, gatherTime: 1800 },
+            { type: 'skilling', id: 'murky_river_fishing', name: 'Net Fish', skill: SkillName.Fishing, requiredLevel: 1, loot: [{ itemId: 'raw_shrimp', chance: 1, xp: 10 }], resourceCount: { min: 5, max: 10 }, respawnTime: 8000, gatherTime: 1800, requiredTool: ToolType.FishingNet },
             { type: 'water_source', name: 'Collect Water' }
         ],
         unlockRequirement: { type: 'quest', questId: 'goblin_menace', stage: 1 },
@@ -42,7 +42,7 @@ export const wildernessPois: Record<string, POI> = {
         description: 'An ancient stone altar on a windswept plateau. The air crackles with energy, and faint whispers ride the currents.',
         connections: ['windswept_clearing'],
         activities: [
-            { type: 'runecrafting_altar', runeId: 'gust_rune' },
+            { type: 'runecrafting_altar', runeId: 'gust_rune', questCondition: { questId: 'magical_runestone_discovery', stages: [], visibleAfterCompletion: true } },
             {
                 type: 'npc',
                 name: 'Approach the altar',
@@ -60,7 +60,7 @@ export const wildernessPois: Record<string, POI> = {
                         npcIcon: 'https://api.iconify.design/game-icons:rune-stone.svg',
                         text: "As you approach the altar, the trinket and the rock chunks in your pack begin to vibrate violently, almost shaking out of your hands. They seem drawn to this place.",
                         responses: [
-                            { text: "(Perhaps I should report this back to Elmsworth.)", action: 'complete_stage', questId: 'magical_runestone_discovery' }
+                            { text: "(Perhaps I should report this back to Elmsworth.)", actions: [{ type: 'advance_quest', questId: 'magical_runestone_discovery' }] }
                         ]
                     },
                     in_progress_magical_runestone_discovery_6: {
@@ -68,8 +68,20 @@ export const wildernessPois: Record<string, POI> = {
                         npcIcon: 'https://api.iconify.design/game-icons:rune-stone.svg',
                         text: "Elmsworth's words echo in your mind. He suggested placing both the trinket and the essence on the altar.",
                         responses: [
-                            { text: "(Combine the talisman and essence on the altar)", action: 'custom', customActionId: 'craft_gust_runes_quest' }
+                            { text: "(Combine the talisman and essence on the altar)", check: { requirements: [{ type: 'items', items: [{ itemId: 'gust_talisman', quantity: 1 }, { itemId: 'rune_essence', quantity: 5 }] }], successNode: 'craft_runes_success', failureNode: 'craft_runes_fail' }, actions: [{ type: 'take_item', itemId: 'rune_essence', quantity: 5 }, { type: 'give_item', itemId: 'gust_rune', quantity: 5 }, { type: 'give_xp', skill: SkillName.Runecrafting, amount: 25 }, { type: 'advance_quest', questId: 'magical_runestone_discovery' }] }
                         ]
+                    },
+                    craft_runes_success: {
+                        npcName: 'Gust Altar',
+                        npcIcon: 'https://api.iconify.design/game-icons:rune-stone.svg',
+                        text: "As you place the items on the altar, they are consumed in a flash of windy light! In their place, several small, flat stones inscribed with glowing runes appear.",
+                        responses: []
+                    },
+                    craft_runes_fail: {
+                        npcName: 'Gust Altar',
+                        npcIcon: 'https://api.iconify.design/game-icons:rune-stone.svg',
+                        text: "You don't have all the necessary components. Elmsworth mentioned a talisman and five rune essence chunks.",
+                        responses: []
                     }
                 },
                 startNode: 'start'
@@ -95,9 +107,9 @@ export const wildernessPois: Record<string, POI> = {
         connections: ['whispering_woods', 'overgrown_path', 'ancient_clearing'],
         activities: [
             { type: 'combat', monsterId: 'giant_rat' },
-            { type: 'skilling', id: 'deep_woods_trees_1', name: 'Chop Trees', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 0.8, xp: 25 }], resourceCount: { min: 2, max: 5 }, respawnTime: 12000, gatherTime: 2000 },
-            { type: 'skilling', id: 'deep_woods_trees_2', name: 'Chop Trees', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 0.8, xp: 25 }], resourceCount: { min: 2, max: 5 }, respawnTime: 12000, gatherTime: 2000 },
-            { type: 'skilling', id: 'deep_woods_trees_3', name: 'Chop Trees', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 0.8, xp: 25 }], resourceCount: { min: 2, max: 5 }, respawnTime: 12000, gatherTime: 2000 },
+            { type: 'skilling', id: 'deep_woods_trees_1', name: 'Chop Trees', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 1, xp: 25 }], resourceCount: { min: 2, max: 5 }, respawnTime: 12000, gatherTime: 2000 },
+            { type: 'skilling', id: 'deep_woods_trees_2', name: 'Chop Trees', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 1, xp: 25 }], resourceCount: { min: 2, max: 5 }, respawnTime: 12000, gatherTime: 2000 },
+            { type: 'skilling', id: 'deep_woods_trees_3', name: 'Chop Trees', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 1, xp: 25 }], resourceCount: { min: 2, max: 5 }, respawnTime: 12000, gatherTime: 2000 },
         ],
         regionId: 'wilderness',
         x: 1100, y: 700
@@ -108,9 +120,9 @@ export const wildernessPois: Record<string, POI> = {
         description: 'A barely-visible path that comes to an abrupt end, blocked by thorny vines. This is a dead end.',
         connections: ['deep_woods'],
         activities: [
-            { type: 'skilling', id: 'overgrown_path_oak_tree', name: 'Chop Oak Tree', skill: SkillName.Woodcutting, requiredLevel: 15, loot: [{ itemId: 'oak_logs', chance: 0.9, xp: 65 }], resourceCount: { min: 6, max: 32 }, respawnTime: 18000, gatherTime: 3000, harvestBoost: 15 },
-            { type: 'skilling', id: 'overgrown_path_trees_1', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 0.8, xp: 25 }], resourceCount: { min: 2, max: 5 }, respawnTime: 12000, gatherTime: 2000 },
-            { type: 'skilling', id: 'overgrown_path_trees_2', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 0.8, xp: 25 }], resourceCount: { min: 2, max: 5 }, respawnTime: 12000, gatherTime: 2000 },
+            { type: 'skilling', id: 'overgrown_path_oak_tree', name: 'Chop Oak Tree', skill: SkillName.Woodcutting, requiredLevel: 15, loot: [{ itemId: 'oak_logs', chance: 1, xp: 65 }], resourceCount: { min: 6, max: 32 }, respawnTime: 18000, gatherTime: 3000 },
+            { type: 'skilling', id: 'overgrown_path_trees_1', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 1, xp: 25 }], resourceCount: { min: 2, max: 5 }, respawnTime: 12000, gatherTime: 2000 },
+            { type: 'skilling', id: 'overgrown_path_trees_2', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 1, xp: 25 }], resourceCount: { min: 2, max: 5 }, respawnTime: 12000, gatherTime: 2000 },
         ],
         regionId: 'wilderness',
         x: 1000, y: 600

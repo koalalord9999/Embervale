@@ -136,6 +136,7 @@ const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, ui, i
                 
                 {/* Map Orb Overlay - Placed in the bottom-right corner of the panel */}
                 <button 
+                    data-tutorial-id="map-orb"
                     {...mapOrbLongPress}
                     className="absolute z-10 w-11 h-11 rounded-full bg-blue-800 hover:bg-blue-700 border-2 border-blue-500 flex items-center justify-center bottom-px right-px"
                     aria-label="Open Map"

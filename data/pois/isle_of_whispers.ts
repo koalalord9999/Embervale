@@ -1,4 +1,4 @@
-import { POI, SkillName } from '../../types';
+import { POI, SkillName, ToolType } from '../../types';
 
 export const isleOfWhispersPois: Record<string, POI> = {
     // --- Port Wreckage (Settlement) ---
@@ -6,7 +6,7 @@ export const isleOfWhispersPois: Record<string, POI> = {
         id: 'port_wreckage_docks',
         name: 'Port Wreckage Docks',
         description: 'A series of rickety docks built from salvaged ship parts. The air is thick with the smell of salt and brine.',
-        connections: ['port_wreckage_square', 'crabclaw_isle'],
+        connections: ['port_wreckage_square', 'crabclaw_isle', 'deep_sea_fishing_spot'],
         activities: [
              {
                 type: 'npc',
@@ -18,11 +18,23 @@ export const isleOfWhispersPois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
                         text: "Ready to leave the isle? Or perhaps venture somewhere new?",
                         responses: [
-                            { text: "Yes, take me back to Silverhaven.", action: 'custom', customActionId: 'travel_to_silverhaven' },
-                            { text: "I've heard tales of floating islands... (1600 coins)", action: 'custom', customActionId: 'travel_to_crystalline_isles'},
-                            { text: "Not just yet.", action: 'close' },
+                            { text: "Yes, take me back to Silverhaven.", actions: [{ type: 'teleport', poiId: 'silverhaven_docks' }] },
+                            { text: "I've heard tales of floating islands... (1600 coins)", check: { requirements: [{ type: 'coins', amount: 1600 }], successNode: 'travel_crystalline_success', failureNode: 'travel_fail' }, actions: [{ type: 'take_coins', amount: 1600 }, { type: 'teleport', poiId: 'crystalline_isles_landing' }] },
+                            { text: "Not just yet." },
                         ],
                     },
+                    travel_crystalline_success: {
+                        npcName: 'Ferryman Silas',
+                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
+                        text: "To the skies! The Crystalline Isles await!",
+                        responses: []
+                    },
+                    travel_fail: {
+                        npcName: 'Ferryman Silas',
+                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
+                        text: "Sorry, friend. Passage ain't free. Come back when you have the coin.",
+                        responses: []
+                    }
                 },
                 startNode: 'start',
             },
@@ -75,6 +87,59 @@ export const isleOfWhispersPois: Record<string, POI> = {
         connections: ['port_wreckage_square'],
         activities: [
             { type: 'quest_board' },
+            {
+                type: 'npc',
+                name: 'Salty Sam',
+                icon: '/assets/npcChatHeads/ferryman_silas.png',
+                dialogue: {
+                    start: {
+                        npcName: 'Salty Sam',
+                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
+                        text: "Welcome to The Barnacle's Bite. Don't mind the creaking, she's an old ship. What'll it be?",
+                        responses: [
+                            { text: "What's on tap?", next: 'buy_drink_intro' },
+                            { text: "Got a hammock free?", next: 'rent_room_intro' },
+                        ]
+                    },
+                    buy_drink_intro: {
+                        npcName: 'Salty Sam',
+                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
+                        text: "Got some grog. Strong enough to strip barnacles, which is how the place got its name. 5 coins.",
+                        responses: [
+                            { text: "Pour me one.", check: { requirements: [{ type: 'coins', amount: 5 }], successNode: 'buy_drink_success', failureNode: 'buy_drink_fail' }, actions: [{ type: 'take_coins', amount: 5 }, { type: 'give_item', itemId: 'beer', quantity: 1 }] },
+                            { text: "I'll stick to water, thanks." },
+                        ]
+                    },
+                    buy_drink_success: {
+                        npcName: 'Salty Sam',
+                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
+                        text: "There ya go. Put some hair on your chest!",
+                        responses: []
+                    },
+                    buy_drink_fail: {
+                        npcName: 'Salty Sam',
+                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
+                        text: "No coin, no grog. That's the rule.",
+                        responses: []
+                    },
+                    rent_room_intro: {
+                        npcName: 'Salty Sam',
+                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
+                        text: "A hammock, eh? It's not the Silverhaven suite, but it's dry and keeps the crabs from nibblin' your toes. 25 coins for the night, and you'll wake up feeling brand new.",
+                        responses: [
+                            { text: "Sounds good to me.", check: { requirements: [{ type: 'coins', amount: 25 }], successNode: 'rent_room_success', failureNode: 'buy_drink_fail' }, actions: [{ type: 'take_coins', amount: 25 }, { type: 'heal', amount: 'full' }] },
+                            { text: "I'll take my chances with the crabs." },
+                        ]
+                    },
+                    rent_room_success: {
+                        npcName: 'Salty Sam',
+                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
+                        text: "Attaboy. Sleep tight.",
+                        responses: []
+                    }
+                },
+                startNode: 'start',
+            }
         ],
         regionId: 'isle_of_whispers',
         x: 450, y: 2350,
@@ -289,5 +354,19 @@ export const isleOfWhispersPois: Record<string, POI> = {
         ],
         regionId: 'isle_of_whispers',
         x: 800, y: 2600,
+    },
+    deep_sea_fishing_spot: {
+        id: 'deep_sea_fishing_spot',
+        name: 'Deep-Sea Fishing',
+        description: 'The deep, treacherous waters off the coast of the island. Large shapes move beneath the waves.',
+        connections: ['port_wreckage_docks'],
+        activities: [
+            { type: 'skilling', id: 'isle_harpoon_tuna', name: 'Harpoon Tuna', skill: SkillName.Fishing, requiredLevel: 40, loot: [{ itemId: 'raw_tuna', chance: 1, xp: 80 }], resourceCount: { min: 5, max: 10 }, respawnTime: 25000, gatherTime: 4000, requiredTool: ToolType.Harpoon },
+            { type: 'skilling', id: 'isle_harpoon_swordfish', name: 'Harpoon Swordfish', skill: SkillName.Fishing, requiredLevel: 62, loot: [{ itemId: 'raw_swordfish', chance: 1, xp: 100 }], resourceCount: { min: 3, max: 8 }, respawnTime: 45000, gatherTime: 5000, requiredTool: ToolType.Harpoon },
+            { type: 'skilling', id: 'isle_harpoon_shark', name: 'Harpoon Shark', skill: SkillName.Fishing, requiredLevel: 76, loot: [{ itemId: 'raw_shark', chance: 1, xp: 110 }], resourceCount: { min: 1, max: 5 }, respawnTime: 90000, gatherTime: 6000, requiredTool: ToolType.Harpoon },
+            { type: 'skilling', id: 'isle_ocean_trap_lobster', name: 'Set Ocean Trap', skill: SkillName.Fishing, requiredLevel: 50, loot: [{ itemId: 'raw_lobster', chance: 1, xp: 90 }], resourceCount: { min: 4, max: 9 }, respawnTime: 35000, gatherTime: 4500, requiredTool: ToolType.OceanBoxTrap },
+        ],
+        regionId: 'isle_of_whispers',
+        x: 350, y: 2450,
     },
 };

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SkillName } from '../../../../types';
 import { CRAFTING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
@@ -30,7 +31,7 @@ const BookbindingSlot: React.FC<{
     const hasIngredients = maxCraftable > 0;
     const canCraft = hasLevels && hasIngredients;
 
-    const handleSingleTap = () => { if(canCraft) onCraftItem(recipe.itemId, 1); };
+    const handleSingleTap = () => { if(canCraft) { onCraftItem(recipe.itemId, 1); setTooltip(null); } };
 
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();

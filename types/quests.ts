@@ -17,27 +17,44 @@ export interface PlayerSlayerTask {
 
 export type QuestRequirement =
   | ({ type: 'gather' } & ({ itemId: string; quantity: number } | { items: { itemId: string; quantity: number }[] }))
-  | { type: 'kill'; monsterId: string; quantity: number }
+  | { type: 'kill'; monsterId: string; quantity: number; style?: 'melee' | 'ranged' | 'magic' }
   | { type: 'talk'; poiId: string; npcName: string }
   | { type: 'shear'; quantity: number }
   | { type: 'smith'; itemId: string; quantity: number }
-  | { type: 'spin'; quantity: number };
+  | { type: 'spin'; quantity: number }
+  | { type: 'accept_repeatable_quest'; questId: string };
 
-export interface QuestStage {
-  description: string;
-  requirement: QuestRequirement;
-  stageRewards?: { xp?: { skill: SkillName; amount: number }[]; items?: InventorySlot[]; coins?: number };
+export type DialogueAction =
+  | { type: 'give_item'; itemId: string; quantity: number; noted?: boolean }
+  | { type: 'take_item'; itemId: string; quantity: number }
+  | { type: 'give_coins'; amount: number }
+  | { type: 'take_coins'; amount: number }
+  | { type: 'give_xp'; skill: SkillName; amount: number }
+  | { type: 'start_quest'; questId: string }
+  | { type: 'advance_quest'; questId: string }
+  | { type: 'complete_quest'; questId: string }
+  | { type: 'teleport'; poiId: string }
+  | { type: 'heal'; amount: 'full' | number }
+  | { type: 'restore_stats' }
+  | { type: 'complete_tutorial' };
+
+export type DialogueCheckRequirement = 
+    | { type: 'items'; items: { itemId: string, quantity: number, operator?: 'gte' | 'lt' | 'eq' }[] }
+    | { type: 'coins'; amount: number }
+    | { type: 'skill'; skill: SkillName; level: number }
+    | { type: 'world_state'; property: 'windmillFlour'; value: number; operator?: 'gte' | 'eq' };
+
+export interface DialogueCheck {
+    requirements: DialogueCheckRequirement[];
+    successNode: string;
+    failureNode: string;
 }
 
 export interface DialogueResponse {
     text: string;
-    next?: string; // Key of the next DialogueNode
-    action?: 'accept_quest' | 'close' | 'custom' | 'complete_stage';
-    questId?: string;
-    customActionId?: string;
-    items?: InventorySlot[];
-    itemsToConsume?: { itemId: string; quantity: number }[];
-    failureNext?: string; // Key of the next DialogueNode if the action fails
+    next?: string;
+    check?: DialogueCheck;
+    actions?: DialogueAction[];
 }
 
 export interface DialogueNode {
@@ -45,6 +62,19 @@ export interface DialogueNode {
     npcIcon: string;
     text: string;
     responses: DialogueResponse[];
+    conditionalResponses?: DialogueResponse[];
+    highlight?: string | string[];
+}
+
+// @fix: Defined the missing 'QuestStage' interface.
+export interface QuestStage {
+  description: string;
+  requirement: QuestRequirement;
+  stageRewards?: {
+    xp?: { skill: SkillName; amount: number }[];
+    items?: InventorySlot[];
+    coins?: number;
+  };
 }
 
 export interface Quest {

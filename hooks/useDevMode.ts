@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useUIState } from './useUIState';
 import { REGIONS } from '../constants';
@@ -53,12 +52,17 @@ export const useDevMode = (deps: DevModeDependencies) => {
     const [isXpBoostEnabled, setIsXpBoostEnabled] = useState(false);
     
     const [devPanelState, setDevPanelState] = useState({
-        activeTab: 'cheats' as 'cheats' | 'items' | 'teleport',
+        activeTab: 'cheats' as 'cheats' | 'items' | 'teleport' | 'woodcutting',
         itemSearchTerm: '',
         selectedItemId: null as string | null,
         spawnQuantity: 1,
         teleportRegionId: '',
         teleportPoiId: '',
+        skillToSet: '' as any | '',
+        levelToSet: 1,
+        coinAmount: 1000000,
+        wcTestLevel: 1,
+        wcTestTreeId: null as string | null,
     });
 
     const [poiCoordinates, setPoiCoordinates] = useState(() => 
@@ -239,8 +243,7 @@ export const useDevMode = (deps: DevModeDependencies) => {
                     }
                 });
                 
-                const header = `--- START OF FILE ${filePath} ---`;
-                generatedCodeBlocks.push(`${header}\n\n${fileContent}`);
+                generatedCodeBlocks.push(`\n${fileContent}`);
     
             } catch (error) {
                 console.error(`Failed to process file ${filePath}:`, error);

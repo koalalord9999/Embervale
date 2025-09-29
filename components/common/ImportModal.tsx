@@ -16,7 +16,7 @@ const ImportModal: React.FC<ImportModalProps> = ({ onImport, onClose }) => {
         if (data.trim()) {
             const success = onImport(data.trim());
             if (!success) {
-                setError("Import failed. The data may be corrupted or in the wrong format.");
+                setError("Import failed: Unknown or outdated save format. If you are seeing this, please reach out to the Developer and have your save file fixed.");
             }
         }
     };

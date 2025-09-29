@@ -18,7 +18,7 @@ export const beasts: Monster[] = [
         ],
         monsterType: MonsterType.Standard,
         attackSpeed: 4,
-        respawnTime: 5000,
+        respawnTime: 10000,
         aggressive: false,
         attackStyle: 'stab',
         customMaxHit: 1,

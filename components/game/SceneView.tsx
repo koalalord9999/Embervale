@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { POI, POIActivity, PlayerQuestState, SkillName, InventorySlot, ResourceNodeState, PlayerRepeatableQuest, SkillRequirement, PlayerSkill, DialogueNode, GroundItem, DialogueResponse, Quest } from '../../types';
-import { MONSTERS, QUESTS, SHOPS, ITEMS, REGIONS } from '../../constants';
+import { POI, POIActivity, PlayerQuestState, SkillName, InventorySlot, ResourceNodeState, PlayerRepeatableQuest, SkillRequirement, PlayerSkill, DialogueNode, GroundItem, DialogueResponse, Quest, BonfireActivity, DialogueAction, DialogueCheckRequirement } from '../../types';
+import { MONSTERS, QUESTS, SHOPS, ITEMS, REGIONS, FIREMAKING_RECIPES, SKILL_ICONS } from '../../constants';
 import { POIS } from '../../data/pois';
 import Button from '../common/Button';
 import { ContextMenuOption } from '../common/ContextMenu';
@@ -42,16 +42,17 @@ interface SceneViewProps {
     onCancelInteractQuest: () => void;
     clearedSkillObstacles: string[];
     onClearObstacle: (fromPoiId: string, toPoiId: string, requirement: SkillRequirement) => void;
-    skills: PlayerSkill[];
+    skills: (PlayerSkill & { currentLevel: number; })[];
     monsterRespawnTimers: Record<string, number>;
     setActiveDialogue: (dialogue: DialogueState | null) => void;
-    handleDialogueAction: (action: any) => boolean;
+    handleDialogueAction: (actions: DialogueAction[]) => void;
+    handleDialogueCheck: (requirements: DialogueCheckRequirement[]) => boolean;
     onDepositBackpack: () => void;
-    ui: ReturnType<typeof useUIState>; // Pass the whole ui object
-    tutorialStage: number;
-    advanceTutorial: (condition: string) => void;
+    ui: ReturnType<typeof useUIState>;
     isTouchSimulationEnabled: boolean;
     worldActions: ReturnType<typeof useWorldActions>;
+    bonfires: BonfireActivity[];
+    onStokeBonfire: (logId: string, bonfireId: string) => void;
 }
 
 const CleanupProgress: React.FC<{
@@ -94,11 +95,9 @@ const ActionableButton: React.FC<{
     setContextMenu: (menu: ContextMenuState | null) => void;
     ui: ReturnType<typeof useUIState>;
     onDepositBackpack: () => void;
-    tutorialStage: number;
-    advanceTutorial: (condition: string) => void;
     isTouchDevice: boolean;
     worldActions: ReturnType<typeof useWorldActions>;
-}> = ({ activity, index, handleActivityClick, setContextMenu, ui, onDepositBackpack, tutorialStage, advanceTutorial, isTouchDevice, worldActions }) => {
+}> = ({ activity, index, handleActivityClick, setContextMenu, ui, onDepositBackpack, isTouchDevice, worldActions }) => {
     
     let text = 'Interact';
     switch (activity.type) {
@@ -111,19 +110,16 @@ const ActionableButton: React.FC<{
         case 'bank': text = 'Use Bank'; break;
         case 'shearing': text = 'Shear Sheep'; break;
         case 'wishing_well': text = 'Toss a coin in the well'; break;
+        case 'bookbinding_workbench': text = 'Bind Books'; break;
         case 'quest_board': text = 'Check the Quest Board'; break;
         case 'spinning_wheel': text = 'Use Spinning Wheel'; break;
         case 'water_source': text = activity.name; break;
-        case 'interactive_dialogue': text = `Talk to ${activity.dialogue[activity.startNode].npcName}`; break;
         case 'milking': text = 'Milk a Cow'; break;
         case 'windmill': text = 'Collect Flour'; break;
         case 'ancient_chest': text = activity.name; break;
     }
 
     const onLongPress = (e: React.MouseEvent | React.TouchEvent) => {
-        if (tutorialStage === 17 && activity.type === 'furnace') advanceTutorial('context-menu-furnace');
-        if (tutorialStage === 19 && activity.type === 'anvil') advanceTutorial('context-menu-anvil');
-
         const event = 'touches' in e ? e.touches[0] : e;
         let options: ContextMenuOption[] = [];
 
@@ -177,9 +173,91 @@ const ActionableButton: React.FC<{
     );
 };
 
+const BonfireButton: React.FC<{
+    activity: BonfireActivity;
+    inventory: (InventorySlot | null)[];
+    skills: (PlayerSkill & { currentLevel: number; })[];
+    onStokeBonfire: (logId: string, bonfireId: string) => void;
+    setContextMenu: (menu: ContextMenuState | null) => void;
+    isTouchDevice: boolean;
+    onActivity: (activity: POIActivity) => void;
+}> = ({ activity, inventory, skills, onStokeBonfire, setContextMenu, isTouchDevice, onActivity }) => {
+    const [timeLeft, setTimeLeft] = useState(Math.max(0, activity.expiresAt - Date.now()));
+    const firemakingLevel = skills.find(s => s.name === SkillName.Firemaking)?.currentLevel ?? 1;
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const remaining = activity.expiresAt - Date.now();
+            if (remaining > 0) {
+                setTimeLeft(remaining);
+            } else {
+                setTimeLeft(0);
+                clearInterval(interval);
+            }
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [activity.expiresAt]);
+
+    const onLongPress = (e: React.MouseEvent | React.TouchEvent) => {
+        const event = 'touches' in e ? e.touches[0] : e;
+        
+        const usableLogs = FIREMAKING_RECIPES
+            .filter(recipe => inventory.some(slot => slot?.itemId === recipe.logId) && firemakingLevel >= recipe.level)
+            .sort((a, b) => b.level - a.level);
+
+        const bestLogToUse = usableLogs.length > 0 ? usableLogs[0] : null;
+
+        const stokeOption: ContextMenuOption = bestLogToUse
+            ? {
+                label: 'Stoke Fire',
+                onClick: () => onStokeBonfire(bestLogToUse.logId, activity.uniqueId),
+              }
+            : {
+                label: 'No usable logs',
+                onClick: () => {},
+                disabled: true,
+              };
+
+        const options: ContextMenuOption[] = [
+            { label: 'Cook', onClick: () => onActivity({ type: 'cooking_range' }) },
+            stokeOption,
+        ];
+        
+        setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
+    };
+    
+    const longPressHandlers = useLongPress({
+        onLongPress,
+        onClick: () => onActivity({ type: 'cooking_range' }),
+    });
+
+    const formatTime = (ms: number) => {
+        const totalSeconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    };
+
+    const originalRecipe = FIREMAKING_RECIPES.find(r => r.logId === activity.logId);
+    const heatColor = originalRecipe ? `hsl(${originalRecipe.level * 2.5 + 10}, 80%, 40%)` : '#d97706';
+
+    return (
+        <Button
+            variant="primary"
+            className="w-full h-11 flex flex-col items-center justify-center border-orange-600 hover:border-orange-500"
+            style={{ backgroundColor: heatColor }}
+            {...longPressHandlers}
+            title="A bonfire. Click to cook, or right-click/long-press to stoke."
+        >
+            <img src={SKILL_ICONS.Firemaking} alt="Bonfire" className="w-6 h-6 filter invert" />
+            <span className="text-xs font-bold">{formatTime(timeLeft)}</span>
+        </Button>
+    );
+};
+
 
 const SceneView: React.FC<SceneViewProps> = (props) => {
-    const { poi, unlockedPois, onNavigate, onActivity, onStartCombat, playerQuests, inventory, setContextMenu, setMakeXPrompt, setTooltip, addLog, startQuest, hasItems, resourceNodeStates, activeSkillingNodeId, onToggleSkilling, initializeNodeState, skillingTick, getSuccessChance, activeRepeatableQuest, activeCleanup, onStartInteractQuest, onCancelInteractQuest, clearedSkillObstacles, onClearObstacle, skills, monsterRespawnTimers, setActiveDialogue, handleDialogueAction, onDepositBackpack, ui, tutorialStage, advanceTutorial, isTouchSimulationEnabled, worldActions } = props;
+    const { poi, unlockedPois, onNavigate, onActivity, onStartCombat, playerQuests, inventory, setContextMenu, setMakeXPrompt, setTooltip, addLog, startQuest, hasItems, resourceNodeStates, activeSkillingNodeId, onToggleSkilling, initializeNodeState, skillingTick, getSuccessChance, activeRepeatableQuest, activeCleanup, onStartInteractQuest, onCancelInteractQuest, clearedSkillObstacles, onClearObstacle, skills, monsterRespawnTimers, setActiveDialogue, handleDialogueAction, handleDialogueCheck, onDepositBackpack, ui, isTouchSimulationEnabled, worldActions, bonfires, onStokeBonfire } = props;
     const { depletedNodesAnimating } = useSkillingAnimations(resourceNodeStates, poi.activities);
     const [countdown, setCountdown] = useState<Record<string, number>>({});
     const [shakingNodeId, setShakingNodeId] = useState<string | null>(null);
@@ -193,6 +271,7 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
         setAreActionsVisible(true);
     }, [poi.id]);
     
+    // @fix: Removed obsolete tutorialStage and advanceTutorial props, as they are no longer part of SceneInteractionDependencies. Tutorial progress is now quest-based.
     const { handleActivityClick } = useSceneInteractions(poi.id, {
         playerQuests,
         startQuest,
@@ -200,12 +279,10 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
         addLog,
         onActivity: (activity) => {
             onActivity(activity);
-            if (activity.type === 'bank') advanceTutorial('open-bank');
         },
         setActiveDialogue,
-        tutorialStage,
-        advanceTutorial,
         handleDialogueAction,
+        handleDialogueCheck
     });
 
     useEffect(() => {
@@ -305,12 +382,23 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
     }, [poi, clearedSkillObstacles]);
 
     const getActivityButton = (activity: POIActivity, index: number) => {
-        if (activity.type === 'npc' && activity.questCondition) {
+        if ((activity.type === 'npc' || activity.type === 'skilling' || activity.type === 'runecrafting_altar') && activity.questCondition) {
             const playerQuest = playerQuests.find(q => q.questId === activity.questCondition!.questId);
-            const stages = activity.questCondition!.stages ?? (activity.questCondition!.stage !== undefined ? [activity.questCondition!.stage] : []);
-            
-            if (!playerQuest || playerQuest.isComplete || !stages.includes(playerQuest.currentStage)) {
-                return null;
+            const stages = activity.questCondition!.stages;
+            const visibleAfter = activity.questCondition!.visibleAfterCompletion ?? false;
+    
+            if (!playerQuest) {
+                return null; // Quest not started, hide activity
+            }
+    
+            if (playerQuest.isComplete) {
+                if (!visibleAfter) {
+                    return null; // Hide if quest is complete and not set to be visible after
+                }
+            } else { // Quest is in progress
+                if (!stages.includes(playerQuest.currentStage)) {
+                    return null; // Hide if not in one of the specified stages
+                }
             }
         }
 
@@ -479,6 +567,14 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
         
         if (activity.type === 'quest_start' && playerQuests.some(q => q.questId === activity.questId)) return null;
         
+        if (activity.type === 'runecrafting_altar') {
+            return (
+                <Button onClick={() => onActivity(activity)}>
+                    Craft Runes
+                </Button>
+            );
+        }
+
         return (
             <ActionableButton
                 key={`${activity.type}-${index}`}
@@ -488,8 +584,6 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
                 setContextMenu={setContextMenu}
                 ui={ui}
                 onDepositBackpack={onDepositBackpack}
-                tutorialStage={tutorialStage}
-                advanceTutorial={advanceTutorial}
                 isTouchDevice={isTouchDevice}
                 worldActions={worldActions}
             />
@@ -525,7 +619,7 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
             const { fromPoiId, toPoiId, requirement } = item;
             const destinationPoi = POIS[toPoiId];
             const playerSkill = skills.find(s => s.name === requirement.skill);
-            const hasLevel = playerSkill && playerSkill.level >= requirement.level;
+            const hasLevel = playerSkill && playerSkill.currentLevel >= requirement.level;
             const hasRequiredItems = requirement.items ? hasItems(requirement.items) : true;
 
             return (
@@ -598,6 +692,18 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
                          <div className="overflow-y-auto pr-1 animate-fade-in">
                             <div className="grid grid-cols-3 gap-2">
                                 {poi.activities.map(getActivityButton)}
+                                {bonfires.length > 0 && bonfires.map(bonfire => (
+                                    <BonfireButton
+                                        key={bonfire.uniqueId}
+                                        activity={bonfire}
+                                        inventory={inventory}
+                                        skills={skills}
+                                        onStokeBonfire={onStokeBonfire}
+                                        setContextMenu={setContextMenu}
+                                        isTouchDevice={isTouchDevice}
+                                        onActivity={onActivity}
+                                    />
+                                ))}
                                 {renderInteractQuestActivity()}
                             </div>
                         </div>

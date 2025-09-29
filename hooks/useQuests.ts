@@ -17,6 +17,16 @@ export const useQuests = (initialData: { playerQuests: PlayerQuestState[], locke
             addLog(`New quest started: ${questData.name}`);
         }
     }, [playerQuests]);
+
+    const resetQuest = useCallback((questId: string, addLog: (message: string) => void) => {
+        const questData = QUESTS[questId];
+        if (questData && playerQuests.some(q => q.questId === questId)) {
+            setPlayerQuests(quests => quests.filter(q => q.questId !== questId));
+            addLog(`DEV: Reset quest '${questData.name}'.`);
+        } else {
+            addLog(`DEV: Quest '${questData?.name || questId}' not active or not found.`);
+        }
+    }, [playerQuests]);
     
-    return { playerQuests, setPlayerQuests, lockedPois, setLockedPois, startQuest };
+    return { playerQuests, setPlayerQuests, lockedPois, setLockedPois, startQuest, resetQuest };
 };

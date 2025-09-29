@@ -51,7 +51,8 @@ export interface SkillGuideEntry {
 export interface ActiveCraftingAction {
     recipeId: string;
     // Distinguishes between different types of recipes that might share item IDs
-    recipeType: 'smithing-bar' | 'smithing-item' | 'fletching-carve' | 'fletching-string' | 'fletching-headless' | 'fletching-tip' | 'crafting' | 'gem-cutting' | 'spinning' | 'cooking' | 'herblore-unfinished' | 'herblore-finished' | 'jewelry' | 'firemaking' | 'milling' | 'dough-making';
+    // FIX: Replaced 'firemaking' with specific types 'firemaking-light' and 'firemaking-stoke' to support new actions.
+    recipeType: 'smithing-bar' | 'smithing-item' | 'fletching-carve' | 'fletching-string' | 'fletching-headless' | 'fletching-tip' | 'crafting' | 'gem-cutting' | 'spinning' | 'cooking' | 'herblore-unfinished' | 'herblore-finished' | 'jewelry' | 'firemaking-light' | 'firemaking-stoke' | 'milling' | 'dough-making';
     totalQuantity: number;
     completedQuantity: number;
     successfulQuantity?: number;
@@ -67,5 +68,7 @@ export interface ActiveCraftingAction {
         cleanHerbId?: string; // for herblore-unfinished
         unfinishedPotionId?: string; // for herblore-finished
         secondaryId?: string; // for herblore-finished
+        // FIX: Added bonfireId to support stoking bonfires.
+        bonfireId?: string; // for firemaking-stoke
     }
 }

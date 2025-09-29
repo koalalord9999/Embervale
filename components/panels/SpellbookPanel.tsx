@@ -132,7 +132,7 @@ const SpellbookPanel: React.FC<SpellbookPanelProps> = ({ skills, inventory, onCa
                 onClick={() => onCastSpell(spell)}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={() => setTooltip(null)}
-                className={`w-full aspect-square rounded-md transition-colors flex items-center justify-center text-center ${isAutocasting ? 'ring-2 ring-blue-400' : 'hover:bg-gray-700/20'}`}
+                className={`w-full aspect-square rounded-md transition-colors flex items-center justify-center text-center hover:bg-gray-700/20 relative isolate ${isAutocasting ? 'autocast-orb-highlight' : ''}`}
             >
                 <img src={getSpellIconUrl(spell)} alt={spell.name} className={`w-full h-full p-1 ${getSpellIconClassName(spell)}`} />
             </button>
@@ -141,7 +141,7 @@ const SpellbookPanel: React.FC<SpellbookPanelProps> = ({ skills, inventory, onCa
     
     return (
         <div className="flex flex-col h-full text-gray-300">
-            <h3 className="text-lg font-bold text-center mb-2 text-yellow-400">{ui.isSelectingAutocastSpell ? 'Select Autocast Spell' : 'Spellbook'}</h3>
+            {ui.isSelectingAutocastSpell && <h3 className="text-lg font-bold text-center mb-2 text-yellow-400">Select Autocast Spell</h3>}
             <div className="flex-grow overflow-y-auto pr-1">
                 <div className="grid grid-cols-5 gap-2">
                     {spellsToDisplay.map(renderSpell)}

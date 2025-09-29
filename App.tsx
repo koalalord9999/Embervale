@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useUIState } from './hooks/useUIState';
 import { useGameStateManager } from './hooks/useGameStateManager';
@@ -9,7 +10,6 @@ import ExportModal from './components/common/ExportModal';
 import ImportModal from './components/common/ImportModal';
 import SkillGuideView from './components/views/overlays/SkillGuideView';
 import QuestDetailView from './components/views/overlays/QuestDetailView';
-import EquipmentStatsView from './components/views/overlays/EquipmentStatsView';
 import ItemsOnDeathView from './components/views/overlays/ItemsOnDeathView';
 import PriceCheckerView from './components/views/overlays/PriceCheckerView';
 import Game from './components/game/Game';
@@ -256,7 +256,6 @@ const App: React.FC = () => {
                     {ui.isImportModalOpen && <ImportModal onImport={loadFromImportedData} onClose={ui.closeImportModal} />}
                     {ui.activeSkillGuide && <SkillGuideView activeSkill={ui.activeSkillGuide} setActiveSkill={ui.setActiveSkillGuide} onClose={ui.closeSkillGuide} playerSkills={initialState.skills as any[]} />}
                     {ui.activeQuestDetail && <QuestDetailView questId={ui.activeQuestDetail.questId} playerQuests={ui.activeQuestDetail.playerQuests} onClose={() => ui.setActiveQuestDetail(null)} />}
-                    {ui.equipmentStats && <EquipmentStatsView equipment={ui.equipmentStats} onClose={() => ui.setEquipmentStats(null)} />}
                     {ui.isItemsOnDeathOpen && <ItemsOnDeathView inventory={initialState.inventory} equipment={initialState.equipment} coins={initialState.coins} onClose={() => ui.setIsItemsOnDeathOpen(false)} />}
                     {ui.priceCheckerInventory && <PriceCheckerView inventory={ui.priceCheckerInventory} onClose={() => ui.setPriceCheckerInventory(null)} setTooltip={ui.setTooltip} />}
                 </>

@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { useState, useCallback } from 'react';
 import { InventorySlot, Equipment, CombatStance, WeaponType, PlayerSkill, Item } from '../types';
@@ -60,10 +58,11 @@ const addToBank = (
     }
 };
 
+const AMMO_TIER_LEVELS: Record<string, number> = { bronze: 1, iron: 2, steel: 3, mithril: 4, adamantite: 5, runic: 6 };
+
 export const useInventory = (
     initialData: { inventory: InventorySlot[], coins: number, equipment: Equipment },
     addLog: (message: string) => void,
-    advanceTutorial: (condition: string) => void,
     options?: {
         isAutoBankOn?: boolean;
         bank?: (InventorySlot | null)[];
@@ -174,10 +173,27 @@ export const useInventory = (
         }
     }, [addLog, isAutoBankOn, bank, setBank]);
 
-    const hasItems = useCallback((requirements: { itemId: string, quantity: number }[]): boolean => {
+    const hasItems = useCallback((requirements: { itemId: string, quantity: number, operator?: 'gte' | 'lt' | 'eq' }[]): boolean => {
       return requirements.every(req => {
         const totalQuantity = inventory.reduce((acc, slot) => (slot && slot.itemId === req.itemId && !slot.noted) ? acc + slot.quantity : acc, 0);
-        return totalQuantity >= req.quantity;
+        
+        // Handle old logic for absence check if quantity is negative
+        if (req.quantity < 0) {
+            return totalQuantity === 0;
+        }
+
+        const operator = req.operator ?? 'gte';
+        
+        switch (operator) {
+            case 'gte':
+                return totalQuantity >= req.quantity;
+            case 'lt':
+                return totalQuantity < req.quantity;
+            case 'eq':
+                return totalQuantity === req.quantity;
+            default: // Default to original behavior
+                return totalQuantity >= req.quantity;
+        }
       });
     }, [inventory]);
 
@@ -196,13 +212,45 @@ export const useInventory = (
         }
     
         const slotKey = itemData.equipment.slot.toLowerCase() as keyof Equipment;
-        const isTwoHanded = itemData.equipment.isTwoHanded;
+
+        // AMMO TIER CHECK when equipping AMMO
+        if (slotKey === 'ammo') {
+            const weaponSlot = equipment.weapon;
+            if (weaponSlot) {
+                const weaponData = ITEMS[weaponSlot.itemId];
+                if (weaponData?.equipment?.weaponType === WeaponType.Bow && weaponData.equipment.ammoTier) {
+                    const bowMaxTier = AMMO_TIER_LEVELS[weaponData.equipment.ammoTier];
+                    const ammoTier = AMMO_TIER_LEVELS[itemData.material as string];
+                    if (ammoTier > bowMaxTier) {
+                        addLog(`Your ${weaponData.name} cannot fire such advanced ammunition.`);
+                        return;
+                    }
+                }
+            }
+        }
     
+        const isTwoHanded = itemData.equipment.isTwoHanded;
         const currentWeapon = equipment.weapon ? ITEMS[equipment.weapon.itemId] : null;
         const isCurrentWeaponTwoHanded = currentWeapon?.equipment?.isTwoHanded;
     
         const itemsToReturnToInventory: (InventorySlot | null)[] = [];
         const newEquipmentChanges: Partial<Equipment> = {};
+
+        // AMMO TIER CHECK when equipping a WEAPON
+        if (slotKey === 'weapon' && itemData.equipment.weaponType === WeaponType.Bow && itemData.equipment.ammoTier) {
+            const equippedAmmo = equipment.ammo;
+            if (equippedAmmo) {
+                const ammoData = ITEMS[equippedAmmo.itemId];
+                const newBowMaxTier = AMMO_TIER_LEVELS[itemData.equipment.ammoTier];
+                const ammoTier = AMMO_TIER_LEVELS[ammoData.material as string];
+
+                if (ammoTier > newBowMaxTier) {
+                    itemsToReturnToInventory.push(equippedAmmo);
+                    newEquipmentChanges.ammo = null;
+                    addLog(`You unequip your ${ammoData.name}; it is too advanced for the ${itemData.name}.`);
+                }
+            }
+        }
     
         // Case 1: Equipping a 2H weapon, need to unequip shield
         if (isTwoHanded && equipment.shield) {
@@ -308,11 +356,8 @@ export const useInventory = (
             return newInv;
         });
     
-        if (itemToEquip.itemId === 'bronze_dagger') {
-            advanceTutorial('equip-dagger');
-        }
         addLog(`Equipped ${itemData.name}.`);
-    }, [equipment, inventory, addLog, advanceTutorial, setCombatStance]);
+    }, [equipment, inventory, addLog, setCombatStance]);
 
     const handleUnequip = useCallback((slotKey: keyof Equipment) => {
         const itemToUnequip = equipment[slotKey];

@@ -1,5 +1,6 @@
 
-import { POI, SkillName } from '../../types';
+
+import { POI, SkillName, ToolType } from '../../types';
 
 export const sunkenLandsPois: Record<string, POI> = {
     tangled_entry: {
@@ -21,7 +22,7 @@ export const sunkenLandsPois: Record<string, POI> = {
         connections: ['tangled_entry'],
         activities: [
              { type: 'skilling', id: 'murky_shallows_willow_1', name: 'Chop Willow Tree', skill: SkillName.Woodcutting, requiredLevel: 30, loot: [{ itemId: 'willow_logs', chance: 1, xp: 90 }], resourceCount: { min: 14, max: 30 }, respawnTime: 25000, gatherTime: 3500 },
-             { type: 'skilling', id: 'murky_shallows_fishing_1', name: 'Fish for Eels', skill: SkillName.Fishing, requiredLevel: 35, loot: [{ itemId: 'raw_eel', chance: 1, xp: 70 }], resourceCount: { min: 1, max: 70 }, respawnTime: 20000, gatherTime: 2800 },
+             { type: 'skilling', id: 'murky_shallows_fishing_1', name: 'Set Basket Trap', skill: SkillName.Fishing, requiredLevel: 38, loot: [{ itemId: 'raw_eel', chance: 1, xp: 70 }], resourceCount: { min: 1, max: 70 }, respawnTime: 20000, gatherTime: 2800, requiredTool: ToolType.BasketTrap },
         ],
         regionId: 'sunken_lands',
         x: 1220, y: 1440
@@ -69,7 +70,7 @@ export const sunkenLandsPois: Record<string, POI> = {
         connections: ['mire_of_sorrow', 'leech_infested_waters'],
         activities: [
             { type: 'combat', monsterId: 'giant_toad' },
-            { type: 'skilling', id: 'toadstool_bog_fishing_1', name: 'Fish for Eels', skill: SkillName.Fishing, requiredLevel: 35, loot: [{ itemId: 'raw_eel', chance: 1, xp: 70 }], resourceCount: { min: 3, max: 8 }, respawnTime: 20000, gatherTime: 2800 },
+            { type: 'skilling', id: 'toadstool_bog_fishing_1', name: 'Set Basket Trap', skill: SkillName.Fishing, requiredLevel: 38, loot: [{ itemId: 'raw_eel', chance: 1, xp: 70 }], resourceCount: { min: 3, max: 8 }, respawnTime: 20000, gatherTime: 2800, requiredTool: ToolType.BasketTrap },
         ],
         regionId: 'sunken_lands',
         x: 1320, y: 1340
@@ -80,7 +81,7 @@ export const sunkenLandsPois: Record<string, POI> = {
         description: 'The water here is particularly foul and writhing with leeches. However, this seems to be where the largest eels congregate.',
         connections: ['toadstool_bog'],
         activities: [
-            { type: 'skilling', id: 'leech_bog_fishing_1', name: 'Fish for Eels', skill: SkillName.Fishing, requiredLevel: 35, loot: [{ itemId: 'raw_eel', chance: 1, xp: 70 }], resourceCount: { min: 5, max: 10 }, respawnTime: 20000, gatherTime: 2800 },
+            { type: 'skilling', id: 'leech_bog_fishing_1', name: 'Set Basket Trap', skill: SkillName.Fishing, requiredLevel: 38, loot: [{ itemId: 'raw_eel', chance: 1, xp: 70 }], resourceCount: { min: 5, max: 10 }, respawnTime: 20000, gatherTime: 2800, requiredTool: ToolType.BasketTrap },
         ],
         regionId: 'sunken_lands',
         x: 1360, y: 1260

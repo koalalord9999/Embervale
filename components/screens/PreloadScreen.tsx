@@ -159,6 +159,20 @@ const PreloadScreen: React.FC<PreloadScreenProps> = ({ loadingTips, onContinue, 
                     </Button>
                 </div>
             </div>
+             <a
+                href="https://discord.gg/vFUhYWWafx"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute bottom-4 left-4 z-20"
+                aria-label="Join our Discord community"
+                title="Join our Discord community"
+            >
+                <img
+                    src="https://www.svgrepo.com/show/353655/discord-icon.svg"
+                    alt="Discord Icon"
+                    className="w-8 h-8 filter grayscale hover:grayscale-0 transition-all duration-200"
+                />
+            </a>
         </div>
     );
 };

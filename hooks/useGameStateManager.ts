@@ -17,8 +17,8 @@ const defaultState = {
     equipment: { weapon: null, shield: null, head: null, body: null, legs: null, ammo: null, gloves: null, boots: null, cape: null, necklace: null, ring: null },
     combatStance: CombatStance.Accurate,
     currentHp: 10,
-    currentPoiId: 'enclave_start',
-    playerQuests: [],
+    currentPoiId: 'tutorial_entrance',
+    playerQuests: [{ questId: 'embrune_101', currentStage: 0, progress: 0, isComplete: false }],
     lockedPois: Object.keys(POIS).filter(id => !!POIS[id].unlockRequirement),
     clearedSkillObstacles: [],
     resourceNodeStates: {},
@@ -31,8 +31,8 @@ const defaultState = {
         boardCompletions: {},
     },
     slayerTask: null as PlayerSlayerTask | null,
-    tutorialStage: 0,
-    worldState: { windmillFlour: 0, deathMarker: null } as WorldState,
+    tutorialStage: -1, // No longer used, progress is through embrune_101 quest
+    worldState: { windmillFlour: 0, deathMarker: null, bankPlaceholders: false, hpBoost: null } as WorldState,
     autocastSpell: null as Spell | null,
 };
 
@@ -148,6 +148,17 @@ const validateAndMergeState = (parsedData: any): GameState => {
         if (parsedData.worldState.deathMarker) {
              validatedState.worldState.deathMarker = parsedData.worldState.deathMarker;
         }
+        if (typeof parsedData.worldState.bankPlaceholders === 'boolean') {
+            validatedState.worldState.bankPlaceholders = parsedData.worldState.bankPlaceholders;
+        }
+        if (parsedData.worldState.hpBoost) {
+             validatedState.worldState.hpBoost = parsedData.worldState.hpBoost;
+        }
+    }
+
+    // Ensure new players get the tutorial quest
+    if (!parsedData.playerQuests?.some((q: any) => q.questId === 'embrune_101') && parsedData.username) {
+        validatedState.playerQuests.push({ questId: 'embrune_101', currentStage: 0, progress: 0, isComplete: false });
     }
 
     return validatedState;
@@ -160,55 +171,28 @@ export const useGameStateManager = (ui: ReturnType<typeof useUIState>) => {
     const parseSaveData = useCallback((data: string): GameState | null => {
         try {
             const trimmedData = data.trim();
-            // New "SAVE" prefixed format
-            if (trimmedData.startsWith('SAVE')) {
-                const base64Data = trimmedData.substring(4);
+    
+            if (trimmedData.startsWith('s4V')) {
+                const base64Data = trimmedData.substring(3);
                 try {
                     const jsonString = atob(base64Data); // Decode from Base64
                     const parsedData = JSON.parse(jsonString);
+                    // A simple validation check
                     if (!parsedData.skills || !parsedData.inventory || typeof parsedData.coins === 'undefined') {
-                        throw new Error("Invalid save file format.");
+                        throw new Error("Invalid save file format: missing core properties.");
                     }
                     return validateAndMergeState(parsedData);
                 } catch (error) {
-                    console.error("Failed to parse obfuscated save data:", error);
+                    console.error("Failed to parse base64 save data:", error);
                     return null;
                 }
-            } 
-            // Legacy plain JSON format for backward compatibility
-            else if (trimmedData.startsWith('{')) {
-                try {
-                    const parsedData = JSON.parse(trimmedData);
-                    if (!parsedData.skills || !parsedData.inventory || typeof parsedData.coins === 'undefined') {
-                        throw new Error("Invalid save file format.");
-                    }
-                    return validateAndMergeState(parsedData);
-                } catch (error) {
-                    console.error("Failed to parse legacy JSON save data:", error);
-                    return null;
-                }
-            }
-            // Handle the bugged `s4Ve` prefix from a previous version, just in case.
-            else if (trimmedData.startsWith('s4Ve')) {
-                 const base64Data = trimmedData.substring(4);
-                try {
-                    const jsonString = atob(base64Data); // Decode from Base64
-                    const parsedData = JSON.parse(jsonString);
-                    if (!parsedData.skills || !parsedData.inventory || typeof parsedData.coins === 'undefined') {
-                        throw new Error("Invalid save file format.");
-                    }
-                    return validateAndMergeState(parsedData);
-                } catch (error) {
-                    console.error("Failed to parse old obfuscated save data:", error);
-                    return null;
-                }
-            }
-            else {
-                 console.error("Unknown save format.");
-                 return null;
+            } else {
+                // Log an error for any other format, as per the new requirement
+                console.error("Import failed: Unknown or outdated save format. If you are seeing this, please reach out to the Developer and have your save file fixed.");
+                return null;
             }
         } catch (error) {
-            console.error("Failed to parse save data:", error);
+            console.error("An unexpected error occurred while parsing save data:", error);
             return null;
         }
     }, []);
@@ -218,7 +202,7 @@ export const useGameStateManager = (ui: ReturnType<typeof useUIState>) => {
         try {
             const dataStr = JSON.stringify(gameState, null, 2);
             const base64Str = btoa(dataStr); // Encode to Base64
-            const finalExportStr = 'SAVE' + base64Str; // Prepend "SAVE"
+            const finalExportStr = 's4V' + base64Str; // Prepend "s4V"
             ui.setExportData({ data: finalExportStr });
         } catch (error) {
             console.error("Failed to serialize save data:", error);

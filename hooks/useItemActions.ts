@@ -1,8 +1,7 @@
-
 import React, { useCallback } from 'react';
-import { InventorySlot, PlayerSkill, SkillName, ActiveCraftingAction, Item, CraftingContext, POIActivity, EquipmentSlot } from '../types';
-import { ITEMS, FLETCHING_RECIPES, HERBLORE_RECIPES, HERBS, INVENTORY_CAPACITY, rollOnLootTable, LootRollResult } from '../constants';
-import { POIS } from '../data/pois';
+import { InventorySlot, PlayerSkill, SkillName, ActiveCraftingAction, Item, CraftingContext, POIActivity, EquipmentSlot, PlayerQuestState } from '../../types';
+import { ITEMS, FLETCHING_RECIPES, HERBLORE_RECIPES, HERBS, INVENTORY_CAPACITY, rollOnLootTable, LootRollResult, FIREMAKING_RECIPES } from '../../constants';
+import { POIS } from '../../data/pois';
 import { MakeXPrompt } from './useUIState';
 
 interface UseItemActionsProps {
@@ -24,12 +23,12 @@ interface UseItemActionsProps {
     addBuff: (buff: Omit<any, 'id' | 'expiresAt'>) => void;
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
     startQuest: (questId: string) => void;
-    advanceTutorial: (condition: string) => void;
     currentPoiId: string;
+    playerQuests: PlayerQuestState[];
 }
 
 export const useItemActions = (props: UseItemActionsProps) => {
-    const { addLog, currentHp, maxHp, setCurrentHp, applyStatModifier, setInventory, skills, inventory, activeCraftingAction, setActiveCraftingAction, hasItems, modifyItem, addXp, openCraftingView, setItemToUse, addBuff, setMakeXPrompt, startQuest, advanceTutorial, currentPoiId } = props;
+    const { addLog, currentHp, maxHp, setCurrentHp, applyStatModifier, setInventory, skills, inventory, activeCraftingAction, setActiveCraftingAction, hasItems, modifyItem, addXp, openCraftingView, setItemToUse, addBuff, setMakeXPrompt, startQuest, currentPoiId, playerQuests } = props;
 
     const handleConsume = useCallback((itemId: string, inventoryIndex: number) => {
         const itemData = ITEMS[itemId];
@@ -207,7 +206,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
             return newInv;
         });
 
-    }, [skills, currentHp, maxHp, setCurrentHp, setInventory, addLog, applyStatModifier, modifyItem, addXp, addBuff, advanceTutorial, inventory]);
+    }, [skills, currentHp, maxHp, setCurrentHp, setInventory, addLog, applyStatModifier, modifyItem, addXp, addBuff, inventory]);
     
     const handleBuryBones = useCallback((itemId: string, inventoryIndex: number) => {
         const itemData = ITEMS[itemId];
@@ -305,6 +304,40 @@ export const useItemActions = (props: UseItemActionsProps) => {
         const usedItemData = ITEMS[usedId];
         const targetItem = ITEMS[targetId];
 
+        const isFiremaking = (usedId === 'tinderbox' && FIREMAKING_RECIPES.some(r => r.logId === targetId)) ||
+                             (targetId === 'tinderbox' && FIREMAKING_RECIPES.some(r => r.logId === usedId));
+        if (isFiremaking) {
+            const logId = usedId === 'tinderbox' ? targetId : usedId;
+            const recipe = FIREMAKING_RECIPES.find(r => r.logId === logId);
+            if (!recipe) return;
+
+            const firemakingLevel = skills.find(s => s.name === SkillName.Firemaking)?.currentLevel ?? 1;
+            if (firemakingLevel < recipe.level) {
+                addLog(`You need a Firemaking level of ${recipe.level} to light these logs.`);
+                return;
+            }
+            if (!hasItems([{ itemId: logId, quantity: 1 }])) {
+                addLog(`You need some ${ITEMS[logId].name} to light a fire.`);
+                return;
+            }
+            if (activeCraftingAction) {
+                addLog("You are already busy.");
+                return;
+            }
+
+            addLog(`You attempt to light the ${ITEMS[logId].name}...`);
+            setActiveCraftingAction({
+                recipeId: logId,
+                recipeType: 'firemaking-light',
+                totalQuantity: 1,
+                completedQuantity: 0,
+                successfulQuantity: 0,
+                startTime: Date.now(),
+                duration: 1800,
+            });
+            return;
+        }
+        
         // Tiara Crafting
         const isTiaraCrafting = (usedId === 'silver_tiara' && targetItem.divining) || (targetId === 'silver_tiara' && usedItemData.divining);
         if (isTiaraCrafting) {
@@ -421,35 +454,6 @@ export const useItemActions = (props: UseItemActionsProps) => {
                         addLog(`You grind ${quantity}x ${ITEMS[crushTargetId].name} into dust and gain ${totalXp} Herblore XP.`);
                     }
                 }
-            });
-            return;
-        }
-
-        const isFiremaking = (usedId === 'tinderbox' && targetId === 'logs') || (targetId === 'tinderbox' && usedId === 'logs');
-        if (isFiremaking) {
-            const firemakingLevel = skills.find(s => s.name === SkillName.Firemaking)?.currentLevel ?? 1;
-            if (firemakingLevel < 1) {
-                addLog("You need a Firemaking level of 1 to light a fire.");
-                return;
-            }
-            if (!hasItems([{ itemId: 'logs', quantity: 1 }])) {
-                addLog("You need some logs to light a fire.");
-                return;
-            }
-            if (activeCraftingAction) {
-                addLog("You are already busy.");
-                return;
-            }
-
-            addLog("You attempt to light the logs...");
-            setActiveCraftingAction({
-                recipeId: 'logs',
-                recipeType: 'firemaking',
-                totalQuantity: 1, // Firemaking is one at a time for now
-                completedQuantity: 0,
-                successfulQuantity: 0,
-                startTime: Date.now(),
-                duration: 1800,
             });
             return;
         }
@@ -583,7 +587,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
         }
 
         const startTimedAction = (recipeId: string, recipeType: ActiveCraftingAction['recipeType'], totalQuantity: number, duration: number, payload?: ActiveCraftingAction['payload']) => {
-            setActiveCraftingAction({ recipeId, recipeType, totalQuantity, completedQuantity: 0, startTime: Date.now(), duration, payload });
+            setActiveCraftingAction({ recipeId, recipeType, totalQuantity, completedQuantity: 0, successfulQuantity: 0, startTime: Date.now(), duration, payload });
         };
         
         // Stringing a bow
@@ -622,13 +626,13 @@ export const useItemActions = (props: UseItemActionsProps) => {
         }
 
         addLog("Nothing interesting happens.");
-    }, [skills, inventory, addLog, setActiveCraftingAction, hasItems, modifyItem, addXp, setMakeXPrompt, activeCraftingAction, advanceTutorial, currentPoiId]);
+    }, [skills, inventory, addLog, setActiveCraftingAction, hasItems, modifyItem, addXp, setMakeXPrompt, activeCraftingAction, currentPoiId]);
 
     const handleUseItemOn = useCallback((used: { item: InventorySlot, index: number }, target: { item: InventorySlot, index: number }) => {
         const usedItem = ITEMS[used.item.itemId];
         const targetItem = ITEMS[target.item.itemId];
     
-        const isLog = (item: Item) => item.id === 'logs' || item.id.endsWith('_logs');
+        const isLog = (item: Item) => item.id.endsWith('_logs');
         const isChisel = (item: Item) => item.id === 'chisel';
         const isUncutGem = (item: Item) => item.id.startsWith('uncut_');
         const isNeedle = (item: Item) => item.id === 'needle';
@@ -653,6 +657,13 @@ export const useItemActions = (props: UseItemActionsProps) => {
         setItemToUse(null);
     }, [openCraftingView, handleItemCombination, setItemToUse]);
 
+    const handleExamine = useCallback((item: Item) => {
+        if (item.id === 'stolen_caravan_goods' && !playerQuests.some(q => q.questId === 'missing_shipment')) {
+            startQuest('missing_shipment');
+        }
+        addLog(`[Examine: ${item.name}] ${item.description}`);
+    }, [addLog, playerQuests, startQuest]);
+
 
     return {
         handleConsume,
@@ -660,5 +671,6 @@ export const useItemActions = (props: UseItemActionsProps) => {
         handleEmptyItem,
         handleUseItemOn,
         handleDivine,
+        handleExamine,
     };
 };

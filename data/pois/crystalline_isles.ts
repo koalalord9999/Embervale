@@ -17,10 +17,22 @@ export const crystallineIslesPois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
                         text: "A breathtaking view, isn't it? Let me know when you're ready to return to the world below. It's a 1600 coin charter.",
                         responses: [
-                            { text: "Take me back to Silverhaven. (1600 coins)", action: 'custom', customActionId: 'travel_from_crystalline_isles_to_silverhaven' },
-                            { text: "I'll stay a while longer.", action: 'close' },
+                            { text: "Take me back to Silverhaven. (1600 coins)", check: { requirements: [{ type: 'coins', amount: 1600 }], successNode: 'travel_success', failureNode: 'travel_fail' }, actions: [{ type: 'take_coins', amount: 1600 }, { type: 'teleport', poiId: 'silverhaven_docks' }] },
+                            { text: "I'll stay a while longer." },
                         ],
                     },
+                    travel_success: {
+                        npcName: 'Skyship Captain',
+                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
+                        text: "Anchors away! Back to solid ground we go.",
+                        responses: []
+                    },
+                    travel_fail: {
+                        npcName: 'Skyship Captain',
+                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
+                        text: "Apologies, but the charter fee is non-negotiable. The winds up here are treacherous.",
+                        responses: []
+                    }
                 },
                 startNode: 'start',
             }

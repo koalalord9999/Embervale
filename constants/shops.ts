@@ -20,16 +20,17 @@ export const SHOPS: Record<string, Shop> = {
             { itemId: 'wooden_shield', quantity: 10, priceModifier: 1.1},
             { itemId: 'leather_body', quantity: 5, priceModifier: 1.1},
             { itemId: 'vial', quantity: 1000, priceModifier: 1.0 },
+            { itemId: 'staff', quantity: 10, priceModifier: 1.2 },
         ]
     },
     dwarven_pickaxes: {
         id: 'dwarven_pickaxes',
         name: "Durin's Pickaxes",
         inventory: [
-            { itemId: 'bronze_pickaxe', quantity: 5, priceModifier: 1.1 },
-            { itemId: 'iron_pickaxe', quantity: 5, priceModifier: 1.1 },
-            { itemId: 'steel_pickaxe', quantity: 5, priceModifier: 1.1 },
-            { itemId: 'mithril_pickaxe', quantity: 5, priceModifier: 1.1 },
+            { itemId: 'bronze_pickaxe', quantity: 5, priceModifier: 1.0 },
+            { itemId: 'iron_pickaxe', quantity: 5, priceModifier: 1.4 },
+            { itemId: 'steel_pickaxe', quantity: 5, priceModifier: 1.8 },
+            { itemId: 'mithril_pickaxe', quantity: 5, priceModifier: 2.0 },
         ]
     },
     oakhaven_general: {
@@ -102,7 +103,7 @@ export const SHOPS: Record<string, Shop> = {
         id: 'silverhaven_magic_shop',
         name: 'Silverhaven Arcane Wares',
         inventory: [
-            { itemId: 'mystic_page', quantity: 10000, priceModifier: 1.0 },
+            { itemId: 'mystic_page', quantity: 10000, priceModifier: 10.0 },
             { itemId: 'staff_of_gusts', quantity: 5, priceModifier: 1.2 },
             { itemId: 'staff_of_aqua', quantity: 5, priceModifier: 1.2 },
             { itemId: 'staff_of_stone', quantity: 5, priceModifier: 1.2 },

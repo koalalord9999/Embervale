@@ -70,4 +70,10 @@ export enum ToolType {
     Axe = "Axe",
     Pickaxe = "Pickaxe",
     Knife = "Knife",
+    FishingNet = "FishingNet",
+    FishingRod = "FishingRod",
+    FlyFishingRod = "FlyFishingRod",
+    BasketTrap = "BasketTrap",
+    Harpoon = "Harpoon",
+    OceanBoxTrap = "OceanBoxTrap",
 }

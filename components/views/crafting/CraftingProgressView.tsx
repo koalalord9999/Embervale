@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { ActiveCraftingAction } from '../../../types';
 import { ITEMS, getIconClassName } from '../../../constants';
@@ -31,7 +29,8 @@ const CraftingProgressView: React.FC<CraftingProgressViewProps> = ({ action, onC
 
     const getActionName = (type: ActiveCraftingAction['recipeType']) => {
         switch (type) {
-            case 'firemaking': return 'Lighting';
+            case 'firemaking-light': return 'Lighting';
+            case 'firemaking-stoke': return 'Stoking';
             case 'cooking': return 'Cooking';
             case 'smithing-bar': return 'Smelting';
             case 'smithing-item': return 'Smithing';

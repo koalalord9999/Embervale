@@ -34,10 +34,7 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
         const isTutorialActive = tutorialStage >= 0;
         
         if (isTutorialActive) {
-            let respawnPoi = 'enclave_start';
-            if (tutorialStage >= 22) {
-                respawnPoi = 'enclave_departure_point';
-            }
+            const respawnPoi = 'tutorial_entrance';
             session.setCurrentPoiId(respawnPoi);
             char.setCurrentHp(char.maxHp);
             addLog("You have been defeated! Don't worry, you've been safely returned. In the main world, death is more costly.");
@@ -98,7 +95,8 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
             ...ws,
             deathMarker: {
                 poiId: deathPoiId,
-                timeRemaining: 600000 // 10 minutes in ms
+                timeRemaining: 600000, // 10 minutes in ms
+                immunityGranted: false
             }
         }));
 

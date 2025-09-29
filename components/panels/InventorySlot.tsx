@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { InventorySlot, PlayerSkill, Item, Spell } from '../../types';
 import { ITEMS, INVENTORY_CAPACITY, getIconClassName } from '../../constants';
@@ -64,9 +65,6 @@ interface InventorySlotProps {
     isBusy?: boolean;
     setConfirmationPrompt: (prompt: ConfirmationPrompt | null) => void;
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
-    tutorialStage?: number;
-    advanceTutorial?: (condition: string) => void;
-    onTutorialAction?: (action: 'left_click_axe') => void;
     onExamine: (item: Item) => void;
     
     draggingIndex: number | null;
@@ -79,10 +77,11 @@ interface InventorySlotProps {
     onSell?: (itemId: string, quantity: number | 'all', inventoryIndex?: number) => void;
     spellToCast: Spell | null;
     onSpellOnItem: (spell: Spell, target: { item: InventorySlot, index: number }) => void;
+    isEquipmentStatsOpen?: boolean;
 }
 
 const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
-    const { index, slot, inventory, skills, onEquip, onConsume, onDropItem, onBury, onEmpty, setTooltip, setContextMenu, addLog, isBankOpen = false, onDeposit = () => {}, itemToUse, setItemToUse, onUseItemOn, isBusy = false, setConfirmationPrompt, tutorialStage, advanceTutorial, onTutorialAction, onExamine, draggingIndex, setDraggingIndex, dragOverIndex, setDragOverIndex, onDrop, isTouchSimulationEnabled, onDivine, isShopOpen = false, onSell = () => {}, spellToCast, onSpellOnItem } = props;
+    const { index, slot, inventory, skills, onEquip, onConsume, onDropItem, onBury, onEmpty, setTooltip, setContextMenu, addLog, isBankOpen = false, onDeposit = () => {}, itemToUse, setItemToUse, onUseItemOn, isBusy = false, setConfirmationPrompt, onExamine, draggingIndex, setDraggingIndex, dragOverIndex, setDragOverIndex, onDrop, isTouchSimulationEnabled, onDivine, isShopOpen = false, onSell = () => {}, spellToCast, onSpellOnItem, isEquipmentStatsOpen = false } = props;
 
     const isTouchDevice = useIsTouchDevice(isTouchSimulationEnabled);
 
@@ -114,8 +113,12 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
         const item = ITEMS[slot.itemId];
         if (!item) return;
 
-        if (tutorialStage === 5 && slot.itemId === 'bronze_axe' && onTutorialAction) {
-            onTutorialAction('left_click_axe');
+        if (isEquipmentStatsOpen) {
+            if (item.equipment) {
+                performAction(() => onEquip(slot, index));
+            } else {
+                onExamine(item);
+            }
             return;
         }
 
@@ -191,12 +194,17 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
         const item = ITEMS[slot.itemId];
         if (!item) return;
 
-        if (tutorialStage === 5 && slot.itemId === 'bronze_axe' && advanceTutorial) {
-            advanceTutorial('context-menu-axe');
-        }
-
         const options: ContextMenuOption[] = [];
         
+        if (isEquipmentStatsOpen) {
+            if (item.equipment) {
+                options.push({ label: 'Equip', onClick: () => performAction(() => onEquip(slot, index)) });
+            }
+            options.push({ label: 'Examine', onClick: () => onExamine(item) });
+            setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
+            return;
+        }
+
         if (isBankOpen) {
             let totalQuantity = 0;
             if (item.stackable || slot.noted) {
@@ -271,7 +279,7 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
 
             options.push({ label: 'Use', onClick: () => { setItemToUse({ item: slot, index }); }, disabled: isBusy });
             
-            const isTutorialItem = tutorialStage >= 0 && TUTORIAL_ITEM_IDS.includes(item.id);
+            const isTutorialItem = false; // Tutorial stage logic is removed
 
             if (item.emptyable) options.push({ label: 'Empty', onClick: () => performAction(() => onEmpty(item.id, index)), disabled: isBusy });
             

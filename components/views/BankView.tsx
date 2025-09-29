@@ -20,6 +20,8 @@ interface BankViewProps {
     setContextMenu: (menu: ContextMenuState | null) => void;
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
     setTooltip: (tooltip: TooltipState | null) => void;
+    bankPlaceholders: boolean;
+    handleToggleBankPlaceholders: () => void;
 }
 
 const formatQuantity = (quantity: number): string => {
@@ -37,9 +39,9 @@ const formatQuantity = (quantity: number): string => {
 
 
 const getQuantityColor = (quantity: number): string => {
-    if (quantity >= 10000000) return 'text-green-400'; // Green for 10M+
-    if (quantity >= 100000) return 'text-white'; // White for 100k+
-    return 'text-yellow-300'; // Default yellow
+    if (quantity >= 10000000) return 'text-green-400';
+    if (quantity >= 100000) return 'text-white';
+    return 'text-yellow-300';
 };
 
 const BankSlot: React.FC<{
@@ -53,14 +55,16 @@ const BankSlot: React.FC<{
     dragHandlers: any;
 }> = ({ slot, index, asNote, onWithdraw, setContextMenu, setMakeXPrompt, setTooltip, dragHandlers }) => {
     const isTouchDevice = useIsTouchDevice(false); // Used only for context menu type
+    const isPlaceholder = slot?.quantity === 0;
 
     const performWithdrawAction = (quantity: number | 'all' | 'all-but-1') => {
+        if (isPlaceholder) return;
         onWithdraw(index, quantity, asNote);
         setTooltip(null);
     };
 
     const handleSingleTap = (e: React.MouseEvent | React.TouchEvent) => {
-        if (slot) {
+        if (slot && !isPlaceholder) {
             if ('shiftKey' in e && e.shiftKey) {
                 performWithdrawAction('all');
             } else {
@@ -83,11 +87,11 @@ const BankSlot: React.FC<{
         if (!slot || !item) return;
 
         const options: ContextMenuOption[] = [
-            { label: `Withdraw 1`, onClick: () => performWithdrawAction(1), disabled: slot.quantity < 1 },
+            { label: `Withdraw 1`, onClick: () => performWithdrawAction(1), disabled: slot.quantity < 1 || isPlaceholder },
         ];
         if (slot.quantity > 1) {
-            options.push({ label: `Withdraw 5`, onClick: () => performWithdrawAction(5), disabled: slot.quantity < 5 });
-            options.push({ label: `Withdraw 10`, onClick: () => performWithdrawAction(10), disabled: slot.quantity < 10 });
+            options.push({ label: `Withdraw 5`, onClick: () => performWithdrawAction(5), disabled: slot.quantity < 5 || isPlaceholder });
+            options.push({ label: `Withdraw 10`, onClick: () => performWithdrawAction(10), disabled: slot.quantity < 10 || isPlaceholder });
             options.push({ 
                 label: 'Withdraw X...', 
                 onClick: () => setMakeXPrompt({
@@ -95,10 +99,10 @@ const BankSlot: React.FC<{
                     max: slot.quantity,
                     onConfirm: (quantity) => performWithdrawAction(quantity)
                 }), 
-                disabled: slot.quantity < 1 
+                disabled: slot.quantity < 1 || isPlaceholder 
             });
-            options.push({ label: `Withdraw All-but-1`, onClick: () => performWithdrawAction('all-but-1'), disabled: slot.quantity < 2 });
-            options.push({ label: `Withdraw All`, onClick: () => performWithdrawAction('all') });
+            options.push({ label: `Withdraw All-but-1`, onClick: () => performWithdrawAction('all-but-1'), disabled: slot.quantity < 2 || isPlaceholder });
+            options.push({ label: `Withdraw All`, onClick: () => performWithdrawAction('all'), disabled: isPlaceholder });
         }
         setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
     };
@@ -119,19 +123,22 @@ const BankSlot: React.FC<{
             {...combinedHandlers}
             onMouseEnter={(e) => {
                 if (item && slot) {
-                    setTooltip({ item, slot, content: <p className="text-sm mt-1 text-gray-400">Quantity: {slot.quantity.toLocaleString()}</p>, position: { x: e.clientX, y: e.clientY } });
+                    const content = isPlaceholder 
+                        ? null 
+                        : <p className="text-sm mt-1 text-gray-400">Quantity: {slot.quantity.toLocaleString()}</p>;
+                    setTooltip({ item, slot, content, position: { x: e.clientX, y: e.clientY } });
                 }
             }}
             onMouseLeave={() => setTooltip(null)}
         >
             {slot && item && (
                 <>
-                    <img src={item.iconUrl} alt={item.name} className={`w-full h-full ${getIconClassName(item)}`} />
-                    <span className={`absolute bottom-0 right-1 text-xs font-bold ${getQuantityColor(slot.quantity)}`} style={{ textShadow: '1px 1px 1px black' }}>
-                        {formatQuantity(slot.quantity)}
+                    <img src={item.iconUrl} alt={item.name} className={`w-full h-full ${getIconClassName(item)} ${isPlaceholder ? 'opacity-10' : ''}`} />
+                    <span className={`absolute bottom-0 right-1 text-xs font-bold ${getQuantityColor(slot.quantity)} ${isPlaceholder ? 'opacity-20' : ''}`} style={{ textShadow: '1px 1px 1px black' }}>
+                        {isPlaceholder ? '0' : formatQuantity(slot.quantity)}
                     </span>
                     {(item.id.startsWith('grimy_') || item.id.startsWith('clean_') || item.id.endsWith('_potion_unf')) && (
-                        <span className="absolute bottom-0.5 left-0 right-0 text-center text-xs font-bold text-yellow-400 pointer-events-none" style={{ textShadow: '1px 1px 2px black', lineHeight: '1' }}>
+                        <span className={`absolute bottom-0.5 left-0 right-0 text-center text-xs font-bold text-yellow-400 pointer-events-none ${isPlaceholder ? 'opacity-20' : ''}`} style={{ textShadow: '1px 1px 2px black', lineHeight: '1' }}>
                             {item.id.startsWith('grimy_')
                                 ? `G${item.name.split(' ')[1]?.substring(0, 3) ?? ''}`
                                 : item.name.split(' ')[0].substring(0, 4)}
@@ -144,7 +151,7 @@ const BankSlot: React.FC<{
 };
 
 
-const BankView: React.FC<BankViewProps> = ({ bank, onClose, onWithdraw, onDepositBackpack, onDepositEquipment, onMoveItem, setContextMenu, setMakeXPrompt, setTooltip }) => {
+const BankView: React.FC<BankViewProps> = ({ bank, onClose, onWithdraw, onDepositBackpack, onDepositEquipment, onMoveItem, setContextMenu, setMakeXPrompt, setTooltip, bankPlaceholders, handleToggleBankPlaceholders }) => {
     const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
     const [withdrawAsNote, setWithdrawAsNote] = useState(false);
@@ -174,7 +181,7 @@ const BankView: React.FC<BankViewProps> = ({ bank, onClose, onWithdraw, onDeposi
         <div className="flex flex-col h-full animate-fade-in text-gray-200">
             <div className="flex justify-between items-center mb-2 pb-2 border-b-2 border-gray-600">
                 <h1 className="text-3xl font-bold text-yellow-400">Bank of Embrune</h1>
-                <p className="text-gray-400">{bank.filter(Boolean).length} / {BANK_CAPACITY} Slots Used</p>
+                <p className="text-gray-400">{bank.filter(s => s && s.quantity > 0).length} / {BANK_CAPACITY} Slots Used</p>
                 <Button onClick={onClose}>Exit Bank</Button>
             </div>
 
@@ -214,17 +221,42 @@ const BankView: React.FC<BankViewProps> = ({ bank, onClose, onWithdraw, onDeposi
             </div>
 
             <div className="mt-2 pt-2 border-t-2 border-gray-600 flex justify-between items-center">
-                 <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
                     <button 
                         onClick={() => setWithdrawAsNote(prev => !prev)}
-                        className={`px-3 py-1 text-sm font-semibold rounded ${withdrawAsNote ? 'bg-yellow-600 text-white' : 'bg-gray-700 hover:bg-gray-600'}`}
+                        className={`w-10 h-10 relative overflow-hidden rounded transition-colors ${withdrawAsNote ? 'bg-yellow-600 border-2 border-yellow-500' : 'bg-gray-700 border-2 border-gray-600 hover:bg-gray-600'}`}
+                        title="Toggle Withdraw as Note"
                     >
-                        Withdraw as Note
+                        <img src="https://api.iconify.design/game-icons:folded-paper.svg" alt="Note" className="item-note-paper" />
+                    </button>
+                    <button 
+                        onClick={handleToggleBankPlaceholders}
+                        className={`w-10 h-10 flex items-center justify-center rounded transition-colors ${bankPlaceholders ? 'bg-yellow-600 border-2 border-yellow-500' : 'bg-gray-700 border-2 border-gray-600 hover:bg-gray-600'}`}
+                        title="Toggle Bank Placeholders"
+                    >
+                        <img 
+                            src={bankPlaceholders ? "https://api.iconify.design/game-icons:padlock.svg" : "https://api.iconify.design/game-icons:padlock-open.svg"} 
+                            alt="Placeholders" 
+                            className="w-6 h-6 filter invert" 
+                        />
                     </button>
                 </div>
-                <div className="flex justify-center gap-4">
-                    <Button onClick={onDepositBackpack} variant="secondary">Deposit Inventory</Button>
-                    <Button onClick={onDepositEquipment} variant="secondary">Deposit Equipment</Button>
+                <div className="flex justify-center gap-2">
+                    <button 
+                        onClick={onDepositBackpack}
+                        className="w-10 h-10 flex items-center justify-center rounded bg-gray-700 border-2 border-gray-600 hover:bg-gray-600 transition-colors"
+                        title="Deposit Inventory"
+                    >
+                        <img src="https://api.iconify.design/game-icons:profit.svg" alt="Deposit Inventory" className="w-6 h-6 filter invert" />
+                    </button>
+                    <button 
+                        onClick={onDepositEquipment}
+                        className="w-10 h-10 relative flex items-center justify-center rounded bg-gray-700 border-2 border-gray-600 hover:bg-gray-600 transition-colors overflow-hidden"
+                        title="Deposit Equipment"
+                    >
+                        <img src="https://api.iconify.design/game-icons:contract.svg" alt="" className="bank-action-bg-icon" />
+                        <img src="https://api.iconify.design/game-icons:battle-gear.svg" alt="Deposit Equipment" className="relative w-6 h-6 filter invert" />
+                    </button>
                 </div>
             </div>
         </div>

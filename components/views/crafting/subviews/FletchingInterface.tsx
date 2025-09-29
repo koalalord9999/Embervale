@@ -1,3 +1,5 @@
+
+
 import React from 'react';
 import { InventorySlot, PlayerSkill, SkillName } from '../../../../types';
 import { FLETCHING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
@@ -27,7 +29,7 @@ const FletchingSlot: React.FC<{
     const canFletch = hasLevel && hasLogs;
     const action = { type: 'carve', payload: { logId, outputItemId: recipe.itemId } } as const;
 
-    const handleSingleTap = () => { if(canFletch) onFletch(action, 1); };
+    const handleSingleTap = () => { if(canFletch) { onFletch(action, 1); setTooltip(null); } };
 
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();

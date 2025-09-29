@@ -13,6 +13,7 @@ export interface EquipmentStats {
     // Attack Bonuses
     stabAttack?: number;
     slashAttack?: number;
+
     crushAttack?: number;
     rangedAttack?: number;
     magicAttack?: number;
@@ -34,6 +35,7 @@ export interface EquipmentStats {
     isTwoHanded?: boolean;
     magicAttribute?: SpellElement;
     providesRune?: string;
+    ammoTier?: 'iron' | 'steel' | 'mithril' | 'adamantite' | 'runic';
 }
 
 
@@ -72,7 +74,7 @@ export interface Item {
     special?: 'treasure_chest';
   };
   buryable?: { prayerXp: number };
-  tool?: { type: ToolType; power: number };
+  tool?: { type: ToolType; power: number; requiredLevels?: { skill: SkillName; level: number }[] };
   cleanable?: { cleanItemId: string; xp: number };
   emptyable?: { emptyItemId: string };
   divining?: { poiId: string; };
@@ -128,6 +130,7 @@ export interface Monster {
   specialAttacks?: { name: string; chance: number; effect: 'damage_multiplier'; value: number }[];
   aggressive: boolean;
   alwaysAggressive?: boolean;
+  alwaysDrops?: boolean;
   customMaxHit?: number;
   elementalWeakness?: SpellElement;
 }
@@ -137,5 +140,12 @@ export interface WorldState {
     deathMarker?: {
         poiId: string;
         timeRemaining: number; // in ms
+        immunityGranted?: boolean;
+    } | null;
+    poiImmunity?: Record<string, number>; // key: poiId, value: expiry timestamp
+    bankPlaceholders?: boolean;
+    hpBoost?: {
+        amount: number;
+        expiresAt: number;
     } | null;
 }

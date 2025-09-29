@@ -1,14 +1,16 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { DialogueNode, DialogueResponse } from '../../../types';
+import { ActivePanel, DialogueNode, DialogueResponse } from '../../../types';
 import Button from '../../common/Button';
 import { DialogueState } from '../../../hooks/useUIState';
 
 interface DialogueOverlayProps {
     dialogue: DialogueState;
+    setActivePanel: (panel: ActivePanel) => void;
 }
 
-const DialogueOverlay: React.FC<DialogueOverlayProps> = ({ dialogue }) => {
-    const { npcName, npcIcon, nodes, currentNodeKey, onEnd, onAction, onNavigate } = dialogue;
+const DialogueOverlay: React.FC<DialogueOverlayProps> = ({ dialogue, setActivePanel }) => {
+    const { npcName, npcIcon, nodes, currentNodeKey, onEnd, onResponse, handleDialogueCheck } = dialogue;
     
     const [textPage, setTextPage] = useState(0);
     const [optionPage, setOptionPage] = useState(0);
@@ -16,6 +18,11 @@ const DialogueOverlay: React.FC<DialogueOverlayProps> = ({ dialogue }) => {
     const currentNode = nodes[currentNodeKey];
 
     const paginatedText = useMemo(() => {
+        // TODO: A future enhancement would be to automatically paginate text based on character count
+        // rather than just line breaks, and to handle it more dynamically without needing manual
+        // splits in the dialogue data. This would involve measuring text size and splitting it
+        // into pages that fit the dialogue box perfectly, then showing a "(Continue)" prompt.
+        // For now, manual splitting by line breaks (4 lines per page) is the implemented solution.
         if (!currentNode) return [];
         const lines = currentNode.text.split('\n');
         const pages: string[] = [];
@@ -33,6 +40,23 @@ const DialogueOverlay: React.FC<DialogueOverlayProps> = ({ dialogue }) => {
         return pages;
     }, [currentNode]);
 
+    const visibleResponses = useMemo(() => {
+        if (!currentNode) return [];
+        
+        const alwaysVisibleResponses = [...(currentNode.responses || [])];
+        
+        let conditionalVisibleResponses: DialogueResponse[] = [];
+        if (currentNode.conditionalResponses && handleDialogueCheck) {
+            conditionalVisibleResponses = currentNode.conditionalResponses.filter(res => {
+                if (!res.check) return true; // Show if no check is defined
+                return handleDialogueCheck(res.check.requirements);
+            });
+        }
+
+        return [...alwaysVisibleResponses, ...conditionalVisibleResponses];
+    }, [currentNode, handleDialogueCheck]);
+
+
     useEffect(() => {
         setTextPage(0);
         setOptionPage(0);
@@ -47,45 +71,32 @@ const DialogueOverlay: React.FC<DialogueOverlayProps> = ({ dialogue }) => {
     }, [textPage, paginatedText, onEnd]);
 
     const handleResponseClick = useCallback((response: DialogueResponse) => {
-        if (response.next && onNavigate) {
-            onNavigate(response.next);
-        } else if (response.action) {
-            if (response.action === 'close') {
-                onEnd();
-            } else {
-                onAction({
-                    type: response.action,
-                    questId: response.questId,
-                    actionId: response.customActionId,
-                    items: response.items,
-                    itemsToConsume: response.itemsToConsume,
-                    failureNext: response.failureNext,
-                } as any);
-            }
-        } else {
-            onEnd();
-        }
-    }, [onAction, onEnd, onNavigate]);
+        onResponse(response);
+    }, [onResponse]);
     
     useEffect(() => {
         const handleKeyPress = (e: KeyboardEvent) => {
+            if (!currentNode) return;
+            const isLastTextPage = textPage >= paginatedText.length - 1;
+            const hasResponses = visibleResponses && visibleResponses.length > 0;
+
             if (e.code === 'Space') {
                 e.preventDefault();
-                if (paginatedText.length > 1 || !currentNode.responses || currentNode.responses.length === 0) {
+                if (!hasResponses || !isLastTextPage) {
                     handleNextPage();
                 }
             }
             
-            if (textPage >= paginatedText.length - 1 && currentNode.responses.length > 0) {
+            if (isLastTextPage && hasResponses) {
                 const keyNum = parseInt(e.key, 10);
                 if (keyNum >= 1 && keyNum <= 4) {
                     e.preventDefault();
                     const optionsPerPage = 4;
-                    const displayedOptions = currentNode.responses.slice(optionPage * (optionsPerPage -1), (optionPage + 1) * (optionsPerPage -1));
-                    const hasMore = currentNode.responses.length > (optionPage + 1) * (optionsPerPage -1);
+                    const displayedOptions = visibleResponses.slice(optionPage * (optionsPerPage - 1), (optionPage + 1) * (optionsPerPage - 1));
+                    const hasMore = visibleResponses.length > (optionPage + 1) * (optionsPerPage - 1);
                     
                     if(keyNum === 4 && hasMore) {
-                         setOptionPage(p => (p + 1) % Math.ceil(currentNode.responses.length / (optionsPerPage -1)));
+                         setOptionPage(p => (p + 1) % Math.ceil(visibleResponses.length / (optionsPerPage -1)));
                     } else if (keyNum <= displayedOptions.length) {
                         handleResponseClick(displayedOptions[keyNum - 1]);
                     }
@@ -95,21 +106,50 @@ const DialogueOverlay: React.FC<DialogueOverlayProps> = ({ dialogue }) => {
 
         window.addEventListener('keydown', handleKeyPress);
         return () => window.removeEventListener('keydown', handleKeyPress);
-    }, [handleNextPage, handleResponseClick, currentNode, textPage, paginatedText, optionPage]);
+    }, [handleNextPage, handleResponseClick, currentNode, textPage, paginatedText, optionPage, visibleResponses]);
 
+    useEffect(() => {
+        // Cleanup function to remove highlights when the dialogue closes or node changes
+        const cleanupHighlights = () => {
+            document.querySelectorAll('.tutorial-highlight-target').forEach(el => {
+                el.classList.remove('tutorial-highlight-target');
+            });
+        };
+
+        cleanupHighlights(); // Clean up previous highlights on each render
+
+        if (currentNode?.highlight) {
+            const highlightIds = Array.isArray(currentNode.highlight) ? currentNode.highlight : [currentNode.highlight];
+            highlightIds.forEach(id => {
+                const element = document.querySelector(`[data-tutorial-id="${id}"]`);
+                if (element) {
+                    element.classList.add('tutorial-highlight-target');
+                    // Scroll the first highlighted element into view if it exists.
+                    if (highlightIds.indexOf(id) === 0) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                    }
+                }
+                if (id.startsWith('side-panel-button-')) {
+                    const panelName = id.replace('side-panel-button-', '') as ActivePanel;
+                    setActivePanel(panelName);
+                }
+            });
+        }
+
+        return cleanupHighlights; // Cleanup on component unmount
+    }, [currentNode, setActivePanel]);
 
     if (!currentNode) return null;
 
-    const isTextPaginated = paginatedText.length > 1;
     const isLastTextPage = textPage >= paginatedText.length - 1;
-    const hasResponses = currentNode.responses && currentNode.responses.length > 0;
+    const hasResponses = visibleResponses && visibleResponses.length > 0;
     
     const optionsPerPage = 4;
-    const hasMoreOptions = hasResponses && currentNode.responses.length > (optionsPerPage - 1);
-    const numOptionPages = hasMoreOptions ? Math.ceil(currentNode.responses.length / (optionsPerPage-1)) : 1;
+    const hasMoreOptions = hasResponses && visibleResponses.length > (optionsPerPage - 1);
+    const numOptionPages = hasMoreOptions ? Math.ceil(visibleResponses.length / (optionsPerPage-1)) : 1;
     const optionSliceStart = hasMoreOptions ? optionPage * (optionsPerPage - 1) : 0;
     const optionSliceEnd = hasMoreOptions ? (optionPage + 1) * (optionsPerPage - 1) : optionsPerPage;
-    const displayedResponses = hasResponses ? currentNode.responses.slice(optionSliceStart, optionSliceEnd) : [];
+    const displayedResponses = hasResponses ? visibleResponses.slice(optionSliceStart, optionSliceEnd) : [];
 
     return (
         <div className="absolute inset-0 bg-gray-900/90 border-2 border-yellow-700 rounded-lg shadow-2xl p-3 pointer-events-auto transition-opacity duration-300 ease-in-out opacity-100 flex flex-col md:flex-row h-full gap-3 animate-fade-in">
