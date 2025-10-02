@@ -1,3 +1,4 @@
+
 import { Item } from '../../types';
 
 export const talismans: Item[] = [
@@ -8,4 +9,5 @@ export const talismans: Item[] = [
     { id: 'stone_talisman', name: 'Stone Talisman', description: 'A mysterious rock fragment that hums with the power of earth.', stackable: false, value: 10, iconUrl: 'https://api.iconify.design/game-icons:wrapped-sweet.svg', divining: { poiId: 'stone_altar' }, material: 'rune-stone' },
     { id: 'aqua_talisman', name: 'Aqua Talisman', description: 'A mysterious rock fragment that hums with the power of water.', stackable: false, value: 10, iconUrl: 'https://api.iconify.design/game-icons:wrapped-sweet.svg', divining: { poiId: 'aqua_altar' }, material: 'rune-aqua' },
     { id: 'ember_talisman', name: 'Ember Talisman', description: 'A mysterious rock fragment that hums with the power of fire.', stackable: false, value: 10, iconUrl: 'https://api.iconify.design/game-icons:wrapped-sweet.svg', divining: { poiId: 'ruined_watchtower' }, material: 'rune-ember' },
+    { id: 'astral_talisman', name: 'Astral Talisman', description: 'A mysterious rock fragment that hums with cosmic energy.', stackable: false, value: 220, iconUrl: 'https://api.iconify.design/game-icons:wrapped-sweet.svg', divining: { poiId: 'astral_altar' }, material: 'rune-astral' },
 ];

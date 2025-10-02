@@ -86,7 +86,7 @@ const LOOT_TABLES: Record<string, LootTable> = {
         { itemId: 'robe_of_power_hat', chance: 32 },
         { itemId: 'robe_of_power_top', chance: 32 },
         { itemId: 'robe_of_power_bottoms', chance: 32 },
-    ]
+    ],
 };
 
 /**

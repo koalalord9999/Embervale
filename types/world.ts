@@ -56,6 +56,7 @@ export type POIActivity =
   | { type: 'runecrafting_altar'; runeId: string; questCondition?: QuestCondition; }
   | { type: 'ancient_chest'; name: string; }
   | { type: 'quest_start'; questId: string }
+  | { type: 'ladder'; name: string; direction: 'up' | 'down'; toPoiId: string }
   | BonfireActivity;
 
 export interface POI {

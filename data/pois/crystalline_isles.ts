@@ -219,11 +219,20 @@ export const crystallineIslesPois: Record<string, POI> = {
         id: 'the_heartcrystal',
         name: 'The Heartcrystal',
         description: 'The center of the Crystalline Isles. A single, gigantic crystal pulses with a brilliant, internal light, the source of the island\'s power.',
-        connections: ['inner_path_A3', 'inner_path_C2'],
+        connections: ['inner_path_A3', 'inner_path_C2', 'magus_spire_entrance'],
         activities: [
             { type: 'combat', monsterId: 'ancient_ammonite' },
         ],
         regionId: 'crystalline_isles',
         x: 1954, y: 767
+    },
+    magus_spire_entrance: {
+        id: 'magus_spire_entrance',
+        name: "Magus Spire Entrance",
+        description: 'A shimmering, ethereal doorway hangs in the air before the Heartcrystal, leading into a towering spire of pure magic.',
+        connections: ['the_heartcrystal', 'ms_f1_antechamber'],
+        activities: [],
+        regionId: 'magus_spire',
+        x: 1954, y: 720,
     },
 };

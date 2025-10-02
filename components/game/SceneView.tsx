@@ -117,6 +117,7 @@ const ActionableButton: React.FC<{
         case 'milking': text = 'Milk a Cow'; break;
         case 'windmill': text = 'Collect Flour'; break;
         case 'ancient_chest': text = activity.name; break;
+        case 'ladder': text = activity.name; break;
     }
 
     const onLongPress = (e: React.MouseEvent | React.TouchEvent) => {

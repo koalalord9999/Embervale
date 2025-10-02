@@ -21,7 +21,8 @@ export const humanoids: Monster[] = [
             { itemId: 'knife', chance: "1/100", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'stone_talisman', chance: "1/200", minQuantity: 1, maxQuantity: 1 },
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 60000, aggressive: false, attackStyle: 'crush',
+        // FIX: Changed monsterType to types array
+        types: [MonsterType.Humanoid], attackSpeed: 4, respawnTime: 60000, aggressive: false, attackStyle: 'crush',
     },
     {
         id: 'woman', name: 'Woman', level: 2, maxHp: 7, attack: 1,
@@ -43,7 +44,8 @@ export const humanoids: Monster[] = [
             { itemId: 'knife', chance: "1/100", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'stone_talisman', chance: "1/200", minQuantity: 1, maxQuantity: 1 },
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 60000, aggressive: false, attackStyle: 'crush',
+        // FIX: Changed monsterType to types array
+        types: [MonsterType.Humanoid], attackSpeed: 4, respawnTime: 60000, aggressive: false, attackStyle: 'crush',
     },
     {
         id: 'goblin', name: 'Goblin', level: 2, maxHp: 8, attack: 1,
@@ -67,7 +69,8 @@ export const humanoids: Monster[] = [
         tertiaryDrops: [
             { itemId: 'goblin_champion_scroll', chance: 1/5000, minQuantity: 1, maxQuantity: 1 }
         ],
-        monsterType: MonsterType.Armored, attackSpeed: 4, respawnTime: 12000, aggressive: false, attackStyle: 'slash',
+        // FIX: Changed monsterType to types array
+        types: [MonsterType.Humanoid, MonsterType.Armored], attackSpeed: 4, respawnTime: 12000, aggressive: false, attackStyle: 'slash',
     },
     {
         id: 'goblin_scout', name: 'Goblin Scout', level: 7, maxHp: 18, attack: 5,
@@ -92,7 +95,8 @@ export const humanoids: Monster[] = [
         tertiaryDrops: [
             { itemId: 'goblin_champion_scroll', chance: 1/5000, minQuantity: 1, maxQuantity: 1 }
         ],
-        monsterType: MonsterType.Armored, attackSpeed: 4, respawnTime: 30000, aggressive: true, alwaysAggressive: true, attackStyle: 'stab',
+        // FIX: Changed monsterType to types array
+        types: [MonsterType.Humanoid, MonsterType.Armored], attackSpeed: 4, respawnTime: 30000, aggressive: true, alwaysAggressive: true, attackStyle: 'stab',
     },
     {
         id: 'goblin_thrower', name: 'Goblin Thrower', level: 14, maxHp: 25, attack: 1, ranged: 12,
@@ -116,7 +120,8 @@ export const humanoids: Monster[] = [
         tertiaryDrops: [
             { itemId: 'goblin_champion_scroll', chance: 1/5000, minQuantity: 1, maxQuantity: 1 }
         ],
-        monsterType: MonsterType.Armored, attackSpeed: 3, respawnTime: 30000, attackStyle: 'ranged', aggressive: true, alwaysAggressive: true,
+        // FIX: Changed monsterType to types array
+        types: [MonsterType.Humanoid, MonsterType.Armored], attackSpeed: 3, respawnTime: 30000, attackStyle: 'ranged', aggressive: true, alwaysAggressive: true,
     },
     {
         id: 'goblin_brute', name: 'Goblin Brute', level: 24, maxHp: 40, attack: 18,
@@ -142,7 +147,8 @@ export const humanoids: Monster[] = [
         tertiaryDrops: [
             { itemId: 'goblin_champion_scroll', chance: 1/5000, minQuantity: 1, maxQuantity: 1 }
         ],
-        monsterType: MonsterType.Armored, attackSpeed: 5, respawnTime: 120000,
+        // FIX: Changed monsterType to types array
+        types: [MonsterType.Humanoid, MonsterType.Armored], attackSpeed: 5, respawnTime: 120000,
         specialAttacks: [{ name: 'Crushing Blow', chance: 0.5, effect: 'damage_multiplier', value: 1.5 }],
         aggressive: true, alwaysAggressive: true, attackStyle: 'crush',
     },
@@ -168,7 +174,8 @@ export const humanoids: Monster[] = [
         tertiaryDrops: [
             { itemId: 'goblin_champion_scroll', chance: 1/1000, minQuantity: 1, maxQuantity: 1 }
         ],
-        monsterType: MonsterType.Armored, attackSpeed: 4, respawnTime: 600000,
+        // FIX: Changed monsterType to types array
+        types: [MonsterType.Humanoid, MonsterType.Armored], attackSpeed: 4, respawnTime: 600000,
         specialAttacks: [{ name: 'Royal Smash', chance: 0.3, effect: 'damage_multiplier', value: 2 }],
         aggressive: true, alwaysAggressive: true, attackStyle: 'crush',
     },
@@ -185,7 +192,8 @@ export const humanoids: Monster[] = [
             { tableId: 'herb_table', chance: "3/20", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'grimy_coin_pouch', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 45000, aggressive: true, attackStyle: 'slash',
+        // FIX: Changed monsterType to types array
+        types: [MonsterType.Humanoid], attackSpeed: 4, respawnTime: 45000, aggressive: true, attackStyle: 'slash',
     },
     {
         id: 'highwayman', name: 'Highwayman', level: 21, maxHp: 35, attack: 16,
@@ -202,7 +210,8 @@ export const humanoids: Monster[] = [
             { itemId: 'grimy_coin_pouch', chance: "3/25", minQuantity: 1, maxQuantity: 2 },
             { itemId: 'lost_heirloom', chance: "1/200", minQuantity: 1, maxQuantity: 1 },
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 3, respawnTime: 60000, aggressive: true, attackStyle: 'slash',
+        // FIX: Changed monsterType to types array
+        types: [MonsterType.Humanoid], attackSpeed: 3, respawnTime: 60000, aggressive: true, attackStyle: 'slash',
     },
     {
         id: 'bandit_marksman', name: 'Bandit Marksman', level: 27, maxHp: 30, attack: 1, ranged: 32,
@@ -219,7 +228,8 @@ export const humanoids: Monster[] = [
             { itemId: 'ember_rune', chance: "1/10", minQuantity: 6, maxQuantity: 15 },
             { itemId: 'binding_rune', chance: "1/10", minQuantity: 4, maxQuantity: 12 },
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 3, respawnTime: 45000, attackStyle: 'ranged', aggressive: true, alwaysAggressive: true
+        // FIX: Changed monsterType to types array
+        types: [MonsterType.Humanoid], attackSpeed: 3, respawnTime: 45000, attackStyle: 'ranged', aggressive: true, alwaysAggressive: true
     },
     {
         id: 'bandit_bruiser', name: 'Bandit Bruiser', level: 36, maxHp: 61, attack: 37,
@@ -237,7 +247,8 @@ export const humanoids: Monster[] = [
             { itemId: 'flux_rune', chance: "1/10", minQuantity: 3, maxQuantity: 10 },
             { itemId: 'bandit_brew', chance: "1/20", minQuantity: 1, maxQuantity: 1 },
         ],
-        monsterType: MonsterType.Armored, attackSpeed: 4, respawnTime: 45000, aggressive: true, alwaysAggressive: true, attackStyle: 'crush',
+        // FIX: Changed monsterType to types array
+        types: [MonsterType.Humanoid, MonsterType.Armored], attackSpeed: 4, respawnTime: 45000, aggressive: true, alwaysAggressive: true, attackStyle: 'crush',
     },
     {
         id: 'bandit_leader', name: 'Bandit Leader', level: 56, maxHp: 75, attack: 42,
@@ -255,7 +266,8 @@ export const humanoids: Monster[] = [
             { itemId: 'spiked_cape', chance: "1/200", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'passage_talisman', chance: "1/500", minQuantity: 1, maxQuantity: 1 },
         ],
-        monsterType: MonsterType.Armored, attackSpeed: 3, respawnTime: 180000, aggressive: true, alwaysAggressive: true,
+        // FIX: Changed monsterType to types array
+        types: [MonsterType.Humanoid, MonsterType.Armored], attackSpeed: 3, respawnTime: 180000, aggressive: true, alwaysAggressive: true,
         specialAttacks: [{ name: 'Crippling Strike', chance: 0.3, effect: 'damage_multiplier', value: 1.5 }], attackStyle: 'slash',
     },
     {
@@ -268,11 +280,28 @@ export const humanoids: Monster[] = [
         mainDrops: [
             { itemId: 'verdant_rune', chance: "1/20", minQuantity: 1, maxQuantity: 1 },
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 5, respawnTime: 30000, aggressive: true, attackStyle: 'crush',
+        // FIX: Changed monsterType to types array
+        types: [MonsterType.Undead], attackSpeed: 5, respawnTime: 30000, aggressive: true, attackStyle: 'crush',
     },
     {
         id: 'training_dummy', name: 'Training Dummy', level: 1, maxHp: 1000, attack: 0, 
         stabDefence: 0, slashDefence: 0, crushDefence: 0, rangedDefence: 0, magicDefence: 0,
         iconUrl: 'https://api.iconify.design/game-icons:wooden-sign.svg',
-        monsterType: MonsterType.Standard, attackSpeed: 1000, respawnTime: 1000, aggressive: false, attackStyle: 'crush', customMaxHit: 0,},
+        // FIX: Changed monsterType to types array
+        types: [MonsterType.Humanoid], attackSpeed: 1000, respawnTime: 1000, aggressive: false, attackStyle: 'crush', customMaxHit: 0,},
+    {
+        id: 'young_hill_giant', name: 'Young Hill Giant', level: 22, maxHp: 45, attack: 20,
+        stabDefence: 18, slashDefence: 18, crushDefence: 22, rangedDefence: 15, magicDefence: -5,
+        iconUrl: '/assets/npcChatHeads/young_hill_giant.png',
+        guaranteedDrops: [
+            { itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 }
+        ],
+        mainDrops: [
+            { itemId: 'stone_rune', chance: "1/4", minQuantity: 5, maxQuantity: 15 },
+            { tableId: 'herb_table', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'iron_warhammer', chance: "1/100", minQuantity: 1, maxQuantity: 1 }
+        ],
+        // FIX: Changed monsterType to types array
+        types: [MonsterType.Humanoid], attackSpeed: 6, respawnTime: 60000, aggressive: true, attackStyle: 'crush',
+    },
 ];

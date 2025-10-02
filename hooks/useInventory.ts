@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useState, useCallback } from 'react';
 import { InventorySlot, Equipment, CombatStance, WeaponType, PlayerSkill, Item } from '../types';
@@ -67,7 +68,7 @@ export const useInventory = (
         isAutoBankOn?: boolean;
         bank?: (InventorySlot | null)[];
         setBank?: React.Dispatch<React.SetStateAction<(InventorySlot | null)[]>>;
-        onItemDropped?: (item: InventorySlot) => void;
+        onItemDropped?: (item: InventorySlot, overridePoiId?: string) => void;
         setCombatStance?: (stance: CombatStance) => void;
     }
 ) => {

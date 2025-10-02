@@ -35,7 +35,7 @@ const generateNewQuestsForBoard = (boardId: string, playerSkills: (PlayerSkill &
     
     const town = getTownForBoard(boardId);
     const availableQuests = REPEATABLE_QUEST_POOL.filter(
-        q => q.location === town || q.location === 'general'
+        q => (q.location === town || q.location === 'general') && q.id !== 'tutorial_magic_rat'
     );
     const shuffled = [...availableQuests].sort(() => 0.5 - Math.random());
     const selectedQuests = shuffled.slice(0, 4);

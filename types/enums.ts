@@ -61,9 +61,14 @@ export enum WeaponType {
 }
 
 export enum MonsterType {
-    Standard = "Standard",
+    Humanoid = "Humanoid",
     Armored = "Armored",
     Undead = "Undead",
+    Demon = "Demon",
+    Beast = "Beast",
+    Dragon = "Dragon",
+    Elemental = "Elemental",
+    Vampire = "Vampire",
 }
 
 export enum ToolType {

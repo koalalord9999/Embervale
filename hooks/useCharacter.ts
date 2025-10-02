@@ -25,7 +25,7 @@ interface ActiveStatModifier {
 
 export interface ActiveBuff {
     id: number;
-    type: 'recoil' | 'flat_damage' | 'poison_on_hit' | 'accuracy_boost' | 'evasion_boost' | 'damage_on_hit' | 'attack_speed_boost' | 'poison_immunity' | 'damage_reduction';
+    type: 'recoil' | 'flat_damage' | 'poison_on_hit' | 'accuracy_boost' | 'evasion_boost' | 'damage_on_hit' | 'attack_speed_boost' | 'poison_immunity' | 'damage_reduction' | 'antifire' | 'stun';
     value: number;
     duration: number;
     expiresAt: number;
@@ -53,6 +53,8 @@ export const useCharacter = (
     const baseMaxHp = useMemo(() => skills.find(s => s.name === SkillName.Hitpoints)?.level ?? 10, [skills]);
     const hpBoost = useMemo(() => worldState.hpBoost?.amount ?? 0, [worldState.hpBoost]);
     const maxHp = useMemo(() => baseMaxHp + hpBoost, [baseMaxHp, hpBoost]);
+    
+    const isStunned = useMemo(() => activeBuffs.some(b => b.type === 'stun'), [activeBuffs]);
     
     const combatLevel = useMemo(() => {
         const get = (name: SkillName) => skills.find(s => s.name === name)?.level ?? 1;
@@ -109,23 +111,27 @@ export const useCharacter = (
             setStatModifiers(prev => {
                 const updatedModifiers = prev.map(mod => {
                     if (now >= mod.nextDecayAt) {
-                        const newValue = mod.currentValue - 1;
-                        if (newValue > 0) {
-                            addLog(`Your ${mod.skill} boost has weakened.`);
-                            return {
-                                ...mod,
-                                currentValue: newValue,
-                                nextDecayAt: now + mod.durationPerLevel,
-                            };
+                        const isBoost = mod.initialValue > 0;
+                        const decayAmount = isBoost ? -1 : 1;
+                        const newValue = mod.currentValue + decayAmount;
+
+                        // Check for expiration (when boost hits 0 or drain hits 0)
+                        if ((isBoost && newValue <= 0) || (!isBoost && newValue >= 0)) {
+                            return null;
                         }
-                        return null; // Buff expires
+
+                        addLog(`Your ${mod.skill} ${isBoost ? 'boost' : 'drain'} has weakened.`);
+                        return {
+                            ...mod,
+                            currentValue: newValue,
+                            nextDecayAt: now + mod.durationPerLevel,
+                        };
                     }
                     return mod;
                 });
 
                 const newModifiersFiltered = updatedModifiers.filter((m): m is ActiveStatModifier => m !== null);
 
-                // Log expiration for any removed modifiers
                 if (newModifiersFiltered.length < prev.length) {
                     const expiredSkills = prev
                         .filter(p => !newModifiersFiltered.some(n => n.id === p.id))
@@ -198,45 +204,39 @@ export const useCharacter = (
     }, [addLog, onXpGain, onLevelUp, xpMultiplier]);
     
     const applyStatModifier = useCallback((skill: SkillName, value: number, totalDuration: number, baseLevelOnConsumption: number) => {
-        if (value <= 0 || totalDuration <= 0) return;
+        if (totalDuration <= 0 || value === 0) return;
 
-        const durationPerLevel = totalDuration / value;
+        const durationPerLevel = totalDuration / Math.abs(value);
 
         setStatModifiers(prev => {
             const existingModifier = prev.find(m => m.skill === skill);
             const now = Date.now();
 
             if (existingModifier) {
-                if (value < existingModifier.initialValue) {
+                // For boosts, a higher value is stronger.
+                // For drains, a more negative value is stronger.
+                // This single condition works for both.
+                if (value > 0 && value < existingModifier.initialValue) {
                     addLog(`You already have a stronger ${skill} boost active.`);
                     return prev;
                 }
-                
-                const newModifiers = prev.filter(m => m.skill !== skill);
-                const newModifier: ActiveStatModifier = {
-                    id: existingModifier.id,
-                    skill,
-                    initialValue: value,
-                    currentValue: value,
-                    durationPerLevel,
-                    nextDecayAt: now + durationPerLevel,
-                    baseLevelOnConsumption,
-                };
-                addLog(`You feel a surge of power, refreshing your ${skill} boost.`);
-                return [...newModifiers, newModifier];
-            } else {
-                const newModifier: ActiveStatModifier = {
-                    id: Date.now() + Math.random(),
-                    skill,
-                    initialValue: value,
-                    currentValue: value,
-                    durationPerLevel,
-                    nextDecayAt: now + durationPerLevel,
-                    baseLevelOnConsumption,
-                };
-                addLog(`You feel your ${skill} level increase.`);
-                return [...prev, newModifier];
+                if (value < 0 && value > existingModifier.initialValue) {
+                    addLog(`You already have a stronger ${skill} drain active.`);
+                    return prev;
+                }
             }
+            
+            const newModifier: ActiveStatModifier = {
+                id: existingModifier?.id ?? (Date.now() + Math.random()),
+                skill,
+                initialValue: value,
+                currentValue: value,
+                durationPerLevel,
+                nextDecayAt: now + durationPerLevel,
+                baseLevelOnConsumption,
+            };
+            addLog(value > 0 ? `You feel your ${skill} level increase.` : `You feel your ${skill} level decrease.`);
+            return [...prev.filter(m => m.skill !== skill), newModifier];
         });
     }, [addLog]);
 
@@ -258,6 +258,8 @@ export const useCharacter = (
         if (buff.type === 'attack_speed_boost') buffMessage = "You feel unnaturally quick.";
         if (buff.type === 'poison_immunity') buffMessage = "You feel resistant to poison.";
         if (buff.type === 'damage_reduction') buffMessage = "Your skin feels as hard as stone.";
+        if (buff.type === 'antifire') buffMessage = "You feel a sudden coolness, resisting extreme heat.";
+        if (buff.type === 'stun') buffMessage = "You have been stunned!";
         addLog(buffMessage);
 
     }, [addLog]);
@@ -270,13 +272,11 @@ export const useCharacter = (
         return skills.map(skill => {
             const modifier = statModifiers.find(m => m.skill === skill.name);
             if (modifier) {
-                // The boosted level is anchored to the base level at the time of consumption.
-                const boostedLevel = modifier.baseLevelOnConsumption + modifier.currentValue;
-                // The current level is the higher of the player's base level or their boosted level.
-                const currentLevel = Math.max(skill.level, boostedLevel);
+                const modifiedLevel = skill.level + modifier.currentValue;
+                // Ensure level doesn't go below 1 for drains. Boosts can go above 99.
+                const currentLevel = modifier.currentValue < 0 ? Math.max(1, Math.round(modifiedLevel)) : Math.round(modifiedLevel);
                 return { ...skill, currentLevel };
             }
-            // If no modifier, current level is the base level.
             return { ...skill, currentLevel: skill.level };
         });
     }, [skills, statModifiers]);
@@ -313,5 +313,6 @@ export const useCharacter = (
         autocastSpell,
         setAutocastSpell,
         setSkillLevel,
+        isStunned,
     };
 };

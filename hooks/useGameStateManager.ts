@@ -11,7 +11,7 @@ type GameState = typeof defaultState;
 const defaultState = {
     username: '',
     skills: ALL_SKILLS,
-    inventory: [],
+    inventory: [{ itemId: 'dragonfire_shield', quantity: 1 }],
     bank: [],
     coins: 0,
     equipment: { weapon: null, shield: null, head: null, body: null, legs: null, ammo: null, gloves: null, boots: null, cape: null, necklace: null, ring: null },

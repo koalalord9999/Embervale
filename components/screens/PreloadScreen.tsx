@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+
+
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Button from '../common/Button';
 import { ContextMenuState } from '../../hooks/useUIState';
 import ProgressBar from '../common/ProgressBar';
@@ -9,9 +11,10 @@ interface PreloadScreenProps {
     onNewGame: () => void;
     onImport: () => void;
     setContextMenu: (menu: ContextMenuState | null) => void;
+    assets: Record<string, string> | null;
 }
 
-const PreloadScreen: React.FC<PreloadScreenProps> = ({ loadingTips, onContinue, onNewGame, onImport, setContextMenu }) => {
+const PreloadScreen: React.FC<PreloadScreenProps> = ({ loadingTips, onContinue, onNewGame, onImport, setContextMenu, assets }) => {
     const [progress, setProgress] = useState(0);
     const [loadingMessage, setLoadingMessage] = useState('');
     const [isLoading, setIsLoading] = useState(true);
@@ -20,6 +23,12 @@ const PreloadScreen: React.FC<PreloadScreenProps> = ({ loadingTips, onContinue, 
     const [currentTip, setCurrentTip] = useState('');
     const [isTipVisible, setIsTipVisible] = useState(false);
     const animationFrameRef = useRef<number | null>(null);
+
+    const backgroundStyle = useMemo(() => (
+        assets?.embrune_splash
+            ? { backgroundImage: `url('${assets.embrune_splash}')` }
+            : {}
+    ), [assets]);
 
     useEffect(() => {
         const messageTimeouts: ReturnType<typeof setTimeout>[] = [];
@@ -126,11 +135,9 @@ const PreloadScreen: React.FC<PreloadScreenProps> = ({ loadingTips, onContinue, 
     };
 
     return (
-        <div className="w-full h-full bg-cover bg-center border-8 border-gray-900 shadow-2xl p-4 flex flex-col items-center justify-center relative" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1505236755279-228d5d36c34b?q=80&w=1024&auto=format=fit=crop')` }}>
-            <div className="absolute inset-0 bg-black/70"></div>
-            <div className="relative z-10 text-center bg-black/60 p-8 rounded-lg border-2 border-gray-700 shadow-2xl w-full max-w-2xl flex flex-col items-center">
-                <h1 className="text-4xl sm:text-6xl font-bold text-yellow-400 mb-6" style={{ textShadow: '3px 3px 6px rgba(0,0,0,0.8)' }}>Embrune</h1>
-                
+        <div className="w-full h-full bg-cover bg-top bg-no-repeat md:bg-[length:100%_100%] border-8 border-gray-900 shadow-2xl p-4 flex flex-col items-center justify-center relative filter brightness-110 saturate-125" style={backgroundStyle}>
+            <div className="absolute inset-0 bg-black/40"></div>
+            <div className="relative z-10 text-center w-full max-w-2xl flex flex-col items-center pt-24">
                 <div className="w-full max-w-md h-24 flex flex-col justify-center items-center">
                     {isLoading ? (
                         <div className={`w-full transition-opacity duration-500 ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}>
@@ -146,7 +153,7 @@ const PreloadScreen: React.FC<PreloadScreenProps> = ({ loadingTips, onContinue, 
                     )}
                 </div>
 
-                <div className={`flex justify-center gap-6 ${showButtons ? 'animate-fade-in' : 'opacity-0'}`}>
+                <div className={`flex justify-center gap-6 mt-4 ${showButtons ? 'animate-fade-in' : 'opacity-0'}`}>
                     <Button onClick={onNewGame} disabled={!showButtons} variant="secondary" size="md">New Game</Button>
                     <Button 
                         onClick={onContinue} 

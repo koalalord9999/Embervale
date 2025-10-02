@@ -61,6 +61,14 @@ const renderStats = (item: Item) => {
                             </div>
                         );
                     })()}
+                    {equipment.resistsDragonfire && (
+                        <div className="flex justify-between mt-1">
+                            <span className="text-orange-400">Dragonfire Resist:</span>
+                            <span className="font-semibold text-green-400">
+                                {Math.round((1 - equipment.resistsDragonfire) * 100)}%
+                            </span>
+                        </div>
+                    )}
                 </div>
                  {hasRequirements && (
                     <div className="col-span-2 mt-1 pt-1 border-t border-gray-700">

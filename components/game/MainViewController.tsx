@@ -1,4 +1,3 @@
-
 import React, { useCallback } from 'react';
 import { useUIState } from '../../hooks/useUIState';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -81,22 +80,26 @@ interface MainViewControllerProps {
     handleToggleBankPlaceholders: () => void;
     bonfires: BonfireActivity[];
     onStokeBonfire: (logId: string, bonfireId: string) => void;
+    isStunned: boolean;
+    addBuff: (buff: any) => void;
 }
 
 const MainViewController: React.FC<MainViewControllerProps> = (props) => {
     const {
         ui, addLog, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, handleDialogueAction, handleDialogueCheck, combatSpeedMultiplier, activeCombatStyleHighlight, isTouchSimulationEnabled, showAllPois,
         groundItemsForCurrentPoi, onPickUpItem, onTakeAllLoot, onItemDropped, isAutoBankOn, handleCombatXpGain, immunityTimeLeft, poiImmunityTimeLeft, killTrigger,
-        bankPlaceholders, handleToggleBankPlaceholders, bonfires, onStokeBonfire
+        bankPlaceholders, handleToggleBankPlaceholders, bonfires, onStokeBonfire, isStunned, addBuff
     } = props;
 
     const handleTeleport = useCallback((toBoardId: string) => {
+        if (isStunned) { addLog("You are stunned and cannot teleport."); return; }
         addLog(`You focus on the quest board and feel yourself pulled through space...`);
         navigation.handleForcedNavigate(toBoardId);
         ui.closeAllModals(); // This will close the teleport modal
-    }, [addLog, navigation, ui]);
+    }, [addLog, navigation, ui, isStunned]);
 
     const onActivity = (activity: POIActivity) => {
+        if (isStunned) { addLog("You are stunned and cannot perform actions."); return; }
         if (activity.type === 'shop') ui.setActiveShopId(activity.shopId);
         else if (activity.type === 'bank') ui.setActivePanel('bank');
         else if (activity.type === 'slayer_master') slayer.handleSlayerMasterInteraction();
@@ -116,6 +119,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
         else if (activity.type === 'ancient_chest') worldActions.handleOpenAncientChest();
         else if (activity.type === 'runecrafting_altar') crafting.handleInstantRunecrafting(activity.runeId);
         else if (activity.type === 'shearing') worldActions.handleSimpleSkilling(activity);
+        else if (activity.type === 'ladder') navigation.handleForcedNavigate(activity.toPoiId);
     };
 
     const mainContent = (() => {
@@ -157,6 +161,9 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 inv={inv}
                 ui={ui}
                 killTrigger={killTrigger}
+                applyStatModifier={char.applyStatModifier}
+                isStunned={isStunned}
+                addBuff={addBuff}
             />;
         }
         if (ui.activeTeleportBoardId) {

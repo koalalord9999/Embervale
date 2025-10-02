@@ -16,9 +16,9 @@ export const beasts: Monster[] = [
         guaranteedDrops: [
             { itemId: 'bones', minQuantity: 1, maxQuantity: 1 }
         ],
-        monsterType: MonsterType.Standard,
+        types: [MonsterType.Beast],
         attackSpeed: 4,
-        respawnTime: 5000,
+        respawnTime: 10000,
         aggressive: false,
         attackStyle: 'stab',
         customMaxHit: 1,
@@ -34,7 +34,7 @@ export const beasts: Monster[] = [
         mainDrops: [
             { itemId: 'binding_rune', chance: "1/20", minQuantity: 1, maxQuantity: 1 }
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 20000, aggressive: false, attackStyle: 'stab',
+        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 20000, aggressive: false, attackStyle: 'stab',
     },
     {
         id: 'giant_spider', name: 'Giant Spider', level: 4, maxHp: 15, attack: 3,
@@ -47,7 +47,7 @@ export const beasts: Monster[] = [
             { itemId: 'spider_eggs', chance: "1/10", minQuantity: 1, maxQuantity: 3 },
             { itemId: 'binding_rune', chance: "1/50", minQuantity: 1, maxQuantity: 2 }
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 30000, aggressive: false, attackStyle: 'stab',
+        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 30000, aggressive: false, attackStyle: 'stab',
     },
     {
         id: 'cow', name: 'Cow', level: 2, maxHp: 10, attack: 1,
@@ -58,7 +58,7 @@ export const beasts: Monster[] = [
             { itemId: 'bones', minQuantity: 1, maxQuantity: 1 },
             { itemId: 'cowhide', minQuantity: 1, maxQuantity: 1 }
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 5, respawnTime: 15000, aggressive: false, attackStyle: 'crush',
+        types: [MonsterType.Beast], attackSpeed: 5, respawnTime: 15000, aggressive: false, attackStyle: 'crush',
     },
     {
         id: 'chicken', name: 'Chicken', level: 1, maxHp: 4, attack: 1,
@@ -72,7 +72,7 @@ export const beasts: Monster[] = [
         mainDrops: [
             { itemId: 'eggs', chance: "1/4", minQuantity: 1, maxQuantity: 1 }
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 10000, aggressive: false, attackStyle: 'stab',
+        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 10000, aggressive: false, attackStyle: 'stab',
         customMaxHit: 0,
     },
     {
@@ -88,7 +88,7 @@ export const beasts: Monster[] = [
             { itemId: 'stone_rune', chance: "1/5", minQuantity: 1, maxQuantity: 4 },
             { itemId: 'boar_tusk', chance: "1/12", minQuantity: 1, maxQuantity: 1 }
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 30000, aggressive: true, alwaysAggressive: true, attackStyle: 'crush',
+        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 30000, aggressive: true, alwaysAggressive: true, attackStyle: 'crush',
     },
     {
         id: 'mountain_goat', name: 'Mountain Goat', level: 18, maxHp: 30, attack: 15,
@@ -102,7 +102,7 @@ export const beasts: Monster[] = [
             { itemId: 'gust_rune', chance: "1/4", minQuantity: 5, maxQuantity: 10 },
             { itemId: 'stone_rune', chance: "1/4", minQuantity: 5, maxQuantity: 10 }
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 30000, aggressive: true, attackStyle: 'crush',
+        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 30000, aggressive: true, attackStyle: 'crush',
     },
     {
         id: 'bog_serpent', name: 'Bog Serpent', level: 40, maxHp: 120, attack: 35,
@@ -123,7 +123,7 @@ export const beasts: Monster[] = [
             { itemId: 'affinity_gloves', chance: "1/256", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'affinity_boots', chance: "1/256", minQuantity: 1, maxQuantity: 1 },
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 90000, aggressive: true, alwaysAggressive: true,
+        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 90000, aggressive: true, alwaysAggressive: true,
         specialAttacks: [{ name: 'Venom Spit', chance: 0.25, effect: 'damage_multiplier', value: 1.2 }], attackStyle: 'slash',
     },
     {
@@ -139,7 +139,7 @@ export const beasts: Monster[] = [
             { itemId: 'spiked_toad_skin', chance: "1/15", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'astral_rune', chance: "1/25", minQuantity: 1, maxQuantity: 3 }
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 30000, aggressive: true, attackStyle: 'crush',
+        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 30000, aggressive: true, attackStyle: 'crush',
     },
     {
         id: 'giant_crab', name: 'Giant Crab', level: 9, maxHp: 25, attack: 8,
@@ -156,7 +156,7 @@ export const beasts: Monster[] = [
             { itemId: 'anima_rune', chance: "1/25", minQuantity: 1, maxQuantity: 2 },
             { itemId: 'aether_rune', chance: "1/250", minQuantity: 1, maxQuantity: 1 }
         ],
-        monsterType: MonsterType.Armored, attackSpeed: 4, respawnTime: 30000, aggressive: true, alwaysAggressive: true, attackStyle: 'crush',
+        types: [MonsterType.Beast, MonsterType.Armored], attackSpeed: 4, respawnTime: 30000, aggressive: true, alwaysAggressive: true, attackStyle: 'crush',
     },
     {
         id: 'tidal_crawler', name: 'Tidal Crawler', level: 38, maxHp: 80, attack: 30,
@@ -168,7 +168,7 @@ export const beasts: Monster[] = [
             { itemId: 'raw_eel', chance: "1/8", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'affinity_top', chance: "1/256", minQuantity: 1, maxQuantity: 1 },
         ],
-        monsterType: MonsterType.Armored, attackSpeed: 5, respawnTime: 70000, aggressive: true, attackStyle: 'crush',
+        types: [MonsterType.Beast], attackSpeed: 5, respawnTime: 70000, aggressive: true, attackStyle: 'crush',
     },
     {
         id: 'jungle_stalker', name: 'Jungle Stalker', level: 41, maxHp: 80, attack: 42,
@@ -181,7 +181,7 @@ export const beasts: Monster[] = [
             { itemId: 'verdant_rune', chance: "1/3", minQuantity: 15, maxQuantity: 30 },
             { itemId: 'nexus_rune', chance: "1/8", minQuantity: 5, maxQuantity: 15 }
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 3, respawnTime: 100000, aggressive: true, alwaysAggressive: true, attackStyle: 'slash',
+        types: [MonsterType.Beast], attackSpeed: 3, respawnTime: 100000, aggressive: true, alwaysAggressive: true, attackStyle: 'slash',
     },
     {
         id: 'bog_mite',
@@ -204,7 +204,7 @@ export const beasts: Monster[] = [
             { itemId: 'hex_rune', chance: "1/5", minQuantity: 5, maxQuantity: 12 },
             { itemId: 'astral_rune', chance: "1/20", minQuantity: 2, maxQuantity: 4 }
         ],
-        monsterType: MonsterType.Standard,
+        types: [MonsterType.Beast],
         attackSpeed: 4,
         respawnTime: 25000,
         aggressive: true,
@@ -224,7 +224,7 @@ export const beasts: Monster[] = [
         mainDrops: [
             { itemId: 'stone_rune', chance: "1/5", minQuantity: 2, maxQuantity: 8 }
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 5, respawnTime: 40000, aggressive: true, attackStyle: 'crush',
+        types: [MonsterType.Beast], attackSpeed: 5, respawnTime: 40000, aggressive: true, attackStyle: 'crush',
     },
     {
         id: 'wolf', name: 'Wolf', level: 15, maxHp: 25, attack: 14,
@@ -238,7 +238,7 @@ export const beasts: Monster[] = [
             { itemId: 'gust_rune', chance: "1/8", minQuantity: 2, maxQuantity: 6 },
             { itemId: 'frost_berries', chance: "1/30", minQuantity: 1, maxQuantity: 1 }
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 3, respawnTime: 30000, aggressive: true, alwaysAggressive: true, attackStyle: 'slash',
+        types: [MonsterType.Beast], attackSpeed: 3, respawnTime: 30000, aggressive: true, alwaysAggressive: true, attackStyle: 'slash',
     },
     {
         id: 'glimmerhorn_stag', name: 'Glimmerhorn Stag', level: 12, maxHp: 20, attack: 8,
@@ -252,21 +252,7 @@ export const beasts: Monster[] = [
         mainDrops: [
             { itemId: 'verdant_rune', chance: "1/10", minQuantity: 1, maxQuantity: 3 }
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 35000, aggressive: false, attackStyle: 'crush',
-    },
-    {
-        id: 'young_hill_giant', name: 'Young Hill Giant', level: 22, maxHp: 45, attack: 20,
-        stabDefence: 18, slashDefence: 18, crushDefence: 22, rangedDefence: 15, magicDefence: -5,
-        iconUrl: '/assets/npcChatHeads/young_hill_giant.png',
-        guaranteedDrops: [
-            { itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 }
-        ],
-        mainDrops: [
-            { itemId: 'stone_rune', chance: "1/4", minQuantity: 5, maxQuantity: 15 },
-            { tableId: 'herb_table', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'iron_warhammer', chance: "1/100", minQuantity: 1, maxQuantity: 1 }
-        ],
-        monsterType: MonsterType.Standard, attackSpeed: 6, respawnTime: 60000, aggressive: true, attackStyle: 'crush',
+        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 35000, aggressive: false, attackStyle: 'crush',
     },
     {
         id: 'giant_hornet', name: 'Giant Hornet', level: 14, maxHp: 22, attack: 1, ranged: 15,
@@ -278,7 +264,7 @@ export const beasts: Monster[] = [
         mainDrops: [
             { itemId: 'gust_rune', chance: "1/2", minQuantity: 10, maxQuantity: 20 }
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 2, respawnTime: 25000, aggressive: true, alwaysAggressive: true, attackStyle: 'ranged',
+        types: [MonsterType.Beast], attackSpeed: 2, respawnTime: 25000, aggressive: true, alwaysAggressive: true, attackStyle: 'ranged',
     },
     {
         id: 'salt_leaper', name: 'Salt Leaper', level: 35, maxHp: 55, attack: 28,
@@ -290,7 +276,7 @@ export const beasts: Monster[] = [
             { itemId: 'gust_rune', chance: "1/8", minQuantity: 10, maxQuantity: 20 },
             { itemId: 'crystalline_chitin', chance: "1/12", minQuantity: 1, maxQuantity: 1 },
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 30000, aggressive: true, attackStyle: 'stab'
+        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 30000, aggressive: true, attackStyle: 'stab'
     },
     {
         id: 'salt_flat_skitterer', name: 'Salt Flat Skitterer', level: 32, maxHp: 48, attack: 25,
@@ -301,7 +287,7 @@ export const beasts: Monster[] = [
             { itemId: 'rock_salt', chance: "1/5", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'stone_rune', chance: "1/6", minQuantity: 8, maxQuantity: 18 },
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 28000, aggressive: true, attackStyle: 'slash'
+        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 28000, aggressive: true, attackStyle: 'slash'
     },
     {
         id: 'salt_preserved_vulture', name: 'Salt-Preserved Vulture', level: 34, maxHp: 50, attack: 26,
@@ -315,7 +301,7 @@ export const beasts: Monster[] = [
             { itemId: 'gust_rune', chance: "1/5", minQuantity: 12, maxQuantity: 22 },
             { itemId: 'rock_salt', chance: "1/6", minQuantity: 1, maxQuantity: 2 },
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 35000, aggressive: true, attackStyle: 'slash'
+        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 35000, aggressive: true, attackStyle: 'slash'
     },
     {
         id: 'sand_scrabbler', name: 'Sand Scrabbler', level: 33, maxHp: 45, attack: 24,
@@ -326,7 +312,7 @@ export const beasts: Monster[] = [
             { itemId: 'rock_salt', chance: "1/4", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'stone_rune', chance: "1/8", minQuantity: 10, maxQuantity: 20 },
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 32000, aggressive: true, attackStyle: 'stab'
+        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 32000, aggressive: true, attackStyle: 'stab'
     },
     {
         id: 'crystalline_tortoise', name: 'Crystalline Tortoise', level: 38, maxHp: 70, attack: 30,
@@ -337,7 +323,7 @@ export const beasts: Monster[] = [
             { itemId: 'hex_rune', chance: "1/12", minQuantity: 5, maxQuantity: 10 },
             { itemId: 'uncut_diamond', chance: "1/500", minQuantity: 1, maxQuantity: 1 },
         ],
-        monsterType: MonsterType.Armored, attackSpeed: 6, respawnTime: 60000, aggressive: false, attackStyle: 'crush'
+        types: [MonsterType.Beast, MonsterType.Armored], attackSpeed: 6, respawnTime: 60000, aggressive: false, attackStyle: 'crush'
     },
     {
         id: 'crystal_scuttler', name: 'Crystal Scuttler', level: 40, maxHp: 65, attack: 32,
@@ -351,7 +337,7 @@ export const beasts: Monster[] = [
             { itemId: 'astral_rune', chance: "1/10", minQuantity: 3, maxQuantity: 8 },
             { itemId: 'crystalline_chitin', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
         ],
-        monsterType: MonsterType.Armored, attackSpeed: 4, respawnTime: 50000, aggressive: true, attackStyle: 'stab'
+        types: [MonsterType.Beast, MonsterType.Armored], attackSpeed: 4, respawnTime: 50000, aggressive: true, attackStyle: 'stab'
     },
     {
         id: 'ancient_ammonite', name: 'Ancient Ammonite', level: 48, maxHp: 110, attack: 40,
@@ -365,7 +351,7 @@ export const beasts: Monster[] = [
             { itemId: 'anima_rune', chance: "1/10", minQuantity: 5, maxQuantity: 10 },
             { itemId: 'uncut_diamond', chance: "1/100", minQuantity: 1, maxQuantity: 1 },
         ],
-        monsterType: MonsterType.Armored, attackSpeed: 5, respawnTime: 180000, aggressive: true, attackStyle: 'crush'
+        types: [MonsterType.Beast, MonsterType.Armored], attackSpeed: 5, respawnTime: 180000, aggressive: true, attackStyle: 'crush'
     },
     {
         id: 'crystal_grazer', name: 'Crystal Grazer', level: 43, maxHp: 60, attack: 30,
@@ -378,6 +364,6 @@ export const beasts: Monster[] = [
             { itemId: 'crystal_shard', chance: "1/4", minQuantity: 1, maxQuantity: 2 },
             { itemId: 'resonating_crystal', chance: "1/50", minQuantity: 1, maxQuantity: 1 },
         ],
-        monsterType: MonsterType.Standard, attackSpeed: 4, respawnTime: 40000, aggressive: false, attackStyle: 'crush',
+        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 40000, aggressive: false, attackStyle: 'crush',
     },
 ];

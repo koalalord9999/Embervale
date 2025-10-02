@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { useSkilling } from './useSkilling';
 import { useInteractQuest } from './useInteractQuest';
@@ -6,7 +7,8 @@ import { useGameSession } from './useGameSession';
 import { useCharacter } from './useCharacter';
 import { useInventory } from './useInventory';
 import { WorldState, InventorySlot, Equipment } from '../types';
-import { ITEMS, INVENTORY_CAPACITY } from '../constants';
+// FIX: Removed duplicate and incorrect import of 'POIS' from '../constants'. It is now correctly imported from '../data/pois'.
+import { ITEMS, INVENTORY_CAPACITY, REGIONS } from '../constants';
 import { POIS } from '../data/pois';
 
 interface PlayerDeathDependencies {
@@ -18,7 +20,7 @@ interface PlayerDeathDependencies {
     inv: ReturnType<typeof useInventory>;
     addLog: (message: string) => void;
     tutorialStage: number;
-    onItemDropped: (item: InventorySlot) => void;
+    onItemDropped: (item: InventorySlot, overridePoiId?: string) => void;
     setWorldState: React.Dispatch<React.SetStateAction<WorldState>>;
 }
 
@@ -60,15 +62,23 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
         const keptItems = allItems.slice(0, 3);
         const droppedItems = allItems.slice(3);
 
-        // 4. Handle dropped items and coins
-        const deathPoiId = session.currentPoiId;
+        // 4. Determine final death POI and handle dropped items/coins
+        let finalDeathPoiId = session.currentPoiId;
+        const currentPoi = POIS[session.currentPoiId];
+        if (currentPoi) {
+            const region = REGIONS[currentPoi.regionId];
+            if (region && region.type === 'dungeon') {
+                finalDeathPoiId = region.entryPoiId;
+            }
+        }
+        
         const lostCoins = inv.coins;
         
         if (lostCoins > 0) {
-            onItemDropped({ itemId: 'coins', quantity: lostCoins });
+            onItemDropped({ itemId: 'coins', quantity: lostCoins }, finalDeathPoiId);
         }
         droppedItems.forEach(item => {
-            onItemDropped(item.slot);
+            onItemDropped(item.slot, finalDeathPoiId);
         });
 
         // 5. Update inventory and equipment with only the kept items
@@ -94,7 +104,7 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
         setWorldState(ws => ({
             ...ws,
             deathMarker: {
-                poiId: deathPoiId,
+                poiId: finalDeathPoiId,
                 timeRemaining: 600000, // 10 minutes in ms
                 immunityGranted: false
             }
@@ -103,7 +113,7 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
         // 7. Respawn player
         session.setCurrentPoiId('meadowdale_square');
         char.setCurrentHp(char.maxHp);
-        addLog(`You have died! Your 3 most valuable items have been kept. The rest, including ${lostCoins.toLocaleString()} coins, have been dropped at ${POIS[deathPoiId].name}.`);
+        addLog(`You have died! Your 3 most valuable items have been kept. The rest, including ${lostCoins.toLocaleString()} coins, have been dropped at ${POIS[finalDeathPoiId].name}.`);
 
     }, [session, char, inv, addLog, ui, skilling, interactQuest, tutorialStage, onItemDropped, setWorldState]);
 

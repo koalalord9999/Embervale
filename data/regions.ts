@@ -1,3 +1,4 @@
+
 import { Region } from '../types';
 
 export const REGIONS: Record<string, Region> = {
@@ -136,5 +137,15 @@ export const REGIONS: Record<string, Region> = {
         y: 200, // Conceptually above the world
         description: 'A breathtaking series of floating islands composed of massive, shimmering crystals. The air is thin and hums with a strange, resonant energy.',
         recommendedCombatLevel: 55,
+    },
+    magus_spire: {
+        id: 'magus_spire',
+        name: "Magus Spire",
+        type: 'dungeon',
+        entryPoiId: 'magus_spire_entrance',
+        x: 0,
+        y: 0,
+        description: 'A towering spire of pure magic, protected by crystalline constructs. It is a place of immense arcane power.',
+        recommendedCombatLevel: 60,
     },
 };

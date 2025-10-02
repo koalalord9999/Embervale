@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Monster, PlayerSkill, SkillName, Equipment, CombatStance, WeaponType, MonsterType, InventorySlot, WeightedDrop, Spell } from '../../types';
+import { Monster, PlayerSkill, SkillName, Equipment, CombatStance, WeaponType, MonsterType, InventorySlot, WeightedDrop, Spell, MonsterSpecialAttack } from '../../types';
 import { MONSTERS, ITEMS, rollOnLootTable, REGIONS, LootRollResult } from '../../constants';
 import { POIS } from '../../data/pois';
 import Button from '../common/Button';
@@ -23,7 +22,7 @@ interface CombatViewProps {
     onCombatEnd: () => void;
     addXp: (skill: SkillName, amount: number) => void;
     addLoot: (itemId: string, quantity: number, quiet?: boolean, doses?: number, options?: { noted?: boolean, bypassAutoBank?: boolean }) => void;
-    onDropLoot: (item: InventorySlot) => void; // For ground drops
+    onDropLoot: (item: InventorySlot, overridePoiId?: string) => void; // For ground drops
     isAutoBankOn: boolean;
     addLog: (message: string) => void;
     onPlayerDeath: () => void;
@@ -36,6 +35,9 @@ interface CombatViewProps {
     inv: ReturnType<typeof useInventory>;
     ui: ReturnType<typeof useUIState>;
     killTrigger: number;
+    applyStatModifier: (skill: SkillName, value: number, duration: number, baseLevelOnConsumption: number) => void;
+    isStunned: boolean;
+    addBuff: (buff: Omit<ActiveBuff, 'id' | 'expiresAt'>) => void;
 }
 
 interface MonsterStatusEffect {
@@ -44,9 +46,9 @@ interface MonsterStatusEffect {
     ticksLeft: number;
 }
 
-const HitSplat: React.FC<{ damage: number | 'miss', isPoison?: boolean, isMagic?: boolean }> = ({ damage, isPoison = false, isMagic = false }) => {
+const HitSplat: React.FC<{ damage: number | 'miss', isPoison?: boolean, isMagic?: boolean, isDragonfire?: boolean }> = ({ damage, isPoison = false, isMagic = false, isDragonfire = false }) => {
     const isMiss = damage === 'miss';
-    const color = isMiss ? 'text-white' : (isPoison ? 'text-green-400' : (isMagic ? 'text-blue-400' : 'text-yellow-400'));
+    const color = isMiss ? 'text-white' : (isPoison ? 'text-green-400' : (isMagic ? 'text-blue-400' : (isDragonfire ? 'text-orange-500' : 'text-yellow-400')));
     const text = isMiss ? 'Miss' : damage;
     const [style, setStyle] = useState({ top: '50%', left: '50%', opacity: 0, transform: 'translate(-50%, -50%) scale(0.5)' });
 
@@ -119,13 +121,13 @@ const parseChance = (chance: number | string): number => {
     return 0; // fallback
 };
 
-const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, playerSkills, playerHp, equipment, combatStance, setCombatStance, setPlayerHp, onCombatEnd, addXp, addLoot, onDropLoot, isAutoBankOn, addLog, onPlayerDeath, onKill, onConsumeAmmo, activeBuffs, combatSpeedMultiplier, advanceTutorial, autocastSpell, inv, ui, killTrigger }) => {
+const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, playerSkills, playerHp, equipment, combatStance, setCombatStance, setPlayerHp, onCombatEnd, addXp, addLoot, onDropLoot, isAutoBankOn, addLog, onPlayerDeath, onKill, onConsumeAmmo, activeBuffs, combatSpeedMultiplier, advanceTutorial, autocastSpell, inv, ui, killTrigger, applyStatModifier, isStunned, addBuff }) => {
     const [currentMonsterIndex, setCurrentMonsterIndex] = useState(0);
     const currentInstanceId = monsterQueue[currentMonsterIndex];
     const monsterId = currentInstanceId.split(':')[1];
     const [monster, setMonster] = useState<Monster | null>(null);
     const [monsterHp, setMonsterHp] = useState(0);
-    const [hitSplats, setHitSplats] = useState<{ id: number; damage: number | 'miss'; target: 'player' | 'monster', isPoison?: boolean, isMagic?: boolean }[]>([]);
+    const [hitSplats, setHitSplats] = useState<{ id: number; damage: number | 'miss'; target: 'player' | 'monster', isPoison?: boolean, isMagic?: boolean, isDragonfire?: boolean }[]>([]);
     const [playerAttacking, setPlayerAttacking] = useState(false);
     const [monsterAttacking, setMonsterAttacking] = useState(false);
     const [monsterStatus, setMonsterStatus] = useState<MonsterStatusEffect[]>([]);
@@ -135,6 +137,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
     const [nextPlayerAttackTime, setNextPlayerAttackTime] = useState(0);
     const [nextMonsterAttackTime, setNextMonsterAttackTime] = useState(0);
     const [isPreparing, setIsPreparing] = useState(true);
+    const [isCombatEnding, setIsCombatEnding] = useState(false);
     
     const playerRef = useRef<HTMLDivElement>(null);
     const monsterRef = useRef<HTMLDivElement>(null);
@@ -285,6 +288,9 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
             setMonsterStatus([]);
             if (monsterQueue.length > 1) addLog(`(${currentMonsterIndex + 1}/${monsterQueue.length}) A ${monsterData.name} steps forward!`);
 
+            setIsCombatEnding(false);
+            setIsPreparing(true);
+
             const preparationTimer = setTimeout(() => {
                 const now = Date.now();
                 const currentTickMs = 600 / combatSpeedMultiplier;
@@ -295,7 +301,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
 
             return () => clearTimeout(preparationTimer);
         }
-    }, [currentInstanceId, playerWeapon.speed, addLog, isMandatory, monsterQueue.length, currentMonsterIndex, combatSpeedMultiplier]);
+    }, [currentInstanceId, monsterId, playerWeapon.speed, addLog, monsterQueue.length, currentMonsterIndex, combatSpeedMultiplier]);
 
     const playerStats = useMemo(() => {
         const totals = {
@@ -328,9 +334,9 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
         return totals;
     }, [equipment]);
     
-    const addHitSplat = (damage: number | 'miss', target: 'player' | 'monster', isPoison: boolean = false, isMagic: boolean = false) => {
+    const addHitSplat = (damage: number | 'miss', target: 'player' | 'monster', isPoison: boolean = false, isMagic: boolean = false, isDragonfire: boolean = false) => {
         const id = Date.now() + Math.random();
-        setHitSplats(splats => [...splats, { id, damage, target, isPoison, isMagic }]);
+        setHitSplats(splats => [...splats, { id, damage, target, isPoison, isMagic, isDragonfire }]);
         setTimeout(() => setHitSplats(splats => splats.filter(splat => splat.id !== id)), 1500);
     };
 
@@ -347,6 +353,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
     useEffect(() => { invRef.current = inv; }, [inv]);
 
     const executeManualCast = useCallback((spell: Spell) => {
+        if (isStunned) return;
         if (!monster) return;
 
         setPlayerAttacking(true);
@@ -399,22 +406,25 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
         addHitSplat(playerDamage > 0 ? playerDamage : 'miss', 'monster', false, true);
         
         if (newMonsterHp <= 0) {
-            onKill(currentInstanceId, 'magic');
-            handleLootDistribution();
-            if (currentMonsterIndex + 1 < monsterQueue.length) {
-                setCurrentMonsterIndex(prev => prev + 1);
-            } else {
-                if (monsterQueue.length > 1) addLog("You have cleared the area!");
-                setQueuedSpell(null);
-                setLastSpellCast(null);
-                onCombatEnd();
-            }
+            setIsCombatEnding(true);
+            setTimeout(() => {
+                onKill(currentInstanceId, 'magic');
+                handleLootDistribution();
+                if (currentMonsterIndex + 1 < monsterQueue.length) {
+                    setCurrentMonsterIndex(prev => prev + 1);
+                } else {
+                    if (monsterQueue.length > 1) addLog("You have cleared the area!");
+                    setQueuedSpell(null);
+                    setLastSpellCast(null);
+                    onCombatEnd();
+                }
+            }, 1500);
+        } else {
+            const castTimeTicks = spell.castTime ?? 4;
+            setNextPlayerAttackTime(Date.now() + castTimeTicks * gameTickMs);
         }
-        
-        const castTimeTicks = spell.castTime ?? 4;
-        setNextPlayerAttackTime(Date.now() + castTimeTicks * gameTickMs);
 
-    }, [monster, equipment.weapon, invRef, addLog, playerSkills, playerStats, monsterHp, onKill, currentInstanceId, handleLootDistribution, currentMonsterIndex, monsterQueue.length, onCombatEnd, gameTickMs, addXp]);
+    }, [monster, equipment.weapon, invRef, addLog, playerSkills, playerStats, monsterHp, onKill, currentInstanceId, handleLootDistribution, currentMonsterIndex, monsterQueue.length, onCombatEnd, gameTickMs, addXp, isStunned]);
 
     const handleManualCast = useCallback((spell: Spell) => {
         if (Date.now() < nextPlayerAttackTime) {
@@ -437,166 +447,175 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
     }, [ui.manualCastTrigger, isPreparing, monster, playerHp, monsterHp, handleManualCast, ui]);
     
     useEffect(() => {
-        if (isPreparing) return;
+        if (isPreparing || isCombatEnding) return;
 
         let combatFrameId: number;
 
         const combatLoop = () => {
-            if (!monster || playerHp <= 0 || monsterHp <= 0) return;
+            if (isCombatEnding || !monster || playerHp <= 0 || monsterHp <= 0) return;
             const now = Date.now();
 
             if (now >= nextPlayerAttackTime) {
+                if (isStunned) {
+                    setNextPlayerAttackTime(now + gameTickMs); // Skip a turn if stunned
+                    return;
+                }
+                
                 if (queuedSpell) {
                     executeManualCast(queuedSpell);
                     setQueuedSpell(null);
-                } else {
-                    setPlayerAttacking(true);
-                    setTimeout(() => setPlayerAttacking(false), 300);
-                    let playerDamage = 0;
-                    let successfulHit = false;
-                    let attackStyle: 'melee' | 'ranged' | 'magic' = 'melee';
-                    
-                    const speedBuff = activeBuffs.find(b => b.type === 'attack_speed_boost');
-                    let effectiveSpeed = playerWeapon.speed;
-                    if (speedBuff) effectiveSpeed = Math.max(1, effectiveSpeed + speedBuff.value);
-            
-                    const isStaff = playerWeapon.type === WeaponType.Staff;
-                    const isAutocasting = isStaff && autocastSpell && (combatStance === CombatStance.Autocast || combatStance === CombatStance.DefensiveAutocast);
-                    const isRangedWeapon = playerWeapon.type === WeaponType.Bow;
-                    let attackPerformedThisTick = false;
+                    return;
+                }
+                
+                setPlayerAttacking(true);
+                setTimeout(() => setPlayerAttacking(false), 300);
+                let playerDamage = 0;
+                let successfulHit = false;
+                let attackStyle: 'melee' | 'ranged' | 'magic' = 'melee';
+                
+                const speedBuff = activeBuffs.find(b => b.type === 'attack_speed_boost');
+                let effectiveSpeed = playerWeapon.speed;
+                if (speedBuff) effectiveSpeed = Math.max(1, effectiveSpeed + speedBuff.value);
+        
+                const isStaff = playerWeapon.type === WeaponType.Staff;
+                const isAutocasting = isStaff && autocastSpell && (combatStance === CombatStance.Autocast || combatStance === CombatStance.DefensiveAutocast);
+                const isRangedWeapon = playerWeapon.type === WeaponType.Bow;
+                let attackPerformedThisTick = false;
 
-                    if (isAutocasting) {
-                        attackStyle = 'magic';
-                        const spell = autocastSpell!;
-                        const equippedStaff = equipment.weapon ? ITEMS[equipment.weapon.itemId] : null;
-                        const providedRune = equippedStaff?.equipment?.providesRune;
-                        const runesNeeded = spell.runes.filter((r: { itemId: string; quantity: number }) => r.itemId !== providedRune);
+                if (isAutocasting) {
+                    attackStyle = 'magic';
+                    const spell = autocastSpell!;
+                    const equippedStaff = equipment.weapon ? ITEMS[equipment.weapon.itemId] : null;
+                    const providedRune = equippedStaff?.equipment?.providesRune;
+                    const runesNeeded = spell.runes.filter((r: { itemId: string; quantity: number }) => r.itemId !== providedRune);
 
-                        if (!inv.hasItems(runesNeeded)) {
-                            addLog(`You run out of runes for ${spell.name}. Reverting to melee combat.`);
-                            setCombatStance(CombatStance.Accurate);
-                        } else {
-                            attackPerformedThisTick = true;
-                            setLastSpellCast(spell);
-                            runesNeeded.forEach((r: {itemId: string, quantity: number}) => inv.modifyItem(r.itemId, -r.quantity, true));
+                    if (!inv.hasItems(runesNeeded)) {
+                        addLog(`You run out of runes for ${spell.name}. Reverting to melee combat.`);
+                        setCombatStance(CombatStance.Accurate);
+                    } else {
+                        attackPerformedThisTick = true;
+                        setLastSpellCast(spell);
+                        runesNeeded.forEach((r: {itemId: string, quantity: number}) => inv.modifyItem(r.itemId, -r.quantity, true));
 
-                            const xpGains: Partial<Record<SkillName, number>> = {};
-                            xpGains[SkillName.Magic] = (xpGains[SkillName.Magic] || 0) + spell.xp;
+                        const xpGains: Partial<Record<SkillName, number>> = {};
+                        xpGains[SkillName.Magic] = (xpGains[SkillName.Magic] || 0) + spell.xp;
 
-                            let effectiveMagic = playerSkills.find(s => s.name === SkillName.Magic)?.currentLevel ?? 1;
-                            const totalMagicAttack = effectiveMagic + playerStats.magicAttack;
-                            const accuracy = calculateAccuracy(totalMagicAttack, monster.magicDefence);
-                            
-                            const baseMaxHit = spell.maxHit ?? 0;
-                            const bonus = 1 + (playerStats.magicDamageBonus / 100);
-                            const maxHit = Math.floor(baseMaxHit * bonus);
+                        let effectiveMagic = playerSkills.find(s => s.name === SkillName.Magic)?.currentLevel ?? 1;
+                        const totalMagicAttack = effectiveMagic + playerStats.magicAttack;
+                        const accuracy = calculateAccuracy(totalMagicAttack, monster.magicDefence);
+                        
+                        const baseMaxHit = spell.maxHit ?? 0;
+                        const bonus = 1 + (playerStats.magicDamageBonus / 100);
+                        const maxHit = Math.floor(baseMaxHit * bonus);
 
+                        if (Math.random() < accuracy) { 
+                            playerDamage = Math.floor(Math.random() * (maxHit + 1));
+                            successfulHit = true;
+                        }
+
+                        const spellTier = spell.level > 80 ? 5 : spell.level > 60 ? 4 : spell.level > 40 ? 3 : spell.level > 20 ? 2 : 1;
+                        setAnimationTriggers(prev => [...prev, { id: Date.now() + Math.random(), type: 'magic', source: 'player', target: 'monster', options: { spellTier } }]);
+                        
+                        if (playerDamage > 0) {
+                            xpGains[SkillName.Hitpoints] = (xpGains[SkillName.Hitpoints] || 0) + playerDamage * 1.33;
+                            if (combatStance === CombatStance.DefensiveAutocast) {
+                                xpGains[SkillName.Magic] = (xpGains[SkillName.Magic] || 0) + playerDamage * 1;
+                                xpGains[SkillName.Defence] = (xpGains[SkillName.Defence] || 0) + playerDamage * 1;
+                            } else {
+                                xpGains[SkillName.Magic] = (xpGains[SkillName.Magic] || 0) + playerDamage * 2;
+                            }
+                        }
+                        
+                        for (const skillName in xpGains) {
+                            const totalXp = xpGains[skillName as SkillName];
+                            if (totalXp && totalXp > 0) {
+                                addXp(skillName as SkillName, Math.round(totalXp));
+                            }
+                        }
+
+                        addHitSplat(playerDamage > 0 ? playerDamage : 'miss', 'monster', false, true);
+                    }
+                }
+                
+                if (!attackPerformedThisTick) {
+                    setLastSpellCast(null);
+                    if (isRangedWeapon) {
+                        attackStyle = 'ranged';
+                        if (!equipment.ammo) { addLog("You have no arrows equipped."); } 
+                        else {
+                            let effectiveRanged = playerSkills.find(s => s.name === SkillName.Ranged)?.currentLevel ?? 1;
+                            if (combatStance === CombatStance.RangedAccurate) effectiveRanged += 3;
+                            if (combatStance === CombatStance.RangedRapid) effectiveSpeed = Math.max(1, effectiveSpeed - 1);
+                            const totalRangedAttack = effectiveRanged + playerStats.rangedAttack;
+                            const accuracy = calculateAccuracy(totalRangedAttack, monster.rangedDefence);
+                            const rangedStrengthBonus = playerStats.rangedStrength;
+                            const maxHit = Math.ceil(0.5 + effectiveRanged * ((rangedStrengthBonus + 64) / 640));
                             if (Math.random() < accuracy) { 
                                 playerDamage = Math.floor(Math.random() * (maxHit + 1));
                                 successfulHit = true;
                             }
-
-                            const spellTier = spell.level > 80 ? 5 : spell.level > 60 ? 4 : spell.level > 40 ? 3 : spell.level > 20 ? 2 : 1;
-                            setAnimationTriggers(prev => [...prev, { id: Date.now() + Math.random(), type: 'magic', source: 'player', target: 'monster', options: { spellTier } }]);
-                            
-                            if (playerDamage > 0) {
-                                xpGains[SkillName.Hitpoints] = (xpGains[SkillName.Hitpoints] || 0) + playerDamage * 1.33;
-                                if (combatStance === CombatStance.DefensiveAutocast) {
-                                    xpGains[SkillName.Magic] = (xpGains[SkillName.Magic] || 0) + playerDamage * 1;
-                                    xpGains[SkillName.Defence] = (xpGains[SkillName.Defence] || 0) + playerDamage * 1;
-                                } else {
-                                    xpGains[SkillName.Magic] = (xpGains[SkillName.Magic] || 0) + playerDamage * 2;
-                                }
-                            }
-                            
-                            for (const skillName in xpGains) {
-                                const totalXp = xpGains[skillName as SkillName];
-                                if (totalXp && totalXp > 0) {
-                                    addXp(skillName as SkillName, Math.round(totalXp));
-                                }
-                            }
-
-                            addHitSplat(playerDamage > 0 ? playerDamage : 'miss', 'monster', false, true);
+                            onConsumeAmmo();
                         }
-                    }
-                    
-                    if (!attackPerformedThisTick) {
-                        setLastSpellCast(null);
-                        if (isRangedWeapon) {
-                            attackStyle = 'ranged';
-                            if (!equipment.ammo) { addLog("You have no arrows equipped."); } 
-                            else {
-                                let effectiveRanged = playerSkills.find(s => s.name === SkillName.Ranged)?.currentLevel ?? 1;
-                                if (combatStance === CombatStance.RangedAccurate) effectiveRanged += 3;
-                                if (combatStance === CombatStance.RangedRapid) effectiveSpeed = Math.max(1, effectiveSpeed - 1);
-                                const totalRangedAttack = effectiveRanged + playerStats.rangedAttack;
-                                const accuracy = calculateAccuracy(totalRangedAttack, monster.rangedDefence);
-                                const rangedStrengthBonus = playerStats.rangedStrength;
-                                const maxHit = Math.ceil(0.5 + effectiveRanged * ((rangedStrengthBonus + 64) / 640));
-                                if (Math.random() < accuracy) { 
-                                    playerDamage = Math.floor(Math.random() * (maxHit + 1));
-                                    successfulHit = true;
-                                }
-                                onConsumeAmmo();
-                            }
-                        } else { // Melee
-                            attackStyle = 'melee';
-                            let effectiveAttack = playerSkills.find(s => s.name === SkillName.Attack)?.currentLevel ?? 1;
-                            let effectiveStrength = playerSkills.find(s => s.name === SkillName.Strength)?.currentLevel ?? 1;
-                            if (combatStance === CombatStance.Accurate) effectiveAttack += 3;
-                            if (combatStance === CombatStance.Aggressive) effectiveStrength += 3;
+                    } else { // Melee
+                        attackStyle = 'melee';
+                        let effectiveAttack = playerSkills.find(s => s.name === SkillName.Attack)?.currentLevel ?? 1;
+                        let effectiveStrength = playerSkills.find(s => s.name === SkillName.Strength)?.currentLevel ?? 1;
+                        if (combatStance === CombatStance.Accurate) effectiveAttack += 3;
+                        if (combatStance === CombatStance.Aggressive) effectiveStrength += 3;
 
-                            let playerAttackStyle: 'stab' | 'slash' | 'crush' = 'crush';
-                            switch (playerWeapon.type) {
-                                case WeaponType.Dagger: playerAttackStyle = 'stab'; break; case WeaponType.Sword: playerAttackStyle = 'slash'; break; case WeaponType.Scimitar: playerAttackStyle = 'slash'; break; case WeaponType.Axe: playerAttackStyle = 'slash'; break; case WeaponType.Battleaxe: playerAttackStyle = 'slash'; break; case WeaponType.Mace: playerAttackStyle = 'crush'; break; case WeaponType.Warhammer: playerAttackStyle = 'crush'; break; case WeaponType.Unarmed: playerAttackStyle = 'crush'; break; case WeaponType.Staff: playerAttackStyle = 'crush'; break;
-                            }
-
-                            let attackBonus = 0;
-                            let monsterDefence = 0;
-                            switch (playerAttackStyle) {
-                                case 'stab': attackBonus = playerStats.stabAttack; monsterDefence = monster.stabDefence; break; case 'slash': attackBonus = playerStats.slashAttack; monsterDefence = monster.slashDefence; break; case 'crush': attackBonus = playerStats.crushAttack; monsterDefence = monster.crushDefence; break;
-                            }
-                            const accuracyBuff = activeBuffs.find(b => b.type === 'accuracy_boost' && (b.style === 'melee' || b.style === 'all'));
-                            const totalAttack = effectiveAttack + attackBonus;
-                            const accuracy = calculateAccuracy(totalAttack, monsterDefence, accuracyBuff?.value);
-                            const equipmentStrengthBonus = playerStats.strengthBonus;
-                            const maxHit = Math.ceil(0.5 + effectiveStrength * ((equipmentStrengthBonus + 64) / 640));
-                            if (Math.random() < accuracy) {
-                                playerDamage = Math.floor(Math.random() * (maxHit + 1));
-                                successfulHit = true;
-                            }
-                        }
-
-                        if (playerDamage > 0) {
-                            addXp(SkillName.Hitpoints, Math.round(playerDamage * 1.33));
-                            if (isRangedWeapon) {
-                                if (combatStance === CombatStance.RangedDefence) { addXp(SkillName.Ranged, playerDamage * 2); addXp(SkillName.Defence, playerDamage * 2); }
-                                else addXp(SkillName.Ranged, playerDamage * 4);
-                            } else {
-                                if (combatStance === CombatStance.Accurate) addXp(SkillName.Attack, playerDamage * 4);
-                                else if (combatStance === CombatStance.Aggressive) addXp(SkillName.Strength, playerDamage * 4);
-                                else if (combatStance === CombatStance.Defensive) { addXp(SkillName.Attack, playerDamage * 2); addXp(SkillName.Defence, playerDamage * 2); }
-                            }
-                        }
-                        addHitSplat(playerDamage > 0 ? playerDamage : 'miss', 'monster');
-                    }
-
-                    if (successfulHit && !isAutocasting) {
                         let playerAttackStyle: 'stab' | 'slash' | 'crush' = 'crush';
-                         switch (playerWeapon.type) { case WeaponType.Dagger: playerAttackStyle = 'stab'; break; case WeaponType.Sword: playerAttackStyle = 'slash'; break; case WeaponType.Scimitar: playerAttackStyle = 'slash'; break; case WeaponType.Axe: playerAttackStyle = 'slash'; break; case WeaponType.Battleaxe: playerAttackStyle = 'slash'; break; case WeaponType.Mace: playerAttackStyle = 'crush'; break; case WeaponType.Warhammer: playerAttackStyle = 'crush'; break; case WeaponType.Unarmed: playerAttackStyle = 'crush'; break; case WeaponType.Staff: playerAttackStyle = 'crush'; break; }
-                        setAnimationTriggers(prev => [...prev, {
-                            id: Date.now() + Math.random(),
-                            type: isRangedWeapon ? 'ranged' : playerAttackStyle,
-                            source: 'player',
-                            target: 'monster',
-                            options: { arrowType: isRangedWeapon && equipment.ammo ? ITEMS[equipment.ammo.itemId].material : null }
-                        }]);
+                        switch (playerWeapon.type) {
+                            case WeaponType.Dagger: playerAttackStyle = 'stab'; break; case WeaponType.Sword: playerAttackStyle = 'slash'; break; case WeaponType.Scimitar: playerAttackStyle = 'slash'; break; case WeaponType.Axe: playerAttackStyle = 'slash'; break; case WeaponType.Battleaxe: playerAttackStyle = 'slash'; break; case WeaponType.Mace: playerAttackStyle = 'crush'; break; case WeaponType.Warhammer: playerAttackStyle = 'crush'; break; case WeaponType.Unarmed: playerAttackStyle = 'crush'; break; case WeaponType.Staff: playerAttackStyle = 'crush'; break;
+                        }
+
+                        let attackBonus = 0;
+                        let monsterDefence = 0;
+                        switch (playerAttackStyle) {
+                            case 'stab': attackBonus = playerStats.stabAttack; monsterDefence = monster.stabDefence; break; case 'slash': attackBonus = playerStats.slashAttack; monsterDefence = monster.slashDefence; break; case 'crush': attackBonus = playerStats.crushAttack; monsterDefence = monster.crushDefence; break;
+                        }
+                        const accuracyBuff = activeBuffs.find(b => b.type === 'accuracy_boost' && (b.style === 'melee' || b.style === 'all'));
+                        const totalAttack = effectiveAttack + attackBonus;
+                        const accuracy = calculateAccuracy(totalAttack, monsterDefence, accuracyBuff?.value);
+                        const equipmentStrengthBonus = playerStats.strengthBonus;
+                        const maxHit = Math.ceil(0.5 + effectiveStrength * ((equipmentStrengthBonus + 64) / 640));
+                        if (Math.random() < accuracy) {
+                            playerDamage = Math.floor(Math.random() * (maxHit + 1));
+                            successfulHit = true;
+                        }
                     }
-                    
-                    const newMonsterHp = Math.max(0, monsterHp - playerDamage);
-                    setMonsterHp(newMonsterHp);
-            
-                    if (newMonsterHp <= 0) {
+
+                    if (playerDamage > 0) {
+                        addXp(SkillName.Hitpoints, Math.round(playerDamage * 1.33));
+                        if (isRangedWeapon) {
+                            if (combatStance === CombatStance.RangedDefence) { addXp(SkillName.Ranged, playerDamage * 2); addXp(SkillName.Defence, playerDamage * 2); }
+                            else addXp(SkillName.Ranged, playerDamage * 4);
+                        } else {
+                            if (combatStance === CombatStance.Accurate) addXp(SkillName.Attack, playerDamage * 4);
+                            else if (combatStance === CombatStance.Aggressive) addXp(SkillName.Strength, playerDamage * 4);
+                            else if (combatStance === CombatStance.Defensive) { addXp(SkillName.Attack, playerDamage * 2); addXp(SkillName.Defence, playerDamage * 2); }
+                        }
+                    }
+                    addHitSplat(playerDamage > 0 ? playerDamage : 'miss', 'monster');
+                }
+
+                if (successfulHit && !isAutocasting) {
+                    let playerAttackStyle: 'stab' | 'slash' | 'crush' = 'crush';
+                     switch (playerWeapon.type) { case WeaponType.Dagger: playerAttackStyle = 'stab'; break; case WeaponType.Sword: playerAttackStyle = 'slash'; break; case WeaponType.Scimitar: playerAttackStyle = 'slash'; break; case WeaponType.Axe: playerAttackStyle = 'slash'; break; case WeaponType.Battleaxe: playerAttackStyle = 'slash'; break; case WeaponType.Mace: playerAttackStyle = 'crush'; break; case WeaponType.Warhammer: playerAttackStyle = 'crush'; break; case WeaponType.Unarmed: playerAttackStyle = 'crush'; break; case WeaponType.Staff: playerAttackStyle = 'crush'; break; }
+                    setAnimationTriggers(prev => [...prev, {
+                        id: Date.now() + Math.random(),
+                        type: isRangedWeapon ? 'ranged' : playerAttackStyle,
+                        source: 'player',
+                        target: 'monster',
+                        options: { arrowType: isRangedWeapon && equipment.ammo ? ITEMS[equipment.ammo.itemId].material : null }
+                    }]);
+                }
+                
+                const newMonsterHp = Math.max(0, monsterHp - playerDamage);
+                setMonsterHp(newMonsterHp);
+        
+                if (newMonsterHp <= 0) {
+                    setIsCombatEnding(true);
+                    setTimeout(() => {
                         onKill(currentInstanceId, attackStyle);
                         handleLootDistribution();
                         if (currentMonsterIndex + 1 < monsterQueue.length) {
@@ -607,7 +626,9 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                             setLastSpellCast(null);
                             onCombatEnd();
                         }
-                    }
+                    }, 1500);
+                    return;
+                } else {
                     setNextPlayerAttackTime(now + effectiveSpeed * gameTickMs);
                 }
             }
@@ -615,57 +636,132 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
             if (now >= nextMonsterAttackTime && monsterHp > 0) {
                 setMonsterAttacking(true);
                 setTimeout(() => setMonsterAttacking(false), 300);
-                let effectiveDefence = playerSkills.find(s => s.name === SkillName.Defence)?.currentLevel ?? 1;
-                if ([CombatStance.Defensive, CombatStance.RangedDefence, CombatStance.DefensiveAutocast].includes(combatStance)) effectiveDefence += 3;
-                
-                let playerDefenceBonus = 0;
-                let monsterAttackStat = monster.attack;
-
-                switch(monster.attackStyle) {
-                    case 'stab': playerDefenceBonus = playerStats.stabDefence; monsterAttackStat = monster.attack; break; case 'slash': playerDefenceBonus = playerStats.slashDefence; monsterAttackStat = monster.attack; break; case 'crush': playerDefenceBonus = playerStats.crushDefence; monsterAttackStat = monster.attack; break; case 'ranged': playerDefenceBonus = playerStats.rangedDefence; monsterAttackStat = monster.ranged ?? monster.attack; break; case 'magic': playerDefenceBonus = playerStats.magicDefence; monsterAttackStat = monster.magic ?? monster.attack; break;
-                }
-                
-                const evasionBuff = activeBuffs.find(b => b.type === 'evasion_boost');
-                let totalDefence = effectiveDefence + Math.floor(playerDefenceBonus * 0.5);
-                if (evasionBuff) totalDefence = Math.floor(totalDefence * (1 + evasionBuff.value / 100));
-
-                const monsterAccuracy = calculateAccuracy(monsterAttackStat, totalDefence);
-                const monsterMaxHit = monster.customMaxHit != null ? monster.customMaxHit : Math.floor(monsterAttackStat / 4) + 1;
+            
                 let monsterDamage = 0;
                 let monsterHit = false;
-                if (Math.random() < monsterAccuracy) {
-                    monsterHit = true;
-                    monsterDamage = Math.floor(Math.random() * (monsterMaxHit + 1));
-                    const specialAttack = monster.specialAttacks?.[0];
-                    if (specialAttack && Math.random() < specialAttack.chance) {
-                        addLog(`The ${monster.name} uses ${specialAttack.name}!`);
-                        if (specialAttack.effect === 'damage_multiplier') monsterDamage = Math.floor(monsterDamage * specialAttack.value);
+                let isDragonfireAttack = false;
+                let isMagicAttack = monster.attackStyle === 'magic';
+            
+                let triggeredSpecial: MonsterSpecialAttack | null = null;
+                if (monster.specialAttacks) {
+                    for (const special of monster.specialAttacks) {
+                        if (Math.random() < special.chance) {
+                            triggeredSpecial = special;
+                            break;
+                        }
                     }
                 }
-                 if(monsterHit) {
-                    setAnimationTriggers(prev => [...prev, { id: Date.now() + Math.random(), type: monster.attackStyle, source: 'monster', target: 'player', options: { spellTier: monster.level > 30 ? 3 : (monster.level > 10 ? 2 : 1) } }]);
-                }
 
+                if (triggeredSpecial) {
+                    addLog(`The ${monster.name} uses ${triggeredSpecial.name}!`);
+                    if (triggeredSpecial.effect === 'stun') {
+                        addBuff({ type: 'stun', value: 0, duration: triggeredSpecial.duration });
+                        monsterDamage = 0;
+                        monsterHit = false;
+                    } else if (triggeredSpecial.effect === 'magic_bypass_defence') {
+                        isMagicAttack = true;
+                        const effectiveDefence = playerSkills.find(s => s.name === SkillName.Magic)?.level ?? 1;
+                        const monsterAttackStat = monster.magic ?? monster.attack;
+                        const monsterAccuracy = calculateAccuracy(monsterAttackStat, effectiveDefence);
+                        if (Math.random() < monsterAccuracy) {
+                            monsterHit = true;
+                            monsterDamage = Math.floor(Math.random() * (triggeredSpecial.maxHit + 1));
+                        }
+                    } else if (triggeredSpecial.effect === 'stat_drain') {
+                        const skillData = playerSkills.find(s => s.name === triggeredSpecial.skill);
+                        applyStatModifier(triggeredSpecial.skill, -triggeredSpecial.value, 60000, skillData?.level ?? 1);
+                    } else if (triggeredSpecial.effect === 'stat_drain_multi') {
+                        triggeredSpecial.skills.forEach(drain => {
+                            const skillData = playerSkills.find(s => s.name === drain.skill);
+                            applyStatModifier(drain.skill, -drain.value, 60000, skillData?.level ?? 1);
+                        });
+                    }
+                }
+            
+                if (!triggeredSpecial || triggeredSpecial.effect === 'damage_multiplier' || triggeredSpecial.effect.startsWith('stat_drain')) {
+                    if (monster.types.includes(MonsterType.Dragon) && Math.random() < 0.3) {
+                        isDragonfireAttack = true;
+                        monsterHit = true;
+                        const dragonfireMaxHit = 60;
+                        monsterDamage = Math.floor(Math.random() * (dragonfireMaxHit + 1));
+                        addLog(`The ${monster.name} unleashes a blast of dragonfire!`);
+                        
+                        const antiFirePotionActive = activeBuffs.some(b => b.type === 'antifire');
+                        const dragonfireResistance = equipment.shield ? ITEMS[equipment.shield.itemId]?.equipment?.resistsDragonfire : undefined;
+
+                        if (dragonfireResistance !== undefined && antiFirePotionActive) {
+                            monsterDamage = 0;
+                            const shieldName = ITEMS[equipment.shield!.itemId].name;
+                            addLog(`Your ${shieldName} and antifire potion completely negate the dragonfire!`);
+                        } else if (dragonfireResistance !== undefined) {
+                            monsterDamage = Math.floor(monsterDamage * dragonfireResistance);
+                            const shieldName = ITEMS[equipment.shield!.itemId].name;
+                            addLog(`Your ${shieldName} absorbs a large portion of the fiery breath!`);
+                        } else if (antiFirePotionActive) {
+                            monsterDamage = Math.floor(monsterDamage * 0.5);
+                            addLog("Your antifire potion protects you from the worst of the heat.");
+                        }
+
+                    } else {
+                        let effectiveDefence = playerSkills.find(s => s.name === SkillName.Defence)?.currentLevel ?? 1;
+                        if ([CombatStance.Defensive, CombatStance.RangedDefence, CombatStance.DefensiveAutocast].includes(combatStance)) effectiveDefence += 3;
+                        let playerDefenceBonus = 0;
+                        let monsterAttackStat = monster.attack;
+                        switch(monster.attackStyle) {
+                            case 'stab': playerDefenceBonus = playerStats.stabDefence; monsterAttackStat = monster.attack; break;
+                            case 'slash': playerDefenceBonus = playerStats.slashDefence; monsterAttackStat = monster.attack; break;
+                            case 'crush': playerDefenceBonus = playerStats.crushDefence; monsterAttackStat = monster.attack; break;
+                            case 'ranged': playerDefenceBonus = playerStats.rangedDefence; monsterAttackStat = monster.ranged ?? monster.attack; break;
+                            case 'magic': playerDefenceBonus = playerStats.magicDefence; monsterAttackStat = monster.magic ?? monster.attack; break;
+                        }
+                        const evasionBuff = activeBuffs.find(b => b.type === 'evasion_boost');
+                        let totalDefence = effectiveDefence + Math.floor(playerDefenceBonus * 0.5);
+                        if (evasionBuff) totalDefence = Math.floor(totalDefence * (1 + evasionBuff.value / 100));
+                        const monsterAccuracy = calculateAccuracy(monsterAttackStat, totalDefence);
+                        const monsterMaxHit = monster.customMaxHit != null ? monster.customMaxHit : Math.floor(monsterAttackStat / 4) + 1;
+                        if (Math.random() < monsterAccuracy) {
+                            monsterHit = true;
+                            monsterDamage = Math.floor(Math.random() * (monsterMaxHit + 1));
+                            if (triggeredSpecial?.effect === 'damage_multiplier') {
+                                monsterDamage = Math.floor(monsterDamage * triggeredSpecial.value);
+                            }
+                        }
+                    }
+                }
+            
+                if (monsterHit) {
+                    setAnimationTriggers(prev => [...prev, { id: Date.now() + Math.random(), type: isDragonfireAttack ? 'magic' : monster.attackStyle, source: 'monster', target: 'player', options: { spellTier: isDragonfireAttack ? 5 : (monster.level > 30 ? 3 : (monster.level > 10 ? 2 : 1)) } }]);
+                }
+            
                 const reductionBuff = activeBuffs.find(b => b.type === 'damage_reduction');
                 if (reductionBuff) {
                     monsterDamage = Math.floor(monsterDamage * (1 - reductionBuff.value / 100));
                 }
-
+            
                 const newPlayerHp = Math.max(0, playerHp - monsterDamage);
                 setPlayerHp(newPlayerHp);
-                addHitSplat(monsterDamage > 0 ? monsterDamage : 'miss', 'player');
+                if (monsterHit || monsterDamage > 0) {
+                    addHitSplat(monsterDamage > 0 ? monsterDamage : 'miss', 'player', false, isDragonfireAttack ? false : isMagicAttack, isDragonfireAttack);
+                }
+            
+                if (newPlayerHp <= 0) {
+                    setIsCombatEnding(true);
+                    setTimeout(() => onPlayerDeath(), 1500);
+                    return;
+                }
+                
                 if (monsterDamage > 0) {
                     if (combatStance === CombatStance.RangedDefence) { addXp(SkillName.Ranged, monsterDamage * 2); addXp(SkillName.Defence, monsterDamage * 2); } 
                     else if (combatStance === CombatStance.DefensiveAutocast) { addXp(SkillName.Magic, monsterDamage * 2); addXp(SkillName.Defence, monsterDamage * 2); } 
                     else if (combatStance !== CombatStance.Defensive) { addXp(SkillName.Defence, monsterDamage * 4); }
-
-                    const isMeleeAttack = monster.attackStyle === 'stab' || monster.attackStyle === 'slash' || monster.attackStyle === 'crush';
+            
+                    const isMeleeAttack = !isDragonfireAttack && (monster.attackStyle === 'stab' || monster.attackStyle === 'slash' || monster.attackStyle === 'crush');
                     const hasSpikedCape = equipment.cape?.itemId === 'spiked_cape';
                     const recoilBuff = activeBuffs.find(b => b.type === 'recoil');
-
+            
                     let recoilDamage = 0;
                     let recoilSource = '';
-
+            
                     if (recoilBuff && isMeleeAttack) {
                         recoilDamage = Math.ceil(monsterDamage * (recoilBuff.value / 100));
                         recoilSource = 'Your potion';
@@ -673,63 +769,70 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                         recoilDamage = Math.ceil(monsterDamage * 0.1);
                         recoilSource = 'Your cape';
                     }
-
+            
                     if (recoilDamage > 0 && monsterHp > 0) {
                         const monsterHpAfterRecoil = Math.max(0, monsterHp - recoilDamage);
                         setMonsterHp(monsterHpAfterRecoil);
                         addHitSplat(recoilDamage, 'monster');
                         addLog(`${recoilSource} recoils, dealing ${recoilDamage} damage to the ${monster.name}!`);
-
+            
                         if (monsterHpAfterRecoil <= 0) {
-                            onKill(currentInstanceId, 'melee'); // Recoil is considered melee
-                            handleLootDistribution();
-                            if (currentMonsterIndex + 1 < monsterQueue.length) {
-                                setCurrentMonsterIndex(prev => prev + 1);
-                            } else {
-                                if (monsterQueue.length > 1) addLog("You have cleared the area!");
-                                setQueuedSpell(null);
-                                setLastSpellCast(null);
-                                onCombatEnd();
-                            }
+                            setIsCombatEnding(true);
+                            setTimeout(() => {
+                                onKill(currentInstanceId, 'melee'); // Recoil is considered melee
+                                handleLootDistribution();
+                                if (currentMonsterIndex + 1 < monsterQueue.length) {
+                                    setCurrentMonsterIndex(prev => prev + 1);
+                                } else {
+                                    if (monsterQueue.length > 1) addLog("You have cleared the area!");
+                                    setQueuedSpell(null);
+                                    setLastSpellCast(null);
+                                    onCombatEnd();
+                                }
+                            }, 1500);
+                            return;
                         }
                     }
                 }
-                if (newPlayerHp <= 0) onPlayerDeath();
                 setNextMonsterAttackTime(now + monster.attackSpeed * gameTickMs);
             }
+            
 
             combatFrameId = requestAnimationFrame(combatLoop);
         };
 
         combatFrameId = requestAnimationFrame(combatLoop);
         return () => cancelAnimationFrame(combatFrameId);
-    }, [isPreparing, monster, playerHp, monsterHp, equipment, combatStance, playerSkills, addXp, addLog, onCombatEnd, onKill, onConsumeAmmo, playerWeapon.speed, playerStats, monsterQueue, currentMonsterIndex, nextPlayerAttackTime, nextMonsterAttackTime, activeBuffs, monsterStatus, gameTickMs, addLoot, onDropLoot, isAutoBankOn, handleLootDistribution, autocastSpell, inv, ui, queuedSpell, executeManualCast]);
+    }, [isPreparing, isCombatEnding, monster, playerHp, monsterHp, equipment, combatStance, playerSkills, addXp, addLog, onCombatEnd, onKill, onConsumeAmmo, playerWeapon.speed, playerStats, monsterQueue, currentMonsterIndex, nextPlayerAttackTime, nextMonsterAttackTime, activeBuffs, monsterStatus, gameTickMs, addLoot, onDropLoot, isAutoBankOn, handleLootDistribution, autocastSpell, inv, ui, queuedSpell, executeManualCast, onPlayerDeath, applyStatModifier, isStunned, addBuff]);
 
     useEffect(() => {
         if (killTrigger > prevKillTrigger.current && monsterHp > 0 && monster) {
             addLog("DEV: Monster killed by dev command.");
-            setMonsterHp(0); // Set HP to 0 for UI
+            setIsCombatEnding(true);
+            setMonsterHp(0); 
 
-            // Manually trigger death logic
-            onKill(currentInstanceId, 'melee'); // Default to melee for dev kill
-            handleLootDistribution();
-            if (currentMonsterIndex + 1 < monsterQueue.length) {
-                setCurrentMonsterIndex(prev => prev + 1);
-            } else {
-                if (monsterQueue.length > 1) addLog("You have cleared the area!");
-                setQueuedSpell(null);
-                setLastSpellCast(null);
-                onCombatEnd();
-            }
+            setTimeout(() => {
+                onKill(currentInstanceId, 'melee');
+                handleLootDistribution();
+                if (currentMonsterIndex + 1 < monsterQueue.length) {
+                    setCurrentMonsterIndex(prev => prev + 1);
+                } else {
+                    if (monsterQueue.length > 1) addLog("You have cleared the area!");
+                    setQueuedSpell(null);
+                    setLastSpellCast(null);
+                    onCombatEnd();
+                }
+            }, 1500);
         }
         prevKillTrigger.current = killTrigger;
-    }, [killTrigger, monsterHp, addLog, monster, onKill, currentInstanceId, handleLootDistribution, currentMonsterIndex, monsterQueue, onCombatEnd]);
+    }, [killTrigger, monsterHp, monster, addLog, onKill, currentInstanceId, handleLootDistribution, currentMonsterIndex, monsterQueue, onCombatEnd]);
 
     const handleFlee = useCallback(() => {
+        if (isStunned) { addLog("You are stunned and cannot flee."); return; }
         setQueuedSpell(null);
         setLastSpellCast(null);
         onCombatEnd();
-    }, [onCombatEnd]);
+    }, [onCombatEnd, isStunned]);
 
     if (!monster) return <div>Loading combat...</div>;
 
@@ -757,8 +860,8 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
             <div className="flex justify-around items-center w-full">
                 <div className="flex flex-col items-center w-32 md:w-48">
                     <div ref={playerRef} className="relative">
-                        <img src="https://api.iconify.design/game-icons:person.svg" alt="Player" className={`w-24 h-24 md:w-32 md:h-32 p-2 bg-gray-900 border-4 border-gray-600 rounded-lg filter invert transition-transform duration-150 pixelated-image ${playerAttacking ? 'scale-110' : 'scale-100'}`} />
-                         {hitSplats.filter(s => s.target === 'player').map(splat => <HitSplat key={splat.id} damage={splat.damage} />)}
+                        <img src="https://api.iconify.design/game-icons:person.svg" alt="Player" className={`w-24 h-24 md:w-32 md:h-32 p-2 bg-gray-900 border-4 border-gray-600 rounded-lg filter invert transition-transform duration-150 pixelated-image ${playerAttacking ? 'scale-110' : ''}`} />
+                         {hitSplats.filter(s => s.target === 'player').map(splat => <HitSplat key={splat.id} damage={splat.damage} isPoison={splat.isPoison} isMagic={splat.isMagic} isDragonfire={splat.isDragonfire} />)}
                     </div>
                     <span className="font-bold mt-2">You</span>
                     <div className="relative w-full mt-1">
@@ -772,7 +875,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                 <div className="flex flex-col items-center w-32 md:w-48">
                     <div ref={monsterRef} className="relative">
                         <img src={monster.iconUrl} alt={monster.name} className={`w-24 h-24 md:w-32 md:h-32 p-2 bg-gray-900 border-4 border-gray-600 rounded-lg transition-transform duration-150 pixelated-image ${monsterAttacking ? 'scale-110' : 'scale-100'}`} />
-                        {hitSplats.filter(s => s.target === 'monster').map(splat => <HitSplat key={splat.id} damage={splat.damage} isPoison={splat.isPoison} isMagic={splat.isMagic} />)}
+                        {hitSplats.filter(s => s.target === 'monster').map(splat => <HitSplat key={splat.id} damage={splat.damage} isPoison={splat.isPoison} isMagic={splat.isMagic} isDragonfire={splat.isDragonfire} />)}
                     </div>
                     <span className="font-bold mt-2">{monster.name}</span>
                     <div className="relative w-full mt-1">
@@ -788,8 +891,8 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
             </div>
             
             <div className="flex flex-col items-center gap-4 mt-2">
-                <Button onClick={handleFlee} variant="secondary" disabled={isMandatory || isPreparing}>
-                    {isMandatory ? 'Cannot Flee' : 'Flee'}
+                <Button onClick={handleFlee} variant="secondary" disabled={isMandatory || isPreparing || isCombatEnding || isStunned}>
+                    {isStunned ? 'Stunned' : (isMandatory ? 'Cannot Flee' : 'Flee')}
                 </Button>
             </div>
         </div>

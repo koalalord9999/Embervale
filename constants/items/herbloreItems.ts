@@ -1,3 +1,4 @@
+
 import { Item, SkillName } from '../../types';
 import { HERBS, HERBLORE_RECIPES } from '../herblore';
 
@@ -110,11 +111,11 @@ const getPotionEffect = (potionId: string): Item['consumable'] => {
         case 'sunfire_elixir':
             return { buffs: [{ type: 'damage_on_hit', style: 'melee', value: 2, duration: 180000 }] };
         case 'combo_brew':
-             return { healAmount: 5, statModifiers: [ { skill: SkillName.Attack, value: 2, duration: 60000 }, { skill: SkillName.Strength, value: 2, duration: 60000 }, { skill: SkillName.Defence, value: -3, duration: 60000 } ] };
+             return { healAmount: 5, statModifiers: [ { skill: SkillName.Attack, percent: 0.05, base: 1, duration: 60000 }, { skill: SkillName.Strength, percent: 0.05, base: 1, duration: 60000 }, { skill: SkillName.Defence, percent: -0.05, base: -1, duration: 60000 } ] };
         case 'stamina_potion':
             return { potionEffect: { description: 'Restores run energy and reduces drain.'} };
         case 'hunters_brew':
-             return { statModifiers: [{ skill: SkillName.Ranged, value: 2, duration: 180000 }, { skill: SkillName.Slayer, value: 2, duration: 180000 }] };
+             return { statModifiers: [{ skill: SkillName.Ranged, percent: 0.05, base: 1, duration: 180000 }, { skill: SkillName.Slayer, percent: 0.05, base: 1, duration: 180000 }] };
         case 'antifire_potion_weak':
             return { potionEffect: { description: 'Provides minor resistance to dragonfire.'} };
         case 'extended_antifire':

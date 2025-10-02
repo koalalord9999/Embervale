@@ -4,12 +4,14 @@ import { Monster } from '../types';
 import { beasts } from './monsters/beasts';
 import { humanoids } from './monsters/humanoids';
 import { magicalAndUndead } from './monsters/magicalAndUndead';
+import { dragons } from './monsters/dragons';
 
 // Assemble all monsters into a single array
 const allMonstersUnsorted: Monster[] = [
     ...beasts,
     ...humanoids,
     ...magicalAndUndead,
+    ...dragons,
 ];
 
 // Sort the array alphabetically by monster name

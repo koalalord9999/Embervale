@@ -1,3 +1,4 @@
+
 import React, { useCallback } from 'react';
 // @fix: Moved import for INVENTORY_CAPACITY to '../constants' as it is not exported from '../types'.
 import { DialogueAction, DialogueCheckRequirement, WorldState, InventorySlot } from '../types';
@@ -9,6 +10,7 @@ import { useInventory } from './useInventory';
 import { useCharacter } from './useCharacter';
 import { useWorldActions } from './useWorldActions';
 import { padBank } from './useBank';
+import { useRepeatableQuests } from './useRepeatableQuests';
 
 interface DialogueActionDependencies {
     quests: ReturnType<typeof useQuests>;
@@ -21,10 +23,11 @@ interface DialogueActionDependencies {
     worldState: WorldState;
     setBank: React.Dispatch<React.SetStateAction<(InventorySlot | null)[]>>;
     setActivityLog: React.Dispatch<React.SetStateAction<string[]>>;
+    repeatableQuests: ReturnType<typeof useRepeatableQuests>;
 }
 
 export const useDialogueActions = (deps: DialogueActionDependencies) => {
-    const { quests, questLogic, navigation, inv, char, worldActions, addLog, worldState, setBank, setActivityLog } = deps;
+    const { quests, questLogic, navigation, inv, char, worldActions, addLog, worldState, setBank, setActivityLog, repeatableQuests } = deps;
 
     const handleDialogueCheck = useCallback((requirements: DialogueCheckRequirement[]): boolean => {
         return requirements.every(req => {
@@ -91,6 +94,12 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                     addLog("Your boosted stats return to normal.");
                     break;
                 case 'complete_tutorial': {
+                    // Automatically turn in the tutorial repeatable quest if it's active.
+                    if (repeatableQuests.activePlayerQuest?.questId === 'tutorial_magic_rat') {
+                        repeatableQuests.handleTurnInRepeatableQuest();
+                        addLog("Your 'Magical Pest Control' task was automatically turned in.");
+                    }
+                    
                     // Wipe everything
                     inv.setInventory(new Array(INVENTORY_CAPACITY).fill(null));
                     setBank(padBank([]));
@@ -122,7 +131,7 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                 }
             }
         }
-    }, [inv, char, quests, questLogic, navigation, addLog, setBank, setActivityLog]);
+    }, [inv, char, quests, questLogic, navigation, addLog, setBank, setActivityLog, repeatableQuests, worldState]);
 
     return { handleDialogueAction, handleDialogueCheck };
 };

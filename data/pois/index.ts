@@ -19,6 +19,7 @@ import { tutorialZonePois } from './tutorial_zone';
 import { dwarvenOutpostPois } from './dwarven_outpost';
 import { saltFlatsPois } from './salt_flats';
 import { crystallineIslesPois } from './crystalline_isles';
+import { magusSpirePois } from './dungeon_magus_spire';
 
 export const POIS: Record<string, POI> = {
     ...tutorialZonePois,
@@ -41,4 +42,5 @@ export const POIS: Record<string, POI> = {
     ...dwarvenOutpostPois,
     ...saltFlatsPois,
     ...crystallineIslesPois,
+    ...magusSpirePois,
 };

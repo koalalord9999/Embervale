@@ -51,6 +51,8 @@ export const resources: Item[] = [
     { id: 'ball_of_wool', name: 'Ball of Wool', description: 'A ball of fluffy wool, ready for crafting.', stackable: false, value: 3, iconUrl: 'https://api.iconify.design/game-icons:wool.svg' },
     { id: 'bones', name: 'Bones', description: 'A set of ordinary bones. Can be buried for Prayer experience.', stackable: false, value: 2, iconUrl: 'https://api.iconify.design/game-icons:crossed-bones.svg', buryable: { prayerXp: 5 } },
     { id: 'big_bones', name: 'Big Bones', description: 'Larger bones from a tougher creature. Can be buried for Prayer experience.', stackable: false, value: 10, iconUrl: 'https://api.iconify.design/game-icons:crossed-bones.svg', buryable: { prayerXp: 15 } },
+    { id: 'dragon_bones', name: 'Dragon Bones', description: 'Large, scorched bones from a dragon. Bury them for a large amount of Prayer experience.', stackable: false, value: 200, iconUrl: 'https://api.iconify.design/game-icons:dinosaur-bones.svg', buryable: { prayerXp: 100 } },
+    { id: 'dragon_hide', name: 'Dragon Hide', description: 'A tough, scaly hide from a dragon. Tanners cannot work with this material.', stackable: false, value: 500, iconUrl: 'https://api.iconify.design/game-icons:dragon-scale.svg', material: 'leather' },
     { id: 'feathers', name: 'Feathers', description: 'A soft feather of an avian.', stackable: true, value: 1, iconUrl: 'https://api.iconify.design/game-icons:feather.svg' },
     { id: 'eggs', name: 'Chicken Egg', description: 'A fresh egg. A simple cooking ingredient.', stackable: false, value: 2, iconUrl: 'https://api.iconify.design/game-icons:egg-clutch.svg' },
     { id: 'cowhide', name: 'Cowhide', description: 'The unprocessed hide of a cow. It needs to be tanned.', stackable: false, value: 6, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg' },
@@ -92,4 +94,15 @@ export const resources: Item[] = [
     { id: 'crystal_shard', name: 'Crystal Shard', description: 'A sharp, resonating shard of pure crystal.', stackable: true, value: 75, iconUrl: 'https://api.iconify.design/game-icons:gold-nuggets.svg', material: 'diamond' },
     { id: 'resonating_crystal', name: 'Resonating Crystal', description: 'A larger crystal that hums with a powerful, stored energy.', stackable: false, value: 350, iconUrl: 'https://api.iconify.design/game-icons:crystal-cluster.svg', material: 'diamond' },
     { id: 'glimmer_thread_fiber', name: 'Glimmer-thread Fiber', description: 'A magical fiber harvested from the mane of a Glimmerhorn Stag.', stackable: true, value: 50, iconUrl: 'https://api.iconify.design/game-icons:yarn.svg', material: 'rune-astral' },
+    // Dragonhides
+    { id: 'grove_hide', name: 'Grove Hide', description: 'A flexible hide cut from a Grove Dragon', stackable: false, value: 300, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg', material: 'uncut-emerald' },
+    { id: 'frost_hide', name: 'Frost Hide', description: 'A tough hide cut from a Frosthide Dragon', stackable: false, value: 400, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg', material: 'uncut-sapphire' },
+    { id: 'emberscale_hide', name: 'Emberscale Hide', description: 'A scaley hide cut from a Emberscale Dragon', stackable: false, value: 600, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg', material: 'uncut-ruby' },
+    { id: 'deathscythe_hide', name: 'Deathscythe Hide', description: 'An ominous hide cut from a Deathscythe Dragon', stackable: false, value: 800, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg', material: 'rune-nexus' },
+    //Dragon Leather
+    { id: 'grove_hide_leather', name: 'Grove Leather', description: 'A tough chunk of leather tanned from a dragon hide', stackable: false, value: 400, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg', material: 'emerald' },
+    { id: 'frost_hide_leather', name: 'Frosthide Leather', description: 'A tough chunk of leather tanned from a dragon hide', stackable: false, value: 500, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg', material: 'sapphire' },
+    { id: 'emberscale_hide_leather', name: 'Emberscale Leather', description: 'A tough chunk of leather tanned from a dragon hide', stackable: false, value: 700, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg', material: 'ruby' },
+    { id: 'deathscythe_hide_leather', name: 'Deathscythe Leather', description: 'A tough chunk of leather tanned from a dragon hide', stackable: false, value: 900, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg', material: 'burnt' },
+    
 ];

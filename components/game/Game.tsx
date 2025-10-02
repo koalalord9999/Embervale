@@ -47,9 +47,10 @@ interface GameProps {
     onResetGame: () => void;
     ui: ReturnType<typeof useUIState>;
     devModeOverride?: boolean;
+    assets: Record<string, string>;
 }
 
-const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, onResetGame, ui, devModeOverride = false }) => {
+const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, onResetGame, ui, devModeOverride = false, assets }) => {
     // Core State Hooks
     const session = useGameSession(initialState.currentPoiId);
     const { activityLog, addLog, setActivityLog } = useActivityLog([]);
@@ -181,10 +182,10 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
     const interactQuest = useInteractQuest({ addLog, activePlayerQuest: repeatableQuests.activePlayerQuest, handleTurnInRepeatableQuest: repeatableQuests.handleTurnInRepeatableQuest });
     const crafting = useCrafting({ skills: char.skills, hasItems: inv.hasItems, addLog, activeCraftingAction: ui.activeCraftingAction, setActiveCraftingAction: ui.setActiveCraftingAction, inventory: inv.inventory, modifyItem: inv.modifyItem, addXp: char.addXp, checkQuestProgressOnSpin: questLogic.checkQuestProgressOnSpin, checkQuestProgressOnSmith: questLogic.checkQuestProgressOnSmith, advanceTutorial: () => {}, closeCraftingView: ui.closeCraftingView, setWindmillFlour, equipment: inv.equipment, setEquipment: inv.setEquipment, worldState, setWorldState, onCreateBonfire, onRefreshBonfire });
     const navigation = useNavigation({ session, lockedPois: quests.lockedPois, clearedSkillObstacles, addLog, isBusy, isInCombat: ui.combatQueue.length > 0, ui, skilling, interactQuest });
-    const spellcasting = useSpellcasting({ char, inv, addLog, navigation, ui });
+    const spellcasting = useSpellcasting({ char, inv, addLog, navigation, ui, isStunned: char.isStunned });
     const worldActions = useWorldActions({ hasItems: inv.hasItems, inventory: inv.inventory, modifyItem: inv.modifyItem, addLog, coins: inv.coins, skills: char.skills, addXp: char.addXp, setClearedSkillObstacles, playerQuests: quests.playerQuests, checkQuestProgressOnShear: questLogic.checkQuestProgressOnShear, setMakeXPrompt: ui.setMakeXPrompt, windmillFlour: worldState.windmillFlour, setWindmillFlour, setActiveCraftingAction: ui.setActiveCraftingAction });
-    const dialogueActions = useDialogueActions({ quests, questLogic, navigation, inv, char, worldActions, addLog, worldState, setBank, setActivityLog });
-    const itemActions = useItemActions({ addLog, currentHp: char.currentHp, maxHp: char.maxHp, setCurrentHp: char.setCurrentHp, applyStatModifier: char.applyStatModifier, setInventory: inv.setInventory, skills: char.skills, inventory: inv.inventory, activeCraftingAction: ui.activeCraftingAction, setActiveCraftingAction: ui.setActiveCraftingAction, hasItems: inv.hasItems, modifyItem: inv.modifyItem, addXp: char.addXp, openCraftingView: ui.openCraftingView, setItemToUse: ui.setItemToUse, addBuff: char.addBuff, setMakeXPrompt: ui.setMakeXPrompt, startQuest: (questId) => { quests.startQuest(questId, addLog); }, currentPoiId: session.currentPoiId, playerQuests: quests.playerQuests });
+    const dialogueActions = useDialogueActions({ quests, questLogic, navigation, inv, char, worldActions, addLog, worldState, setBank, setActivityLog, repeatableQuests });
+    const itemActions = useItemActions({ addLog, currentHp: char.currentHp, maxHp: char.maxHp, setCurrentHp: char.setCurrentHp, applyStatModifier: char.applyStatModifier, setInventory: inv.setInventory, skills: char.skills, inventory: inv.inventory, activeCraftingAction: ui.activeCraftingAction, setActiveCraftingAction: ui.setActiveCraftingAction, hasItems: inv.hasItems, modifyItem: inv.modifyItem, addXp: char.addXp, openCraftingView: ui.openCraftingView, setItemToUse: ui.setItemToUse, addBuff: char.addBuff, setMakeXPrompt: ui.setMakeXPrompt, startQuest: (questId) => { quests.startQuest(questId, addLog); }, currentPoiId: session.currentPoiId, playerQuests: quests.playerQuests, isStunned: char.isStunned });
     const { handlePlayerDeath: baseHandlePlayerDeath } = usePlayerDeath({ skilling, interactQuest, ui, session, char, inv, addLog, tutorialStage: -1, onItemDropped: groundItems.onItemDropped, setWorldState });
     const handleCombatFinish = useCallback(() => {
         if (devMode.isInstantRespawnOn && devMode.instantRespawnCounter !== null) {
@@ -198,7 +199,13 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
     const killHandler = useKillHandler({ questLogic, repeatableQuests, slayer, setMonsterRespawnTimers, isInstantRespawnOn: devMode.isInstantRespawnOn, currentPoiId: session.currentPoiId, monsterRespawnTimers, setWorldState, addLog });
     const handleKill = useCallback((id: string, style?: 'melee' | 'ranged' | 'magic') => { killHandler.handleKill(id, style); }, [killHandler]);
     
-    const startCombat = useCallback((ids: string[]) => { ui.setCombatQueue(ids); ui.setIsMandatoryCombat(true); }, [ui]);
+    const startCombat = useCallback((ids: string[]) => {
+        if (ui.activeDialogue) {
+            ui.setActiveDialogue(null);
+        }
+        ui.setCombatQueue(ids);
+        ui.setIsMandatoryCombat(true);
+    }, [ui]);
     const isInCombat = ui.combatQueue.length > 0;
     useAggression(session.currentPoiId, true, isBusy, isInCombat, char.combatLevel, startCombat, addLog, monsterRespawnTimers, devMode.configAggroIds, devMode.isPlayerInvisible, isImmune, inv.equipment, inv.setEquipment, worldState);
     
@@ -350,7 +357,7 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
         <>
             <div className="w-full md:w-4/5 flex flex-col gap-2 relative">
                 <div className="bg-black/70 border-2 border-gray-600 rounded-lg p-4 flex-grow min-h-0 relative">
-                    <MainViewController {...{char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, handleDialogueAction: dialogueActions.handleDialogueAction, handleDialogueCheck: dialogueActions.handleDialogueCheck, combatSpeedMultiplier: devMode.combatSpeedMultiplier, activeCombatStyleHighlight: null, isTouchSimulationEnabled: devMode.isTouchSimulationEnabled, isMapManagerEnabled: devMode.isMapManagerEnabled, poiCoordinates: devMode.poiCoordinates, regionCoordinates: devMode.regionCoordinates, onUpdatePoiCoordinate: devMode.handleUpdatePoiCoordinate, poiConnections: devMode.poiConnections, onUpdatePoiConnections: devMode.handleUpdatePoiConnections, addLog, ui, onExportGame, onImportGame, onResetGame, initialState, showAllPois: devMode.showAllPois, groundItemsForCurrentPoi: groundItems.groundItemsForCurrentPoi, onPickUpItem: groundItems.handlePickUpItem, onTakeAllLoot: groundItems.handleTakeAllLoot, onItemDropped: groundItems.onItemDropped, isAutoBankOn: devMode.isAutoBankOn, handleCombatXpGain: char.addXp, immunityTimeLeft, poiImmunityTimeLeft, killTrigger, bankPlaceholders: worldState.bankPlaceholders ?? false, handleToggleBankPlaceholders, bonfires: bonfires.filter(b => b.uniqueId.startsWith(session.currentPoiId)), onStokeBonfire: crafting.handleStokeBonfire }} />
+                    <MainViewController {...{char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, handleDialogueAction: dialogueActions.handleDialogueAction, handleDialogueCheck: dialogueActions.handleDialogueCheck, combatSpeedMultiplier: devMode.combatSpeedMultiplier, activeCombatStyleHighlight: null, isTouchSimulationEnabled: devMode.isTouchSimulationEnabled, isMapManagerEnabled: devMode.isMapManagerEnabled, poiCoordinates: devMode.poiCoordinates, regionCoordinates: devMode.regionCoordinates, onUpdatePoiCoordinate: devMode.handleUpdatePoiCoordinate, poiConnections: devMode.poiConnections, onUpdatePoiConnections: devMode.handleUpdatePoiConnections, addLog, ui, onExportGame, onImportGame, onResetGame, initialState, showAllPois: devMode.showAllPois, groundItemsForCurrentPoi: groundItems.groundItemsForCurrentPoi, onPickUpItem: groundItems.handlePickUpItem, onTakeAllLoot: groundItems.handleTakeAllLoot, onItemDropped: groundItems.onItemDropped, isAutoBankOn: devMode.isAutoBankOn, handleCombatXpGain: char.addXp, immunityTimeLeft, poiImmunityTimeLeft, killTrigger, bankPlaceholders: worldState.bankPlaceholders ?? false, handleToggleBankPlaceholders, bonfires: bonfires.filter(b => b.uniqueId.startsWith(session.currentPoiId)), onStokeBonfire: crafting.handleStokeBonfire, isStunned: char.isStunned, addBuff: char.addBuff }} />
                     {levelUpInfo && <LevelUpAnimation skill={levelUpInfo.skill} level={levelUpInfo.level} />}
                     {groundItems.groundItemsForCurrentPoi.length > 0 && (
                         <button
@@ -391,12 +398,13 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
                     onExportGame={() => onExportGame(gameState)}
                     onImportGame={onImportGame}
                     onResetGame={onResetGame}
+                    // FIX: Correctly access isDevMode from the devMode hook object.
                     isDevMode={devMode.isDevMode}
                     isTouchSimulationEnabled={devMode.isTouchSimulationEnabled}
-                    // @fix: The 'onToggleTouchSimulation' function is returned by the 'useDevMode' hook and should be accessed through the 'devMode' object.
                     onToggleTouchSimulation={devMode.onToggleTouchSimulation}
                     itemActions={itemActions}
                     isBusy={isBusy}
+                    // FIX: Correctly access handleExamine from the itemActions hook object.
                     handleExamine={itemActions.handleExamine}
                     session={session}
                     addLog={addLog}

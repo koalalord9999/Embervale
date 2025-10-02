@@ -1,0 +1,130 @@
+import { Monster, MonsterType } from '../../types';
+
+export const dragons: Monster[] = [
+    {
+        id: 'grove_dragon', name: 'Grove Dragon', level: 75, maxHp: 80, attack: 60,
+        stabDefence: 70, slashDefence: 114, crushDefence: 141, rangedDefence: 58, magicDefence: 12,
+        iconUrl: '/assets/npcChatHeads/grove_dragon.png',
+        guaranteedDrops: [
+            { itemId: 'dragon_bones', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'grove_hide', minQuantity: 1, maxQuantity: 1 }
+        ],
+        mainDrops: [
+            { itemId: 'mithril_sword', chance: "1/64", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'mithril_legs', chance: "1/128", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'mithril_axe', chance: "1/32", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'mithril_battleaxe', chance: "1/128", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'mithril_warhammer', chance: "1/128", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'runic_dagger', chance: "1/256", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'verdant_rune', chance: "1/24", minQuantity: 15, maxQuantity: 15 },
+            { itemId: 'passage_rune', chance: "1/24", minQuantity: 5, maxQuantity: 8 },
+            { itemId: 'cooked_pike', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
+            { tableId: 'herb_table', chance: "3/10", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'coal', chance: "1/16", minQuantity: 15, maxQuantity: 30, noted: true },
+            { itemId: 'iron_ore', chance: "1/8", minQuantity: 5, maxQuantity: 10, noted: true },
+            { itemId: 'coins', chance: "1/1", minQuantity: 500, maxQuantity: 600},
+        ],
+        types: [MonsterType.Dragon], attackSpeed: 5, respawnTime: 120000, aggressive: true, attackStyle: 'slash',
+    },
+    {
+        id: 'frosthide_dragon', name: 'Frosthide Dragon', level: 100, maxHp: 110, attack: 70,
+        stabDefence: 90, slashDefence: 148, crushDefence: 183, rangedDefence: 80, magicDefence: 20,
+        iconUrl: '/assets/npcChatHeads/frosthide_dragon.png',
+        guaranteedDrops: [
+            { itemId: 'dragon_bones', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'frost_hide', minQuantity: 1, maxQuantity: 1 }
+        ],
+        mainDrops: [
+            { itemId: 'adamantite_sword', chance: "1/64", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'mithril_platebody', chance: "1/128", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'adamantite_axe', chance: "1/32", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'adamantite_battleaxe', chance: "1/128", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'runic_mace', chance: "1/256", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'verdant_rune', chance: "1/12", minQuantity: 20, maxQuantity: 30 },
+            { itemId: 'passage_rune', chance: "1/12", minQuantity: 10, maxQuantity: 15 },
+            { itemId: 'flux_rune', chance: "1/20", minQuantity: 5, maxQuantity: 10 },
+            { itemId: 'cooked_tuna', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
+            { tableId: 'herb_table', chance: "3/10", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'mithril_ore', chance: "1/16", minQuantity: 10, maxQuantity: 20, noted: true },
+            { itemId: 'coal', chance: "1/8", minQuantity: 25, maxQuantity: 50, noted: true },
+            { itemId: 'coins', chance: "1/1", minQuantity: 700, maxQuantity: 800},
+        ],
+        types: [MonsterType.Dragon], attackSpeed: 5, respawnTime: 140000, aggressive: true, attackStyle: 'slash',
+    },
+    {
+        id: 'emberscale_dragon', name: 'Emberscale Dragon', level: 135, maxHp: 150, attack: 85,
+        stabDefence: 120, slashDefence: 192, crushDefence: 238, rangedDefence: 110, magicDefence: 30,
+        iconUrl: '/assets/npcChatHeads/emberscale_dragon.png',
+        guaranteedDrops: [
+            { itemId: 'dragon_bones', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'emberscale_hide', minQuantity: 1, maxQuantity: 1 }
+        ],
+        mainDrops: [
+            { itemId: 'adamantite_platebody', chance: "1/64", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'runic_sword', chance: "1/128", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'runic_scimitar', chance: "1/128", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'adamantite_warhammer', chance: "1/64", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'runic_battleaxe', chance: "1/256", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'verdant_rune', chance: "1/8", minQuantity: 30, maxQuantity: 40 },
+            { itemId: 'passage_rune', chance: "1/8", minQuantity: 15, maxQuantity: 20 },
+            { itemId: 'nexus_rune', chance: "1/15", minQuantity: 10, maxQuantity: 15 },
+            { itemId: 'cooked_lobster', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
+            { tableId: 'herb_table', chance: "3/10", minQuantity: 1, maxQuantity: 1 },
+            { tableId: 'herb_table', chance: "3/10", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'adamantite_ore', chance: "1/16", minQuantity: 5, maxQuantity: 15, noted: true },
+            { itemId: 'gold_ore', chance: "1/8", minQuantity: 10, maxQuantity: 20, noted: true },
+            { itemId: 'coins', chance: "1/1", minQuantity: 900, maxQuantity: 1000},
+        ],
+        types: [MonsterType.Dragon], attackSpeed: 5, respawnTime: 160000, aggressive: true, attackStyle: 'slash',
+    },
+    {
+        id: 'deathscythe', name: 'Deathscythe', level: 180, maxHp: 200, attack: 100,
+        stabDefence: 160, slashDefence: 250, crushDefence: 310, rangedDefence: 150, magicDefence: 45,
+        iconUrl: '/assets/npcChatHeads/deathscythe_dragon.png',
+        guaranteedDrops: [
+            { itemId: 'dragon_bones', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'deathscythe_hide', minQuantity: 1, maxQuantity: 1 }
+        ],
+        mainDrops: [
+            { itemId: 'runic_platebody', chance: "1/64", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'runic_platelegs', chance: "1/64", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'runic_kiteshield', chance: "1/128", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'runic_warhammer', chance: "1/128", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'dragonfire_shield', chance: "1/512", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'verdant_rune', chance: "1/6", minQuantity: 50, maxQuantity: 70 },
+            { itemId: 'passage_rune', chance: "1/6", minQuantity: 25, maxQuantity: 35 },
+            { itemId: 'anima_rune', chance: "1/10", minQuantity: 15, maxQuantity: 25 },
+            { itemId: 'cooked_swordfish', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
+            { tableId: 'herb_table', chance: "3/10", minQuantity: 1, maxQuantity: 1 },
+            { tableId: 'herb_table', chance: "3/10", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'titanium_ore', chance: "1/16", minQuantity: 3, maxQuantity: 8, noted: true },
+            { itemId: 'yew_logs', chance: "1/8", minQuantity: 20, maxQuantity: 40, noted: true },
+            { itemId: 'coins', chance: "1/1", minQuantity: 1800, maxQuantity: 2000},
+        ],
+        types: [MonsterType.Dragon], attackSpeed: 5, respawnTime: 180000, aggressive: true, attackStyle: 'slash',
+    },
+    {
+        id: 'arcane_wyvern', name: 'Arcane Wyvern', level: 115, maxHp: 200, attack: 1, magic: 100,
+        stabDefence: 120, slashDefence: 120, crushDefence: 120, rangedDefence: 60, magicDefence: 30, customMaxHit: 18,
+        iconUrl: 'https://api.iconify.design/game-icons:wyvern.svg',
+        guaranteedDrops: [
+            { itemId: 'dragon_bones', minQuantity: 2, maxQuantity: 2 },
+        ],
+        mainDrops: [
+            { itemId: 'astral_talisman', chance: "1/8", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'tome_of_the_master', chance: "1/128", minQuantity: 1, maxQuantity: 1 },
+            { tableId: 'robes_of_power_table', chance: "1/64", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'runic_bar', chance: "1/10", minQuantity: 5, maxQuantity: 10, noted: true },
+            { itemId: 'adamantite_bar', chance: "1/5", minQuantity: 10, maxQuantity: 20, noted: true },
+            { itemId: 'anima_rune', chance: "1/3", minQuantity: 50, maxQuantity: 100 },
+            { itemId: 'aether_rune', chance: "1/4", minQuantity: 40, maxQuantity: 80 },
+            { itemId: 'uncut_diamond', chance: "1/8", minQuantity: 1, maxQuantity: 3, noted: true },
+            { itemId: 'mystic_page', chance: "1/2", minQuantity: 50, maxQuantity: 100, noted: true },
+        ],
+        types: [MonsterType.Dragon], attackSpeed: 4, respawnTime: 300000, aggressive: true, attackStyle: 'magic',
+        specialAttacks: [
+            { name: 'Arcane Stun', chance: 0.15, effect: 'stun', duration: 3000 },
+            { name: 'Arcane Blast', chance: 0.2, effect: 'magic_bypass_defence', maxHit: 22 }
+        ],
+    },
+];

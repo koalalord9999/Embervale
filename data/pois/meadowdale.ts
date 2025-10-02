@@ -108,24 +108,41 @@ export const meadowdalePois: Record<string, POI> = {
                     quest_intro_goblin_menace: {
                         npcName: 'Old Man Fitzwilliam',
                         npcIcon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
-                        text: "Troubled? I'm beyond troubled! I'm incensed! It's this dreadful racket coming from the Stonebreak Mine. Day and night, clang, clang, bash! A man can't get a moment's peace!",
+                        text: "Troubled? I'm beyond troubled! I'm incensed! It's this dreadful racket coming from the Stonebreak Mine. Day and night, clang, clang, bash! It's an affront to civilized ears! A man can't get a moment's peace!",
                         responses: [
                             { text: "What kind of racket?", next: 'situation_goblin_menace' },
-                            { text: "Have you tried earplugs?" },
+                            { text: "Have you tried earplugs?", next: 'earplugs_response' },
+                        ]
+                    },
+                    earplugs_response: {
+                        npcName: 'Old Man Fitzwilliam',
+                        npcIcon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
+                        text: "Earplugs?! Don't be absurd! It's the principle of the thing! I shouldn't have to plug my own ears in my own town square because of some subterranean hooligans! Now are you going to help or are you going to offer daft suggestions?",
+                        responses: [
+                            { text: "Alright, alright. Tell me about the racket.", next: 'situation_goblin_menace' }
                         ]
                     },
                     situation_goblin_menace: {
                         npcName: 'Old Man Fitzwilliam',
                         npcIcon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
-                        text: "It can only be one thing: goblins. They're probably banging rocks together and calling it music. It's scaring the birds, it's wilting my prize-winning petunias, and I haven't had a decent afternoon nap in a week!",
+                        text: "It can only be one thing: goblins. They've infested the old mine again. They're probably banging rocks together and calling it music. It's scaring the birds, it's wilting my prize-winning petunias, and I haven't had a decent afternoon nap in a week!",
                         responses: [
+                            { text: "Why don't the guards do something?", next: 'guards_response' },
                             { text: "What do you want me to do about it?", next: 'job_goblin_menace' },
+                        ]
+                    },
+                    guards_response: {
+                        npcName: 'Old Man Fitzwilliam',
+                        npcIcon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
+                        text: "The guards! Hah! They're too busy... guarding! Polishing their helmets and watching the gates for threats that are already under our feet. 'Official jurisdiction,' they say. Bureaucratic nonsense! It falls to citizens of action, like you, to solve real problems.",
+                        responses: [
+                            { text: "I see. So what's the job?", next: 'job_goblin_menace' },
                         ]
                     },
                     job_goblin_menace: {
                         npcName: 'Old Man Fitzwilliam',
                         npcIcon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
-                        text: "I want you to go in there and give them a taste of their own medicine! A little 'persuasion', if you will. Silence five of those noisy little brutes, and I'll make it worth your while. My sanity is a valuable thing, you know.",
+                        text: "The job is simple: pest control. Go in there and give them a taste of their own medicine! A little 'persuasion', if you will. Silence five of those noisy little brutes, and I'll make it worth your while. My sanity is a valuable thing, you know.",
                         responses: [
                             { text: "Alright, I'll restore the peace. For a price.", actions: [{ type: 'start_quest', questId: 'goblin_menace' }] },
                             { text: "Sounds dangerous. Not my problem." },
@@ -218,16 +235,22 @@ export const meadowdalePois: Record<string, POI> = {
                     quest_intro_a_smiths_apprentice: {
                         npcName: 'Valerius the Master Smith',
                         npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
-                        text: "Help? You look like you're not afraid of a bit of hard work. I could use some, and you could learn a valuable skill. Interested?",
+                        text: "Help? Hah! You've got the look of someone not afraid of a bit of hard work. This town was built on the sweat of good smiths, but the young folk these days... they'd rather read books in the library. I could use a hand, and you could learn a skill that'll save your life. Interested?",
                         responses: [
-                            { text: "What do you need help with?", next: 'details_a_smiths_apprentice' },
-                            { text: "I'm not interested, thanks." },
+                            { text: "I'm always ready to learn. What do you need?", next: 'details_a_smiths_apprentice' },
+                            { text: "Sorry, I've got books to read.", next: 'decline_smithing_quest' },
                         ],
+                    },
+                    decline_smithing_quest: {
+                        npcName: 'Valerius the Master Smith',
+                        npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                        text: "Hmph. Another one. Go on then, bury your nose in dusty pages. See if a book will stop a goblin's blade. The forge is here if you change your mind.",
+                        responses: []
                     },
                     details_a_smiths_apprentice: {
                         npcName: 'Valerius the Master Smith',
                         npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
-                        text: "I need ore. The foundation of all good smithing is good metal. The local mine is full of Copper and Tin. Bring me one of each, and I'll show you the first step of turning rock into a weapon.",
+                        text: "Every great sword starts as ugly rock. I need ore. The Stonebreak Mine is full of Copper and Tin. Bring me one of each. Do that, and I'll teach you the first, most important lesson of the forge: turning worthless stone into something strong.",
                         responses: [
                             { text: "I'll be back with your ore.", actions: [{ type: 'start_quest', questId: 'a_smiths_apprentice' }] },
                         ],
@@ -235,13 +258,13 @@ export const meadowdalePois: Record<string, POI> = {
                     in_progress_a_smiths_apprentice_0: {
                         npcName: 'Valerius the Master Smith',
                         npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
-                        text: "The forge doesn't wait forever, you know. Have you gathered that Copper and Tin ore for me yet?",
+                        text: "The forge doesn't wait forever, you know. That copper and tin isn't going to mine itself. Get to it.",
                         responses: []
                     },
                     in_progress_a_smiths_apprentice_1: {
                         npcName: 'Valerius the Master Smith',
                         npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
-                        text: "Ah, you've returned! Let's have a look at that ore... Perfect! Now, for your first lesson. Take this bronze bar. I made it from the ore you brought. Now, go to the anvil and smith it into a Bronze Dagger.",
+                        text: "Ah, good! Let's see... yes, this will do. Good quality. Now for your first lesson. You see, when you heat copper and tin together... you create bronze. Stronger than both. That's the heart of smithing: making things better than they were before. Here, take this bar I've smelted for you. Now, to the anvil! Turn that metal into a Bronze Dagger.",
                         responses: [
                             { text: "Thank you, I'll get to it.", actions: [{ type: 'advance_quest', questId: 'a_smiths_apprentice' }] }
                         ]
@@ -249,13 +272,13 @@ export const meadowdalePois: Record<string, POI> = {
                     in_progress_a_smiths_apprentice_2: {
                         npcName: 'Valerius the Master Smith',
                         npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
-                        text: "Don't just stand there holding that bar, the anvil is right over there! Turn that metal into something useful.",
+                        text: "The anvil is for hammering, not for admiring! Get that hammer swinging and shape the metal. It's all about heat, pressure, and knowing when to strike.",
                         responses: []
                     },
                     in_progress_a_smiths_apprentice_3: {
                         npcName: 'Valerius the Master Smith',
                         npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
-                        text: "Let me see that dagger... Not bad, not bad at all for a first try! You've got potential. Keep practicing, and you'll be a fine smith. Here's something for your trouble.",
+                        text: "Let me see... a bit rough around the edges, but the blade is true. Not bad at all for a first try! You've got the spark. With practice, you could be a great smith. Here's something for your trouble. Keep at it.",
                         responses: [
                             { text: "Thank you for the lesson!", actions: [{ type: 'advance_quest', questId: 'a_smiths_apprentice' }] }
                         ]
@@ -263,7 +286,7 @@ export const meadowdalePois: Record<string, POI> = {
                     post_quest_a_smiths_apprentice: {
                         npcName: 'Valerius the Master Smith',
                         npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
-                        text: "Good to see you again, apprentice. Remember what I taught you, and you'll go far.",
+                        text: "Good to see you again, apprentice. Remember what I taught you: heat, pressure, and a strong arm. That's all there is to it... mostly. How's the forge treating you?",
                         responses: []
                     },
                     // --- An Ancient Blade ---
@@ -676,24 +699,32 @@ export const meadowdalePois: Record<string, POI> = {
                     quest_intro_bandit_toll: {
                         npcName: 'Clerk Augustus',
                         npcIcon: '/assets/npcChatHeads/clerk_augustus.png',
-                        text: "Work? As a matter of fact, yes! Thank the stars. I'm at my wit's end. The lifeblood of this town, our trade with Oakhaven, has been severed by a pack of audacious thugs on the southern road. They're calling it a 'toll'.",
+                        text: "Work? As a matter of fact, yes! Thank the founders. I'm at my wit's end. The lifeblood of this town, our trade with Oakhaven to the south, has been severed by a pack of audacious thugs. They've set up a blockade and are calling it a 'toll'. Extortion, is what it is!",
                         responses: [
-                            { text: "What's the situation?", next: 'situation_bandit_toll' },
-                            { text: "I'm not interested in road maintenance." },
+                            { text: "Tell me about the trade situation.", next: 'situation_bandit_toll' },
+                            { text: "Sounds like a job for the guards.", next: 'guards_response_augustus' },
                         ],
+                    },
+                    guards_response_augustus: {
+                        npcName: 'Clerk Augustus',
+                        npcIcon: '/assets/npcChatHeads/clerk_augustus.png',
+                        text: "The town guard is stretched thin as it is, what with the goblins in the mine and strange beasts in the woods. Their mandate is to protect the town itself, not patrol the highways. It's a frustrating piece of bureaucracy, but it means we must rely on... freelance peacekeepers such as yourself.",
+                        responses: [
+                            { text: "I see. So what's the problem with the trade route?", next: 'situation_bandit_toll' }
+                        ]
                     },
                     situation_bandit_toll: {
                         npcName: 'Clerk Augustus',
                         npcIcon: '/assets/npcChatHeads/clerk_augustus.png',
-                        text: "Oakhaven is a town of artisans. We rely on their crafted goods, their fine leathers, their expert fletching supplies. In return, they need our food and ore. These bandits aren't just robbing travelers, they're starving our economy. I need someone to send a message... a firm, sharp message.",
+                        text: "Oakhaven is a town of artisans. We rely on their crafted goods, their fine leathers, their expert fletching supplies. In return, they need our food from the ranches and ore from the mines. These bandits aren't just robbing travelers, they're starving our economy. I need someone to send a message... a firm, sharp message.",
                         responses: [
-                            { text: "What's the pay?", next: 'job_bandit_toll' },
+                            { text: "And you're willing to pay for this message?", next: 'job_bandit_toll' },
                         ],
                     },
                     job_bandit_toll: {
                         npcName: 'Clerk Augustus',
                         npcIcon: '/assets/npcChatHeads/clerk_augustus.png',
-                        text: "The Meadowdale council has authorized a significant bounty. Remove five of these roadblocks—permanently—and you will be rewarded not just with coin, but with the gratitude of two towns. The road to Oakhaven simply must be reopened. Can you do this?",
+                        text: "Handsomely. The Meadowdale council has authorized a significant bounty. Remove five of these roadblocks—permanently—and you will be rewarded not just with coin, but with the gratitude of two towns. The road to Oakhaven simply must be reopened. Can you do this?",
                         responses: [
                             { text: "Consider it done. I'll clear the road.", actions: [{ type: 'start_quest', questId: 'bandit_toll' }] },
                             { text: "I'd rather not get my hands dirty." },

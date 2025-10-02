@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { InventorySlot, GroundItem, WorldState } from '../types';
 import { ITEMS } from '../constants';
@@ -18,8 +19,8 @@ export const useGroundItems = (deps: GroundItemDependencies) => {
     const { session, invRef, addLog, ui, worldState, setWorldState } = deps;
     const [groundItems, setGroundItems] = useState<Record<string, GroundItem[]>>({});
 
-    const onItemDropped = useCallback((item: InventorySlot) => {
-        const poiId = session.currentPoiId;
+    const onItemDropped = useCallback((item: InventorySlot, overridePoiId?: string) => {
+        const poiId = overridePoiId || session.currentPoiId;
         const itemData = ITEMS[item.itemId];
         if (!itemData) return;
     
@@ -82,7 +83,6 @@ export const useGroundItems = (deps: GroundItemDependencies) => {
             const poiItems = newItems[poiId] || [];
             newItems[poiId] = poiItems.filter(gi => gi.uniqueId !== uniqueId);
 
-            // Check if this was the last item of a death pile
             if (worldState.deathMarker && worldState.deathMarker.poiId === poiId && newItems[poiId].length === 0) {
                 setWorldState(ws => ({ ...ws, deathMarker: null }));
                 addLog("You have recovered your lost items.");
@@ -105,63 +105,74 @@ export const useGroundItems = (deps: GroundItemDependencies) => {
         }
 
         const poiId = session.currentPoiId;
-        let groundItemsForPoi = groundItems[poiId];
+        const groundItemsForPoi = groundItems[poiId];
         if (!groundItemsForPoi || groundItemsForPoi.length === 0) return;
 
-        let itemsToPickUp: InventorySlot[] = [];
-        let idsToRemove: number[] = [];
+        const itemsToPickUp: InventorySlot[] = [];
+        const idsToRemove: number[] = [];
         let tempInventory = [...inv.inventory];
+        let spaceRanOut = false;
 
-        for (const groundItem of groundItemsForPoi) {
+        const sortedGroundItems = [...groundItemsForPoi].sort((a, b) => {
+            const itemA = ITEMS[a.item.itemId];
+            const itemB = ITEMS[b.item.itemId];
+            const isStackableA = itemA.stackable || a.item.noted;
+            const isStackableB = itemB.stackable || b.item.noted;
+            const hasStackA = isStackableA && tempInventory.some(i => i?.itemId === a.item.itemId && !!i.noted === !!a.item.noted);
+            const hasStackB = isStackableB && tempInventory.some(i => i?.itemId === b.item.itemId && !!i.noted === !!b.item.noted);
+
+            if (hasStackA && !hasStackB) return -1;
+            if (!hasStackA && hasStackB) return 1;
+            return 0;
+        });
+
+        for (const groundItem of sortedGroundItems) {
             const itemData = ITEMS[groundItem.item.itemId];
-            let slotsNeeded = 0;
-            if (!itemData.stackable && !groundItem.item.noted) {
-                slotsNeeded = groundItem.item.quantity;
-            } else {
-                const stackExists = tempInventory.some(i => i?.itemId === groundItem.item.itemId && !!i.noted === !!groundItem.item.noted);
-                if (!stackExists) {
-                    slotsNeeded = 1;
-                }
-            }
+            let freeSlots = tempInventory.filter(s => s === null).length;
             
-            const freeSlots = tempInventory.filter(s => s === null).length;
+            const stackExists = (itemData.stackable || groundItem.item.noted) && tempInventory.some(i => i?.itemId === groundItem.item.itemId && !!i.noted === !!groundItem.item.noted);
+            const slotsNeeded = (itemData.stackable || groundItem.item.noted) ? (stackExists ? 0 : 1) : groundItem.item.quantity;
 
             if (freeSlots >= slotsNeeded) {
                 itemsToPickUp.push(groundItem.item);
                 idsToRemove.push(groundItem.uniqueId);
 
-                // Update temp inventory for next iteration's free slot check
-                let added = false;
-                if (itemData.stackable || groundItem.item.noted) {
-                    const existingStack = tempInventory.find(i => i?.itemId === groundItem.item.itemId && !!i.noted === !!groundItem.item.noted);
-                    if (existingStack) {
-                        existingStack.quantity += groundItem.item.quantity;
-                        added = true;
-                    }
-                }
-                if (!added) {
-                    // This handles both new stacks and unstackable items
-                    for (let i = 0; i < groundItem.item.quantity; i++) {
+                if (!stackExists && slotsNeeded > 0) {
+                     for (let i = 0; i < slotsNeeded; i++) {
                         const emptySlotIndex = tempInventory.findIndex(s => s === null);
                         if (emptySlotIndex !== -1) {
-                            tempInventory[emptySlotIndex] = { ...groundItem.item, quantity: 1 };
+                            tempInventory[emptySlotIndex] = { itemId: 'placeholder', quantity: 1 };
                         }
                     }
                 }
             } else {
-                addLog("You don't have enough space to pick up everything.");
-                break;
+                spaceRanOut = true;
             }
         }
 
+        if (spaceRanOut) {
+            addLog("You don't have enough space to pick up everything.");
+        }
+
         if (itemsToPickUp.length > 0) {
+            const consolidatedPickups: Record<string, InventorySlot> = {};
             itemsToPickUp.forEach(item => {
+                const key = `${item.itemId}:${!!item.noted}:${item.doses ?? 'na'}`;
+                if (consolidatedPickups[key]) {
+                    consolidatedPickups[key].quantity += item.quantity;
+                } else {
+                    consolidatedPickups[key] = { ...item };
+                }
+            });
+
+            Object.values(consolidatedPickups).forEach(item => {
                 inv.modifyItem(item.itemId, item.quantity, false, item.doses, { bypassAutoBank: true, noted: item.noted });
             });
             
             setGroundItems(prev => {
                 const newItems = { ...prev };
-                newItems[poiId] = newItems[poiId].filter(gi => !idsToRemove.includes(gi.uniqueId));
+                const poiItems = newItems[poiId] || [];
+                newItems[poiId] = poiItems.filter(gi => !idsToRemove.includes(gi.uniqueId));
                 
                 if (worldState.deathMarker && worldState.deathMarker.poiId === poiId && newItems[poiId].length === 0) {
                     setWorldState(ws => ({ ...ws, deathMarker: null }));
@@ -196,11 +207,9 @@ export const useGroundItems = (deps: GroundItemDependencies) => {
                 let changed = false;
                 for (const poiId in prev) {
                     const items = prev[poiId].filter(item => {
-                        // If there's an active death marker at this POI, don't despawn items via the normal 5-minute timer.
                         if (deathMarker && deathMarker.poiId === poiId) {
                             return true;
                         }
-                        // Otherwise, use the standard 5 minute timer.
                         return now - item.dropTime < 5 * 60 * 1000;
                     });
                     if (items.length < prev[poiId].length) changed = true;
@@ -210,7 +219,7 @@ export const useGroundItems = (deps: GroundItemDependencies) => {
                 }
                 return changed ? newGroundItems : prev;
             });
-        }, 10000); // Check every 10 seconds
+        }, 10000);
         return () => clearInterval(interval);
     }, [worldState]);
 

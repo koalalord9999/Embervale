@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback, useMemo } from 'react';
 import { ActivePanel, SkillName, InventorySlot, ActiveCraftingAction, DialogueNode, CraftingContext, Equipment, PlayerQuestState, Spell, Item, DialogueResponse, DialogueCheckRequirement } from '../types';
 import { ContextMenuOption } from '../components/common/ContextMenu';
@@ -98,7 +99,6 @@ export const useUIState = () => {
         activeQuestBoardId ||
         activeTeleportBoardId ||
         makeXPrompt ||
-        activeDialogue ||
         confirmationPrompt ||
         exportData ||
         isImportModalOpen ||
@@ -118,7 +118,6 @@ export const useUIState = () => {
         activeQuestBoardId,
         activeTeleportBoardId,
         makeXPrompt,
-        activeDialogue,
         confirmationPrompt,
         exportData,
         isImportModalOpen,

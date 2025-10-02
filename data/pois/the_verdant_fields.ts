@@ -26,16 +26,24 @@ export const theVerdantFieldsPois: Record<string, POI> = {
                     quest_intro_sheep_troubles: {
                         npcName: 'Rancher McGregor',
                         npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-                        text: "Frazzled? That's putting it mildly! My sheep have gotten... well, 'fluffy' is an understatement. They're like woolly clouds with legs!",
+                        text: "Frazzled? That's putting it mildly! Look at 'em! My prize sheep have gotten so woolly they're starting to roll instead of walk. They're like fluffy, bleating boulders! It's a woolly catastrophe!",
                         responses: [
-                            { text: "They do look rather spherical.", next: 'problem_sheep_troubles' },
-                            { text: "Sounds like a you problem." },
+                            { text: "They do look rather spherical. What happened?", next: 'problem_sheep_troubles' },
+                            { text: "Sounds like a you problem.", next: 'you_problem_response' },
                         ],
+                    },
+                    you_problem_response: {
+                        npcName: 'Rancher McGregor',
+                        npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
+                        text: "Well, it'll be your problem too when the price of wool blankets skyrockets before winter! A little help here benefits everyone, you know.",
+                        responses: [
+                            { text: "Alright, you've got a point. What's the issue?", next: 'problem_sheep_troubles' }
+                        ]
                     },
                     problem_sheep_troubles: {
                         npcName: 'Rancher McGregor',
                         npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-                        text: "Spherical! Exactly! It's a woolly catastrophe. My usual shearer is out with a cold, and I can't keep up myself. I need someone to shear ten of 'em for me. The raw wool isn't much use on its own, though.",
+                        text: "Spherical! Exactly! It's a woolly catastrophe. My usual shearer is out with a case of the sniffles, and I can't keep up myself. The wool is so thick the poor things can barely see! I need someone to shear ten of 'em for me. The raw wool isn't much use to the weavers in Oakhaven on its own, though.",
                         responses: [
                             { text: "What needs to be done with it?", next: 'solution_sheep_troubles' },
                         ],
@@ -43,7 +51,7 @@ export const theVerdantFieldsPois: Record<string, POI> = {
                     solution_sheep_troubles: {
                         npcName: 'Rancher McGregor',
                         npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-                        text: "It needs to be spun into balls of wool. I've got a spinning wheel in the barn you can use. If you can shear ten sheep, spin the wool, and bring me back ten finished balls, I'd be mighty grateful. I'll pay you well for your trouble, of course.",
+                        text: "It needs to be spun into proper balls of wool. I've got a spinning wheel in the barn you can use. If you can shear ten sheep, spin the wool, and bring me back ten finished balls, I'd be mighty grateful. I'll pay you well for your trouble, of course.",
                         responses: [
                             { text: "You've got a deal. I'll get right on it.", actions: [{ type: 'start_quest', questId: 'sheep_troubles' }] },
                             { text: "That sounds like a lot of work." },

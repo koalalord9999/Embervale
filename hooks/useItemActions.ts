@@ -25,12 +25,17 @@ interface UseItemActionsProps {
     startQuest: (questId: string) => void;
     currentPoiId: string;
     playerQuests: PlayerQuestState[];
+    isStunned: boolean;
 }
 
 export const useItemActions = (props: UseItemActionsProps) => {
-    const { addLog, currentHp, maxHp, setCurrentHp, applyStatModifier, setInventory, skills, inventory, activeCraftingAction, setActiveCraftingAction, hasItems, modifyItem, addXp, openCraftingView, setItemToUse, addBuff, setMakeXPrompt, startQuest, currentPoiId, playerQuests } = props;
+    const { addLog, currentHp, maxHp, setCurrentHp, applyStatModifier, setInventory, skills, inventory, activeCraftingAction, setActiveCraftingAction, hasItems, modifyItem, addXp, openCraftingView, setItemToUse, addBuff, setMakeXPrompt, startQuest, currentPoiId, playerQuests, isStunned } = props;
 
     const handleConsume = useCallback((itemId: string, inventoryIndex: number) => {
+        if (isStunned) {
+            addLog("You are stunned and cannot eat or drink.");
+            return;
+        }
         const itemData = ITEMS[itemId];
         if (!itemData) return;
 
@@ -206,7 +211,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
             return newInv;
         });
 
-    }, [skills, currentHp, maxHp, setCurrentHp, setInventory, addLog, applyStatModifier, modifyItem, addXp, addBuff, inventory]);
+    }, [skills, currentHp, maxHp, setCurrentHp, setInventory, addLog, applyStatModifier, modifyItem, addXp, addBuff, inventory, isStunned]);
     
     const handleBuryBones = useCallback((itemId: string, inventoryIndex: number) => {
         const itemData = ITEMS[itemId];

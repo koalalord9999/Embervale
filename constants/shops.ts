@@ -61,6 +61,7 @@ export const SHOPS: Record<string, Shop> = {
             { itemId: 'necklace_mould', quantity: 10, priceModifier: 1.0 },
             { itemId: 'amulet_mould', quantity: 10, priceModifier: 1.0 },
             { itemId: 'vial', quantity: 1000, priceModifier: 1.0 },
+            { itemId: 'fire_resistant_shield', quantity: 5, priceModifier: 1.2 },
         ]
     },
     oakhaven_herblore: {

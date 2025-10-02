@@ -36,6 +36,7 @@ export interface EquipmentStats {
     magicAttribute?: SpellElement;
     providesRune?: string;
     ammoTier?: 'iron' | 'steel' | 'mithril' | 'adamantite' | 'runic';
+    resistsDragonfire?: number; // Damage multiplier, e.g., 0.3 for 70% reduction
 }
 
 
@@ -104,6 +105,13 @@ export interface Equipment {
   ring: InventorySlot | null;
 }
 
+export type MonsterSpecialAttack =
+  | { name: string; chance: number; effect: 'damage_multiplier'; value: number }
+  | { name: string; chance: number; effect: 'stat_drain'; value: number; skill: SkillName }
+  | { name: string; chance: number; effect: 'stat_drain_multi'; skills: { skill: SkillName; value: number }[] }
+  | { name: string; chance: number; effect: 'stun'; duration: number }
+  | { name: string; chance: number; effect: 'magic_bypass_defence'; maxHit: number };
+
 export interface Monster {
   id: string;
   name: string;
@@ -123,11 +131,11 @@ export interface Monster {
   guaranteedDrops?: GuaranteedDrop[];
   mainDrops?: WeightedDrop[];
   tertiaryDrops?: TertiaryDrop[];
-  monsterType: MonsterType;
+  types: MonsterType[];
   attackSpeed: number; // In game ticks
   respawnTime: number; // In milliseconds
   attackStyle: 'stab' | 'slash' | 'crush' | 'ranged' | 'magic';
-  specialAttacks?: { name: string; chance: number; effect: 'damage_multiplier'; value: number }[];
+  specialAttacks?: MonsterSpecialAttack[];
   aggressive: boolean;
   alwaysAggressive?: boolean;
   alwaysDrops?: boolean;

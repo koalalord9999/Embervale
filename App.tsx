@@ -1,4 +1,6 @@
 
+
+
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useUIState } from './hooks/useUIState';
 import { useGameStateManager } from './hooks/useGameStateManager';
@@ -15,8 +17,10 @@ import PriceCheckerView from './components/views/overlays/PriceCheckerView';
 import Game from './components/game/Game';
 import PreloadScreen from './components/screens/PreloadScreen';
 import UsernamePrompt from './components/common/UsernamePrompt';
+import { imagePaths, loadImagesAsBase64 } from './imageLoader';
+import { GAME_VERSION, DEV_MODE_ENABLED } from './config';
 
-type AppState = 'LOADING_DB' | 'PRELOAD' | 'USERNAME_PROMPT' | 'GAME';
+type AppState = 'LOADING_DB' | 'LOADING_ASSETS' | 'PRELOAD' | 'USERNAME_PROMPT' | 'GAME';
 type PromptReason = 'new_game' | 'set_username' | 'set_username_import' | null;
 
 const App: React.FC = () => {
@@ -33,30 +37,29 @@ const App: React.FC = () => {
     } = useGameStateManager(ui);
     
     const [appState, setAppState] = useState<AppState>('LOADING_DB');
+    const [loadedAssets, setLoadedAssets] = useState<Record<string, string> | null>(null);
     const [promptReason, setPromptReason] = useState<PromptReason>(null);
     const [pendingImportState, setPendingImportState] = useState<any | null>(null);
-    const [version, setVersion] = useState<string>('');
     const [isCtrlPressed, setIsCtrlPressed] = useState(false);
-    const [isDevModeEnabled, setIsDevModeEnabled] = useState<boolean>(false);
+
+    const gameContainerStyle = useMemo(() => (
+        loadedAssets?.embrune_splash
+            ? { backgroundImage: `url('${loadedAssets.embrune_splash}')` }
+            : {}
+    ), [loadedAssets]);
 
     useEffect(() => {
-        fetch('/metadata.json')
-            .then(response => response.json())
-            .then(data => {
-                if (data.version) {
-                    setVersion(data.version);
-                }
-                if (data.DevModeEnabled) {
-                    setIsDevModeEnabled(true);
-                }
-            })
-            .catch(error => console.error("Failed to load metadata:", error));
-    }, []);
-
-    useEffect(() => {
-        // Only transition from LOADING_DB to PRELOAD once.
         if (initialState && appState === 'LOADING_DB') {
-            setAppState('PRELOAD');
+            setAppState('LOADING_ASSETS');
+            loadImagesAsBase64(imagePaths).then(assets => {
+                setLoadedAssets(assets);
+                setAppState('PRELOAD');
+            }).catch(error => {
+                console.error("Failed to load image assets:", error);
+                // Handle error case, maybe proceed without images or show an error
+                setLoadedAssets({});
+                setAppState('PRELOAD');
+            });
         }
     }, [initialState, appState]);
     
@@ -182,16 +185,17 @@ const App: React.FC = () => {
     }, []);
 
     const renderAppContent = () => {
-        if (!initialState) {
+        if (!initialState || appState === 'LOADING_DB' || appState === 'LOADING_ASSETS') {
             return (
-                <div className="w-full h-full game-container bg-cover bg-center border-8 border-gray-900 shadow-2xl p-4 flex flex-col items-center justify-center relative" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1505236755279-228d5d36c34b?q=80&w=1024&auto=format=fit=crop')` }}>
-                    <div className="absolute inset-0 bg-black/50"></div>
+                <div className="w-full h-full game-container bg-cover bg-top bg-no-repeat md:bg-[length:100%_100%] border-8 border-gray-900 shadow-2xl p-4 flex flex-col items-center justify-center relative filter brightness-110 saturate-125" style={gameContainerStyle}>
+                    <div className="absolute inset-0 bg-black/30"></div>
                      <div className="relative z-10 text-center animate-fade-in bg-black/60 p-8 rounded-lg border-2 border-gray-700 shadow-2xl">
-                        <h1 className="text-4xl md:text-6xl font-bold text-yellow-400 mb-6" style={{ textShadow: '3px 3px 6px rgba(0,0,0,0.8)' }}>Embrune</h1>
                         <div className="w-16 h-16 mx-auto mb-6 animate-spin-slow">
                             <img src="https://api.iconify.design/game-icons:yin-yang.svg" alt="Loading symbol" className="w-full h-full filter invert text-yellow-500"/>
                         </div>
-                        <p className="text-lg text-gray-300 italic">Loading your adventure...</p>
+                        <p className="text-lg text-gray-300 italic">
+                            {appState === 'LOADING_ASSETS' ? 'Loading assets...' : 'Loading your adventure...'}
+                        </p>
                     </div>
                 </div>
             );
@@ -200,27 +204,29 @@ const App: React.FC = () => {
         switch (appState) {
             case 'PRELOAD':
                 return (
-                    <div className="w-full h-full game-container">
+                    <div className="w-full h-full game-container bg-cover bg-top bg-no-repeat md:bg-[length:100%_100%]" style={gameContainerStyle}>
                         <PreloadScreen 
                             loadingTips={loadingTips} 
                             onContinue={handleContinue} 
                             onNewGame={requestNewGame} 
                             onImport={handleImportSave}
                             setContextMenu={ui.setContextMenu}
+                            assets={loadedAssets}
                         />
                     </div>
                 );
             case 'USERNAME_PROMPT':
                 return (
-                     <div className="w-full h-full game-container bg-cover bg-center border-8 border-gray-900 shadow-2xl p-2 md:p-4 flex items-center justify-center relative" style={{ backgroundImage: `url('https://images.unsplash.com/photo-15052367semberv5279-228d5d36c34b?q=80&w=1024&auto=format=fit=crop')`}}>
-                        <div className="absolute inset-0 bg-black/60"></div>
+                     <div className="w-full h-full game-container bg-cover bg-top bg-no-repeat md:bg-[length:100%_100%] border-8 border-gray-900 shadow-2xl p-2 md:p-4 flex items-center justify-center relative filter brightness-110 saturate-125" style={gameContainerStyle}>
+                        <div className="absolute inset-0 bg-black/30"></div>
                         <UsernamePrompt onConfirm={handleUsernameConfirm} onCancel={handleUsernameCancel} />
                      </div>
                 );
             case 'GAME':
             default:
+                if (!loadedAssets) return null; // Should not happen if logic is correct
                 return (
-                    <div className="w-full h-full game-container bg-cover bg-center border-8 border-gray-900 shadow-2xl p-2 flex flex-col md:flex-row gap-2 relative overflow-y-auto md:overflow-hidden" style={{ backgroundImage: `url('https://images.unsplash.com/photo-15052367semberv5279-228d5d36c34b?q=80&w=1024&auto=format=fit=crop')`}}>
+                    <div className="w-full h-full game-container border-8 border-gray-900 shadow-2xl p-2 flex flex-col md:flex-row gap-2 relative overflow-y-auto md:overflow-hidden">
                         <Game 
                             key={gameKey} 
                             initialState={initialState} 
@@ -228,7 +234,8 @@ const App: React.FC = () => {
                             onImportGame={handleImportSave} 
                             onResetGame={requestNewGame} 
                             ui={ui} 
-                            devModeOverride={isDevModeEnabled}
+                            devModeOverride={DEV_MODE_ENABLED}
+                            assets={loadedAssets}
                         />
                     </div>
                 );
@@ -239,9 +246,9 @@ const App: React.FC = () => {
         <div className="bg-gray-800 text-white h-screen w-screen flex items-center justify-center font-serif overflow-hidden">
             <div className="w-full h-full md:max-w-[177.77vh] md:max-h-[100vh] md:aspect-[16/9] relative">
                 {renderAppContent()}
-                {version && (
+                {GAME_VERSION && (
                     <span className="absolute bottom-2 right-2 text-xs text-gray-500 z-10 pointer-events-none">
-                        v{version}
+                        v{GAME_VERSION}
                     </span>
                 )}
             </div>

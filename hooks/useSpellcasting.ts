@@ -12,6 +12,7 @@ interface SpellcastingDependencies {
     addLog: (message: string) => void;
     navigation: ReturnType<typeof useNavigation>;
     ui: ReturnType<typeof useUIState>;
+    isStunned: boolean;
 }
 
 const ENCHANTMENT_MAP: Record<string, string> = {
@@ -30,7 +31,7 @@ const ENCHANTMENT_MAP: Record<string, string> = {
 };
 
 export const useSpellcasting = (deps: SpellcastingDependencies) => {
-    const { char, inv, addLog, navigation, ui } = deps;
+    const { char, inv, addLog, navigation, ui, isStunned } = deps;
 
     const onSpellOnItem = useCallback((spell: Spell, target: { item: InventorySlot, index: number }) => {
         ui.setSpellToCast(null);
@@ -75,6 +76,10 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
     }, [char, inv, addLog, ui]);
 
     const onCastSpell = useCallback((spell: Spell) => {
+        if (isStunned) {
+            addLog("You are stunned and cannot cast spells.");
+            return;
+        }
         if (ui.isBusy && spell.type !== 'utility-teleport') {
             addLog("You are busy.");
             return;
@@ -151,7 +156,7 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
             addLog(`You cast ${spell.name}.`);
         }
     
-    }, [char, addLog, inv, navigation, ui]);
+    }, [char, addLog, inv, navigation, ui, isStunned]);
 
     return { onCastSpell, onSpellOnItem };
 };

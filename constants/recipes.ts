@@ -147,6 +147,26 @@ export const CRAFTING_RECIPES: CraftingRecipe[] = [
     { itemId: 'bear_hide_vambraces', level: 32, xp: 60, ingredients: [{ itemId: 'bear_leather', quantity: 1 }, { itemId: 'thread', quantity: 1 }] },
     { itemId: 'bear_hide_chaps', level: 34, xp: 145, ingredients: [{ itemId: 'bear_leather', quantity: 2 }, { itemId: 'thread', quantity: 1 }] },
     { itemId: 'bear_hide_body', level: 36, xp: 240, ingredients: [{ itemId: 'bear_leather', quantity: 3 }, { itemId: 'thread', quantity: 1 }] },
+    // Dragonhide (Level 60+)
+    { itemId: 'grovehide_vambs', level: 52, xp: 60, ingredients: [{ itemId: 'grove_hide_leather', quantity: 1 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'grovehide_coif', level: 56, xp: 120, ingredients: [{ itemId: 'grove_hide_leather', quantity: 2 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'grovehide_legs', level: 57, xp: 180, ingredients: [{ itemId: 'grove_hide_leather', quantity: 2 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'grovehide_body', level: 60, xp: 240, ingredients: [{ itemId: 'grove_hide_leather', quantity: 3 }, { itemId: 'thread', quantity: 1 }] },
+    
+    { itemId: 'frosthide_vambs', level: 63, xp: 70, ingredients: [{ itemId: 'frost_hide_leather', quantity: 1 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'frosthide_coif', level: 65, xp: 140, ingredients: [{ itemId: 'frost_hide_leather', quantity: 2 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'frosthide_legs', level: 66, xp: 210, ingredients: [{ itemId: 'frost_hide_leather', quantity: 2 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'frosthide_body', level: 69, xp: 280, ingredients: [{ itemId: 'frost_hide_leather', quantity: 3 }, { itemId: 'thread', quantity: 1 }] },
+
+    { itemId: 'emberscale_vambs', level: 74, xp: 80, ingredients: [{ itemId: 'emberscale_hide_leather', quantity: 1 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'emberscale_coif', level: 76, xp: 160, ingredients: [{ itemId: 'emberscale_hide_leather', quantity: 2 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'emberscale_legs', level: 77, xp: 240, ingredients: [{ itemId: 'emberscale_hide_leather', quantity: 2 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'emberscale_body', level: 79, xp: 320, ingredients: [{ itemId: 'emberscale_hide_leather', quantity: 3 }, { itemId: 'thread', quantity: 1 }] },
+
+    { itemId: 'deathscythe_vambs', level: 82, xp: 90, ingredients: [{ itemId: 'deathscythe_hide_leather', quantity: 1 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'deathscythe_coif', level: 84, xp: 180, ingredients: [{ itemId: 'deathscythe_hide_leather', quantity: 2 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'deathscythe_legs', level: 85, xp: 200, ingredients: [{ itemId: 'deathscythe_hide_leather', quantity: 2 }, { itemId: 'thread', quantity: 1 }] },
+    { itemId: 'deathscythe_body', level: 87, xp: 280, ingredients: [{ itemId: 'deathscythe_hide_leather', quantity: 3 }, { itemId: 'thread', quantity: 1 }] },
     // Tomes
     { itemId: 'tome_of_warding', level: 10, xp: 50, requiredSkills: [{skill: SkillName.Runecrafting, level: 7}], xpRewards: [{skill: SkillName.Runecrafting, amount: 25}], ingredients: [{ itemId: 'leather', quantity: 5 }, { itemId: 'thread', quantity: 10 }, { itemId: 'gust_rune', quantity: 20 }, { itemId: 'mystic_page', quantity: 5 }] },
     { itemId: 'tome_of_focus', level: 20, xp: 110, requiredSkills: [{skill: SkillName.Runecrafting, level: 19}], xpRewards: [{skill: SkillName.Runecrafting, amount: 55}], ingredients: [{ itemId: 'boar_leather', quantity: 5 }, { itemId: 'thread', quantity: 20 }, { itemId: 'aqua_rune', quantity: 40 }, { itemId: 'mystic_page', quantity: 12 }] },
