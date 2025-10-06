@@ -632,7 +632,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
         const usedItem = ITEMS[used.item.itemId];
         const targetItem = ITEMS[target.item.itemId];
     
-        const isLog = (item: Item) => item.id.endsWith('_logs');
+        const isLog = (item: Item) => item.id.endsWith('_logs') || item.id === 'logs';
         const isChisel = (item: Item) => item.id === 'chisel';
         const isUncutGem = (item: Item) => item.id.startsWith('uncut_');
         const isNeedle = (item: Item) => item.id === 'needle';
