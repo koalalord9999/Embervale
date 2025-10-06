@@ -103,9 +103,6 @@ export const useCrafting = (props: UseCraftingProps) => {
             }
             if (!hasItems(recipe.ingredients)) { addLog(`You don't have the required ingredients.`); return; }
 
-            const leatherIngredient = recipe.ingredients.find(ing => ing.itemId === 'leather');
-            const duration = (leatherIngredient?.quantity ?? 1) * 1200;
-
             setActiveCraftingAction({
                 recipeId,
                 recipeType: 'crafting',
@@ -113,7 +110,7 @@ export const useCrafting = (props: UseCraftingProps) => {
                 completedQuantity: 0,
                 successfulQuantity: 0,
                 startTime: Date.now(),
-                duration,
+                duration: 1800,
             });
         } else if (jewelryRecipe) {
             const recipe = jewelryRecipe;
@@ -226,7 +223,7 @@ export const useCrafting = (props: UseCraftingProps) => {
             completedQuantity: 0,
             successfulQuantity: 0,
             startTime: Date.now(),
-            duration: 1200 * recipe.barsRequired,
+            duration: 1800,
         });
     }, [skills, hasItems, addLog, setActiveCraftingAction, inventory]);
 

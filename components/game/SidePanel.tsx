@@ -138,6 +138,8 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     setTooltip={ui.setTooltip} 
                     ui={ui} 
                     inventory={inv.inventory} 
+                    // FIX: Pass the 'coins' prop to the EquipmentPanel component.
+                    coins={inv.coins}
                     addLog={addLog}
                     onExamine={handleExamine}
                     isTouchSimulationEnabled={isTouchSimulationEnabled}
@@ -153,6 +155,7 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                 return <SpellbookPanel
                     skills={char.skills}
                     inventory={inv.inventory}
+                    // FIX: Pass the 'equipment' prop to the SpellbookPanel component.
                     equipment={inv.equipment}
                     onCastSpell={onCastSpell}
                     setTooltip={ui.setTooltip}

@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { useState, useCallback } from 'react';
 // FIX: Import BankTab to support the new bank data structure.
@@ -97,7 +98,7 @@ export const useInventory = (
     const modifyItem = useCallback((itemId: string, quantity: number, quiet: boolean = false, doses?: number, options?: { noted?: boolean, bypassAutoBank?: boolean }) => {
         if (itemId === 'coins') {
             setCoins(c => c + quantity);
-            if (quantity !== 0 && !quiet) addLog(`${quantity > 0 ? 'Gained' : 'Lost'} ${Math.abs(quantity)} coins.`);
+            if (quantity < 0 && !quiet) addLog(`Lost ${Math.abs(quantity)} coins.`);
             return;
         }
 
@@ -131,14 +132,12 @@ export const useInventory = (
                         }
                         newInv[emptySlotIndex] = { itemId, quantity, doses, noted: isNoted || undefined };
                     }
-                    if (!quiet) addLog(`Gained ${quantity}x ${itemData.name}.`);
                 } else { // NOT STACKABLE
                     let added = 0;
                     for (let i = 0; i < quantity; i++) {
                         const emptySlotIndex = newInv.findIndex(slot => slot === null);
                         if (emptySlotIndex === -1) {
                             if (!quiet) {
-                                if (added > 0) addLog(`Gained ${added}x ${itemData.name}.`);
                                 const remaining = quantity - added;
                                 addLog(`Inventory is full. You left ${remaining}x ${itemData.name} behind.`);
                             }
@@ -146,9 +145,6 @@ export const useInventory = (
                         }
                         newInv[emptySlotIndex] = { itemId, quantity: 1, doses, noted: false };
                         added++;
-                    }
-                    if (added > 0 && !quiet) {
-                        addLog(`Gained ${added}x ${itemData.name}.`);
                     }
                 }
                 return newInv;
@@ -376,7 +372,6 @@ export const useInventory = (
             return newInv;
         });
     
-        addLog(`Equipped ${itemData.name}.`);
     }, [equipment, inventory, addLog, setCombatStance]);
 
     const handleUnequip = useCallback((slotKey: keyof Equipment) => {
@@ -396,7 +391,6 @@ export const useInventory = (
         }
         modifyItem(itemToUnequip.itemId, itemToUnequip.quantity, true, itemToUnequip.doses, { bypassAutoBank: true });
         setEquipment(prev => ({ ...prev, [slotKey]: null }));
-        addLog(`Unequipped ${ITEMS[itemToUnequip.itemId].name}.`);
     }, [equipment, modifyItem, addLog, inventory, setCombatStance]);
     
     const handleDropItem = useCallback((inventoryIndex: number, quantity: 'all' | number) => {

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SkillName } from '../../../../types';
 import { CRAFTING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
@@ -52,8 +51,7 @@ const LeatherworkingSlot: React.FC<{
 
     const handleMouseEnter = (e: React.MouseEvent) => {
         const ingredients = recipe.ingredients.map(ing => ({ item: ITEMS[ing.itemId], quantity: ing.quantity }));
-        const leatherIngredient = recipe.ingredients.find(ing => ing.itemId.includes('leather'));
-        const craftTime = (leatherIngredient?.quantity ?? 1) * 1.2;
+        const craftTime = 1.8;
     
         const tooltipContent = (
             <div className="text-sm text-left w-48">

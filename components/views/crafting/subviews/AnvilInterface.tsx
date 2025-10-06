@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { InventorySlot, PlayerSkill, PlayerQuestState, SkillName, WeaponType } from '../../../../types';
 import { SMITHING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
@@ -55,7 +54,7 @@ const AnvilSlot: React.FC<{
 
     const handleMouseEnter = (e: React.MouseEvent) => {
         const outputQuantity = item.stackable && recipe.itemId.includes('arrowtips') ? 15 : 1;
-        const craftTime = recipe.barsRequired * 1.2;
+        const craftTime = 1.8;
         const hasRequiredBars = getItemCount(recipe.barType) >= recipe.barsRequired;
         const hasHammer = inventory.some(i => i?.itemId === 'hammer');
 

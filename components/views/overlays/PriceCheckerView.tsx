@@ -1,9 +1,13 @@
+
 import React, { useState } from 'react';
 import { InventorySlot } from '../../../types';
 import { ITEMS, getIconClassName } from '../../../constants';
 import Button from '../../common/Button';
-import { TooltipState } from '../../../hooks/useUIState';
+import { TooltipState, ContextMenuState, MakeXPrompt } from '../../../hooks/useUIState';
 import { getDisplayName } from '../../panels/InventorySlot';
+import { useLongPress } from '../../../hooks/useLongPress';
+import { useIsTouchDevice } from '../../../hooks/useIsTouchDevice';
+import { ContextMenuOption } from '../../common/ContextMenu';
 
 const getQuantityColor = (quantity: number): string => {
     if (quantity >= 10000000) return 'text-green-400';
@@ -29,28 +33,111 @@ interface PriceCheckerViewProps {
     inventory: (InventorySlot | null)[];
     onClose: () => void;
     setTooltip: (tooltip: TooltipState | null) => void;
+    setContextMenu: (menu: ContextMenuState | null) => void;
+    setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
 }
 
-const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose, setTooltip }) => {
+const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose, setTooltip, setContextMenu, setMakeXPrompt }) => {
+    const [localInventory, setLocalInventory] = useState<(InventorySlot | null)[]>(inventory.map(slot => slot ? { ...slot } : null));
     const [checkedItems, setCheckedItems] = useState<InventorySlot[]>([]);
+    const isTouchDevice = useIsTouchDevice(false);
 
-    const addToChecker = (invSlot: InventorySlot, index: number) => {
-        const item = ITEMS[invSlot.itemId];
-        if (!item) return;
+    const addToChecker = (index: number, quantity: 'all' | number) => {
+        const fromSlot = localInventory[index];
+        if (!fromSlot) return;
+        const itemData = ITEMS[fromSlot.itemId];
 
-        const existingItemIndex = checkedItems.findIndex(i => i.itemId === invSlot.itemId && !!i.noted === !!invSlot.noted);
+        let qtyToMove: number;
+        let newLocalInv = [...localInventory];
 
-        if (existingItemIndex > -1) {
-            const updatedItems = [...checkedItems];
-            updatedItems[existingItemIndex].quantity += invSlot.quantity;
-            setCheckedItems(updatedItems);
-        } else {
-            setCheckedItems(prev => [...prev, { ...invSlot }]);
+        if (itemData.stackable || fromSlot.noted) {
+            qtyToMove = quantity === 'all' ? fromSlot.quantity : Math.min(quantity, fromSlot.quantity);
+            if (qtyToMove <= 0) return;
+
+            const currentSlot = newLocalInv[index];
+            if (currentSlot) {
+                currentSlot.quantity -= qtyToMove;
+                if (currentSlot.quantity <= 0) newLocalInv[index] = null;
+            }
+        } else { // Unstackable
+            const allIndices = newLocalInv.map((s, i) => s?.itemId === fromSlot.itemId ? i : -1).filter(i => i !== -1);
+            qtyToMove = quantity === 'all' ? allIndices.length : Math.min(quantity, allIndices.length);
+            if (qtyToMove <= 0) return;
+
+            for (let i = 0; i < qtyToMove; i++) {
+                newLocalInv[allIndices[i]] = null;
+            }
         }
+
+        setLocalInventory(newLocalInv);
+
+        setCheckedItems(prev => {
+            const newChecked = [...prev];
+            const existingIndex = newChecked.findIndex(i => i.itemId === fromSlot.itemId && !!i.noted === !!fromSlot.noted);
+            if (existingIndex > -1) {
+                newChecked[existingIndex].quantity += qtyToMove;
+            } else {
+                newChecked.push({ ...fromSlot, quantity: qtyToMove });
+            }
+            return newChecked;
+        });
+        setTooltip(null);
     };
 
-    const removeFromChecker = (itemIndex: number) => {
-        setCheckedItems(prev => prev.filter((_, i) => i !== itemIndex));
+    const removeFromChecker = (index: number) => {
+        const fromSlot = checkedItems[index];
+        if (!fromSlot) return;
+
+        setCheckedItems(prev => prev.filter((_, i) => i !== index));
+
+        setLocalInventory(prev => {
+            const newInv = [...prev];
+            const itemData = ITEMS[fromSlot.itemId];
+            let remainingQty = fromSlot.quantity;
+
+            if (itemData.stackable || fromSlot.noted) {
+                const existingIndex = newInv.findIndex(i => i?.itemId === fromSlot.itemId && !!i.noted === !!fromSlot.noted);
+                if (existingIndex > -1) {
+                    newInv[existingIndex]!.quantity += remainingQty;
+                } else {
+                    const emptyIndex = newInv.findIndex(i => i === null);
+                    if (emptyIndex > -1) newInv[emptyIndex] = fromSlot;
+                }
+            } else {
+                for (let i = 0; i < newInv.length && remainingQty > 0; i++) {
+                    if (newInv[i] === null) {
+                        newInv[i] = { ...fromSlot, quantity: 1 };
+                        remainingQty--;
+                    }
+                }
+            }
+            return newInv;
+        });
+        setTooltip(null);
+    };
+    
+    const createContextMenu = (e: React.MouseEvent | React.TouchEvent, invSlot: InventorySlot, index: number) => {
+        const event = 'touches' in e ? e.touches[0] : e;
+        const item = ITEMS[invSlot.itemId];
+        let maxQty: number;
+        if(item.stackable || invSlot.noted) {
+            maxQty = invSlot.quantity;
+        } else {
+            maxQty = localInventory.filter(s => s?.itemId === item.id && !s.noted).length;
+        }
+
+        const options: ContextMenuOption[] = [
+            { label: 'Price-check 1', onClick: () => addToChecker(index, 1), disabled: maxQty < 1 },
+            { label: 'Price-check 5', onClick: () => addToChecker(index, 5), disabled: maxQty < 5 },
+            { label: 'Price-check 10', onClick: () => addToChecker(index, 10), disabled: maxQty < 10 },
+            { label: 'Price-check X...', onClick: () => setMakeXPrompt({
+                title: `Price-check ${item.name}`,
+                max: maxQty,
+                onConfirm: (quantity) => addToChecker(index, quantity)
+            }), disabled: maxQty < 1 },
+            { label: 'Price-check All', onClick: () => addToChecker(index, 'all'), disabled: maxQty < 1 },
+        ];
+        setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
     };
 
     const totalValue = checkedItems.reduce((acc, slot) => {
@@ -59,7 +146,7 @@ const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose,
     }, 0);
 
     const inventoryGrid: (InventorySlot | null)[] = new Array(35).fill(null);
-    inventory.forEach((item, index) => {
+    localInventory.forEach((item, index) => {
         if (item && index < 35) inventoryGrid[index] = item;
     });
 
@@ -74,15 +161,13 @@ const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose,
         const tooltipContent = (
             <div>
                 <p className="font-bold text-yellow-300">{getDisplayName(item)}</p>
-                <p className="text-sm text-gray-300">Value (each): {itemData.value.toLocaleString()}</p>
-                <p className="text-sm text-gray-300">Total Value: {(itemData.value * item.quantity).toLocaleString()}</p>
             </div>
         );
         setTooltip({ content: tooltipContent, position: { x: e.clientX, y: e.clientY } });
     }
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-60 p-4 animate-fade-in" onClick={onClose}>
             <div 
                 className="bg-gray-800 border-4 border-gray-600 rounded-lg shadow-xl w-full max-w-3xl"
                 onClick={e => e.stopPropagation()}
@@ -134,8 +219,18 @@ const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose,
                         <div className="flex-grow grid grid-cols-5 gap-2 bg-black/40 p-2 rounded-lg border border-gray-600">
                             {inventoryGrid.map((slot, index) => {
                                 const item = slot ? ITEMS[slot.itemId] : null;
+                                const longPressHandlers = useLongPress({
+                                    onLongPress: (e) => slot && createContextMenu(e, slot, index),
+                                    onClick: () => slot && addToChecker(index, 'all'),
+                                });
                                 return (
-                                <div key={index} className="w-full aspect-square bg-gray-900 border border-gray-700 rounded-md p-1 relative cursor-pointer" onClick={() => slot && addToChecker(slot, index)} onMouseEnter={(e) => slot && handleMouseEnter(e, slot)} onMouseLeave={() => setTooltip(null)}>
+                                <div 
+                                    key={index}
+                                    className="w-full aspect-square bg-gray-900 border border-gray-700 rounded-md p-1 relative cursor-pointer"
+                                    {...longPressHandlers}
+                                    onMouseEnter={(e) => slot && handleMouseEnter(e, slot)} 
+                                    onMouseLeave={() => setTooltip(null)}
+                                >
                                      {slot && item && (
                                         <>
                                             {slot.noted ? (

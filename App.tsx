@@ -1,5 +1,4 @@
 
-
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useUIState } from './hooks/useUIState';
 import { useGameStateManager } from './hooks/useGameStateManager';
@@ -263,8 +262,8 @@ const App: React.FC = () => {
                     {ui.isImportModalOpen && <ImportModal onImport={loadFromImportedData} onClose={ui.closeImportModal} />}
                     {ui.activeSkillGuide && <SkillGuideView activeSkill={ui.activeSkillGuide} setActiveSkill={ui.setActiveSkillGuide} onClose={ui.closeSkillGuide} playerSkills={initialState.skills as any[]} />}
                     {ui.activeQuestDetail && <QuestDetailView questId={ui.activeQuestDetail.questId} playerQuests={ui.activeQuestDetail.playerQuests} onClose={() => ui.setActiveQuestDetail(null)} />}
-                    {ui.isItemsOnDeathOpen && <ItemsOnDeathView inventory={initialState.inventory} equipment={initialState.equipment} coins={initialState.coins} onClose={() => ui.setIsItemsOnDeathOpen(false)} />}
-                    {ui.priceCheckerInventory && <PriceCheckerView inventory={ui.priceCheckerInventory} onClose={() => ui.setPriceCheckerInventory(null)} setTooltip={ui.setTooltip} />}
+                    {ui.itemsOnDeathData && <ItemsOnDeathView inventory={ui.itemsOnDeathData.inventory} equipment={ui.itemsOnDeathData.equipment} coins={ui.itemsOnDeathData.coins} onClose={() => ui.setItemsOnDeathData(null)} />}
+                    {ui.priceCheckerInventory && <PriceCheckerView inventory={ui.priceCheckerInventory} onClose={() => ui.setPriceCheckerInventory(null)} setTooltip={ui.setTooltip} setContextMenu={ui.setContextMenu} setMakeXPrompt={ui.setMakeXPrompt} />}
                     {ui.activeDungeonMap && (
                         <div className="absolute inset-0 bg-black/80 z-30 p-4">
                             <DungeonMapView

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 
 export interface ContextMenuOption {
@@ -89,10 +90,10 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ options, triggerEvent, onClos
 
     return (
         <>
-            <div className="fixed inset-0 z-40" onClick={onClose} onContextMenu={(e) => { e.preventDefault(); onClose(); }} />
+            <div className="fixed inset-0 z-[75]" onClick={onClose} onContextMenu={(e) => { e.preventDefault(); onClose(); }} />
             <div
                 ref={menuRef}
-                className="fixed bg-gray-900 border border-gray-600 rounded-md shadow-lg py-1 z-50"
+                className="fixed bg-gray-900 border border-gray-600 rounded-md shadow-lg py-1 z-[80]"
                 style={style}
             >
                 <ul>

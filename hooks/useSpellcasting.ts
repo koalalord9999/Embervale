@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { Spell, SkillName, InventorySlot, WeaponType } from '../types';
 import { useCharacter } from './useCharacter';
@@ -74,7 +75,7 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
             runesNeeded.forEach(rune => inv.modifyItem(rune.itemId, -rune.quantity, true));
             char.addXp(SkillName.Magic, spell.xp);
 
-            const coinValue = Math.floor(itemData.value * (spell.id === 'greater_transmutation' ? 0.6 : 0.3));
+            const coinValue = Math.floor(itemData.value * (spell.id === 'greater_transmutation' ? 0.85 : 0.4));
             inv.modifyItem(target.item.itemId, -1, true);
             inv.modifyItem('coins', coinValue, true);
             addLog(`You transmute the ${itemData.name} into ${coinValue} coins.`);
@@ -107,11 +108,9 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
             const isCurrentlyAutocasting = char.autocastSpell?.id === spell.id;
             
             if (isCurrentlyAutocasting) {
-                // User clicked the spell that is already selected. Just close the panel.
                 ui.setIsSelectingAutocastSpell(false);
                 return;
             } else {
-                // User clicked a new spell (or had no spell selected). Set it.
                 char.setAutocastSpell(spell);
                 addLog(`Autocast spell set to: ${spell.name}.`);
                 ui.setIsSelectingAutocastSpell(false);
@@ -119,13 +118,15 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
             }
         }
 
-        if (spell.type === 'combat') {
-            if (ui.combatQueue.length === 0) {
+        if (['combat', 'curse', 'enhancement'].includes(spell.type)) {
+            if (ui.combatQueue.length > 0) {
+                ui.setManualCastTrigger(spell);
+                return;
+            }
+            if (spell.type === 'combat' || spell.type === 'curse') {
                 addLog("You can only cast this spell in combat.");
                 return;
             }
-            ui.setManualCastTrigger(spell);
-            return;
         }
         
         if (['utility-enchant', 'utility-alchemy', 'utility-processing'].includes(spell.type)) {
@@ -159,6 +160,26 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
                 setTimeout(() => {
                     navigation.handleForcedNavigate(destinationPoiId);
                 }, 500);
+            }
+        } else if (spell.type === 'enhancement') {
+            let skillToBoost: SkillName;
+            let baseStat = 0;
+            if (spell.id === 'clarity_of_thought') {
+                skillToBoost = SkillName.Attack;
+                baseStat = char.skills.find(s => s.name === SkillName.Attack)?.level ?? 1;
+            } else if (spell.id === 'arcane_strength') {
+                skillToBoost = SkillName.Strength;
+                baseStat = char.skills.find(s => s.name === SkillName.Strength)?.level ?? 1;
+            } else {
+                return;
+            }
+            // Logic matches super potions: 20% + 6
+            const boostValue = Math.floor(baseStat * 0.20) + 6;
+            if (boostValue > 0) {
+                // Duration of 6 minutes
+                char.applyStatModifier(skillToBoost, boostValue, 360000, baseStat);
+            } else {
+                addLog("The spell has no effect at your current level.");
             }
         } else {
             addLog(`You cast ${spell.name}.`);

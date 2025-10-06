@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { CombatStance, PlayerSlayerTask, ShopStates, SkillName, POIActivity, InventorySlot, ActivePanel, Item, Region, POI, WorldState, GroundItem, Spell, GeneratedRepeatableQuest, BonfireActivity, BankTab } from '../../types';
 import { useActivityLog } from '../../hooks/useActivityLog';
@@ -16,6 +17,7 @@ import { useSlayer } from '../../hooks/useSlayer';
 import { useQuestLogic } from '../../hooks/useQuestLogic';
 import { useCrafting } from '../../hooks/useCrafting';
 import { useItemActions } from '../../hooks/useItemActions';
+import { useSpellActions } from '../../hooks/useSpellActions';
 import { useWorldActions } from '../../hooks/useWorldActions';
 import { useNavigation } from '../../hooks/useNavigation';
 import { usePlayerDeath } from '../../hooks/usePlayerDeath';
@@ -66,7 +68,6 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
     const devMode = useDevMode({ initialState, devModeOverride, isInCombat: ui.combatQueue.length > 0, ui, addLog });
     
     const isBusy = ui.isBusy;
-    // FIX: Define isEquipmentStatsOpen based on ui state to resolve undefined variable error.
     const isEquipmentStatsOpen = !!ui.equipmentStats;
     const effectiveXpMultiplier = devMode.isDevMode && devMode.isXpBoostEnabled ? devMode.xpMultiplier : 1;
 
@@ -200,7 +201,8 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
     const spellcasting = useSpellcasting({ char, inv, addLog, navigation, ui, isStunned: char.isStunned });
     const worldActions = useWorldActions({ hasItems: inv.hasItems, inventory: inv.inventory, modifyItem: inv.modifyItem, addLog, coins: inv.coins, skills: char.skills, addXp: char.addXp, setClearedSkillObstacles, playerQuests: quests.playerQuests, checkQuestProgressOnShear: questLogic.checkQuestProgressOnShear, setMakeXPrompt: ui.setMakeXPrompt, windmillFlour: worldState.windmillFlour, setWindmillFlour, setActiveCraftingAction: ui.setActiveCraftingAction });
     const dialogueActions = useDialogueActions({ quests, questLogic, navigation, inv, char, worldActions, addLog, worldState, setBank, setActivityLog, repeatableQuests, ui, setWorldState, session });
-    const itemActions = useItemActions({ addLog, currentHp: char.currentHp, maxHp: char.maxHp, setCurrentHp: char.setCurrentHp, applyStatModifier: char.applyStatModifier, setInventory: inv.setInventory, skills: char.skills, inventory: inv.inventory, activeCraftingAction: ui.activeCraftingAction, setActiveCraftingAction: ui.setActiveCraftingAction, hasItems: inv.hasItems, modifyItem: inv.modifyItem, addXp: char.addXp, openCraftingView: ui.openCraftingView, setItemToUse: ui.setItemToUse, addBuff: char.addBuff, setMakeXPrompt: ui.setMakeXPrompt, startQuest: (questId) => { quests.startQuest(questId, addLog); }, currentPoiId: session.currentPoiId, playerQuests: quests.playerQuests, isStunned: char.isStunned, setActiveDungeonMap: ui.setActiveDungeonMap, confirmValuableDrops: ui.confirmValuableDrops, valuableDropThreshold: ui.valuableDropThreshold });
+    const itemActions = useItemActions({ addLog, currentHp: char.currentHp, maxHp: char.maxHp, setCurrentHp: char.setCurrentHp, applyStatModifier: char.applyStatModifier, setInventory: inv.setInventory, skills: char.skills, inventory: inv.inventory, activeCraftingAction: ui.activeCraftingAction, setActiveCraftingAction: ui.setActiveCraftingAction, hasItems: inv.hasItems, modifyItem: inv.modifyItem, addXp: char.addXp, openCraftingView: ui.openCraftingView, setItemToUse: ui.setItemToUse, addBuff: char.addBuff, setMakeXPrompt: ui.setMakeXPrompt, startQuest: (questId) => { quests.startQuest(questId, addLog); }, currentPoiId: session.currentPoiId, playerQuests: quests.playerQuests, isStunned: char.isStunned, setActiveDungeonMap: ui.setActiveDungeonMap, confirmValuableDrops: ui.confirmValuableDrops, valuableDropThreshold: ui.valuableDropThreshold, ui, equipment: inv.equipment });
+    const spellActions = useSpellActions({ addLog, addXp: char.addXp, modifyItem: inv.modifyItem, hasItems: inv.hasItems, skills: char.skills, ui, equipment: inv.equipment });
     const { handlePlayerDeath: baseHandlePlayerDeath } = usePlayerDeath({ skilling, interactQuest, ui, session, char, inv, addLog, playerQuests: quests.playerQuests, onItemDropped, setWorldState });
     const handleCombatFinish = useCallback(() => {
         if (devMode.isInstantRespawnOn && devMode.instantRespawnCounter !== null) {
@@ -485,7 +487,7 @@ const Game: React.FC<GameProps> = ({ initialState, onExportGame, onImportGame, o
                     isShopOpen={isShopOpen}
                     onDeposit={(inventoryIndex, quantity) => bankLogic.handleDeposit(inventoryIndex, quantity, ui.activeBankTabId)}
                     onCastSpell={spellcasting.onCastSpell}
-                    onSpellOnItem={spellcasting.onSpellOnItem}
+                    onSpellOnItem={spellActions.handleSpellOnItem}
                     isEquipmentStatsOpen={isEquipmentStatsOpen}
                 />
             </div>

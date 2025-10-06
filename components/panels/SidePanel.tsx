@@ -138,6 +138,8 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     setTooltip={ui.setTooltip} 
                     ui={ui} 
                     inventory={inv.inventory} 
+                    // FIX: Pass the 'coins' prop to the EquipmentPanel component.
+                    coins={inv.coins}
                     addLog={addLog}
                     onExamine={handleExamine}
                     isTouchSimulationEnabled={isTouchSimulationEnabled}

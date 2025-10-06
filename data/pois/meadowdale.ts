@@ -228,7 +228,7 @@ export const meadowdalePois: Record<string, POI> = {
                     details_a_smiths_apprentice: {
                         npcName: 'Valerius the Master Smith',
                         npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
-                        text: "Every great sword starts as ugly rock. I need ore. The Stonebreak Mine is full of Copper and Tin. Bring me one of each. Do that, and I'll teach you the first, most important lesson of the forge: turning worthless stone into something strong.",
+                        text: "Every great blade starts as ugly rock. I need ore. The Stonebreak Mine is full of Copper and Tin. Bring me one of each. Do that, and I'll teach you the first, most important lesson of the forge: turning worthless stone into something strong.",
                         responses: [
                             { text: "I'll be back with your ore.", actions: [{ type: 'start_quest', questId: 'a_smiths_apprentice' }] },
                         ],
@@ -242,9 +242,17 @@ export const meadowdalePois: Record<string, POI> = {
                     in_progress_a_smiths_apprentice_1: {
                         npcName: 'Valerius the Master Smith',
                         npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
-                        text: "Ah, good! Let's see... yes, this will do. Good quality. Now for your first lesson. You see, when you heat copper and tin together... you create bronze. Stronger than both. That's the heart of smithing: making things better than they were before. Here, take this bar I've smelted for you. Now, to the anvil! Turn that metal into a Bronze Dagger.",
+                        text: "Ah, good! Let's see... yes, this will do. Good quality. Now for your first lesson. You see, when you heat copper and tin together... you create bronze. Stronger than both.",
                         responses: [
-                            { text: "Thank you, I'll get to it.", actions: [{ type: 'advance_quest', questId: 'a_smiths_apprentice' }] }
+                            { text: "Continue", next: 'in_progress_a_smiths_apprentice_1_continued'}
+                        ]
+                    },
+                    in_progress_a_smiths_apprentice_1_continued: {
+                        npcName: 'Valerius the Master Smith',
+                        npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                        text: "That's the heart of smithing: making things better than they were before. Here, take this bar I've smelted for you. Now, to the anvil! Turn that metal into a Bronze Dagger.",
+                        responses: [
+                            { text: "Thank you, I'll get to it.", actions: [{ type: 'advance_quest', questId: 'a_smiths_apprentice' }, { type: 'take_item', itemId: 'copper_ore', quantity: 1 }, { type: 'take_item', itemId: 'tin_ore', quantity: 1 }, { type: 'give_item', itemId: 'bronze_bar', quantity: 1 }, { type: 'give_item', itemId: 'hammer', quantity: 1 }] }
                         ]
                     },
                     in_progress_a_smiths_apprentice_2: {

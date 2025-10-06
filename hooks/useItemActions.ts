@@ -1,8 +1,8 @@
 import React, { useCallback } from 'react';
-import { InventorySlot, PlayerSkill, SkillName, ActiveCraftingAction, Item, CraftingContext, POIActivity, EquipmentSlot, PlayerQuestState } from '../types';
+import { InventorySlot, PlayerSkill, SkillName, ActiveCraftingAction, Item, CraftingContext, POIActivity, EquipmentSlot, PlayerQuestState, Spell, Equipment } from '../types';
 import { ITEMS, FLETCHING_RECIPES, HERBLORE_RECIPES, HERBS, INVENTORY_CAPACITY, rollOnLootTable, LootRollResult, FIREMAKING_RECIPES } from '../constants';
 import { POIS } from '../data/pois';
-import { MakeXPrompt } from './useUIState';
+import { MakeXPrompt, useUIState } from './useUIState';
 
 interface UseItemActionsProps {
     addLog: (message: string) => void;
@@ -29,10 +29,12 @@ interface UseItemActionsProps {
     setActiveDungeonMap: (mapInfo: { regionId: string; mapTitle: string; } | null) => void;
     confirmValuableDrops: boolean;
     valuableDropThreshold: number;
+    ui: ReturnType<typeof useUIState>;
+    equipment: Equipment;
 }
 
 export const useItemActions = (props: UseItemActionsProps) => {
-    const { addLog, currentHp, maxHp, setCurrentHp, applyStatModifier, setInventory, skills, inventory, activeCraftingAction, setActiveCraftingAction, hasItems, modifyItem, addXp, openCraftingView, setItemToUse, addBuff, setMakeXPrompt, startQuest, currentPoiId, playerQuests, isStunned, setActiveDungeonMap, confirmValuableDrops, valuableDropThreshold } = props;
+    const { addLog, currentHp, maxHp, setCurrentHp, applyStatModifier, setInventory, skills, inventory, activeCraftingAction, setActiveCraftingAction, hasItems, modifyItem, addXp, openCraftingView, setItemToUse, addBuff, setMakeXPrompt, startQuest, currentPoiId, playerQuests, isStunned, setActiveDungeonMap, confirmValuableDrops, valuableDropThreshold, ui, equipment } = props;
 
     const handleConsume = useCallback((itemId: string, inventoryIndex: number) => {
         if (isStunned) {
@@ -52,55 +54,54 @@ export const useItemActions = (props: UseItemActionsProps) => {
             modifyItem(itemId, -1, true);
             modifyItem(itemData.cleanable.cleanItemId, 1, true, undefined, { bypassAutoBank: true });
             addXp(SkillName.Herblore, itemData.cleanable.xp);
-            addLog(`You clean the grimy herb.`);
             return;
         }
 
         if (!itemData.consumable) return;
-        
-        if (itemId === 'grimy_coin_pouch') {
-            addLog("YUCK! I'm not opening that, maybe I should clean it first?");
-            return;
-        }
 
         if (itemData.consumable.special === 'treasure_chest') {
             const freeSlots = inventory.filter(s => s === null).length;
             if (freeSlots < 9) {
-                addLog("You need at least 10 free inventory slots to open this chest.");
+                addLog("You need at least 9 free inventory slots to open this chest.");
                 return;
             }
         
             modifyItem(itemId, -1, true);
             addLog("You open the treasure chest and find...");
         
-            const uncutGems = ['uncut_sapphire', 'uncut_emerald', 'uncut_ruby'];
             for (let i = 0; i < 5; i++) {
-                const randomGem = uncutGems[Math.floor(Math.random() * uncutGems.length)];
-                modifyItem(randomGem, 1, true, undefined, { bypassAutoBank: true });
+                const gem = rollOnLootTable('gem_table');
+                if (gem) {
+                    const gemId = typeof gem === 'string' ? gem : gem.itemId;
+                    // All gems from the chest are noted.
+                    modifyItem(gemId, 1, true, undefined, { bypassAutoBank: true, noted: true });
+                }
             }
         
             for (let i = 0; i < 3; i++) {
                 const herb = rollOnLootTable('herb_table');
                 if (herb) {
-                    if (typeof herb === 'string') {
-                        modifyItem(herb, 1, true, undefined, { bypassAutoBank: true });
-                    } else {
-                        modifyItem(herb.itemId, herb.quantity, true, undefined, { bypassAutoBank: true, noted: herb.noted });
-                    }
+                    const herbId = typeof herb === 'string' ? herb : herb.itemId;
+                    // All herbs from the chest are noted.
+                    modifyItem(herbId, 1, true, undefined, { bypassAutoBank: true, noted: true });
                 }
             }
         
-            const steelEquipment = Object.values(ITEMS).filter(
-                item => item.material === 'steel' && item.equipment && item.id !== 'steel_warhammer'
+            const mithrilEquipment = Object.values(ITEMS).filter(
+                item => item.material === 'mithril' && item.equipment
             );
-            if (steelEquipment.length > 0) {
-                const randomSteelItem = steelEquipment[Math.floor(Math.random() * steelEquipment.length)];
-                modifyItem(randomSteelItem.id, 1, true, undefined, { bypassAutoBank: true });
+            if (mithrilEquipment.length > 0) {
+                const randomMithrilItem = mithrilEquipment[Math.floor(Math.random() * mithrilEquipment.length)];
+                if (randomMithrilItem.id === 'mithril_arrow') {
+                    modifyItem(randomMithrilItem.id, 100, true, undefined, { bypassAutoBank: true });
+                } else {
+                    modifyItem(randomMithrilItem.id, 1, true, undefined, { bypassAutoBank: true });
+                }
             }
         
             if (Math.random() < 0.01) {
-                modifyItem('runic_sword', 1, true, undefined, { bypassAutoBank: true });
-                addLog("Incredibly lucky! You found a Runic Sword inside!");
+                modifyItem('runic_scimitar', 1, true, undefined, { bypassAutoBank: true });
+                addLog("Incredibly lucky! You found a Runic Scimitar inside!");
             }
         
             return;
@@ -245,8 +246,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
             return newInv;
         });
 
-        addLog(`You empty the ${itemData.name}.`);
-    }, [setInventory, addLog]);
+    }, [setInventory]);
 
     const handleDivine = useCallback((itemId: string, inventoryIndex: number) => {
         const itemData = ITEMS[itemId];
@@ -425,16 +425,16 @@ export const useItemActions = (props: UseItemActionsProps) => {
                 modifyItem('golem_core', -1, true);
                 modifyItem('golem_core_shard', 10, true, undefined, { bypassAutoBank: true });
                 addXp(SkillName.Crafting, 25);
-                addLog("You carefully smash the golem core, breaking it into 10 smaller shards. You gain 25 Crafting XP.");
+                addLog("You carefully smash the golem core, breaking it into 10 smaller shards.");
             }
             return;
         }
 
-        const crushableMap: Record<string, { dust: string, xp: number }> = {
-            'glimmerhorn_antler': { dust: 'glimmerhorn_dust', xp: 2 },
-            'serpent_scale': { dust: 'serpent_scale_dust', xp: 2 },
-            'unicorn_horn': { dust: 'unicorn_horn_dust', xp: 2 },
-            'wyrmscale': { dust: 'wyrmscale_dust', xp: 2 }
+        const crushableMap: Record<string, { dust: string }> = {
+            'glimmerhorn_antler': { dust: 'glimmerhorn_dust' },
+            'serpent_scale': { dust: 'serpent_scale_dust' },
+            'unicorn_horn': { dust: 'unicorn_horn_dust'},
+            'wyrmscale': { dust: 'wyrmscale_dust' }
         };
 
         const crushTargetId = (usedId === 'pestle_and_mortar') ? targetId : ((targetId === 'pestle_and_mortar') ? usedId : null);
@@ -449,9 +449,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
                 if (quantity > 0) {
                     modifyItem(crushTargetId, -quantity, true);
                     modifyItem(recipe.dust, quantity, true, undefined, { bypassAutoBank: true });
-                    const totalXp = recipe.xp * quantity;
-                    addXp(SkillName.Herblore, totalXp);
-                    addLog(`You grind ${quantity}x ${ITEMS[crushTargetId].name} into dust and gain ${totalXp} Herblore XP.`);
+                    addLog(`You grind ${quantity}x ${ITEMS[crushTargetId].name} into dust.`);
                 }
             };
             if (maxCrushable === 1) {
@@ -663,7 +661,6 @@ export const useItemActions = (props: UseItemActionsProps) => {
         }
         addLog(`[Examine: ${item.name}] ${item.description}`);
     }, [addLog, playerQuests, startQuest]);
-
 
     return {
         handleConsume,

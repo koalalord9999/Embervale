@@ -120,7 +120,7 @@ export const useCharacter = (
                             return null;
                         }
 
-                        addLog(`Your ${mod.skill} ${isBoost ? 'boost' : 'drain'} has weakened.`);
+                        // addLog(`Your ${mod.skill} ${isBoost ? 'boost' : 'drain'} has weakened.`);
                         return {
                             ...mod,
                             currentValue: newValue,
@@ -137,9 +137,9 @@ export const useCharacter = (
                         .filter(p => !newModifiersFiltered.some(n => n.id === p.id))
                         .map(m => m.skill);
                     
-                    expiredSkills.forEach(skillName => {
-                        addLog(`You feel your ${skillName} level returning to normal.`);
-                    });
+                    // expiredSkills.forEach(skillName => {
+                    //     addLog(`You feel your ${skillName} level returning to normal.`);
+                    // });
                 }
                 
                 return newModifiersFiltered;

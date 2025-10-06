@@ -121,7 +121,7 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
     const stopSkilling = useCallback(() => {
         if (activeSkilling) {
             setActiveSkilling(null);
-            addLog("You stop gathering.");
+            // addLog("You stop gathering.");
         }
     }, [activeSkilling, addLog]);
 

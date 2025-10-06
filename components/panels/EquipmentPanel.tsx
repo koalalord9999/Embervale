@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Equipment, InventorySlot, Item } from '../../types';
 import { ITEMS, getIconClassName } from '../../constants';
@@ -10,6 +11,7 @@ import { useIsTouchDevice } from '../../hooks/useIsTouchDevice';
 interface EquipmentPanelProps {
     equipment: Equipment;
     inventory: (InventorySlot | null)[];
+    coins: number;
     onUnequip: (slot: keyof Equipment) => void;
     setTooltip: (tooltip: TooltipState | null) => void;
     ui: ReturnType<typeof useUIState>;
@@ -135,30 +137,42 @@ const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, it
 
 const EmptySlot = () => <div className="w-full aspect-square" />;
 
-const EquipmentPanel: React.FC<EquipmentPanelProps> = ({ equipment, inventory, onUnequip, setTooltip, ui, addLog, onExamine, isTouchSimulationEnabled, isOneClickMode }) => {
+const EquipmentPanel: React.FC<EquipmentPanelProps> = (props) => {
+    const { equipment, inventory, coins, onUnequip, setTooltip, ui, addLog, onExamine, isTouchSimulationEnabled, isOneClickMode } = props;
+
+    const equipmentSlotDisplayProps = {
+        onUnequip,
+        setTooltip,
+        setContextMenu: ui.setContextMenu,
+        addLog,
+        onExamine,
+        isTouchSimulationEnabled,
+        isOneClickMode
+    };
+
     return (
         <div className="flex flex-col h-full text-gray-300 pt-2">
             <div className="flex flex-col justify-center items-center">
                 <div className="grid grid-cols-3 gap-2 w-full max-w-[180px]">
                     <EmptySlot />
-                    <EquipmentSlotDisplay slotKey="head" itemSlot={equipment.head} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
+                    <EquipmentSlotDisplay {...equipmentSlotDisplayProps} slotKey="head" itemSlot={equipment.head} />
                     <EmptySlot />
 
-                    <EquipmentSlotDisplay slotKey="cape" itemSlot={equipment.cape} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
-                    <EquipmentSlotDisplay slotKey="necklace" itemSlot={equipment.necklace} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
-                    <EquipmentSlotDisplay slotKey="ammo" itemSlot={equipment.ammo} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
+                    <EquipmentSlotDisplay {...equipmentSlotDisplayProps} slotKey="cape" itemSlot={equipment.cape} />
+                    <EquipmentSlotDisplay {...equipmentSlotDisplayProps} slotKey="necklace" itemSlot={equipment.necklace} />
+                    <EquipmentSlotDisplay {...equipmentSlotDisplayProps} slotKey="ammo" itemSlot={equipment.ammo} />
 
-                    <EquipmentSlotDisplay slotKey="weapon" itemSlot={equipment.weapon} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
-                    <EquipmentSlotDisplay slotKey="body" itemSlot={equipment.body} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
-                    <EquipmentSlotDisplay slotKey="shield" itemSlot={equipment.shield} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
+                    <EquipmentSlotDisplay {...equipmentSlotDisplayProps} slotKey="weapon" itemSlot={equipment.weapon} />
+                    <EquipmentSlotDisplay {...equipmentSlotDisplayProps} slotKey="body" itemSlot={equipment.body} />
+                    <EquipmentSlotDisplay {...equipmentSlotDisplayProps} slotKey="shield" itemSlot={equipment.shield} />
 
                     <EmptySlot />
-                    <EquipmentSlotDisplay slotKey="legs" itemSlot={equipment.legs} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
+                    <EquipmentSlotDisplay {...equipmentSlotDisplayProps} slotKey="legs" itemSlot={equipment.legs} />
                     <EmptySlot />
 
-                    <EquipmentSlotDisplay slotKey="gloves" itemSlot={equipment.gloves} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
-                    <EquipmentSlotDisplay slotKey="boots" itemSlot={equipment.boots} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
-                    <EquipmentSlotDisplay slotKey="ring" itemSlot={equipment.ring} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
+                    <EquipmentSlotDisplay {...equipmentSlotDisplayProps} slotKey="gloves" itemSlot={equipment.gloves} />
+                    <EquipmentSlotDisplay {...equipmentSlotDisplayProps} slotKey="boots" itemSlot={equipment.boots} />
+                    <EquipmentSlotDisplay {...equipmentSlotDisplayProps} slotKey="ring" itemSlot={equipment.ring} />
                 </div>
             </div>
             
@@ -166,7 +180,7 @@ const EquipmentPanel: React.FC<EquipmentPanelProps> = ({ equipment, inventory, o
                 <button onClick={() => ui.setEquipmentStats(equipment)} className="flex-1 text-center py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded border border-gray-500 transition-colors">
                     Equipment Stats
                 </button>
-                 <button onClick={() => ui.setIsItemsOnDeathOpen(true)} className="flex-1 text-center py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded border border-gray-500 transition-colors">
+                 <button onClick={() => ui.setItemsOnDeathData({ inventory, equipment, coins })} className="flex-1 text-center py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded border border-gray-500 transition-colors">
                     Items Kept on Death
                 </button>
                 <button onClick={() => ui.setPriceCheckerInventory(inventory)} className="flex-1 text-center py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded border border-gray-500 transition-colors">

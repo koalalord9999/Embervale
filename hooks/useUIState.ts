@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo } from 'react';
 import { ActivePanel, SkillName, InventorySlot, ActiveCraftingAction, DialogueNode, CraftingContext, Equipment, PlayerQuestState, Spell, Item, DialogueResponse, DialogueCheckRequirement } from '../types';
 import { ContextMenuOption } from '../components/common/ContextMenu';
@@ -49,6 +50,13 @@ export interface ExportDataState {
     copyButtonText?: string;
 }
 
+export interface ItemsOnDeathData {
+    inventory: (InventorySlot | null)[];
+    equipment: Equipment;
+    coins: number;
+}
+
+
 export const useUIState = () => {
     const [activePanel, setActivePanel] = useState<ActivePanel>(null);
     const [combatQueue, setCombatQueue] = useState<string[]>([]);
@@ -75,7 +83,7 @@ export const useUIState = () => {
 
     // New state for equipment overlays
     const [equipmentStats, _setEquipmentStats] = useState<Equipment | null>(null);
-    const [isItemsOnDeathOpen, setIsItemsOnDeathOpen] = useState<boolean>(false);
+    const [itemsOnDeathData, setItemsOnDeathData] = useState<ItemsOnDeathData | null>(null);
     const [priceCheckerInventory, setPriceCheckerInventory] = useState<(InventorySlot | null)[] | null>(null);
     const [isAtlasViewOpen, setIsAtlasViewOpen] = useState<boolean>(false);
     const [isExpandedMapViewOpen, setIsExpandedMapViewOpen] = useState<boolean>(false);
@@ -118,7 +126,7 @@ export const useUIState = () => {
         activeCraftingAction ||
         activeQuestDetail ||
         equipmentStats ||
-        isItemsOnDeathOpen ||
+        itemsOnDeathData ||
         priceCheckerInventory ||
         isAtlasViewOpen ||
         isExpandedMapViewOpen ||
@@ -139,7 +147,7 @@ export const useUIState = () => {
         activeCraftingAction,
         activeQuestDetail,
         equipmentStats,
-        isItemsOnDeathOpen,
+        itemsOnDeathData,
         priceCheckerInventory,
         isAtlasViewOpen,
         isExpandedMapViewOpen,
@@ -177,7 +185,7 @@ export const useUIState = () => {
         setActiveCraftingAction(null);
         setActiveQuestDetail(null);
         setEquipmentStats(null);
-        setIsItemsOnDeathOpen(false);
+        setItemsOnDeathData(null);
         setPriceCheckerInventory(null);
         setIsAtlasViewOpen(false);
         setIsExpandedMapViewOpen(false);
@@ -211,7 +219,7 @@ export const useUIState = () => {
         activeCraftingAction, setActiveCraftingAction,
         activeQuestDetail, setActiveQuestDetail,
         equipmentStats, setEquipmentStats,
-        isItemsOnDeathOpen, setIsItemsOnDeathOpen,
+        itemsOnDeathData, setItemsOnDeathData,
         priceCheckerInventory, setPriceCheckerInventory,
         isAtlasViewOpen, setIsAtlasViewOpen,
         isExpandedMapViewOpen, setIsExpandedMapViewOpen,
