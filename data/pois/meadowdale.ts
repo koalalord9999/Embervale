@@ -1,4 +1,5 @@
 
+
 import { POI, SkillName } from '../../types';
 import { CIVILLIAN_DIALOGUE } from '../../constants';
 
@@ -828,7 +829,7 @@ export const meadowdalePois: Record<string, POI> = {
             { type: 'shop', shopId: 'meadowdale_magic' },
         ],
         regionId: 'meadowdale',
-        x: 250, y: 100,
+        x: 203, y: 106,
         type: 'internal',
     },
 };

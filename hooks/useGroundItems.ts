@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { InventorySlot, GroundItem, WorldState } from '../types';
 import { ITEMS } from '../constants';
@@ -15,11 +14,11 @@ interface GroundItemDependencies {
     setWorldState: React.Dispatch<React.SetStateAction<WorldState>>;
 }
 
-export const useGroundItems = (deps: GroundItemDependencies) => {
+export const useGroundItems = (initialGroundItems: Record<string, GroundItem[]>, deps: GroundItemDependencies) => {
     const { session, invRef, addLog, ui, worldState, setWorldState } = deps;
-    const [groundItems, setGroundItems] = useState<Record<string, GroundItem[]>>({});
+    const [groundItems, setGroundItems] = useState<Record<string, GroundItem[]>>(initialGroundItems);
 
-    const onItemDropped = useCallback((item: InventorySlot, overridePoiId?: string) => {
+    const onItemDropped = useCallback((item: InventorySlot, overridePoiId?: string, isDeathPile: boolean = false) => {
         const poiId = overridePoiId || session.currentPoiId;
         const itemData = ITEMS[item.itemId];
         if (!itemData) return;
@@ -27,20 +26,38 @@ export const useGroundItems = (deps: GroundItemDependencies) => {
         setGroundItems(prev => {
             const newItemsForPoi = [...(prev[poiId] || [])];
             
+            const newGroundItem: GroundItem = {
+                item: item,
+                uniqueId: Date.now() + Math.random(),
+                isDeathPile: isDeathPile ? true : undefined,
+            };
+            if (!isDeathPile) {
+                newGroundItem.expiresAt = Date.now() + (5 * 60 * 1000);
+            }
+
             if (itemData.stackable || item.noted) {
                 const existingStackIndex = newItemsForPoi.findIndex(gi => 
                     gi.item.itemId === item.itemId && 
-                    !!gi.item.noted === !!item.noted
+                    !!gi.item.noted === !!item.noted &&
+                    !!gi.isDeathPile === isDeathPile // Stack like with like
                 );
                 if (existingStackIndex > -1) {
                     newItemsForPoi[existingStackIndex].item.quantity += item.quantity;
-                    newItemsForPoi[existingStackIndex].dropTime = Date.now();
+                    // Update expiry for normal items
+                    if (!isDeathPile) {
+                        newItemsForPoi[existingStackIndex].expiresAt = newGroundItem.expiresAt;
+                    }
                 } else {
-                    newItemsForPoi.push({ item, dropTime: Date.now(), uniqueId: Date.now() + Math.random() });
+                    newItemsForPoi.push(newGroundItem);
                 }
             } else {
                 for (let i = 0; i < item.quantity; i++) {
-                    newItemsForPoi.push({ item: { ...item, quantity: 1 }, dropTime: Date.now(), uniqueId: Date.now() + Math.random() + i });
+                    newItemsForPoi.push({ 
+                        item: { ...item, quantity: 1 }, 
+                        uniqueId: Date.now() + Math.random() + i,
+                        isDeathPile: isDeathPile ? true : undefined,
+                        expiresAt: isDeathPile ? undefined : Date.now() + (5 * 60 * 1000)
+                    });
                 }
             }
     
@@ -83,9 +100,9 @@ export const useGroundItems = (deps: GroundItemDependencies) => {
             const poiItems = newItems[poiId] || [];
             newItems[poiId] = poiItems.filter(gi => gi.uniqueId !== uniqueId);
 
-            if (worldState.deathMarker && worldState.deathMarker.poiId === poiId && newItems[poiId].length === 0) {
+            if (worldState.deathMarker && worldState.deathMarker.poiId === poiId && newItems[poiId].filter(i => i.isDeathPile).length === 0) {
                 setWorldState(ws => ({ ...ws, deathMarker: null }));
-                addLog("You have recovered your lost items.");
+                addLog("You have recovered all your lost items.");
             }
             
             if (newItems[poiId].length === 0) {
@@ -174,9 +191,9 @@ export const useGroundItems = (deps: GroundItemDependencies) => {
                 const poiItems = newItems[poiId] || [];
                 newItems[poiId] = poiItems.filter(gi => !idsToRemove.includes(gi.uniqueId));
                 
-                if (worldState.deathMarker && worldState.deathMarker.poiId === poiId && newItems[poiId].length === 0) {
+                if (worldState.deathMarker && worldState.deathMarker.poiId === poiId && newItems[poiId].filter(i => i.isDeathPile).length === 0) {
                     setWorldState(ws => ({ ...ws, deathMarker: null }));
-                    addLog("You have recovered your lost items.");
+                    addLog("You have recovered all your lost items.");
                 }
 
                 if (newItems[poiId].length === 0) {
@@ -188,7 +205,7 @@ export const useGroundItems = (deps: GroundItemDependencies) => {
         }
     }, [groundItems, session.currentPoiId, addLog, ui, invRef, worldState, setWorldState]);
 
-    const clearItemsAtPoi = useCallback((poiId: string) => {
+    const clearAllItemsAtPoi = useCallback((poiId: string) => {
         setGroundItems(prev => {
             const newItems = { ...prev };
             if (newItems[poiId]) {
@@ -198,30 +215,59 @@ export const useGroundItems = (deps: GroundItemDependencies) => {
         });
     }, []);
 
+    const clearDeathPileItemsAtPoi = useCallback((poiId: string) => {
+        setGroundItems(prev => {
+            const newItems = { ...prev };
+            if (newItems[poiId]) {
+                newItems[poiId] = newItems[poiId].filter(item => !item.isDeathPile);
+                if (newItems[poiId].length === 0) {
+                    delete newItems[poiId];
+                }
+            }
+            return newItems;
+        });
+    }, []);
+    
+    // Cleanup on load for items that expired while offline
+    useEffect(() => {
+        setGroundItems(prev => {
+            const now = Date.now();
+            const newGroundItems: Record<string, GroundItem[]> = {};
+            let changed = false;
+            for (const poiId in prev) {
+                const items = prev[poiId].filter(item => item.isDeathPile || (item.expiresAt && now < item.expiresAt));
+                if (items.length < prev[poiId].length) {
+                    changed = true;
+                }
+                if (items.length > 0) {
+                    newGroundItems[poiId] = items;
+                }
+            }
+            return changed ? newGroundItems : prev;
+        });
+    }, []); // Empty dependency array ensures this runs only once on mount
+
     useEffect(() => {
         const interval = setInterval(() => {
             setGroundItems(prev => {
                 const now = Date.now();
-                const { deathMarker } = worldState;
                 const newGroundItems: Record<string, GroundItem[]> = {};
                 let changed = false;
                 for (const poiId in prev) {
-                    const items = prev[poiId].filter(item => {
-                        if (deathMarker && deathMarker.poiId === poiId) {
-                            return true;
-                        }
-                        return now - item.dropTime < 5 * 60 * 1000;
-                    });
-                    if (items.length < prev[poiId].length) changed = true;
+                    // Filter out expired normal items, but keep all death pile items
+                    const items = prev[poiId].filter(item => item.isDeathPile || (item.expiresAt && now < item.expiresAt));
+                    if (items.length < prev[poiId].length) {
+                        changed = true;
+                    }
                     if (items.length > 0) {
                         newGroundItems[poiId] = items;
                     }
                 }
                 return changed ? newGroundItems : prev;
             });
-        }, 10000);
+        }, 10000); // Check every 10 seconds
         return () => clearInterval(interval);
-    }, [worldState]);
+    }, []);
 
     return {
         groundItems,
@@ -229,6 +275,7 @@ export const useGroundItems = (deps: GroundItemDependencies) => {
         onItemDropped,
         handlePickUpItem,
         handleTakeAllLoot,
-        clearItemsAtPoi,
+        clearAllItemsAtPoi,
+        clearDeathPileItemsAtPoi,
     };
 };

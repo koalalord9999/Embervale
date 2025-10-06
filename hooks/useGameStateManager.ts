@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect, useCallback } from 'react';
 import { saveGameState, loadGameState, deleteGameState } from '../db';
 import { ALL_SKILLS, REPEATABLE_QUEST_POOL, ITEMS, MONSTERS, SPELLS, QUESTS, BANK_CAPACITY } from '../constants';
@@ -37,6 +35,7 @@ const defaultState = {
     clearedSkillObstacles: [],
     resourceNodeStates: {},
     monsterRespawnTimers: {},
+    groundItems: {},
     repeatableQuestsState: {
         boards: {},
         activePlayerQuest: null,
@@ -177,6 +176,29 @@ const validateAndMergeState = (parsedData: any): GameState => {
     if(Array.isArray(parsedData.clearedSkillObstacles)) validatedState.clearedSkillObstacles = parsedData.clearedSkillObstacles;
     if (parsedData.resourceNodeStates) validatedState.resourceNodeStates = parsedData.resourceNodeStates;
     if (parsedData.monsterRespawnTimers) validatedState.monsterRespawnTimers = parsedData.monsterRespawnTimers;
+
+    if (parsedData.groundItems) {
+        const migratedGroundItems: Record<string, any[]> = {};
+        for (const poiId in parsedData.groundItems) {
+            if (Array.isArray(parsedData.groundItems[poiId])) {
+                migratedGroundItems[poiId] = parsedData.groundItems[poiId].map((item: any) => {
+                    // Check if it's the old format (has dropTime but not expiresAt)
+                    if (item && typeof item.dropTime === 'number' && typeof item.expiresAt === 'undefined') {
+                        const isDeathItem = parsedData.worldState?.deathMarker?.poiId === poiId;
+                        const duration = isDeathItem ? 10 * 60 * 1000 : 5 * 60 * 1000;
+                        const { dropTime, ...rest } = item;
+                        return {
+                            ...rest,
+                            expiresAt: dropTime + duration,
+                        };
+                    }
+                    return item;
+                }).filter(Boolean);
+            }
+        }
+        validatedState.groundItems = migratedGroundItems;
+    }
+
 
     if (parsedData.repeatableQuestsState) {
         const boards = parsedData.repeatableQuestsState.boards ?? {};

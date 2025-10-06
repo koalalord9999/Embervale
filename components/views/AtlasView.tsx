@@ -1,7 +1,8 @@
 import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
-import { POI, Region } from '../../types';
-import { REGIONS, MAP_DIMENSIONS } from '../../constants';
+import { POI, Region, WorldState } from '../../types';
+import { REGIONS, MAP_FEATURES } from '../../constants';
 import { POIS } from '../../data/pois';
+import { MAP_DIMENSIONS, CITY_MAP_DIMENSIONS } from '../../constants';
 import { TooltipState } from '../../hooks/useUIState';
 import Button from '../common/Button';
 
@@ -11,7 +12,16 @@ interface AtlasViewProps {
     onClose: () => void;
     setTooltip: (tooltip: TooltipState | null) => void;
     showAllPois: boolean;
+    // FIX: Add deathMarker prop to fix type error in Game.tsx
+    deathMarker: WorldState['deathMarker'];
 }
+
+const formatTime = (ms: number) => {
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+};
 
 const getRegionColor = (regionId: string, alpha: number = 0.4) => {
     let hash = 0;
@@ -73,7 +83,7 @@ const getPolygonCentroid = (points: { x: number; y: number }[]): { x: number; y:
 };
 
 
-const AtlasView: React.FC<AtlasViewProps> = ({ currentPoiId, unlockedPois, onClose, setTooltip, showAllPois }) => {
+const AtlasView: React.FC<AtlasViewProps> = ({ currentPoiId, unlockedPois, onClose, setTooltip, showAllPois, deathMarker }) => {
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const [view, setView] = useState({ x: 0, y: 0, zoom: 0.5 });
     const [isDragging, setIsDragging] = useState(false);
@@ -338,6 +348,21 @@ const AtlasView: React.FC<AtlasViewProps> = ({ currentPoiId, unlockedPois, onClo
                             </div>
                         )}
                         
+                        {deathMarker && POIS[deathMarker.poiId] && (
+                            <div
+                                key="death-marker"
+                                className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none"
+                                style={{ top: `${POIS[deathMarker.poiId].y}px`, left: `${POIS[deathMarker.poiId].x}px` }}
+                            >
+                                <img src="https://api.iconify.design/game-icons:tombstone.svg" alt="Death Location" className="filter invert opacity-90" style={{ width: `${32 / view.zoom}px`, height: `${32 / view.zoom}px` }} />
+                                <span 
+                                    className="text-xs font-bold text-white bg-black/50 px-1 rounded whitespace-nowrap"
+                                    style={{ transform: `scale(${1 / view.zoom}) translateY(-${4 / view.zoom}px)` }}
+                                >
+                                    {formatTime(deathMarker.timeRemaining)}
+                                </span>
+                            </div>
+                        )}
                     </div>
                     <div className="absolute bottom-2 right-2 flex flex-col gap-1 z-10">
                         <Button onClick={zoomIn} size="sm" className="w-8 h-8 text-lg">+</Button>

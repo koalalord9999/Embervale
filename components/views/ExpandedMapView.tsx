@@ -476,27 +476,23 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                             </div>
                         ))}
                         {deathMarker && POIS[deathMarker.poiId] && (
-                             <div
+                            <div
                                 key="death-marker"
-                                className="absolute transform -translate-x-1/2 -translate-y-1/2"
-                                style={{ 
-                                    top: `${(isWorldView ? POIS[deathMarker.poiId].y : POIS[deathMarker.poiId].cityMapY) ?? 0}px`,
-                                    left: `${(isWorldView ? POIS[deathMarker.poiId].x : POIS[deathMarker.poiId].cityMapX) ?? 0}px`
+                                className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none"
+                                style={{
+                                    top: `${(isWorldView ? (isMapManagerEnabled && poiCoordinates ? poiCoordinates[deathMarker.poiId]?.y : POIS[deathMarker.poiId].y) : POIS[deathMarker.poiId].cityMapY) ?? 0}px`,
+                                    left: `${(isWorldView ? (isMapManagerEnabled && poiCoordinates ? poiCoordinates[deathMarker.poiId]?.x : POIS[deathMarker.poiId].x) : POIS[deathMarker.poiId].cityMapX) ?? 0}px`
                                 }}
-                                onMouseEnter={(e) => setTooltip({
-                                    content: (
-                                        <div>
-                                            <p className="font-bold text-red-400">Death Pile</p>
-                                            <p>Disappears in: {formatTime(deathMarker.timeRemaining)}</p>
-                                        </div>
-                                    ),
-                                    position: { x: e.clientX, y: e.clientY }
-                                })}
-                                onMouseLeave={() => setTooltip(null)}
                             >
                                 <img src="https://api.iconify.design/game-icons:tombstone.svg" alt="Death Location"
                                     className="filter invert opacity-90"
                                     style={{ width: `${32 / view.zoom}px`, height: `${32 / view.zoom}px` }} />
+                                <span 
+                                    className="text-xs font-bold text-white bg-black/50 px-1 rounded whitespace-nowrap"
+                                    style={{ transform: `scale(${1 / view.zoom}) translateY(-${4 / view.zoom}px)` }}
+                                >
+                                    {formatTime(deathMarker.timeRemaining)}
+                                </span>
                             </div>
                         )}
                     </div>

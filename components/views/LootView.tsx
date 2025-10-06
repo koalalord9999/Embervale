@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { GroundItem, InventorySlot, Item } from '../../types';
+import React, { useState, useEffect, useMemo } from 'react';
+import { GroundItem, InventorySlot, Item, WorldState } from '../../types';
 import { ITEMS, getIconClassName } from '../../constants';
 import Button from '../common/Button';
 import { TooltipState } from '../../hooks/useUIState';
@@ -31,31 +31,40 @@ interface LootViewProps {
     onTakeAll: () => void;
     onClose: () => void;
     setTooltip: (tooltip: TooltipState | null) => void;
+    deathMarker?: WorldState['deathMarker'];
 }
 
 const LootSlot: React.FC<{
     groundItem: GroundItem;
     onPickUp: (id: number) => void;
     setTooltip: (tooltip: TooltipState | null) => void;
-}> = ({ groundItem, onPickUp, setTooltip }) => {
-    const { item, uniqueId, dropTime } = groundItem;
+    deathMarker?: WorldState['deathMarker'];
+}> = ({ groundItem, onPickUp, setTooltip, deathMarker }) => {
+    const { item, uniqueId, expiresAt, isDeathPile } = groundItem;
     const itemData = ITEMS[item.itemId];
-    const [timeLeft, setTimeLeft] = useState(300 * 1000); // 5 minutes in ms
+    const [timeLeft, setTimeLeft] = useState(0);
+
+    const totalDuration = useMemo(() => {
+        if (isDeathPile) return 600000; // 10 minutes
+        return 5 * 60 * 1000; // 5 minutes
+    }, [isDeathPile]);
 
     useEffect(() => {
-        const totalDuration = 5 * 60 * 1000;
         let frameId: number;
         const update = () => {
-            const elapsed = Date.now() - dropTime;
-            const remaining = totalDuration - elapsed;
+            const remaining = isDeathPile 
+                ? deathMarker?.timeRemaining ?? 0
+                : (expiresAt ?? 0) - Date.now();
+            
             setTimeLeft(Math.max(0, remaining));
+
             if (remaining > 0) {
                 frameId = requestAnimationFrame(update);
             }
         };
         frameId = requestAnimationFrame(update);
         return () => cancelAnimationFrame(frameId);
-    }, [dropTime]);
+    }, [expiresAt, isDeathPile, deathMarker]);
     
     if (!itemData) return null;
 
@@ -63,7 +72,6 @@ const LootSlot: React.FC<{
         setTooltip({ item: itemData, slot: item, position: { x: e.clientX, y: e.clientY } });
     };
     
-    const totalDuration = 5 * 60 * 1000;
     const progressDegrees = ((totalDuration - timeLeft) / totalDuration) * 360;
 
     const timerStyle = {
@@ -106,7 +114,7 @@ const LootSlot: React.FC<{
 };
 
 
-const LootView: React.FC<LootViewProps> = ({ items, onPickUp, onTakeAll, onClose, setTooltip }) => {
+const LootView: React.FC<LootViewProps> = ({ items, onPickUp, onTakeAll, onClose, setTooltip, deathMarker }) => {
     if (items.length === 0) {
         onClose();
         return null;
@@ -125,7 +133,7 @@ const LootView: React.FC<LootViewProps> = ({ items, onPickUp, onTakeAll, onClose
                 <div className="p-4">
                     <div className="grid grid-cols-5 gap-2 bg-black/40 p-2 rounded-lg border border-gray-600 min-h-[184px] content-start">
                         {items.map(gi => (
-                            <LootSlot key={gi.uniqueId} groundItem={gi} onPickUp={onPickUp} setTooltip={setTooltip} />
+                            <LootSlot key={gi.uniqueId} groundItem={gi} onPickUp={onPickUp} setTooltip={setTooltip} deathMarker={deathMarker} />
                         ))}
                     </div>
                     <div className="mt-4 flex justify-center">

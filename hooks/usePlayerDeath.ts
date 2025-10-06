@@ -1,5 +1,3 @@
-
-
 import { useCallback } from 'react';
 import { useSkilling } from './useSkilling';
 import { useInteractQuest } from './useInteractQuest';
@@ -20,7 +18,7 @@ interface PlayerDeathDependencies {
     inv: ReturnType<typeof useInventory>;
     addLog: (message: string) => void;
     playerQuests: PlayerQuestState[];
-    onItemDropped: (item: InventorySlot, overridePoiId?: string) => void;
+    onItemDropped: (item: InventorySlot, overridePoiId?: string, isDeathPile?: boolean) => void;
     setWorldState: React.Dispatch<React.SetStateAction<WorldState>>;
 }
 
@@ -76,10 +74,10 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
         const lostCoins = inv.coins;
         
         if (lostCoins > 0) {
-            onItemDropped({ itemId: 'coins', quantity: lostCoins }, finalDeathPoiId);
+            onItemDropped({ itemId: 'coins', quantity: lostCoins }, finalDeathPoiId, true);
         }
         droppedItems.forEach(item => {
-            onItemDropped(item.slot, finalDeathPoiId);
+            onItemDropped(item.slot, finalDeathPoiId, true);
         });
 
         // 5. Update inventory and equipment with only the kept items
@@ -114,7 +112,7 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
         // 7. Respawn player
         session.setCurrentPoiId('meadowdale_square');
         char.setCurrentHp(char.maxHp);
-        addLog(`You have died! Your 3 most valuable items have been kept. The rest, including ${lostCoins.toLocaleString()} coins, have been dropped at ${POIS[finalDeathPoiId].name}.`);
+        addLog(`You have died! Your 3 most valuable items have been kept. The rest, including ${lostCoins.toLocaleString()} coins, have been dropped at ${POIS[finalDeathPoiId].name}. You have 10 minutes of in-game time to retrieve them.`);
 
     }, [session, char, inv, addLog, ui, skilling, interactQuest, playerQuests, onItemDropped, setWorldState]);
 

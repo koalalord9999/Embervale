@@ -21,6 +21,7 @@ interface CombatViewProps {
     setCombatStance: (stance: CombatStance) => void;
     setPlayerHp: React.Dispatch<React.SetStateAction<number>>;
     onCombatEnd: () => void;
+    onFlee: () => void;
     addXp: (skill: SkillName, amount: number) => void;
     addLoot: (itemId: string, quantity: number, quiet?: boolean, doses?: number, options?: { noted?: boolean, bypassAutoBank?: boolean }) => void;
     onDropLoot: (item: InventorySlot, overridePoiId?: string) => void; // For ground drops
@@ -126,7 +127,7 @@ const parseChance = (chance: number | string): number => {
     return 0; // fallback
 };
 
-const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, playerSkills, playerHp, equipment, combatStance, setCombatStance, setPlayerHp, onCombatEnd, addXp, addLoot, onDropLoot, isAutoBankOn, addLog, onPlayerDeath, onKill, onConsumeAmmo, activeBuffs, combatSpeedMultiplier, advanceTutorial, autocastSpell, inv, ui, killTrigger, applyStatModifier, isStunned, addBuff, showPlayerHealthNumbers, showEnemyHealthNumbers, showHitsplats }) => {
+const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, playerSkills, playerHp, equipment, combatStance, setCombatStance, setPlayerHp, onCombatEnd, onFlee, addXp, addLoot, onDropLoot, isAutoBankOn, addLog, onPlayerDeath, onKill, onConsumeAmmo, activeBuffs, combatSpeedMultiplier, advanceTutorial, autocastSpell, inv, ui, killTrigger, applyStatModifier, isStunned, addBuff, showPlayerHealthNumbers, showEnemyHealthNumbers, showHitsplats }) => {
     const [currentMonsterIndex, setCurrentMonsterIndex] = useState(0);
     const currentInstanceId = monsterQueue[currentMonsterIndex];
     const monsterId = currentInstanceId.split(':')[1];
@@ -946,8 +947,8 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
         if (isStunned) { addLog("You are stunned and cannot flee."); return; }
         setQueuedSpell(null);
         setLastSpellCast(null);
-        onCombatEnd();
-    }, [onCombatEnd, isStunned]);
+        onFlee();
+    }, [onFlee, isStunned]);
 
     const monsterIconClass = useMemo(() => {
         if (monster?.id === 'arcane_wyvern' && currentElementalWeakness) {

@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { PlayerRepeatableQuest, GeneratedRepeatableQuest, RepeatableQuestsState, SkillName, PlayerSkill } from '../types';
 import { REPEATABLE_QUEST_POOL, MONSTERS, ITEMS, XP_TABLE, TELEPORT_UNLOCK_THRESHOLD } from '../constants';
@@ -112,6 +113,7 @@ export const useRepeatableQuests = (
 
     }, [activePlayerQuest, addLog]);
 
+    // Effect for timed resets
     useEffect(() => {
         const checkAndReset = () => {
             if (Date.now() >= nextResetTimestamp) {
@@ -119,16 +121,20 @@ export const useRepeatableQuests = (
             }
         };
 
-        checkAndReset();
-        
+        const interval = setInterval(checkAndReset, 10000);
+        checkAndReset(); // Check on mount in case it's already expired
+
+        return () => clearInterval(interval);
+    }, [nextResetTimestamp, resetBoards]);
+
+    // Effect for initial generation
+    useEffect(() => {
         const needsInitialGeneration = BOARD_IDS.some(id => !boards[id] || boards[id].length === 0);
         if (needsInitialGeneration) {
             resetBoards();
         }
-
-        const interval = setInterval(checkAndReset, 10000);
-        return () => clearInterval(interval);
-    }, [nextResetTimestamp, resetBoards, boards]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Run only on mount
 
     const acceptQuest = useCallback((quest: GeneratedRepeatableQuest, boardId: string) => {
         if (activePlayerQuest) {

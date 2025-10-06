@@ -193,16 +193,8 @@ export const beasts: Monster[] = [
         types: [MonsterType.Beast], attackSpeed: 3, respawnTime: 100000, aggressive: true, alwaysAggressive: true, attackStyle: 'slash',
     },
     {
-        id: 'bog_mite',
-        name: 'Bog Mite',
-        level: 26,
-        maxHp: 45,
-        attack: 20,
-        stabDefence: 15,
-        slashDefence: 18,
-        crushDefence: 12,
-        rangedDefence: 20,
-        magicDefence: 10,
+        id: 'bog_mite', name: 'Bog Mite', level: 26, maxHp: 45, attack: 20,
+        stabDefence: 15, slashDefence: 18, crushDefence: 12, rangedDefence: 20, magicDefence: 10,
         iconUrl: '/assets/npcChatHeads/bog_mite.png',
         guaranteedDrops: [
             { itemId: 'bones', minQuantity: 1, maxQuantity: 1 }
@@ -213,12 +205,7 @@ export const beasts: Monster[] = [
             { itemId: 'hex_rune', chance: "1/5", minQuantity: 5, maxQuantity: 12 },
             { itemId: 'astral_rune', chance: "1/20", minQuantity: 2, maxQuantity: 4 }
         ],
-        types: [MonsterType.Beast],
-        attackSpeed: 4,
-        respawnTime: 25000,
-        aggressive: true,
-        alwaysAggressive: true,
-        attackStyle: 'stab',
+        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 25000, aggressive: true, alwaysAggressive: true, attackStyle: 'stab',
     },
     // New Verdant Fields Monsters
     {

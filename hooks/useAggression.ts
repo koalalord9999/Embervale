@@ -21,6 +21,7 @@ export const useAggression = (
 ) => {
     useEffect(() => {
         const isPoiImmune = (worldState.poiImmunity?.[currentPoiId] ?? 0) > Date.now();
+        
         if (!isGameLoaded || isBusy || isInCombat || isPlayerInvisible || isPlayerImmune || isPoiImmune) return;
 
         const poi = POIS[currentPoiId];

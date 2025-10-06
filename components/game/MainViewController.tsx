@@ -15,7 +15,7 @@ import { useSkilling } from '../../hooks/useSkilling';
 import { useInteractQuest } from '../../hooks/useInteractQuest';
 import { useGameSession } from '../../hooks/useGameSession';
 import { useItemActions } from '../../hooks/useItemActions';
-import { SkillName, InventorySlot, CombatStance, POIActivity, GroundItem, Spell, BonfireActivity, DialogueCheckRequirement, DialogueAction, BankTab } from '../../types';
+import { SkillName, InventorySlot, CombatStance, POIActivity, GroundItem, Spell, BonfireActivity, DialogueCheckRequirement, DialogueAction, BankTab, WorldState } from '../../types';
 import { POIS } from '../../data/pois';
 import CraftingProgressView from '../views/crafting/CraftingProgressView';
 import CombatView from '../views/CombatView';
@@ -51,6 +51,8 @@ interface MainViewControllerProps {
     monsterRespawnTimers: Record<string, number>;
     handlePlayerDeath: () => void;
     handleKill: (uniqueInstanceId: string, attackStyle?: 'melee' | 'ranged' | 'magic') => void;
+    onWinCombat: () => void;
+    onFleeFromCombat: () => void;
     handleDialogueAction: (actions: DialogueAction[]) => void;
     handleDialogueCheck: (requirements: DialogueCheckRequirement[]) => boolean;
     combatSpeedMultiplier: number;
@@ -73,7 +75,7 @@ interface MainViewControllerProps {
     groundItemsForCurrentPoi: GroundItem[];
     onPickUpItem: (uniqueId: number) => void;
     onTakeAllLoot: () => void;
-    onItemDropped: (item: InventorySlot) => void;
+    onItemDropped: (item: InventorySlot, overridePoiId?: string) => void;
     isAutoBankOn: boolean;
     handleCombatXpGain: (skill: SkillName, amount: number) => void;
     immunityTimeLeft: number;
@@ -90,11 +92,12 @@ interface MainViewControllerProps {
     onToggleDevPanel: () => void;
     onToggleTouchSimulation: () => void;
     onDepositEquipment: () => void;
+    deathMarker?: WorldState['deathMarker'];
 }
 
 const MainViewController: React.FC<MainViewControllerProps> = (props) => {
     const {
-        ui, addLog, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, handleDialogueAction, handleDialogueCheck, combatSpeedMultiplier, activeCombatStyleHighlight, isTouchSimulationEnabled, showAllPois,
+        ui, addLog, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, onWinCombat, onFleeFromCombat, handleDialogueAction, handleDialogueCheck, combatSpeedMultiplier, activeCombatStyleHighlight, isTouchSimulationEnabled, showAllPois,
         groundItemsForCurrentPoi, onPickUpItem, onTakeAllLoot, onItemDropped, isAutoBankOn, handleCombatXpGain, immunityTimeLeft, poiImmunityTimeLeft, killTrigger,
         bankPlaceholders, handleToggleBankPlaceholders, bonfires, onStokeBonfire, isStunned, addBuff, onExportGame, onImportGame, onResetGame,
         itemActions,
@@ -102,6 +105,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
         onToggleDevPanel,
         onToggleTouchSimulation,
         onDepositEquipment,
+        deathMarker,
     } = props;
 
     const handleTeleport = useCallback((toBoardId: string) => {
@@ -171,10 +175,8 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 combatStance={char.combatStance}
                 setCombatStance={char.setCombatStance} 
                 setPlayerHp={char.setCurrentHp} 
-                onCombatEnd={() => {
-                    ui.setCombatQueue([]);
-                    ui.setIsMandatoryCombat(false);
-                }} 
+                onCombatEnd={onWinCombat}
+                onFlee={onFleeFromCombat}
                 addXp={handleCombatXpGain} 
                 addLoot={inv.modifyItem}
                 onDropLoot={onItemDropped}
@@ -337,6 +339,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
             {ui.isLootViewOpen && (
                 <LootView
                     items={groundItemsForCurrentPoi}
+                    deathMarker={deathMarker}
                     onPickUp={onPickUpItem}
                     onTakeAll={onTakeAllLoot}
                     onClose={() => ui.setIsLootViewOpen(false)}

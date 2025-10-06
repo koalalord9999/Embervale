@@ -361,20 +361,16 @@ const WorldMapView: React.FC<WorldMapViewProps> = ({ currentPoiId, unlockedPois,
                     {deathMarker && isWorldView && POIS[deathMarker.poiId] && (
                         <div
                             key="death-marker"
-                            className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                            className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none"
                             style={{ top: `${POIS[deathMarker.poiId].y}px`, left: `${POIS[deathMarker.poiId].x}px` }}
-                            onMouseEnter={(e) => setTooltip({
-                                content: (
-                                    <div>
-                                        <p className="font-bold text-red-400">Death Pile</p>
-                                        <p>Disappears in: {formatTime(deathMarker.timeRemaining)}</p>
-                                    </div>
-                                ),
-                                position: { x: e.clientX, y: e.clientY }
-                            })}
-                            onMouseLeave={() => setTooltip(null)}
                         >
                             <img src="https://api.iconify.design/game-icons:tombstone.svg" alt="Death Location" className="filter invert opacity-90" style={{ width: `${32 / view.zoom}px`, height: `${32 / view.zoom}px` }} />
+                            <span 
+                                className="text-xs font-bold text-white bg-black/50 px-1 rounded whitespace-nowrap"
+                                style={{ transform: `scale(${1 / view.zoom}) translateY(-${4 / view.zoom}px)` }}
+                            >
+                                {formatTime(deathMarker.timeRemaining)}
+                            </span>
                         </div>
                     )}
                 </div>

@@ -1,4 +1,3 @@
-
 import { SkillName, InventorySlot, ToolType } from './';
 import { DialogueNode } from './quests';
 
@@ -85,8 +84,9 @@ export interface ResourceNodeState {
 
 export interface GroundItem {
   item: InventorySlot;
-  dropTime: number;
+  expiresAt?: number;
   uniqueId: number;
+  isDeathPile?: boolean;
 }
 
 export interface MapFeature {
