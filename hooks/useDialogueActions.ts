@@ -1,7 +1,7 @@
 
+
 import React, { useCallback } from 'react';
-// @fix: Moved import for INVENTORY_CAPACITY to '../constants' as it is not exported from '../types'.
-import { DialogueAction, DialogueCheckRequirement, WorldState, InventorySlot } from '../types';
+import { DialogueAction, DialogueCheckRequirement, WorldState, InventorySlot, BankTab, ActivePanel, POIActivity } from '../types';
 import { INVENTORY_CAPACITY } from '../constants';
 import { useQuests } from './useQuests';
 import { useQuestLogic } from './useQuestLogic';
@@ -9,8 +9,10 @@ import { useNavigation } from './useNavigation';
 import { useInventory } from './useInventory';
 import { useCharacter } from './useCharacter';
 import { useWorldActions } from './useWorldActions';
-import { padBank } from './useBank';
 import { useRepeatableQuests } from './useRepeatableQuests';
+import { useUIState } from './useUIState';
+import { POIS } from '../data/pois';
+import { useGameSession } from './useGameSession';
 
 interface DialogueActionDependencies {
     quests: ReturnType<typeof useQuests>;
@@ -21,13 +23,16 @@ interface DialogueActionDependencies {
     worldActions: ReturnType<typeof useWorldActions>;
     addLog: (message: string) => void;
     worldState: WorldState;
-    setBank: React.Dispatch<React.SetStateAction<(InventorySlot | null)[]>>;
+    setBank: React.Dispatch<React.SetStateAction<BankTab[]>>;
     setActivityLog: React.Dispatch<React.SetStateAction<string[]>>;
     repeatableQuests: ReturnType<typeof useRepeatableQuests>;
+    ui: ReturnType<typeof useUIState>;
+    setWorldState: React.Dispatch<React.SetStateAction<WorldState>>;
+    session: ReturnType<typeof useGameSession>;
 }
 
 export const useDialogueActions = (deps: DialogueActionDependencies) => {
-    const { quests, questLogic, navigation, inv, char, worldActions, addLog, worldState, setBank, setActivityLog, repeatableQuests } = deps;
+    const { quests, questLogic, navigation, inv, char, worldActions, addLog, worldState, setBank, setActivityLog, repeatableQuests, ui, setWorldState, session } = deps;
 
     const handleDialogueCheck = useCallback((requirements: DialogueCheckRequirement[]): boolean => {
         return requirements.every(req => {
@@ -38,7 +43,9 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                     return inv.coins >= req.amount;
                 case 'skill':
                     const skill = char.skills.find(s => s.name === req.skill);
-                    return !!skill && skill.level >= req.level;
+                    if (!skill) return false;
+                    const { level } = skill;
+                    return level >= req.level;
                 case 'world_state':
                     if (req.property === 'windmillFlour') {
                         const operator = req.operator ?? 'gte';
@@ -49,9 +56,24 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                         }
                     }
                     return false;
+                case 'quest':
+                    const playerQuest = quests.playerQuests.find(q => q.questId === req.questId);
+                    switch (req.status) {
+                        case 'not_started':
+                            return !playerQuest;
+                        case 'in_progress':
+                            let inProgressCheck = !!playerQuest && !playerQuest.isComplete;
+                            if (req.stage !== undefined) {
+                                inProgressCheck = inProgressCheck && playerQuest.currentStage === req.stage;
+                            }
+                            return inProgressCheck;
+                        case 'completed':
+                            return !!playerQuest && playerQuest.isComplete;
+                    }
+                    return false; // Should not be reached
             }
         });
-    }, [inv, char, worldState]);
+    }, [inv, char, worldState, quests.playerQuests]);
 
     const handleDialogueAction = useCallback((actions: DialogueAction[]) => {
         for (const action of actions) {
@@ -93,6 +115,9 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                     char.clearStatModifiers();
                     addLog("Your boosted stats return to normal.");
                     break;
+                case 'open_bank':
+                    ui.setActivePanel('bank');
+                    break;
                 case 'complete_tutorial': {
                     // Automatically turn in the tutorial repeatable quest if it's active.
                     if (repeatableQuests.activePlayerQuest?.questId === 'tutorial_magic_rat') {
@@ -102,7 +127,7 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                     
                     // Wipe everything
                     inv.setInventory(new Array(INVENTORY_CAPACITY).fill(null));
-                    setBank(padBank([]));
+                    setBank([{ id: 0, name: 'Main', icon: null, items: [] }]);
                     inv.setCoins(0);
                     setActivityLog([]);
 
@@ -129,9 +154,20 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                     questLogic.forceCompleteQuest('embrune_101');
                     break;
                 }
+                case 'set_quest_combat_reward': {
+                    setWorldState(ws => ({ ...ws, pendingQuestCombatReward: { itemId: action.itemId, quantity: action.quantity } }));
+                    break;
+                }
+                case 'start_mandatory_combat': {
+                    // This creates a unique instance for a quest-spawned monster that does not respawn.
+                    const uniqueId = `${session.currentPoiId}:${action.monsterId}:quest`;
+                    ui.setCombatQueue([uniqueId]);
+                    ui.setIsMandatoryCombat(true);
+                    break;
+                }
             }
         }
-    }, [inv, char, quests, questLogic, navigation, addLog, setBank, setActivityLog, repeatableQuests, worldState]);
+    }, [inv, char, quests, questLogic, navigation, addLog, setBank, setActivityLog, repeatableQuests, worldState, ui, setWorldState, session.currentPoiId]);
 
     return { handleDialogueAction, handleDialogueCheck };
 };

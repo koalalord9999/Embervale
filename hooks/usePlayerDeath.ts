@@ -1,4 +1,5 @@
 
+
 import { useCallback } from 'react';
 import { useSkilling } from './useSkilling';
 import { useInteractQuest } from './useInteractQuest';
@@ -6,8 +7,7 @@ import { useUIState } from './useUIState';
 import { useGameSession } from './useGameSession';
 import { useCharacter } from './useCharacter';
 import { useInventory } from './useInventory';
-import { WorldState, InventorySlot, Equipment } from '../types';
-// FIX: Removed duplicate and incorrect import of 'POIS' from '../constants'. It is now correctly imported from '../data/pois'.
+import { WorldState, InventorySlot, Equipment, PlayerQuestState } from '../types';
 import { ITEMS, INVENTORY_CAPACITY, REGIONS } from '../constants';
 import { POIS } from '../data/pois';
 
@@ -19,13 +19,13 @@ interface PlayerDeathDependencies {
     char: ReturnType<typeof useCharacter>;
     inv: ReturnType<typeof useInventory>;
     addLog: (message: string) => void;
-    tutorialStage: number;
+    playerQuests: PlayerQuestState[];
     onItemDropped: (item: InventorySlot, overridePoiId?: string) => void;
     setWorldState: React.Dispatch<React.SetStateAction<WorldState>>;
 }
 
 export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
-    const { skilling, interactQuest, ui, session, char, inv, addLog, tutorialStage, onItemDropped, setWorldState } = deps;
+    const { skilling, interactQuest, ui, session, char, inv, addLog, playerQuests, onItemDropped, setWorldState } = deps;
 
     const handlePlayerDeath = useCallback(() => {
         skilling.stopSkilling();
@@ -33,7 +33,8 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
         ui.setCombatQueue([]);
         ui.setIsMandatoryCombat(false);
     
-        const isTutorialActive = tutorialStage >= 0;
+        const tutorialQuest = playerQuests.find(q => q.questId === 'embrune_101');
+        const isTutorialActive = tutorialQuest && !tutorialQuest.isComplete;
         
         if (isTutorialActive) {
             const respawnPoi = 'tutorial_entrance';
@@ -115,7 +116,7 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
         char.setCurrentHp(char.maxHp);
         addLog(`You have died! Your 3 most valuable items have been kept. The rest, including ${lostCoins.toLocaleString()} coins, have been dropped at ${POIS[finalDeathPoiId].name}.`);
 
-    }, [session, char, inv, addLog, ui, skilling, interactQuest, tutorialStage, onItemDropped, setWorldState]);
+    }, [session, char, inv, addLog, ui, skilling, interactQuest, playerQuests, onItemDropped, setWorldState]);
 
     return { handlePlayerDeath };
 };

@@ -1,4 +1,6 @@
-import { POI, SkillName } from '../../types';
+
+
+import { POI, SkillName, ToolType } from '../../types';
 
 export const theFeywoodPois: Record<string, POI> = {
     feywood_entrance: {
@@ -69,16 +71,16 @@ export const theFeywoodPois: Record<string, POI> = {
             { 
                 type: 'skilling', 
                 id: 'whispering_pond_fishing', 
-                name: 'Fish for Trout', 
+                name: 'Fly Fish', 
                 skill: SkillName.Fishing, 
                 requiredLevel: 20, 
                 loot: [
-                    { itemId: 'raw_sardine', chance: 1, xp: 20, requiredLevel: 5 }, 
-                    { itemId: 'raw_trout', chance: 0.8, xp: 50, requiredLevel: 20 }
+                    { itemId: 'raw_trout', chance: 1, xp: 50, requiredLevel: 20 }
                 ], 
                 resourceCount: { min: 15, max: 33 }, 
                 respawnTime: 15000, 
-                gatherTime: 2200 
+                gatherTime: 2200,
+                requiredTool: ToolType.FlyFishingRod,
             }
         ],
         regionId: 'feywood',
@@ -145,7 +147,47 @@ export const theFeywoodPois: Record<string, POI> = {
         description: 'A serene altar made of smooth, river-worn stones. A spring of impossibly pure water bubbles up from its center, flowing into the Whispering Pond.',
         connections: ['moonlit_clearing'],
         activities: [
-            { type: 'runecrafting_altar', runeId: 'aqua_rune' }
+            { type: 'runecrafting_altar', runeId: 'aqua_rune' },
+            {
+                type: 'npc',
+                name: 'Use Resonator',
+                icon: 'https://api.iconify.design/game-icons:orb-wand.svg',
+                questCondition: { questId: 'the_arcane_awakening', stages: [0] },
+                dialogue: {
+                    start: {
+                        npcName: 'Arcane Resonator', npcIcon: 'https://api.iconify.design/game-icons:orb-wand.svg',
+                        text: "You hold the Arcane Resonator up to the altar. It begins to vibrate violently, and a shimmering creature of pure energy coalesces before you!",
+                        responses: [
+                            {
+                                text: "(Face the creature)",
+                                check: {
+                                    requirements: [
+                                        { type: 'items', items: [{ itemId: 'arcane_resonator', quantity: 1 }] },
+                                        { type: 'items', items: [{ itemId: 'aqua_reading', quantity: 0, operator: 'eq' }] }
+                                    ],
+                                    successNode: 'trigger_combat',
+                                    failureNode: 'already_have_reading'
+                                },
+                                actions: [
+                                    { type: 'set_quest_combat_reward', itemId: 'aqua_reading', quantity: 1 },
+                                    { type: 'start_mandatory_combat', monsterId: 'mana_wisp' }
+                                ]
+                            }
+                        ]
+                    },
+                    trigger_combat: {
+                        npcName: 'Arcane Resonator', npcIcon: 'https://api.iconify.design/game-icons:orb-wand.svg',
+                        text: "The Mana Wisp shrieks and attacks!",
+                        responses: [],
+                    },
+                    already_have_reading: {
+                        npcName: 'Arcane Resonator', npcIcon: 'https://api.iconify.design/game-icons:orb-wand.svg',
+                        text: "You've already taken a reading from this altar.",
+                        responses: []
+                    }
+                },
+                startNode: 'start'
+            },
         ],
         regionId: 'feywood',
         x: 1240, y: 420,

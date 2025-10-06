@@ -1,5 +1,3 @@
-
-
 import { Quest, RepeatableQuest, SkillName } from '../types';
 
 export const QUESTS: Record<string, Quest> = {
@@ -28,11 +26,11 @@ export const QUESTS: Record<string, Quest> = {
             "The Banker explained how the bank works. Now I must speak to the Money Guide.", // 16
             "The Money Guide explained how currency works. Now I must speak to the Prayer Guide.", // 17
             "The Prayer Guide told me to bury some bones, and then head to the Tavern.", // 18
-            "The Tavern Manager directed me to the Quest Board. I should accept the 'Magical Pest Control' task.", // 19
-            "I've accepted the task. Now I must speak with the Magic Guide.", // 20
+            "The Tavern Manager directed me to the Quest Board. I should investigate the posting.", // 19
+            "I've accepted the task from the board. I need to speak with the Magic Guide.", // 20
             "The Magic Guide has given me runes. I need to defeat the rat in the tavern using magic.", // 21
-            "I've defeated the rat with magic. Now I need to turn in the task at the Quest Board.", // 22
-            "I've completed the task. The Tavern Manager sent me back to the Magic Guide for my final lesson.", // 23
+            "I've defeated the rat with magic. I should report back to the Tavern Manager.", // 22
+            "The Tavern Manager was pleased. Now I must speak to the Magic Guide for my final lesson.", // 23
             "I've learned all I can here. I should speak to the Magic Guide to leave the island.", // 24
         ],
         completionSummary: "I've completed my training with all the guides. I've learned about survival, crafting, combat, banking, and even a little magic. I am now ready to explore the world of Embrune.",
@@ -56,10 +54,10 @@ export const QUESTS: Record<string, Quest> = {
             { description: "Speak to the Money Guide.", requirement: { type: 'talk', poiId: 'tutorial_bank_area', npcName: 'Money Guide' } }, // 16
             { description: "Speak to the Prayer Guide.", requirement: { type: 'talk', poiId: 'tutorial_chapel_area', npcName: 'Prayer Guide' } }, // 17
             { description: "Speak to the Tavern Manager.", requirement: { type: 'talk', poiId: 'tutorial_tavern', npcName: 'Tavern Manager' } }, // 18
-            { description: "Accept the 'Magical Pest Control' task from the Quest Board.", requirement: { type: 'accept_repeatable_quest', questId: 'tutorial_magic_rat' } }, // 19
+            { description: "Investigate the Quest Board.", requirement: { type: 'talk', poiId: 'tutorial_tavern', npcName: 'Quest Board' } }, // 19
             { description: "Speak to the Magic Guide.", requirement: { type: 'talk', poiId: 'tutorial_tavern', npcName: 'Magic Guide' } }, // 20
             { description: "Defeat the rat with magic.", requirement: { type: 'kill', monsterId: 'tutorial_rat', quantity: 1, style: 'magic' } }, // 21
-            { description: "Turn in the task at the Quest Board.", requirement: { type: 'talk', poiId: 'tutorial_tavern', npcName: 'Tavern Manager' } }, // 22
+            { description: "Report your success to the Tavern Manager.", requirement: { type: 'talk', poiId: 'tutorial_tavern', npcName: 'Tavern Manager' } }, // 22
             { description: "Speak to the Magic Guide for your final lesson.", requirement: { type: 'talk', poiId: 'tutorial_tavern', npcName: 'Magic Guide' } }, // 23
             { description: "Leave the tutorial island.", requirement: { type: 'talk', poiId: 'tutorial_tavern', npcName: 'Magic Guide' } }, // 24
         ],
@@ -192,8 +190,8 @@ export const QUESTS: Record<string, Quest> = {
         ],
         // FIX: Added missing rewards property to conform to Quest type.
         rewards: {
-            xp: [{ skill: SkillName.Smithing, amount: 250 }],
-            items: [{ itemId: 'iron_sword', quantity: 1 }],
+            xp: [{ skill: SkillName.Smithing, amount: 2500 }],
+            items: [{ itemId: 'steel_scimitar', quantity: 1 }],
         }
     },
     bandit_toll: {
@@ -323,6 +321,41 @@ export const QUESTS: Record<string, Quest> = {
             coins: 2500,
         }
     },
+    'the_arcane_awakening': {
+        id: 'the_arcane_awakening',
+        name: "The Arcane Awakening",
+        description: "Archmage Theron has detected a dangerous magical disturbance. He needs a powerful adventurer to investigate and stabilize the Arcane Weave before it tears the world apart.",
+        startHint: "Speak to Archmage Theron in the Silverhaven Arcane Wares shop. Requires Magic Level 40 and completion of 'The Capital's Call'.",
+        playerStagePerspectives: [
+            "Archmage Theron has tasked me with taking readings at the Gust, Stone, and Aqua altars to find the source of a magical disturbance. I need to use the Arcane Resonator he gave me at each altar.", // 0
+            "I have taken all three readings. I should return to Archmage Theron in Silverhaven.", // 1
+            "The readings point to the Crystalline Isles. Theron believes the source of the problem is there and has sent me to find passage via the Skyship Captain at the Silverhaven Docks.", // 2
+            "The Skyship Captain won't fly without a 'Resonance Dampener.' He suggested I seek out Durin, the smith in the Dwarven Outpost.", // 3
+            "Durin can craft the Dampener, but I must bring him 5 Golem Cores from the Gale-Swept Peaks, 10 Runic Bars, and an Eldritch Pearl from the Isle of Whispers.", // 4
+            "I have the materials for Durin. I should return to the Dwarven Outpost.", // 5
+            "I have the Resonance Dampener. I need to take it to the Skyship Captain in Silverhaven.", // 6
+            "I've arrived at the Crystalline Isles. The source of the disturbance seems to be coming from the massive spire in the center. I must reach its entrance.", // 7
+            "I must ascend the Magus Spire and defeat the Arcane Wyvern at its apex to stop the resonance cascade.", // 8
+            "I have stabilized the arcane disturbance and proven my mastery. I should report my success to Archmage Theron in Silverhaven." // 9
+        ],
+        completionSummary: "I traveled to the Crystalline Isles, ascended the Magus Spire, and defeated the Arcane Wyvern. By doing so, I stabilized the Arcane Weave and saved the world from a magical catastrophe. Archmage Theron has rewarded me with knowledge of the most powerful spells.",
+        stages: [
+            { description: "Use the Arcane Resonator on the Gust, Stone, and Aqua altars.", requirement: { type: 'gather', items: [{ itemId: 'gust_reading', quantity: 1 }, { itemId: 'stone_reading', quantity: 1 }, { itemId: 'aqua_reading', quantity: 1 }] } },
+            { description: "Return to Archmage Theron in Silverhaven.", requirement: { type: 'talk', poiId: 'silverhaven_arcane_wares', npcName: 'Archmage Theron' } },
+            { description: "Speak to the Skyship Captain at the Silverhaven Docks.", requirement: { type: 'talk', poiId: 'silverhaven_docks', npcName: 'Skyship Captain' } },
+            { description: "Speak to Durin in the Dwarven Outpost.", requirement: { type: 'talk', poiId: 'dwarven_forge', npcName: 'Durin' } },
+            { description: "Gather 5 Golem Cores, 10 Runic Bars, and 1 Eldritch Pearl for Durin.", requirement: { type: 'gather', items: [{ itemId: 'golem_core', quantity: 5 }, { itemId: 'runic_bar', quantity: 10 }, { itemId: 'eldritch_pearl', quantity: 1 }] } },
+            { description: "Bring the materials to Durin.", requirement: { type: 'talk', poiId: 'dwarven_forge', npcName: 'Durin' } },
+            { description: "Take the Resonance Dampener to the Skyship Captain.", requirement: { type: 'talk', poiId: 'silverhaven_docks', npcName: 'Skyship Captain' } },
+            { description: "Travel to the Crystalline Isles and reach the entrance of the Magus Spire.", requirement: { type: 'talk', poiId: 'magus_spire_entrance', npcName: 'Enter the Spire' } },
+            { description: "Defeat the Arcane Wyvern at the apex of the Spire.", requirement: { type: 'kill', monsterId: 'arcane_wyvern', quantity: 1 } },
+            { description: "Return to Archmage Theron in Silverhaven for your reward.", requirement: { type: 'talk', poiId: 'silverhaven_arcane_wares', npcName: 'Archmage Theron' } },
+        ],
+        rewards: {
+            xp: [{ skill: SkillName.Magic, amount: 25000 }],
+            items: [{ itemId: 'tome_of_the_master', quantity: 1 }],
+        }
+    },
     lost_heirloom: {
         id: 'lost_heirloom',
         name: "Lost Heirloom",
@@ -371,17 +404,6 @@ export const QUESTS: Record<string, Quest> = {
 };
 
 export const REPEATABLE_QUEST_POOL: RepeatableQuest[] = [
-    // --- TUTORIAL ---
-    {
-        id: 'tutorial_magic_rat',
-        type: 'kill',
-        title: 'Magical Pest Control',
-        description: "A rat in the tavern has been chewing on spellbooks. The manager wants it gone, and the Magic Guide suggests using magic.",
-        location: 'general',
-        target: { monsterId: 'tutorial_rat' },
-        baseCoinReward: 250,
-        xpReward: { skill: SkillName.Magic, amount: 50 },
-    },
     // --- GATHER ---
     {
         id: 'gather_logs_meadowdale',

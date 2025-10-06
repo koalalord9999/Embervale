@@ -1,4 +1,4 @@
-import { Monster, MonsterType } from '../../types';
+import { Monster, MonsterType, SpellElement } from '../../types';
 
 export const dragons: Monster[] = [
     {
@@ -105,7 +105,7 @@ export const dragons: Monster[] = [
     },
     {
         id: 'arcane_wyvern', name: 'Arcane Wyvern', level: 115, maxHp: 200, attack: 1, magic: 100,
-        stabDefence: 120, slashDefence: 120, crushDefence: 120, rangedDefence: 60, magicDefence: 30, customMaxHit: 18,
+        stabDefence: 120, slashDefence: 120, crushDefence: 120, rangedDefence: 260, magicDefence: 500, customMaxHit: 18,
         iconUrl: 'https://api.iconify.design/game-icons:wyvern.svg',
         guaranteedDrops: [
             { itemId: 'dragon_bones', minQuantity: 2, maxQuantity: 2 },
@@ -120,11 +120,15 @@ export const dragons: Monster[] = [
             { itemId: 'aether_rune', chance: "1/4", minQuantity: 40, maxQuantity: 80 },
             { itemId: 'uncut_diamond', chance: "1/8", minQuantity: 1, maxQuantity: 3, noted: true },
             { itemId: 'mystic_page', chance: "1/2", minQuantity: 50, maxQuantity: 100, noted: true },
+            { itemId: 'magus_spire_map', chance: "1/16", minQuantity: 1, maxQuantity: 1 },
         ],
         types: [MonsterType.Dragon], attackSpeed: 4, respawnTime: 300000, aggressive: true, attackStyle: 'magic',
         specialAttacks: [
             { name: 'Arcane Stun', chance: 0.15, effect: 'stun', duration: 3000 },
-            { name: 'Arcane Blast', chance: 0.2, effect: 'magic_bypass_defence', maxHit: 22 }
+            { name: 'Arcane Blast', chance: 0.2, effect: 'magic_bypass_defence', maxHit: 22 },
+            { name: 'Arcane Shift', chance: 0.1, effect: 'elemental_shift' }
         ],
+        // FIX: Replaced enum-style access with string literals for SpellElement type alias.
+        elementalWeaknessCycle: ['wind', 'water', 'earth', 'fire'],
     },
 ];

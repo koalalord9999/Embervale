@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 
 export const sunkenLabyrinthPois: Record<string, POI> = {
@@ -8,7 +9,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['forgotten_temple_courtyard', 'laby_flooded_hall_1'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 700, y: 2150,
+        x: -352, y: 2119,
     },
     laby_flooded_hall_1: {
         id: 'laby_flooded_hall_1',
@@ -16,10 +17,11 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         description: 'The entrance hall is ankle-deep in murky water. Faded murals on the walls depict serpentine creatures.',
         connections: ['laby_entrance', 'laby_crossroads_1', 'laby_armory_ruins'],
         activities: [
+            { type: 'combat', monsterId: 'sunken_zombie' },
             { type: 'combat', monsterId: 'deep_lurker' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 700, y: 2250,
+        x: -75, y: 2140,
     },
     laby_armory_ruins: {
         id: 'laby_armory_ruins',
@@ -28,9 +30,10 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_flooded_hall_1', 'laby_collapsed_passage_1'],
         activities: [
             { type: 'combat', monsterId: 'ancient_sentinel' },
+            { type: 'combat', monsterId: 'skeletal_archer' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 500, y: 2250,
+        x: -147, y: 2284,
     },
     laby_crossroads_1: {
         id: 'laby_crossroads_1',
@@ -38,10 +41,10 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         description: 'A four-way intersection. The path is slick with a strange, glowing algae.',
         connections: ['laby_flooded_hall_1', 'laby_golem_hall', 'laby_whispering_stream', 'laby_archive_hall', 'laby_flooded_passage_east'],
         activities: [
-            { type: 'combat', monsterId: 'coral_golem' },
+            { type: 'combat', monsterId: 'labyrinth_guardian' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 700, y: 2350,
+        x: 267, y: 2126,
     },
     laby_golem_hall: {
         id: 'laby_golem_hall',
@@ -49,11 +52,11 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         description: 'This long hall is lined with alcoves containing dormant, coral-encrusted golems. Some of them seem to be active.',
         connections: ['laby_crossroads_1', 'laby_crystal_vein_1', 'laby_bone_pit'],
         activities: [
-            { type: 'combat', monsterId: 'coral_golem' },
-            { type: 'combat', monsterId: 'coral_golem' },
+            { type: 'combat', monsterId: 'abyssal_knight' },
+            { type: 'combat', monsterId: 'labyrinth_guardian' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 500, y: 2350,
+        x: 150, y: 2237,
     },
     laby_crystal_vein_1: {
         id: 'laby_crystal_vein_1',
@@ -62,7 +65,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_golem_hall'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 300, y: 2350,
+        x: 217, y: 2310,
     },
     laby_whispering_stream: {
         id: 'laby_whispering_stream',
@@ -70,10 +73,10 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         description: 'An underground stream flows through this passage. Faint, incoherent whispers seem to echo from the water.',
         connections: ['laby_crossroads_1', 'laby_lurker_nest', 'laby_waterfall_chamber', 'laby_fungal_cavern'],
         activities: [
-            { type: 'combat', monsterId: 'deep_lurker' },
+            { type: 'combat', monsterId: 'water_weird' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 700, y: 2450,
+        x: 280, y: 2234,
     },
     laby_lurker_nest: {
         id: 'laby_lurker_nest',
@@ -81,12 +84,12 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         description: 'A foul-smelling cavern littered with fish bones and other remains. This is clearly a nest.',
         connections: ['laby_whispering_stream'],
         activities: [
-            { type: 'combat', monsterId: 'deep_lurker' },
-            { type: 'combat', monsterId: 'deep_lurker' },
-            { type: 'combat', monsterId: 'deep_lurker' },
+            { type: 'combat', monsterId: 'abyssal_leech' },
+            { type: 'combat', monsterId: 'abyssal_leech' },
+            { type: 'combat', monsterId: 'abyssal_leech' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 900, y: 2450,
+        x: 343, y: 2244,
     },
     laby_archive_hall: {
         id: 'laby_archive_hall',
@@ -95,9 +98,10 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_crossroads_1', 'laby_scriptorium', 'laby_sentinel_chamber_1', 'laby_hidden_passage'],
         activities: [
             { type: 'combat', monsterId: 'ancient_sentinel' },
+            { type: 'combat', monsterId: 'temple_spirit' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 700, y: 2550,
+        x: 425, y: 2231,
     },
     laby_scriptorium: {
         id: 'laby_scriptorium',
@@ -106,7 +110,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_archive_hall'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 700, y: 2650,
+        x: 591, y: 2287,
     },
     laby_sentinel_chamber_1: {
         id: 'laby_sentinel_chamber_1',
@@ -115,9 +119,10 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_archive_hall', 'laby_flooded_library', 'laby_gears_room'],
         activities: [
             { type: 'combat', monsterId: 'ancient_sentinel' },
+            { type: 'combat', monsterId: 'gloom_weaver' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 500, y: 2550,
+        x: 461, y: 2322,
     },
     laby_flooded_library: {
         id: 'laby_flooded_library',
@@ -125,10 +130,11 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         description: 'This entire library is submerged in chest-deep water. Preserved books float like ghostly vessels.',
         connections: ['laby_sentinel_chamber_1'],
         activities: [
-            { type: 'combat', monsterId: 'deep_lurker' },
+            { type: 'combat', monsterId: 'temple_spirit' },
+            { type: 'combat', monsterId: 'temple_spirit' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 300, y: 2550,
+        x: 645, y: 2332,
     },
     laby_gears_room: {
         id: 'laby_gears_room',
@@ -137,7 +143,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_sentinel_chamber_1', 'laby_maintenance_tunnel_1', 'laby_hub_2'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 500, y: 2650,
+        x: 467, y: 2407,
     },
     laby_maintenance_tunnel_1: {
         id: 'laby_maintenance_tunnel_1',
@@ -148,7 +154,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
              { type: 'combat', monsterId: 'deep_lurker' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 500, y: 2750,
+        x: 366, y: 2463,
     },
     laby_collapsed_passage_1: {
         id: 'laby_collapsed_passage_1',
@@ -157,7 +163,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_armory_ruins', 'laby_maintenance_tunnel_1'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 500, y: 2850,
+        x: 136, y: 2472,
     },
     laby_waterfall_chamber: {
         id: 'laby_waterfall_chamber',
@@ -166,7 +172,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_whispering_stream', 'laby_hub_2', 'laby_crystal_cave_2'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 700, y: 2750,
+        x: 277, y: 2271,
     },
     laby_crystal_cave_2: {
         id: 'laby_crystal_cave_2',
@@ -175,7 +181,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_waterfall_chamber'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 500, y: 2750,
+        x: 240, y: 2358,
     },
     laby_hub_2: {
         id: 'laby_hub_2',
@@ -183,20 +189,22 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         description: 'Another large, central chamber. The water is deeper here, and the architecture more ornate.',
         connections: ['laby_gears_room', 'laby_waterfall_chamber', 'laby_offering_chamber', 'laby_sleeping_quarters', 'laby_water_control_room'],
         activities: [
-            { type: 'combat', monsterId: 'coral_golem' },
-            { type: 'combat', monsterId: 'ancient_sentinel' },
+            { type: 'combat', monsterId: 'abyssal_knight' },
+            { type: 'combat', monsterId: 'abyssal_knight' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 700, y: 2850,
+        x: 347, y: 2333,
     },
     laby_sleeping_quarters: {
         id: 'laby_sleeping_quarters',
         name: 'Sleeping Quarters',
         description: 'Rows of stone beds line this long chamber. It is eerily silent.',
         connections: ['laby_hub_2', 'laby_storage_room', 'laby_forgotten_tomb', 'laby_meditation_chamber', 'laby_kitchen_ruins'],
-        activities: [],
+        activities: [
+            { type: 'combat', monsterId: 'grave_revenant' },
+        ],
         regionId: 'sunken_labyrinth',
-        x: 500, y: 2850,
+        x: 223, y: 2526,
     },
     laby_storage_room: {
         id: 'laby_storage_room',
@@ -205,7 +213,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_sleeping_quarters'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 300, y: 2850,
+        x: 125, y: 2528,
     },
     laby_offering_chamber: {
         id: 'laby_offering_chamber',
@@ -213,11 +221,11 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         description: 'A circular room with a deep, dark pool in the center. Gold and other treasures lie at the bottom, just out of reach.',
         connections: ['laby_hub_2', 'laby_central_bridge_north'],
         activities: [
-            { type: 'combat', monsterId: 'deep_lurker' },
-            { type: 'combat', monsterId: 'deep_lurker' },
+            { type: 'combat', monsterId: 'hydra_hatchling' },
+            { type: 'combat', monsterId: 'hydra_hatchling' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 900, y: 2850,
+        x: 518, y: 2516,
     },
     laby_central_bridge_north: {
         id: 'laby_central_bridge_north',
@@ -226,7 +234,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_offering_chamber', 'laby_central_bridge_south'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 900, y: 2950,
+        x: 472, y: 2629,
     },
     laby_central_bridge_south: {
         id: 'laby_central_bridge_south',
@@ -235,7 +243,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_central_bridge_north', 'laby_hub_3'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 900, y: 3050,
+        x: 369, y: 2701,
     },
     laby_hub_3: {
         id: 'laby_hub_3',
@@ -243,11 +251,11 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         description: 'The air is noticeably colder here. The architecture is grander, suggesting you are approaching an important area.',
         connections: ['laby_central_bridge_south', 'laby_hall_of_echoes', 'laby_colonnade_of_the_ancients', 'laby_cracked_chamber', 'laby_spiral_staircase'],
         activities: [
-            { type: 'combat', monsterId: 'ancient_sentinel' },
-            { type: 'combat', monsterId: 'ancient_sentinel' },
+            { type: 'combat', monsterId: 'abyssal_knight' },
+            { type: 'combat', monsterId: 'grave_revenant' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 900, y: 3150,
+        x: 221, y: 2750,
     },
     laby_cracked_chamber: {
         id: 'laby_cracked_chamber',
@@ -255,19 +263,22 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         description: 'A huge crack in the floor leaks a steady stream of water. The entire room feels unstable.',
         connections: ['laby_hub_3'],
         activities: [
-             { type: 'combat', monsterId: 'coral_golem' },
+             { type: 'combat', monsterId: 'giant_clam' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 700, y: 3150,
+        x: 115, y: 2844,
     },
     laby_hall_of_echoes: {
         id: 'laby_hall_of_echoes',
         name: 'Hall of Echoes',
         description: 'Every drop of water in this vast hall echoes endlessly, creating a disorienting cacophony.',
         connections: ['laby_hub_3', 'laby_lurker_spawning_pool', 'laby_murky_pool'],
-        activities: [],
+        activities: [
+            { type: 'combat', monsterId: 'temple_spirit' },
+            { type: 'combat', monsterId: 'temple_spirit' },
+        ],
         regionId: 'sunken_labyrinth',
-        x: 1100, y: 3150,
+        x: 358, y: 2830,
     },
     laby_lurker_spawning_pool: {
         id: 'laby_lurker_spawning_pool',
@@ -280,7 +291,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'deep_lurker' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 1100, y: 3250,
+        x: 359, y: 2889,
     },
     laby_colonnade_of_the_ancients: {
         id: 'laby_colonnade_of_the_ancients',
@@ -288,10 +299,11 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         description: 'A long hallway supported by massive pillars carved into the likenesses of ancient kings.',
         connections: ['laby_hub_3', 'laby_antechamber', 'laby_treasure_vault_1', 'laby_great_hall_west'],
         activities: [
-            { type: 'combat', monsterId: 'ancient_sentinel' },
+            { type: 'combat', monsterId: 'labyrinth_guardian' },
+            { type: 'combat', monsterId: 'labyrinth_guardian' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 900, y: 3250,
+        x: -50, y: 2745,
     },
     laby_treasure_vault_1: {
         id: 'laby_treasure_vault_1',
@@ -300,43 +312,29 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_colonnade_of_the_ancients'],
         activities: [],
         regionId: 'sunken_labyrinth',
-        x: 700, y: 3250,
+        x: -198, y: 2655,
     },
     laby_antechamber: {
         id: 'laby_antechamber',
         name: 'Antechamber',
-        description: 'The final chamber before the temple\'s heart. The water here is crystal clear.',
+        description: 'The final chamber before the temple\'s heart. The water here is crystal clear. A hulking guardian, dripping with seaweed and malice, blocks the way forward.',
         connections: ['laby_colonnade_of_the_ancients', 'laby_central_altar'],
         activities: [
-             { type: 'combat', monsterId: 'coral_golem' },
-             { type: 'combat', monsterId: 'coral_golem' },
+             { type: 'combat', monsterId: 'the_abyssal_warden' },
         ],
         regionId: 'sunken_labyrinth',
-        x: 900, y: 3350,
+        x: -48, y: 2602,
     },
     laby_central_altar: {
         id: 'laby_central_altar',
-        name: 'Central Altar',
-        description: 'The heart of the labyrinth. A massive, intricately carved altar stands on a raised dais, free of the water. It pulses with a dark energy.',
+        name: 'Altar of the Nexus',
+        description: 'The heart of the labyrinth. A massive, intricately carved altar stands on a raised dais, free of the water. It pulses with a dark, corrupting energy.',
         connections: ['laby_antechamber'],
         activities: [
-            { 
-                type: 'npc', 
-                name: 'Altar of the Depths', 
-                icon: '/assets/npcChatHeads/altar_of_depths.png', 
-                dialogue: {
-                    start: {
-                        npcName: 'Altar of the Depths',
-                        npcIcon: '/assets/npcChatHeads/altar_of_depths.png',
-                        text: "...",
-                        responses: []
-                    }
-                },
-                startNode: 'start'
-            }
+            { type: 'runecrafting_altar', runeId: 'nexus_rune' }
         ],
         regionId: 'sunken_labyrinth',
-        x: 900, y: 3450,
+        x: 177, y: 2387,
     },
     laby_flooded_passage_east: { 
         id: 'laby_flooded_passage_east', 
@@ -345,7 +343,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_crossroads_1', 'laby_flooded_intersection'], 
         activities: [{type: 'combat', monsterId: 'deep_lurker'}], 
         regionId: 'sunken_labyrinth', 
-        x: 900, y: 2350 
+        x: 555, y: 2133 
     },
     laby_flooded_intersection: { 
         id: 'laby_flooded_intersection', 
@@ -354,7 +352,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_flooded_passage_east', 'laby_grotto_1', 'laby_water_control_room'], 
         activities: [], 
         regionId: 'sunken_labyrinth', 
-        x: 1100, y: 2350 
+        x: 731, y: 2312 
     },
     laby_grotto_1: { 
         id: 'laby_grotto_1', 
@@ -363,7 +361,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_flooded_intersection'], 
         activities: [], 
         regionId: 'sunken_labyrinth', 
-        x: 1100, y: 2250 
+        x: 823, y: 2290 
     },
     laby_water_control_room: { 
         id: 'laby_water_control_room', 
@@ -372,7 +370,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_flooded_intersection', 'laby_hub_2'], 
         activities: [{type: 'combat', monsterId: 'ancient_sentinel'}], 
         regionId: 'sunken_labyrinth', 
-        x: 900, y: 2750 
+        x: 596, y: 2408 
     },
     laby_forgotten_tomb: { 
         id: 'laby_forgotten_tomb', 
@@ -381,7 +379,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_sleeping_quarters'], 
         activities: [], 
         regionId: 'sunken_labyrinth', 
-        x: 400, y: 2950 
+        x: 144, y: 2608 
     },
     laby_spiral_staircase: { 
         id: 'laby_spiral_staircase', 
@@ -390,7 +388,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_hub_3'], 
         activities: [], 
         regionId: 'sunken_labyrinth', 
-        x: 1100, y: 3150 
+        x: 222, y: 2854 
     },
     laby_great_hall_west: { 
         id: 'laby_great_hall_west', 
@@ -399,7 +397,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_colonnade_of_the_ancients'], 
         activities: [{type: 'combat', monsterId: 'coral_golem'}], 
         regionId: 'sunken_labyrinth', 
-        x: 700, y: 3250 
+        x: 29, y: 2680 
     },
     laby_meditation_chamber: { 
         id: 'laby_meditation_chamber', 
@@ -408,7 +406,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_sleeping_quarters'], 
         activities: [], 
         regionId: 'sunken_labyrinth', 
-        x: 500, y: 2950 
+        x: 301, y: 2525 
     },
     laby_kitchen_ruins: { 
         id: 'laby_kitchen_ruins', 
@@ -417,7 +415,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_sleeping_quarters'], 
         activities: [], 
         regionId: 'sunken_labyrinth', 
-        x: 500, y: 3050 
+        x: 230, y: 2612 
     },
     laby_murky_pool: { 
         id: 'laby_murky_pool', 
@@ -426,7 +424,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_hall_of_echoes'], 
         activities: [{type: 'combat', monsterId: 'deep_lurker'}], 
         regionId: 'sunken_labyrinth', 
-        x: 1300, y: 3150 
+        x: 423, y: 2829 
     },
     laby_hidden_passage: { 
         id: 'laby_hidden_passage', 
@@ -435,7 +433,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_archive_hall', 'laby_treasure_vault_2'], 
         activities: [], 
         regionId: 'sunken_labyrinth', 
-        x: 500, y: 2550 
+        x: 483, y: 2175 
     },
     laby_treasure_vault_2: { 
         id: 'laby_treasure_vault_2', 
@@ -444,7 +442,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_hidden_passage'], 
         activities: [], 
         regionId: 'sunken_labyrinth', 
-        x: 300, y: 2550 
+        x: 541, y: 2232 
     },
     laby_fungal_cavern: { 
         id: 'laby_fungal_cavern', 
@@ -453,7 +451,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_whispering_stream'], 
         activities: [], 
         regionId: 'sunken_labyrinth', 
-        x: 800, y: 2550 
+        x: 228, y: 2238 
     },
     laby_bone_pit: { 
         id: 'laby_bone_pit', 
@@ -462,6 +460,6 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         connections: ['laby_golem_hall'], 
         activities: [], 
         regionId: 'sunken_labyrinth', 
-        x: 400, y: 2450 
+        x: 109, y: 2312 
     },
 };

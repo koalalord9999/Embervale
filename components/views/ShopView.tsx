@@ -153,45 +153,41 @@ const ShopView: React.FC<ShopViewProps> = ({ shopId, playerCoins, shopStates, on
         if ('shiftKey' in e && e.shiftKey) {
             performActionAndCloseTooltip(() => onBuy(shopId, itemId, 1));
         } else {
+            setTooltip(null);
             const buyPrice = Math.ceil(itemData.value * defaultShopItem.priceModifier);
             addLog(`[${itemData.name}] Buy price: ${buyPrice} coins. Stock: ${itemState.currentStock ?? 0}`);
         }
     };
 
     return (
-        <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-30 p-4 animate-fade-in" onClick={onExit}>
-            <div 
-                className="bg-gray-800 border-4 border-gray-600 rounded-lg shadow-xl w-full max-w-2xl h-full max-h-[90vh] flex flex-col"
-                onClick={e => e.stopPropagation()}
-            >
-                <div className="flex justify-between items-center p-4 border-b-2 border-gray-600 flex-shrink-0">
-                    <h1 className="text-3xl font-bold text-yellow-400">{shop.name}</h1>
-                    <Button onClick={onExit}>Exit</Button>
-                </div>
-                
-                <div className="flex-grow min-h-0 p-4">
-                    <div className="bg-black/40 p-2 rounded-lg border border-gray-600 flex flex-col h-full">
-                        <h2 className="text-xl font-semibold mb-2 text-center text-yellow-300">Shop's Wares</h2>
-                        <div className="flex-grow overflow-y-auto pr-1 grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-2 content-start">
-                            {shop.inventory.map(({ itemId, priceModifier }) => {
-                                const item = ITEMS[itemId];
-                                if (!item) return null;
-                                const itemState = currentShopState[itemId];
-                                const buyPrice = Math.ceil(item.value * priceModifier);
-                                return (
-                                    <ShopSlot
-                                        key={itemId}
-                                        slot={{ itemId, quantity: 1, doses: item.initialDoses }}
-                                        price={buyPrice}
-                                        stock={itemState?.currentStock}
-                                        onSingleTap={(e) => handleBuyTap(e, itemId)}
-                                        onDoubleTap={() => addLog(`[Examine: ${item.name}] ${item.description}`)}
-                                        onContextMenu={(e) => createBuyContextMenu(e, itemId)}
-                                        setTooltip={setTooltip}
-                                    />
-                                );
-                            })}
-                        </div>
+        <div className="flex flex-col h-full text-gray-200 animate-fade-in">
+            <div className="flex justify-between items-center p-4 border-b-2 border-gray-600 flex-shrink-0">
+                <h1 className="text-3xl font-bold text-yellow-400">{shop.name}</h1>
+                <Button onClick={onExit}>Exit</Button>
+            </div>
+            
+            <div className="flex-grow min-h-0 p-4">
+                <div className="bg-black/40 p-2 rounded-lg border border-gray-600 flex flex-col h-full">
+                    <h2 className="text-xl font-semibold mb-2 text-center text-yellow-300">Shop's Wares</h2>
+                    <div className="flex-grow overflow-y-auto pr-1 grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-2 content-start">
+                        {shop.inventory.map(({ itemId, priceModifier }) => {
+                            const item = ITEMS[itemId];
+                            if (!item) return null;
+                            const itemState = currentShopState[itemId];
+                            const buyPrice = Math.ceil(item.value * priceModifier);
+                            return (
+                                <ShopSlot
+                                    key={itemId}
+                                    slot={{ itemId, quantity: 1, doses: item.initialDoses }}
+                                    price={buyPrice}
+                                    stock={itemState?.currentStock}
+                                    onSingleTap={(e) => handleBuyTap(e, itemId)}
+                                    onDoubleTap={() => addLog(`[Examine: ${item.name}] ${item.description}`)}
+                                    onContextMenu={(e) => createBuyContextMenu(e, itemId)}
+                                    setTooltip={setTooltip}
+                                />
+                            );
+                        })}
                     </div>
                 </div>
             </div>

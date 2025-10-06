@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { InventorySlot, PlayerSkill, Item, Spell } from '../../types';
 import { ITEMS, INVENTORY_CAPACITY, getIconClassName } from '../../constants';
@@ -53,6 +52,7 @@ interface InventorySlotProps {
     onBury: (itemId: string, index: number) => void;
     onEmpty: (itemId: string, index: number) => void;
     onDivine: (itemId: string, index: number) => void;
+    onReadMap: (item: Item) => void;
     setTooltip: (tooltip: { content?: React.ReactNode; item?: Item; slot?: InventorySlot; position: { x: number; y: number; } } | null) => void;
     setContextMenu: (menu: ContextMenuState | null) => void;
     addLog: (message: string) => void;
@@ -78,10 +78,13 @@ interface InventorySlotProps {
     spellToCast: Spell | null;
     onSpellOnItem: (spell: Spell, target: { item: InventorySlot, index: number }) => void;
     isEquipmentStatsOpen?: boolean;
+    confirmValuableDrops: boolean;
+    valuableDropThreshold: number;
+    isOneClickMode: boolean;
 }
 
 const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
-    const { index, slot, inventory, skills, onEquip, onConsume, onDropItem, onBury, onEmpty, setTooltip, setContextMenu, addLog, isBankOpen = false, onDeposit = () => {}, itemToUse, setItemToUse, onUseItemOn, isBusy = false, setConfirmationPrompt, onExamine, draggingIndex, setDraggingIndex, dragOverIndex, setDragOverIndex, onDrop, isTouchSimulationEnabled, onDivine, isShopOpen = false, onSell = () => {}, spellToCast, onSpellOnItem, isEquipmentStatsOpen = false } = props;
+    const { index, slot, inventory, skills, onEquip, onConsume, onDropItem, onBury, onEmpty, setTooltip, setContextMenu, addLog, isBankOpen = false, onDeposit = () => {}, itemToUse, setItemToUse, onUseItemOn, isBusy = false, setConfirmationPrompt, onExamine, draggingIndex, setDraggingIndex, dragOverIndex, setDragOverIndex, onDrop, isTouchSimulationEnabled, onDivine, onReadMap, isShopOpen = false, onSell = () => {}, spellToCast, onSpellOnItem, isEquipmentStatsOpen = false, confirmValuableDrops, valuableDropThreshold, isOneClickMode } = props;
 
     const isTouchDevice = useIsTouchDevice(isTouchSimulationEnabled);
 
@@ -98,94 +101,14 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
         const quantityToDrop = item.stackable || slot.noted ? 'all' : 1;
         const valueToDrop = item.stackable || slot.noted ? item.value * slot.quantity : item.value;
 
-        if (valueToDrop > 1000) {
+        if (confirmValuableDrops && valueToDrop > valuableDropThreshold) {
             setConfirmationPrompt({
-                message: `Are you sure you want to drop your ${getDisplayName(slot)}?`,
+                message: `Are you sure you want to drop your ${getDisplayName(slot)}? (Value: ${valueToDrop.toLocaleString()})`,
                 onConfirm: () => performAction(() => onDropItem(index, quantityToDrop))
             });
         } else {
             performAction(() => onDropItem(index, quantityToDrop));
         }
-    };
-
-    const handleSingleTap = (e: React.MouseEvent | React.TouchEvent) => {
-        if (!slot) return;
-        const item = ITEMS[slot.itemId];
-        if (!item) return;
-
-        if (isEquipmentStatsOpen) {
-            if (item.equipment) {
-                performAction(() => onEquip(slot, index));
-            } else {
-                onExamine(item);
-            }
-            return;
-        }
-
-        if (spellToCast && slot) {
-            onSpellOnItem(spellToCast, { item: slot, index: index });
-            return;
-        }
-
-        if (itemToUse) {
-            if (itemToUse.index !== index) {
-                onUseItemOn(itemToUse, { item: slot, index: index });
-            } else {
-                setItemToUse(null);
-            }
-            return;
-        }
-        
-        if (isBusy) {
-            addLog("You are busy and cannot do that right now.");
-            return;
-        }
-
-        if ('shiftKey' in e && e.shiftKey) {
-            if (isBankOpen) {
-                performAction(() => onDeposit(index, 'all'));
-            } else if (isShopOpen) {
-                performAction(() => onSell(slot.itemId, 'all', index));
-            } else {
-                handleDropClick();
-            }
-            return;
-        }
-
-        if (isBankOpen) {
-            performAction(() => onDeposit(index, 1));
-            return;
-        }
-
-        if (isShopOpen) {
-            const sellPrice = Math.floor(item.value * 0.2);
-            addLog(`[${getDisplayName(slot)}] Sell price: ${sellPrice} coins.`);
-            return;
-        }
-
-        if (slot.noted) {
-            setItemToUse({ item: slot, index: index });
-            return;
-        }
-        
-        const isEquippable = !!item.equipment;
-        const isBuryable = !!item.buryable;
-        const isConsumable = !!item.consumable;
-        const isDivining = !!item.divining;
-
-        if (isDivining) performAction(() => onDivine(item.id, index));
-        else if (isEquippable) performAction(() => onEquip(slot, index));
-        else if (isBuryable) performAction(() => onBury(item.id, index));
-        else if (item.cleanable) performAction(() => onConsume(item.id, index));
-        else if (isConsumable) performAction(() => onConsume(item.id, index));
-        else setItemToUse({ item: slot, index: index });
-    };
-
-    const handleDoubleTap = () => {
-        if (!slot) return;
-        const item = ITEMS[slot.itemId];
-        if (!item) return;
-        onExamine(item);
     };
 
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
@@ -263,6 +186,7 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
             options.push({ label: 'Use', onClick: () => { setItemToUse({ item: slot, index }); }, disabled: isBusy });
             options.push({ label: 'Drop', onClick: handleDropClick, disabled: isBusy });
         } else {
+            if (item.mappable) options.push({ label: 'Read', onClick: () => performAction(() => onReadMap(item)), disabled: isBusy });
             if (item.equipment) options.push({ label: 'Equip', onClick: () => performAction(() => onEquip(slot, index)), disabled: isBusy });
             if (item.buryable) options.push({ label: 'Bury', onClick: () => performAction(() => onBury(item.id, index)), disabled: isBusy });
             if (item.cleanable) options.push({ label: 'Clean', onClick: () => performAction(() => onConsume(item.id, index)), disabled: isBusy });
@@ -288,6 +212,102 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
 
         options.push({ label: 'Examine', onClick: () => onExamine(item) });
         setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
+    };
+
+    const handleSingleTap = (e: React.MouseEvent | React.TouchEvent) => {
+        if (isOneClickMode && slot) {
+            handleLongPress(e);
+            return;
+        }
+
+        if (!slot) return;
+        const item = ITEMS[slot.itemId];
+        if (!item) return;
+
+        if (isEquipmentStatsOpen) {
+            setTooltip(null);
+            if (item.equipment) {
+                performAction(() => onEquip(slot, index));
+            } else {
+                onExamine(item);
+            }
+            return;
+        }
+
+        if (spellToCast && slot) {
+            setTooltip(null);
+            onSpellOnItem(spellToCast, { item: slot, index: index });
+            return;
+        }
+
+        if (itemToUse) {
+            setTooltip(null);
+            if (itemToUse.index !== index) {
+                onUseItemOn(itemToUse, { item: slot, index: index });
+            } else {
+                setItemToUse(null);
+            }
+            return;
+        }
+        
+        if (isBusy) {
+            addLog("You are busy and cannot do that right now.");
+            return;
+        }
+
+        if ('shiftKey' in e && e.shiftKey) {
+            if (isBankOpen) {
+                performAction(() => onDeposit(index, 'all'));
+            } else if (isShopOpen) {
+                performAction(() => onSell(slot.itemId, 'all', index));
+            } else {
+                handleDropClick();
+            }
+            return;
+        }
+
+        if (isBankOpen) {
+            performAction(() => onDeposit(index, 1));
+            return;
+        }
+
+        if (isShopOpen) {
+            setTooltip(null);
+            const sellPrice = Math.floor(item.value * 0.2);
+            addLog(`[${getDisplayName(slot)}] Sell price: ${sellPrice} coins.`);
+            return;
+        }
+
+        if (slot.noted) {
+            setTooltip(null);
+            setItemToUse({ item: slot, index: index });
+            return;
+        }
+        
+        const isEquippable = !!item.equipment;
+        const isBuryable = !!item.buryable;
+        const isConsumable = !!item.consumable;
+        const isDivining = !!item.divining;
+        const isMappable = !!item.mappable;
+
+        if (isMappable) performAction(() => onReadMap(item));
+        else if (isDivining) performAction(() => onDivine(item.id, index));
+        else if (isEquippable) performAction(() => onEquip(slot, index));
+        else if (isBuryable) performAction(() => onBury(item.id, index));
+        else if (item.cleanable) performAction(() => onConsume(item.id, index));
+        else if (isConsumable) performAction(() => onConsume(item.id, index));
+        else {
+            setTooltip(null);
+            setItemToUse({ item: slot, index: index });
+        }
+    };
+
+    const handleDoubleTap = () => {
+        if (!slot) return;
+        const item = ITEMS[slot.itemId];
+        if (!item) return;
+        setTooltip(null);
+        onExamine(item);
     };
 
     const doubleTapHandlers = useDoubleTap({

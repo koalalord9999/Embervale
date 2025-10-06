@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 import { CIVILLIAN_DIALOGUE } from '../../constants';
 
@@ -48,7 +49,9 @@ export const meadowdalePois: Record<string, POI> = {
         name: 'South Meadow Street',
         description: "The main southern road inside Meadowdale. The cook's kitchen is just off the road here.",
         connections: ['meadowdale_south_gate', 'meadowdale_square', 'meadowdale_kitchen'],
-        activities: [],
+        activities: [
+            { type: 'npc', name: 'Man', icon: '/assets/npcChatHeads/tavern_regular.png', dialogue: { start: { npcName: 'Man', npcIcon: '/assets/npcChatHeads/tavern_regular.png', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man' },
+        ],
         regionId: 'meadowdale',
         x: 250, y: 350,
         type: 'internal',
@@ -56,9 +59,11 @@ export const meadowdalePois: Record<string, POI> = {
     north_meadow_street: {
         id: 'north_meadow_street',
         name: 'North Meadow Street',
-        description: 'The main northern road inside Meadowdale, leading past the library and town hall.',
-        connections: ['meadowdale_north_gate', 'meadowdale_square', 'meadowdale_library', 'town_hall'],
-        activities: [],
+        description: 'The main northern road inside Meadowdale, leading past the library, a small magic shop, and the town hall.',
+        connections: ['meadowdale_north_gate', 'meadowdale_square', 'meadowdale_library', 'town_hall', 'meadowdale_magic_shop'],
+        activities: [
+            { type: 'npc', name: 'Woman', icon: '/assets/npcChatHeads/elara.png', dialogue: { start: { npcName: 'Woman', npcIcon: '/assets/npcChatHeads/elara.png', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'woman' },
+        ],
         regionId: 'meadowdale',
         x: 250, y: 150,
         type: 'internal',
@@ -68,7 +73,9 @@ export const meadowdalePois: Record<string, POI> = {
         name: 'East Meadow Street',
         description: 'The eastern road of Meadowdale, leading past the smithy and the local inn.',
         connections: ['meadowdale_east_gate', 'meadowdale_square', 'meadowdale_smithy', 'the_rusty_flagon'],
-        activities: [],
+        activities: [
+            { type: 'npc', name: 'Man', icon: '/assets/npcChatHeads/tavern_regular.png', dialogue: { start: { npcName: 'Man', npcIcon: '/assets/npcChatHeads/tavern_regular.png', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man' },
+        ],
         regionId: 'meadowdale',
         x: 350, y: 250,
         type: 'internal',
@@ -171,38 +178,8 @@ export const meadowdalePois: Record<string, POI> = {
                 },
                 startNode: 'default_dialogue'
             },
-            {
-                type: 'npc',
-                name: 'Townsman',
-                icon: '/assets/npcChatHeads/tavern_regular.png',
-                dialogue: {
-                    start: {
-                        npcName: 'Townsman',
-                        npcIcon: '/assets/npcChatHeads/tavern_regular.png',
-                        text: CIVILLIAN_DIALOGUE.meadowdale.join('\n\n'),
-                        responses: []
-                    }
-                },
-                startNode: 'start',
-                dialogueType: 'random',
-                actions: [{ label: 'Pickpocket', disabled: true }]
-            },
-            {
-                type: 'npc',
-                name: 'Townswoman',
-                icon: '/assets/npcChatHeads/elara.png',
-                dialogue: {
-                     start: {
-                        npcName: 'Townswoman',
-                        npcIcon: '/assets/npcChatHeads/elara.png',
-                        text: CIVILLIAN_DIALOGUE.meadowdale.join('\n\n'),
-                        responses: []
-                    }
-                },
-                startNode: 'start',
-                dialogueType: 'random',
-                actions: [{ label: 'Pickpocket', disabled: true }]
-            },
+            { type: 'npc', name: 'Man', icon: '/assets/npcChatHeads/tavern_regular.png', dialogue: { start: { npcName: 'Man', npcIcon: '/assets/npcChatHeads/tavern_regular.png', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man' },
+            { type: 'npc', name: 'Woman', icon: '/assets/npcChatHeads/elara.png', dialogue: { start: { npcName: 'Woman', npcIcon: '/assets/npcChatHeads/elara.png', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'woman' },
         ],
         regionId: 'meadowdale',
         x: 250, y: 250,
@@ -287,6 +264,15 @@ export const meadowdalePois: Record<string, POI> = {
                         npcName: 'Valerius the Master Smith',
                         npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
                         text: "Good to see you again, apprentice. Remember what I taught you: heat, pressure, and a strong arm. That's all there is to it... mostly. How's the forge treating you?",
+                        conditionalResponses: [ 
+                            // Conditional logic that requires specific checks to pass, to display information while on the quest
+                            // Completable
+                            { text: 'About the Ancient blade', check: { requirements: [{ type: 'quest', questId: 'ancient_blade', status: 'in_progress' }, { type: 'items', items: [{ itemId: 'iron_ore', quantity: 5 }] }, { type: 'items', items: [{ itemId: 'rusty_iron_sword', quantity: 1 }] }], successNode: 'in_progress_ancient_blade_2', failureNode: '' }},
+                            // no items
+                            { text: 'About the Ancient blade', check: { requirements: [{ type: 'quest', questId: 'ancient_blade', status: 'in_progress' }, { type: 'items', items: [{ itemId: 'iron_ore', quantity: 5, operator: 'lt'}]}], successNode: 'in_progress_ancient_blade_1', failureNode: ''}},
+                            //only iron ore
+                            { text: 'About the Ancient blade', check: { requirements: [{ type: 'quest', questId: 'ancient_blade', status: 'in_progress' }, { type: 'items', items: [{ itemId: 'iron_ore', quantity: 5}, { itemId: 'rusty_iron_sword', quantity: -1}]}], successNode: 'only_ore_ancient_blade', failureNode: ''}}
+                        ],
                         responses: []
                     },
                     // --- An Ancient Blade ---
@@ -304,6 +290,15 @@ export const meadowdalePois: Record<string, POI> = {
                         text: "The core is iron. I'll need 5 Iron Ores to reforge the blade and draw out its true strength. Bring them to me, and I'll see what I can do. It would be a crime to let a blade like this turn to dust.",
                         responses: [
                             { text: "I'll get the ore for you.", actions: [{ type: 'start_quest', questId: 'ancient_blade' }] }
+                        ],
+                        conditionalResponses: [
+                            { text: "Just so happens that I have 5 iron ore on me right now. How about that?",
+                                check: {
+                                    requirements: [{ type: 'items', items: [{ itemId: 'iron_ore', quantity: 5 }] }],
+                                    successNode: 'silly_ancient_blade',
+                                    failureNode: ''
+                                }
+                            }
                         ]
                     },
                     in_progress_ancient_blade_1: {
@@ -312,13 +307,27 @@ export const meadowdalePois: Record<string, POI> = {
                         text: "Have you gathered those 5 Iron Ores yet? That old sword is practically humming, waiting to be reborn.",
                         responses: []
                     },
+                    silly_ancient_blade: {
+                        npcName: 'Valerius the Master Smith',
+                        npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                        text: "Well thats quite a peculiar thing to just be carrying around with you, but no matter, give me a moment and I'll fix it right up for you! In fact, I'll even throw in some of my coal to make it better!",
+                        responses: [
+                            { text: "Sounds good, here's the iron ore.", actions: [{ type: 'take_item', itemId: 'iron_ore', quantity: 5}, { type: 'take_item', itemId: 'rusty_iron_sword', quantity: 1}, { type: 'complete_quest', questId: 'ancient_blade'}]}, 
+                        ]
+                    },
                     in_progress_ancient_blade_2: {
                         npcName: 'Valerius the Master Smith',
                         npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
-                        text: "Excellent! With this ore, I can restore the blade. Give me a moment... There! Good as new. A fine Iron Sword for your troubles. Take good care of it.",
+                        text: "Excellent! With this ore, I can restore the blade. Give me a moment... There! Good as new. I even added some of my coal to make it a bit better! A fine Steel Scimitar for your troubles. Take good care of it.",
                         responses: [
-                            { text: "Thank you, Valerius!", actions: [{ type: 'advance_quest', questId: 'ancient_blade' }] }
+                            { text: "Thank you, Valerius!", actions: [{ type: 'take_item', itemId: 'rusty_iron_sword', quantity: 1}, { type: 'take_item', itemId: 'iron_ore', quantity: 5}, { type: 'complete_quest', questId: 'ancient_blade' }] }
                         ]
+                    },
+                    only_ore_ancient_blade: {
+                        npcName: 'Valerius the Master Smith',
+                        npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+                        text: 'You have the Iron ore, but you don\'t have the sword with you',
+                        responses: []
                     },
                     post_quest_ancient_blade: {
                         npcName: 'Valerius the Master Smith',
@@ -464,7 +473,17 @@ export const meadowdalePois: Record<string, POI> = {
                         npcName: 'Wizard Elmsworth',
                         npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
                         text: "Ah, hello there. Fascinating research to be done, fascinating!",
-                        responses: []
+                        responses: [],
+                        conditionalResponses: [
+                            {
+                                text: "You seem excited. What are you researching?",
+                                check: {
+                                    requirements: [{ type: 'quest', questId: 'magical_runestone_discovery', status: 'not_started' }],
+                                    successNode: 'quest_intro_magical_runestone_discovery',
+                                    failureNode: '' 
+                                }
+                            }
+                        ]
                     },
                     quest_intro_magical_runestone_discovery: {
                         npcName: 'Wizard Elmsworth',
@@ -764,17 +783,33 @@ export const meadowdalePois: Record<string, POI> = {
         description: 'A grand building with polished counters and secure vaults, accessed from the town square. A stern-looking banker watches over the main hall.',
         connections: ['meadowdale_square'],
         activities: [
-            { type: 'bank' },
             {
                 type: 'npc',
                 name: 'Banker Theron',
                 icon: '/assets/npcChatHeads/banker_theron.png',
+                actions: [
+                    { label: 'Bank', action: 'open_bank' },
+                    { label: 'Deposit Backpack', action: 'deposit_backpack' },
+                    { label: 'Deposit Equipment', action: 'deposit_equipment' },
+                ],
                 dialogue: {
                     start: {
                         npcName: 'Banker Theron',
                         npcIcon: '/assets/npcChatHeads/banker_theron.png',
                         text: "Welcome to the Bank of Embrune. Your items are safe with us.",
-                        responses: []
+                        responses: [
+                            { text: "I'd like to access my bank.", next: 'access_bank' },
+                            { text: "Just looking around, thank you." }
+                        ]
+                    },
+                    access_bank: {
+                        npcName: 'Banker Theron',
+                        npcIcon: '/assets/npcChatHeads/banker_theron.png',
+                        text: "Of course. Here you can deposit or withdraw items from your personal vault. Would you like to access it now?",
+                        responses: [
+                            { text: "Yes, please.", actions: [{ type: 'open_bank' }] },
+                            { text: "Not right now." }
+                        ]
                     }
                 },
                 startNode: 'start'
@@ -782,6 +817,18 @@ export const meadowdalePois: Record<string, POI> = {
         ],
         regionId: 'meadowdale',
         x: 200, y: 200,
+        type: 'internal',
+    },
+    meadowdale_magic_shop: {
+        id: 'meadowdale_magic_shop',
+        name: "Elmsworth's Embryo Magicks",
+        description: "A small shop tucked away near the library, smelling faintly of old parchment and ozone. It offers basic supplies for aspiring mages.",
+        connections: ['north_meadow_street'],
+        activities: [
+            { type: 'shop', shopId: 'meadowdale_magic' },
+        ],
+        regionId: 'meadowdale',
+        x: 250, y: 100,
         type: 'internal',
     },
 };

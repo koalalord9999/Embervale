@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { Spell, SkillName, InventorySlot } from '../types';
+import { Spell, SkillName, InventorySlot, WeaponType } from '../types';
 import { useCharacter } from './useCharacter';
 import { useInventory } from './useInventory';
 import { useNavigation } from './useNavigation';
@@ -33,6 +33,12 @@ const ENCHANTMENT_MAP: Record<string, string> = {
 export const useSpellcasting = (deps: SpellcastingDependencies) => {
     const { char, inv, addLog, navigation, ui, isStunned } = deps;
 
+    const getRunesNeeded = useCallback((spell: Spell): {itemId: string, quantity: number}[] => {
+        const equippedStaff = inv.equipment.weapon ? ITEMS[inv.equipment.weapon.itemId] : null;
+        const providedRune = equippedStaff?.equipment?.weaponType === WeaponType.Staff ? equippedStaff.equipment.providesRune : null;
+        return spell.runes.filter(r => r.itemId !== providedRune);
+    }, [inv.equipment.weapon]);
+
     const onSpellOnItem = useCallback((spell: Spell, target: { item: InventorySlot, index: number }) => {
         ui.setSpellToCast(null);
 
@@ -41,7 +47,8 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
             return;
         }
 
-        if (!inv.hasItems(spell.runes)) {
+        const runesNeeded = getRunesNeeded(spell);
+        if (!inv.hasItems(runesNeeded)) {
             addLog("You do not have enough runes to cast this spell.");
             return;
         }
@@ -49,7 +56,7 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
         if (spell.type === 'utility-enchant') {
             const enchantedItemId = ENCHANTMENT_MAP[target.item.itemId];
             if (enchantedItemId) {
-                spell.runes.forEach(rune => inv.modifyItem(rune.itemId, -rune.quantity, true));
+                runesNeeded.forEach(rune => inv.modifyItem(rune.itemId, -rune.quantity, true));
                 char.addXp(SkillName.Magic, spell.xp);
                 inv.modifyItem(target.item.itemId, -1, true);
                 inv.modifyItem(enchantedItemId, 1, false, undefined, { bypassAutoBank: true });
@@ -64,7 +71,7 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
                 return;
             }
             
-            spell.runes.forEach(rune => inv.modifyItem(rune.itemId, -rune.quantity, true));
+            runesNeeded.forEach(rune => inv.modifyItem(rune.itemId, -rune.quantity, true));
             char.addXp(SkillName.Magic, spell.xp);
 
             const coinValue = Math.floor(itemData.value * (spell.id === 'greater_transmutation' ? 0.6 : 0.3));
@@ -73,7 +80,7 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
             addLog(`You transmute the ${itemData.name} into ${coinValue} coins.`);
         }
 
-    }, [char, inv, addLog, ui]);
+    }, [char, inv, addLog, ui, getRunesNeeded]);
 
     const onCastSpell = useCallback((spell: Spell) => {
         if (isStunned) {
@@ -122,7 +129,7 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
         }
         
         if (['utility-enchant', 'utility-alchemy', 'utility-processing'].includes(spell.type)) {
-            if (!inv.hasItems(spell.runes)) {
+            if (!inv.hasItems(getRunesNeeded(spell))) {
                 addLog("You do not have enough runes to cast this spell.");
                 return;
             }
@@ -132,12 +139,13 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
             return;
         }
 
-        if (!inv.hasItems(spell.runes)) {
+        const runesNeeded = getRunesNeeded(spell);
+        if (!inv.hasItems(runesNeeded)) {
             addLog("You do not have enough runes to cast this spell.");
             return;
         }
     
-        spell.runes.forEach(rune => inv.modifyItem(rune.itemId, -rune.quantity, true));
+        runesNeeded.forEach(rune => inv.modifyItem(rune.itemId, -rune.quantity, true));
         char.addXp(SkillName.Magic, spell.xp);
     
         if (spell.type === 'utility-teleport') {
@@ -156,7 +164,7 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
             addLog(`You cast ${spell.name}.`);
         }
     
-    }, [char, addLog, inv, navigation, ui, isStunned]);
+    }, [char, addLog, inv, navigation, ui, isStunned, getRunesNeeded]);
 
     return { onCastSpell, onSpellOnItem };
 };

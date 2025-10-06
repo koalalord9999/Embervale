@@ -11,7 +11,7 @@ export const beasts: Monster[] = [
         slashDefence: 0,
         crushDefence: 0,
         rangedDefence: 0,
-        magicDefence: 0,
+        magicDefence: -10,
         iconUrl: '/assets/npcChatHeads/giant_rat.png',
         guaranteedDrops: [
             { itemId: 'bones', minQuantity: 1, maxQuantity: 1 }
@@ -24,8 +24,8 @@ export const beasts: Monster[] = [
         customMaxHit: 1,
     },
     {
-        id: 'giant_rat', name: 'Giant Rat', level: 1, maxHp: 5, attack: 1,
-        stabDefence: 0, slashDefence: 0, crushDefence: 0, rangedDefence: 0, magicDefence: 0,
+        id: 'giant_rat', name: 'Giant Rat', level: 2, maxHp: 5, attack: 1,
+        stabDefence: 0, slashDefence: 0, crushDefence: 0, rangedDefence: 0, magicDefence: -10,
         iconUrl: '/assets/npcChatHeads/giant_rat.png',
         guaranteedDrops: [
             { itemId: 'rat_tail', minQuantity: 1, maxQuantity: 1 },
@@ -37,7 +37,7 @@ export const beasts: Monster[] = [
         types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 20000, aggressive: false, attackStyle: 'stab',
     },
     {
-        id: 'giant_spider', name: 'Giant Spider', level: 4, maxHp: 15, attack: 3,
+        id: 'giant_spider', name: 'Giant Spider', level: 7, maxHp: 15, attack: 3,
         stabDefence: 2, slashDefence: 2, crushDefence: 2, rangedDefence: 4, magicDefence: 0,
         iconUrl: '/assets/npcChatHeads/giant_spider.png',
         guaranteedDrops: [
@@ -50,19 +50,22 @@ export const beasts: Monster[] = [
         types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 30000, aggressive: false, attackStyle: 'stab',
     },
     {
-        id: 'cow', name: 'Cow', level: 2, maxHp: 10, attack: 1,
-        stabDefence: 1, slashDefence: 1, crushDefence: 1, rangedDefence: 1, magicDefence: 0,
+        id: 'cow', name: 'Cow', level: 2, maxHp: 8, attack: 1,
+        stabDefence: 0, slashDefence: 0, crushDefence: 0, rangedDefence: 0, magicDefence: -10,
         iconUrl: '/assets/npcChatHeads/cow.png',
         guaranteedDrops: [
             { itemId: 'raw_beef', minQuantity: 1, maxQuantity: 1 },
             { itemId: 'bones', minQuantity: 1, maxQuantity: 1 },
             { itemId: 'cowhide', minQuantity: 1, maxQuantity: 1 }
         ],
+        tertiaryDrops: [
+            { itemId: 'gust_talisman', chance: 1/32, minQuantity: 1, maxQuantity: 1 }
+        ],
         types: [MonsterType.Beast], attackSpeed: 5, respawnTime: 15000, aggressive: false, attackStyle: 'crush',
     },
     {
-        id: 'chicken', name: 'Chicken', level: 1, maxHp: 4, attack: 1,
-        stabDefence: 0, slashDefence: 0, crushDefence: 0, rangedDefence: 0, magicDefence: 0,
+        id: 'chicken', name: 'Chicken', level: 2, maxHp: 3, attack: 1,
+        stabDefence: 0, slashDefence: 0, crushDefence: 0, rangedDefence: 0, magicDefence: -10,
         iconUrl: '/assets/npcChatHeads/chicken.png',
         guaranteedDrops: [
             { itemId: 'raw_chicken', minQuantity: 1, maxQuantity: 1 },
@@ -72,11 +75,14 @@ export const beasts: Monster[] = [
         mainDrops: [
             { itemId: 'eggs', chance: "1/4", minQuantity: 1, maxQuantity: 1 }
         ],
+        tertiaryDrops: [
+            { itemId: 'gust_talisman', chance: 1/32, minQuantity: 1, maxQuantity: 1 }
+        ],
         types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 10000, aggressive: false, attackStyle: 'stab',
         customMaxHit: 0,
     },
     {
-        id: 'wild_boar', name: 'Wild Boar', level: 6, maxHp: 22, attack: 7,
+        id: 'wild_boar', name: 'Wild Boar', level: 11, maxHp: 22, attack: 7,
         stabDefence: 4, slashDefence: 4, crushDefence: 6, rangedDefence: 2, magicDefence: 0,
         iconUrl: '/assets/npcChatHeads/wild_boar.png',
         guaranteedDrops: [
@@ -87,6 +93,9 @@ export const beasts: Monster[] = [
         mainDrops: [
             { itemId: 'stone_rune', chance: "1/5", minQuantity: 1, maxQuantity: 4 },
             { itemId: 'boar_tusk', chance: "1/12", minQuantity: 1, maxQuantity: 1 }
+        ],
+        tertiaryDrops: [
+            { itemId: 'gust_talisman', chance: 1/32, minQuantity: 1, maxQuantity: 1 }
         ],
         types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 30000, aggressive: true, alwaysAggressive: true, attackStyle: 'crush',
     },
@@ -224,6 +233,9 @@ export const beasts: Monster[] = [
         mainDrops: [
             { itemId: 'stone_rune', chance: "1/5", minQuantity: 2, maxQuantity: 8 }
         ],
+        tertiaryDrops: [
+            { itemId: 'gust_talisman', chance: 1/32, minQuantity: 1, maxQuantity: 1 }
+        ],
         types: [MonsterType.Beast], attackSpeed: 5, respawnTime: 40000, aggressive: true, attackStyle: 'crush',
     },
     {
@@ -238,19 +250,25 @@ export const beasts: Monster[] = [
             { itemId: 'gust_rune', chance: "1/8", minQuantity: 2, maxQuantity: 6 },
             { itemId: 'frost_berries', chance: "1/30", minQuantity: 1, maxQuantity: 1 }
         ],
+        tertiaryDrops: [
+            { itemId: 'gust_talisman', chance: 1/32, minQuantity: 1, maxQuantity: 1 }
+        ],
         types: [MonsterType.Beast], attackSpeed: 3, respawnTime: 30000, aggressive: true, alwaysAggressive: true, attackStyle: 'slash',
     },
     {
-        id: 'glimmerhorn_stag', name: 'Glimmerhorn Stag', level: 12, maxHp: 20, attack: 8,
-        stabDefence: 15, slashDefence: 15, crushDefence: 15, rangedDefence: 10, magicDefence: 10,
+        id: 'glimmerhorn_stag', name: 'Glimmerhorn Stag', level: 16, maxHp: 20, attack: 10,
+        stabDefence: 15, slashDefence: 15, crushDefence: 15, rangedDefence: 5, magicDefence: 0,
         iconUrl: '/assets/npcChatHeads/glimmerhorn_stag.png',
         guaranteedDrops: [
             { itemId: 'bones', minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'glimmerhorn_antler', minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'glimmer_thread_fiber', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'glimmer_thread_fiber', minQuantity: 1, maxQuantity: 3 },
         ],
         mainDrops: [
+            { itemId: 'glimmerhorn_antler', chance: "1/4", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'verdant_rune', chance: "1/10", minQuantity: 1, maxQuantity: 3 }
+        ],
+        tertiaryDrops: [
+            { itemId: 'gust_talisman', chance: 1/16, minQuantity: 1, maxQuantity: 1 }
         ],
         types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 35000, aggressive: false, attackStyle: 'crush',
     },
@@ -263,6 +281,9 @@ export const beasts: Monster[] = [
         ],
         mainDrops: [
             { itemId: 'gust_rune', chance: "1/2", minQuantity: 10, maxQuantity: 20 }
+        ],
+        tertiaryDrops: [
+            { itemId: 'gust_talisman', chance: 1/32, minQuantity: 1, maxQuantity: 1 }
         ],
         types: [MonsterType.Beast], attackSpeed: 2, respawnTime: 25000, aggressive: true, alwaysAggressive: true, attackStyle: 'ranged',
     },
@@ -366,4 +387,9 @@ export const beasts: Monster[] = [
         ],
         types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 40000, aggressive: false, attackStyle: 'crush',
     },
+    // --- New Sunken Labyrinth Beasts ---
+    { id: 'giant_clam', name: 'Giant Clam', level: 45, maxHp: 50, attack: 35, stabDefence: 100, slashDefence: 100, crushDefence: 100, rangedDefence: 80, magicDefence: 5, iconUrl: 'https://api.iconify.design/game-icons:clam-shells.svg', alwaysDrops: true, guaranteedDrops: [{ itemId: 'raw_tuna', minQuantity: 1, maxQuantity: 2, noted: true }], mainDrops: [{ itemId: 'eldritch_pearl', chance: "1/32", minQuantity: 1, maxQuantity: 1 }, { tableId: 'gem_table', chance: "1/10", minQuantity: 1, maxQuantity: 1 }], tertiaryDrops: [{ itemId: 'nexus_talisman', chance: 1/128, minQuantity: 1, maxQuantity: 1 }], types: [MonsterType.Beast, MonsterType.Armored], attackSpeed: 8, respawnTime: 75000, aggressive: false, attackStyle: 'crush' },
+    { id: 'abyssal_leech', name: 'Abyssal Leech', level: 42, maxHp: 55, attack: 38, stabDefence: 20, slashDefence: 20, crushDefence: 20, rangedDefence: 25, magicDefence: 25, iconUrl: 'https://api.iconify.design/game-icons:leech.svg', guaranteedDrops: [{ itemId: 'bones', minQuantity: 1, maxQuantity: 1 }], mainDrops: [{ itemId: 'raw_lobster', chance: "1/5", minQuantity: 1, maxQuantity: 1, noted: true }, { itemId: 'hex_rune', chance: "1/4", minQuantity: 10, maxQuantity: 20 }], tertiaryDrops: [{ itemId: 'nexus_talisman', chance: 1/128, minQuantity: 1, maxQuantity: 1 }], types: [MonsterType.Beast], attackSpeed: 2, respawnTime: 30000, aggressive: true, alwaysAggressive: true, attackStyle: 'stab' },
+    { id: 'hydra_hatchling', name: 'Hydra Hatchling', level: 59, maxHp: 70, attack: 1, ranged: 55, stabDefence: 40, slashDefence: 40, crushDefence: 40, rangedDefence: 45, magicDefence: 45, iconUrl: 'https://api.iconify.design/game-icons:hydra-shot.svg', guaranteedDrops: [{ itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 }], mainDrops: [{ itemId: 'adamantite_arrow', chance: "1/2", minQuantity: 10, maxQuantity: 25 }, { itemId: 'aqua_rune', chance: "1/3", minQuantity: 30, maxQuantity: 50 }], tertiaryDrops: [{ itemId: 'nexus_talisman', chance: 1/128, minQuantity: 1, maxQuantity: 1 }], types: [MonsterType.Beast, MonsterType.Dragon], attackSpeed: 3, respawnTime: 60000, aggressive: true, alwaysAggressive: true, attackStyle: 'ranged' },
+    { id: 'gloom_weaver', name: 'Gloom Weaver', level: 54, maxHp: 65, attack: 1, magic: 50, stabDefence: 35, slashDefence: 35, crushDefence: 35, rangedDefence: 40, magicDefence: 40, iconUrl: 'https://api.iconify.design/game-icons:spider-face.svg', guaranteedDrops: [{ itemId: 'spider_silk', minQuantity: 1, maxQuantity: 1 }], mainDrops: [{ itemId: 'hex_rune', chance: "1/2", minQuantity: 20, maxQuantity: 40 }, { tableId: 'herb_table', chance: "1/8", minQuantity: 2, maxQuantity: 3, noted: true }], tertiaryDrops: [{ itemId: 'nexus_talisman', chance: 1/128, minQuantity: 1, maxQuantity: 1 }], types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 40000, aggressive: true, attackStyle: 'magic' },
 ];

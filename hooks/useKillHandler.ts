@@ -1,12 +1,11 @@
-
 import React, { useCallback } from 'react';
 import { useQuestLogic } from './useQuestLogic';
 import { useRepeatableQuests } from './useRepeatableQuests';
 import { useSlayer } from './useSlayer';
-// Fix: Corrected import for POIS
 import { MONSTERS } from '../constants';
 import { POIS } from '../data/pois';
 import { WorldState } from '../types';
+import { useInventory } from './useInventory';
 
 interface KillHandlerDependencies {
     questLogic: ReturnType<typeof useQuestLogic>;
@@ -18,24 +17,36 @@ interface KillHandlerDependencies {
     monsterRespawnTimers: Record<string, number>;
     setWorldState: React.Dispatch<React.SetStateAction<WorldState>>;
     addLog: (message: string) => void;
+    worldState: WorldState;
+    inv: ReturnType<typeof useInventory>;
 }
 
 export const useKillHandler = (deps: KillHandlerDependencies) => {
-    const { questLogic, repeatableQuests, slayer, setMonsterRespawnTimers, isInstantRespawnOn, currentPoiId, monsterRespawnTimers, setWorldState, addLog } = deps;
+    const { questLogic, repeatableQuests, slayer, setMonsterRespawnTimers, isInstantRespawnOn, currentPoiId, monsterRespawnTimers, setWorldState, addLog, worldState, inv } = deps;
 
     const handleKill = useCallback((uniqueInstanceId: string, attackStyle?: 'melee' | 'ranged' | 'magic') => {
         const parts = uniqueInstanceId.split(':');
         const poiIdForKill = parts[0];
         const monsterId = parts.length > 1 ? parts[1] : parts[0];
+        const instanceType = parts.length > 2 ? parts[2] : null;
         
         questLogic.checkQuestProgressOnKill(monsterId, attackStyle);
         repeatableQuests.checkProgressOnKill(monsterId);
         slayer.checkKill(monsterId);
 
+        // Check for and grant quest combat rewards
+        if (worldState.pendingQuestCombatReward) {
+            const reward = worldState.pendingQuestCombatReward;
+            inv.modifyItem(reward.itemId, reward.quantity, false, undefined, { bypassAutoBank: true });
+            setWorldState(ws => ({ ...ws, pendingQuestCombatReward: null }));
+            addLog(`You retrieve the ${MONSTERS[monsterId].name}'s essence from the altar.`);
+        }
+
         const monsterData = MONSTERS[monsterId];
         let newRespawnTimers = { ...monsterRespawnTimers };
         
-        if (monsterData && monsterData.respawnTime) {
+        // Do not set a respawn timer for one-off quest monsters.
+        if (instanceType !== 'quest' && monsterData && monsterData.respawnTime) {
             const respawnTimestamp = isInstantRespawnOn ? Date.now() : Date.now() + monsterData.respawnTime;
             newRespawnTimers[uniqueInstanceId] = respawnTimestamp;
             setMonsterRespawnTimers(prev => ({
@@ -69,7 +80,7 @@ export const useKillHandler = (deps: KillHandlerDependencies) => {
             }
         }
 
-    }, [questLogic, repeatableQuests, slayer, setMonsterRespawnTimers, isInstantRespawnOn, monsterRespawnTimers, currentPoiId, addLog, setWorldState]);
+    }, [questLogic, repeatableQuests, slayer, setMonsterRespawnTimers, isInstantRespawnOn, monsterRespawnTimers, currentPoiId, addLog, setWorldState, worldState, inv]);
 
     return { handleKill };
-};
+}

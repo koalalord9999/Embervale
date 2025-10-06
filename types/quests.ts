@@ -36,13 +36,17 @@ export type DialogueAction =
   | { type: 'teleport'; poiId: string }
   | { type: 'heal'; amount: 'full' | number }
   | { type: 'restore_stats' }
-  | { type: 'complete_tutorial' };
+  | { type: 'open_bank' }
+  | { type: 'complete_tutorial' }
+  | { type: 'set_quest_combat_reward'; itemId: string; quantity: number }
+  | { type: 'start_mandatory_combat'; monsterId: string };
 
 export type DialogueCheckRequirement = 
     | { type: 'items'; items: { itemId: string, quantity: number, operator?: 'gte' | 'lt' | 'eq' }[] }
     | { type: 'coins'; amount: number }
     | { type: 'skill'; skill: SkillName; level: number }
-    | { type: 'world_state'; property: 'windmillFlour'; value: number; operator?: 'gte' | 'eq' };
+    | { type: 'world_state'; property: 'windmillFlour'; value: number; operator?: 'gte' | 'eq' }
+    | { type: 'quest'; questId: string; status: 'not_started' | 'in_progress' | 'completed'; stage?: number };
 
 export interface DialogueCheck {
     requirements: DialogueCheckRequirement[];
@@ -66,7 +70,6 @@ export interface DialogueNode {
     highlight?: string | string[];
 }
 
-// @fix: Defined the missing 'QuestStage' interface.
 export interface QuestStage {
   description: string;
   requirement: QuestRequirement;

@@ -1,3 +1,5 @@
+
+
 import { POI, SkillName, ToolType } from '../../types';
 
 export const wildernessPois: Record<string, POI> = {
@@ -45,6 +47,46 @@ export const wildernessPois: Record<string, POI> = {
             { type: 'runecrafting_altar', runeId: 'gust_rune', questCondition: { questId: 'magical_runestone_discovery', stages: [], visibleAfterCompletion: true } },
             {
                 type: 'npc',
+                name: 'Use Resonator',
+                icon: 'https://api.iconify.design/game-icons:orb-wand.svg',
+                questCondition: { questId: 'the_arcane_awakening', stages: [0] },
+                dialogue: {
+                    start: {
+                        npcName: 'Arcane Resonator', npcIcon: 'https://api.iconify.design/game-icons:orb-wand.svg',
+                        text: "You hold the Arcane Resonator up to the altar. It begins to vibrate violently, and a shimmering creature of pure energy coalesces before you!",
+                        responses: [
+                            {
+                                text: "(Face the creature)",
+                                check: {
+                                    requirements: [
+                                        { type: 'items', items: [{ itemId: 'arcane_resonator', quantity: 1 }] },
+                                        { type: 'items', items: [{ itemId: 'gust_reading', quantity: 0, operator: 'eq' }] }
+                                    ],
+                                    successNode: 'trigger_combat',
+                                    failureNode: 'already_have_reading'
+                                },
+                                actions: [
+                                    { type: 'set_quest_combat_reward', itemId: 'gust_reading', quantity: 1 },
+                                    { type: 'start_mandatory_combat', monsterId: 'mana_wisp' }
+                                ]
+                            }
+                        ]
+                    },
+                    trigger_combat: {
+                        npcName: 'Arcane Resonator', npcIcon: 'https://api.iconify.design/game-icons:orb-wand.svg',
+                        text: "The Mana Wisp shrieks and attacks!",
+                        responses: [],
+                    },
+                    already_have_reading: {
+                        npcName: 'Arcane Resonator', npcIcon: 'https://api.iconify.design/game-icons:orb-wand.svg',
+                        text: "You've already taken a reading from this altar.",
+                        responses: []
+                    }
+                },
+                startNode: 'start'
+            },
+            {
+                type: 'npc',
                 name: 'Approach the altar',
                 icon: 'https://api.iconify.design/game-icons:rune-stone.svg',
                 questCondition: { questId: 'magical_runestone_discovery', stages: [4, 6] },
@@ -85,7 +127,7 @@ export const wildernessPois: Record<string, POI> = {
                     }
                 },
                 startNode: 'start'
-            }
+            },
         ],
         regionId: 'wilderness',
         x: 850, y: 600,

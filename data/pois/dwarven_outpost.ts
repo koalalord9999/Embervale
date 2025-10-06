@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 
 export const dwarvenOutpostPois: Record<string, POI> = {
@@ -26,12 +27,48 @@ export const dwarvenOutpostPois: Record<string, POI> = {
                     start: {
                         npcName: 'Durin',
                         npcIcon: '/assets/npcChatHeads/prospector_gudrun.png',
-                        text: "Best pickaxes this side of the mountain, guaranteed!\n\nA good pickaxe is a miner's best friend. Don't go cheap on your best friend.",
+                        text: "Best pickaxes this side of the mountain, guaranteed!",
+                        responses: [
+                             { text: "Just looking around." }
+                        ],
+                        conditionalResponses: [
+                            { text: "I was told you could build a 'Resonance Dampener'.", check: { requirements: [{type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 3}], successNode: 'quest_intro_resonance_dampener', failureNode: ''}},
+                            { text: "About that Resonance Dampener...", check: { requirements: [{type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 4}], successNode: 'in_progress_the_arcane_awakening_4', failureNode: ''}},
+                            { text: "I have the materials you asked for.", check: { requirements: [{type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 5}, { type: 'items', items: [{ itemId: 'golem_core', quantity: 5 }, { itemId: 'runic_bar', quantity: 10 }, { itemId: 'eldritch_pearl', quantity: 1 }] }], successNode: 'in_progress_the_arcane_awakening_5', failureNode: 'in_progress_the_arcane_awakening_4'}},
+                        ]
+                    },
+                    quest_intro_resonance_dampener: {
+                        npcName: 'Durin',
+                        npcIcon: '/assets/npcChatHeads/prospector_gudrun.png',
+                        text: "A 'Resonance Dampener'? Hah! More floaty magic nonsense. Still... the engineering challenge is intriguing. Aye, I can build it. But it won't be easy, and it won't be cheap. The materials required are exceptionally rare.",
+                        responses: [
+                            { text: "What do you need?", next: 'taa_durin_2' }
+                        ]
+                    },
+                    taa_durin_2: {
+                        npcName: 'Durin',
+                        npcIcon: '/assets/npcChatHeads/prospector_gudrun.png',
+                        text: "For the core's stability, I'll need 5 Golem Cores from the Stone Golems in the Gale-Swept Peaks. For the casing, 10 Runic Bars—smith them yourself if you have the skill, or find someone who can. And for the dampening agent... an Eldritch Pearl from the Shipwreck Specters on the Isle of Whispers. Bring me these things, and I'll build your contraption.",
+                        responses: [
+                            { text: "It's a tall order, but I'll get them.", actions: [{ type: 'advance_quest', questId: 'the_arcane_awakening' }] }
+                        ]
+                    },
+                    in_progress_the_arcane_awakening_4: {
+                        npcName: 'Durin',
+                        npcIcon: '/assets/npcChatHeads/prospector_gudrun.png',
+                        text: "Still gathering the materials? They won't find themselves, you know. 5 Golem Cores, 10 Runic Bars, and 1 Eldritch Pearl. Get to it.",
                         responses: []
+                    },
+                    in_progress_the_arcane_awakening_5: {
+                        npcName: 'Durin',
+                        npcIcon: '/assets/npcChatHeads/prospector_gudrun.png',
+                        text: "You've got them! By my beard, you actually did it. Give them here. ... A bit of hammering, a touch of riveting... and... done! One Resonance Dampener, as ordered. Now take this thing and get it out of my forge. It's making my anvil nervous.",
+                        responses: [
+                            { text: "Thank you, Durin. This is incredible work.", actions: [{ type: 'take_item', itemId: 'golem_core', quantity: 5 }, { type: 'take_item', itemId: 'runic_bar', quantity: 10 }, { type: 'take_item', itemId: 'eldritch_pearl', quantity: 1 }, { type: 'give_item', itemId: 'resonance_dampener', quantity: 1 }, { type: 'advance_quest', questId: 'the_arcane_awakening' }] }
+                        ]
                     }
                 },
                 startNode: 'start',
-                dialogueType: 'random',
             }
         ],
         regionId: 'dwarven_outpost',

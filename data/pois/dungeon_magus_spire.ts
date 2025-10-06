@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 
 export const magusSpirePois: Record<string, POI> = {
@@ -9,6 +10,7 @@ export const magusSpirePois: Record<string, POI> = {
         connections: ['magus_spire_entrance', 'ms_f1_west_hall', 'ms_f1_east_hall', 'ms_f1_central_chamber'],
         activities: [],
         regionId: 'magus_spire',
+        unlockRequirement: { type: 'quest', questId: 'the_arcane_awakening', stage: 8 },
         x: 1954, y: 680,
     },
     ms_f1_west_hall: {
@@ -278,7 +280,7 @@ export const magusSpirePois: Record<string, POI> = {
                         npcIcon: 'https://api.iconify.design/game-icons:dead-head.svg',
                         text: "The adventurer is slumped against the wall, clearly deceased. Their shield seems to be radiating a faint warmth.",
                         responses: [
-                            { text: "(Take the Dragonfire Shield)", actions: [{ type: 'give_item', itemId: 'dragonfire_shield', quantity: 1 }] }
+                            { text: "(Take the Mysterious Shield)", actions: [{ type: 'give_item', itemId: 'fire_resistant_shield', quantity: 1 }] }
                         ]
                     }
                 },

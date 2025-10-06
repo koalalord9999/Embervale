@@ -33,6 +33,11 @@ interface InventoryPanelProps {
     spellToCast: Spell | null;
     onSpellOnItem: (spell: Spell, target: { item: InventorySlot, index: number }) => void;
     isEquipmentStatsOpen?: boolean;
+    onReadMap: (item: Item) => void;
+    // FIX: Add missing props required by InventorySlotDisplay
+    confirmValuableDrops: boolean;
+    valuableDropThreshold: number;
+    isOneClickMode: boolean;
 }
 
 const formatCoins = (quantity: number): string => {

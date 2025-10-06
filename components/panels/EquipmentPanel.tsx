@@ -16,6 +16,7 @@ interface EquipmentPanelProps {
     addLog: (message: string) => void;
     onExamine: (item: Item) => void;
     isTouchSimulationEnabled: boolean;
+    isOneClickMode: boolean;
 }
 
 const SLOT_PLACEHOLDERS: Record<keyof Equipment, string> = {
@@ -41,9 +42,10 @@ interface EquipmentSlotDisplayProps {
     addLog: (message: string) => void;
     onExamine: (item: Item) => void;
     isTouchSimulationEnabled: boolean;
+    isOneClickMode: boolean;
 }
 
-const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, itemSlot, onUnequip, setTooltip, setContextMenu, addLog, onExamine, isTouchSimulationEnabled }) => {
+const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, itemSlot, onUnequip, setTooltip, setContextMenu, addLog, onExamine, isTouchSimulationEnabled, isOneClickMode }) => {
     const item = itemSlot ? ITEMS[itemSlot.itemId] : null;
     const isTouchDevice = useIsTouchDevice(isTouchSimulationEnabled);
 
@@ -94,9 +96,17 @@ const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, it
         setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
     };
 
+    const handleSingleTap = (e: React.MouseEvent | React.TouchEvent) => {
+        if (isOneClickMode) {
+            handleContextMenu(e);
+        } else {
+            handleUnequip();
+        }
+    };
+
     const longPressHandlers = useLongPress({
         onLongPress: handleContextMenu,
-        onClick: handleUnequip,
+        onClick: handleSingleTap,
     });
 
     return (
@@ -125,30 +135,30 @@ const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, it
 
 const EmptySlot = () => <div className="w-full aspect-square" />;
 
-const EquipmentPanel: React.FC<EquipmentPanelProps> = ({ equipment, inventory, onUnequip, setTooltip, ui, addLog, onExamine, isTouchSimulationEnabled }) => {
+const EquipmentPanel: React.FC<EquipmentPanelProps> = ({ equipment, inventory, onUnequip, setTooltip, ui, addLog, onExamine, isTouchSimulationEnabled, isOneClickMode }) => {
     return (
         <div className="flex flex-col h-full text-gray-300 pt-2">
             <div className="flex flex-col justify-center items-center">
                 <div className="grid grid-cols-3 gap-2 w-full max-w-[180px]">
                     <EmptySlot />
-                    <EquipmentSlotDisplay slotKey="head" itemSlot={equipment.head} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
+                    <EquipmentSlotDisplay slotKey="head" itemSlot={equipment.head} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
                     <EmptySlot />
 
-                    <EquipmentSlotDisplay slotKey="cape" itemSlot={equipment.cape} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
-                    <EquipmentSlotDisplay slotKey="necklace" itemSlot={equipment.necklace} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
-                    <EquipmentSlotDisplay slotKey="ammo" itemSlot={equipment.ammo} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
+                    <EquipmentSlotDisplay slotKey="cape" itemSlot={equipment.cape} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
+                    <EquipmentSlotDisplay slotKey="necklace" itemSlot={equipment.necklace} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
+                    <EquipmentSlotDisplay slotKey="ammo" itemSlot={equipment.ammo} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
 
-                    <EquipmentSlotDisplay slotKey="weapon" itemSlot={equipment.weapon} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
-                    <EquipmentSlotDisplay slotKey="body" itemSlot={equipment.body} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
-                    <EquipmentSlotDisplay slotKey="shield" itemSlot={equipment.shield} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
+                    <EquipmentSlotDisplay slotKey="weapon" itemSlot={equipment.weapon} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
+                    <EquipmentSlotDisplay slotKey="body" itemSlot={equipment.body} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
+                    <EquipmentSlotDisplay slotKey="shield" itemSlot={equipment.shield} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
 
                     <EmptySlot />
-                    <EquipmentSlotDisplay slotKey="legs" itemSlot={equipment.legs} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
+                    <EquipmentSlotDisplay slotKey="legs" itemSlot={equipment.legs} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
                     <EmptySlot />
 
-                    <EquipmentSlotDisplay slotKey="gloves" itemSlot={equipment.gloves} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
-                    <EquipmentSlotDisplay slotKey="boots" itemSlot={equipment.boots} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
-                    <EquipmentSlotDisplay slotKey="ring" itemSlot={equipment.ring} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} />
+                    <EquipmentSlotDisplay slotKey="gloves" itemSlot={equipment.gloves} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
+                    <EquipmentSlotDisplay slotKey="boots" itemSlot={equipment.boots} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
+                    <EquipmentSlotDisplay slotKey="ring" itemSlot={equipment.ring} onUnequip={onUnequip} setTooltip={setTooltip} setContextMenu={ui.setContextMenu} addLog={addLog} onExamine={onExamine} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={isOneClickMode} />
                 </div>
             </div>
             

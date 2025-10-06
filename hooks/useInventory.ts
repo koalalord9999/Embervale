@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { useState, useCallback } from 'react';
-import { InventorySlot, Equipment, CombatStance, WeaponType, PlayerSkill, Item } from '../types';
+// FIX: Import BankTab to support the new bank data structure.
+import { InventorySlot, Equipment, CombatStance, WeaponType, PlayerSkill, Item, BankTab } from '../types';
 import { ITEMS, INVENTORY_CAPACITY, BANK_CAPACITY } from '../constants';
 
 // Helper to ensure inventory is always a fixed-size sparse array
@@ -15,48 +16,63 @@ const padInventory = (inv: (InventorySlot | null)[]): (InventorySlot | null)[] =
     return padded;
 };
 
+// FIX: Rewrote addToBank to handle the new BankTab[] structure. It now uses a functional update on `setBank` and adds items to the main tab.
 const addToBank = (
     itemId: string,
     quantity: number,
-    bank: (InventorySlot | null)[],
-    setBank: React.Dispatch<React.SetStateAction<(InventorySlot | null)[]>>,
+    setBank: React.Dispatch<React.SetStateAction<BankTab[]>>,
     addLog: (message: string) => void,
     quiet: boolean = false
 ) => {
     const itemData = ITEMS[itemId];
     if (!itemData) return;
 
-    let itemsAdded = 0;
-    const newBank = [...bank]; // Create a mutable copy
+    setBank(prevBank => {
+        // Deep copy to prevent state mutation issues.
+        const newBank = JSON.parse(JSON.stringify(prevBank)) as BankTab[];
+        
+        let mainTab = newBank.find(t => t.id === 0);
+        if (!mainTab) {
+            if (newBank.length > 0) {
+                mainTab = newBank[0];
+            } else {
+                mainTab = { id: 0, name: 'Main', icon: null, items: [] };
+                newBank.push(mainTab);
+            }
+        }
+        
+        let itemsAdded = 0;
+        // In the bank, all items are treated as stackable.
+        const existingStackIndex = mainTab.items.findIndex((i: InventorySlot | null) => i?.itemId === itemId);
 
-    // In the bank, all items are treated as stackable.
-    // Find if there's already a stack of this item.
-    const existingStackIndex = newBank.findIndex(i => i?.itemId === itemId);
-
-    if (existingStackIndex > -1) {
-        // If a stack exists, add to it.
-        newBank[existingStackIndex]!.quantity += quantity;
-        itemsAdded = quantity;
-    } else {
-        // If no stack exists, find an empty slot.
-        const emptySlotIndex = newBank.findIndex(slot => slot === null);
-        if (emptySlotIndex > -1 && emptySlotIndex < BANK_CAPACITY) {
-            newBank[emptySlotIndex] = { itemId, quantity };
+        if (existingStackIndex > -1) {
+            mainTab.items[existingStackIndex]!.quantity += quantity;
             itemsAdded = quantity;
+        } else {
+            const totalBankedItems = newBank.reduce((total: number, tab: BankTab) => total + tab.items.filter((item: InventorySlot | null) => item !== null && item.quantity > 0).length, 0);
+            if (totalBankedItems < BANK_CAPACITY) {
+                const emptySlotIndex = mainTab.items.findIndex((slot: InventorySlot | null) => slot === null);
+                if (emptySlotIndex > -1) {
+                    mainTab.items[emptySlotIndex] = { itemId, quantity };
+                } else {
+                    mainTab.items.push({ itemId, quantity });
+                }
+                itemsAdded = quantity;
+            }
         }
-    }
 
-    setBank(newBank); // Update state with the new bank array
+        if (!quiet) {
+            if (itemsAdded > 0) {
+                addLog(`Auto-banked: ${itemsAdded}x ${itemData.name}.`);
+            }
+            const itemsLost = quantity - itemsAdded;
+            if (itemsLost > 0) {
+                addLog(`Bank is full. Lost ${itemsLost}x ${itemData.name}.`);
+            }
+        }
 
-    if (!quiet) {
-        if (itemsAdded > 0) {
-            addLog(`Auto-banked: ${itemsAdded}x ${itemData.name}.`);
-        }
-        const itemsLost = quantity - itemsAdded;
-        if (itemsLost > 0) {
-            addLog(`Bank is full. Lost ${itemsLost}x ${itemData.name}.`);
-        }
-    }
+        return newBank;
+    });
 };
 
 const AMMO_TIER_LEVELS: Record<string, number> = { bronze: 1, iron: 2, steel: 3, mithril: 4, adamantite: 5, runic: 6 };
@@ -66,8 +82,8 @@ export const useInventory = (
     addLog: (message: string) => void,
     options?: {
         isAutoBankOn?: boolean;
-        bank?: (InventorySlot | null)[];
-        setBank?: React.Dispatch<React.SetStateAction<(InventorySlot | null)[]>>;
+        // FIX: Update setBank to use the BankTab[] type. The `bank` prop is removed as it's not needed with functional updates.
+        setBank?: React.Dispatch<React.SetStateAction<BankTab[]>>;
         onItemDropped?: (item: InventorySlot, overridePoiId?: string) => void;
         setCombatStance?: (stance: CombatStance) => void;
     }
@@ -75,7 +91,8 @@ export const useInventory = (
     const [inventory, setInventory] = useState<(InventorySlot | null)[]>(padInventory(initialData.inventory));
     const [coins, setCoins] = useState<number>(initialData.coins);
     const [equipment, setEquipment] = useState<Equipment>(initialData.equipment);
-    const { isAutoBankOn = false, bank, setBank, onItemDropped = () => {}, setCombatStance = () => {} } = options ?? {};
+    // FIX: Removed `bank` from destructuring as it's no longer passed.
+    const { isAutoBankOn = false, setBank, onItemDropped = () => {}, setCombatStance = () => {} } = options ?? {};
 
     const modifyItem = useCallback((itemId: string, quantity: number, quiet: boolean = false, doses?: number, options?: { noted?: boolean, bypassAutoBank?: boolean }) => {
         if (itemId === 'coins') {
@@ -84,8 +101,9 @@ export const useInventory = (
             return;
         }
 
-        if (quantity > 0 && isAutoBankOn && !options?.bypassAutoBank && bank && setBank) {
-            addToBank(itemId, quantity, bank, setBank, addLog, quiet);
+        // FIX: Update call to `addToBank` to match its new signature.
+        if (quantity > 0 && isAutoBankOn && !options?.bypassAutoBank && setBank) {
+            addToBank(itemId, quantity, setBank, addLog, quiet);
             return;
         }
 
@@ -172,7 +190,8 @@ export const useInventory = (
                 return newInv;
             });
         }
-    }, [addLog, isAutoBankOn, bank, setBank]);
+    // FIX: Removed `bank` from dependency array.
+    }, [addLog, isAutoBankOn, setBank]);
 
     const hasItems = useCallback((requirements: { itemId: string, quantity: number, operator?: 'gte' | 'lt' | 'eq' }[]): boolean => {
       return requirements.every(req => {

@@ -1,4 +1,5 @@
 
+
 import React, { useMemo } from 'react';
 import { Equipment, InventorySlot, Item } from '../../../types';
 import { ITEMS, getIconClassName } from '../../../constants';
@@ -166,15 +167,12 @@ const EquipmentStatsView: React.FC<EquipmentStatsViewProps> = (props) => {
     };
 
     return (
-        <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-30 p-4 animate-fade-in" onClick={onClose}>
-            <div 
-                className="bg-gray-800 border-4 border-gray-600 rounded-lg shadow-xl w-full max-w-4xl"
-                onClick={e => e.stopPropagation()}
-            >
-                <div className="flex justify-between items-center p-4 bg-gray-900/50 border-b-2 border-gray-600">
-                    <h1 className="text-2xl font-bold text-yellow-400">Worn Equipment</h1>
-                    <Button onClick={onClose} size="sm">Close</Button>
-                </div>
+        <div className="flex flex-col h-full text-gray-200 animate-fade-in">
+            <div className="flex justify-between items-center p-4 bg-gray-900/50 border-b-2 border-gray-600 flex-shrink-0">
+                <h1 className="text-2xl font-bold text-yellow-400">Worn Equipment</h1>
+                <Button onClick={onClose} size="sm">Close</Button>
+            </div>
+            <div className="flex-grow min-h-0 overflow-y-auto">
                 <div className="flex flex-col md:flex-row p-4 gap-4">
                     {/* Left: Stats Panel */}
                     <div className="w-full md:w-1/2 bg-black/40 p-3 rounded-lg border border-gray-600">

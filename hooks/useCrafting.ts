@@ -597,15 +597,20 @@ export const useCrafting = (props: UseCraftingProps) => {
         for (const ing of ingredients) {
             const itemData = ITEMS[ing.itemId];
             if (itemData?.emptyable) {
-                const emptyItemData = ITEMS[itemData.emptyable.emptyItemId];
-                if (emptyItemData.stackable) {
-                    // It only takes a new slot if there isn't a stack already
-                    if (!inventory.some(s => s && s.itemId === emptyItemData.id)) {
-                        slotsGained++;
+                const isMakingFinishedPotion = action.recipeType === 'herblore-finished';
+                const isUnfinishedPotionIngredient = itemData.id.endsWith('_unf');
+
+                if (!(isMakingFinishedPotion && isUnfinishedPotionIngredient)) {
+                    const emptyItemData = ITEMS[itemData.emptyable.emptyItemId];
+                    if (emptyItemData.stackable) {
+                        // It only takes a new slot if there isn't a stack already
+                        if (!inventory.some(s => s && s.itemId === emptyItemData.id)) {
+                            slotsGained++;
+                        }
+                    } else {
+                        // Not stackable, so each one takes a slot
+                        slotsGained += ing.quantity;
                     }
-                } else {
-                    // Not stackable, so each one takes a slot
-                    slotsGained += ing.quantity;
                 }
             }
         }
@@ -636,7 +641,12 @@ export const useCrafting = (props: UseCraftingProps) => {
                 if (ing.quantity > 0) {
                     const itemData = ITEMS[ing.itemId];
                     modifyItem(ing.itemId, -ing.quantity, true);
-                    if (itemData?.emptyable) {
+
+                    // Special check for Herblore: don't return an empty vial from an unfinished potion
+                    const isMakingFinishedPotion = action.recipeType === 'herblore-finished';
+                    const isUnfinishedPotionIngredient = itemData.id.endsWith('_unf');
+
+                    if (itemData?.emptyable && !(isMakingFinishedPotion && isUnfinishedPotionIngredient)) {
                         modifyItem(itemData.emptyable.emptyItemId, ing.quantity, true, undefined, { bypassAutoBank: true });
                     }
                 }

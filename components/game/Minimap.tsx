@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { POIS } from '../../data/pois';
 import { useUIState } from '../../hooks/useUIState';
@@ -14,9 +13,13 @@ interface MinimapProps {
     onNavigate: (poiId: string) => void;
     unlockedPois: string[];
     addLog: (message: string) => void;
+    // FIX: Add missing props
+    isDevMode: boolean;
+    onToggleDevPanel: () => void;
+    showMinimapHealth: boolean;
 }
 
-const HpOrb: React.FC<{ currentHp: number, maxHp: number }> = ({ currentHp, maxHp }) => {
+const HpOrb: React.FC<{ currentHp: number, maxHp: number, showHealthNumbers: boolean }> = ({ currentHp, maxHp, showHealthNumbers }) => {
     const percentage = maxHp > 0 ? (currentHp / maxHp) * 100 : 0;
   
     return (
@@ -40,16 +43,18 @@ const HpOrb: React.FC<{ currentHp: number, maxHp: number }> = ({ currentHp, maxH
         {/* Shine effect */}
         <div className="absolute top-1 left-1 w-8 h-8 rounded-full bg-white/20 blur-sm" />
         {/* HP Text */}
-        <div className="absolute inset-0 flex items-center justify-center z-10">
-          <span className="font-bold text-lg text-white" style={{ textShadow: '1px 1px 2px black' }}>
-            {currentHp}
-          </span>
-        </div>
+        {showHealthNumbers && (
+            <div className="absolute inset-0 flex items-center justify-center z-10">
+                <span className="font-bold text-lg text-white" style={{ textShadow: '1px 1px 2px black' }}>
+                    {currentHp}
+                </span>
+            </div>
+        )}
       </div>
     );
 };
 
-const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, ui, isTouchSimulationEnabled, onNavigate, unlockedPois, addLog }) => {
+const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, ui, isTouchSimulationEnabled, onNavigate, unlockedPois, addLog, isDevMode, onToggleDevPanel, showMinimapHealth }) => {
     const currentPoi = POIS[currentPoiId];
     const isTouchDevice = useIsTouchDevice(isTouchSimulationEnabled);
 
@@ -131,8 +136,18 @@ const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, ui, i
 
                 {/* HP Orb Overlay - Placed in the top-left corner of the panel */}
                 <div className="absolute z-10 top-px left-px">
-                    <HpOrb currentHp={currentHp} maxHp={maxHp} />
+                    <HpOrb currentHp={currentHp} maxHp={maxHp} showHealthNumbers={showMinimapHealth} />
                 </div>
+                
+                {isDevMode && (
+                    <button 
+                        onClick={onToggleDevPanel}
+                        className="absolute z-10 w-8 h-8 bg-gray-800 hover:bg-gray-700 border-2 border-gray-500 rounded-full flex items-center justify-center top-px right-px"
+                        aria-label="Open Dev Panel"
+                    >
+                        <img src="https://api.iconify.design/game-icons:wrench.svg" alt="Dev Panel" className="w-5 h-5 filter invert" />
+                    </button>
+                )}
                 
                 {/* Map Orb Overlay - Placed in the bottom-right corner of the panel */}
                 <button 

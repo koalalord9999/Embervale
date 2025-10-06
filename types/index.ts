@@ -1,4 +1,5 @@
 
+
 export * from './enums';
 export * from './entities';
 export * from './quests';
@@ -10,3 +11,4 @@ export * from './drops';
 export * from './spells';
 export type { POIActivity } from './world';
 export type { Spell } from './spells';
+export type { BankTab } from './entities';

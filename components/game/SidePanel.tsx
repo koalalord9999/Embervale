@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useUIState, TooltipState } from '../../hooks/useUIState';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -18,7 +17,7 @@ import QuestsPanel from '../panels/QuestsPanel';
 import SpellbookPanel from '../panels/SpellbookPanel';
 import SettingsPanel from '../panels/SettingsPanel';
 import DevPanel from '../panels/DevPanel';
-import { ActivePanel, CombatStance, Spell, InventorySlot, SkillName } from '../../types';
+import { ActivePanel, CombatStance, Spell, InventorySlot, SkillName, Item } from '../../types';
 
 interface SidePanelProps {
     ui: ReturnType<typeof useUIState>;
@@ -52,12 +51,14 @@ interface SidePanelProps {
 
 const PanelIcon: React.FC<{
     icon: string;
-    label: string;
+    label: React.ReactNode;
+    ariaLabel: string;
     isActive: boolean;
-    onClick: () => void;
+    onClick: (e: React.MouseEvent) => void;
     setTooltip: (tooltip: TooltipState | null) => void;
     tutorialId?: string;
-}> = ({ icon, label, isActive, onClick, setTooltip, tutorialId }) => {
+    onContextMenu?: (e: React.MouseEvent) => void;
+}> = ({ icon, label, ariaLabel, isActive, onClick, setTooltip, tutorialId, onContextMenu }) => {
 
     const handleMouseEnter = (e: React.MouseEvent) => {
         setTooltip({
@@ -70,9 +71,9 @@ const PanelIcon: React.FC<{
         setTooltip(null);
     };
     
-    const handleClick = () => {
-        setTooltip(null); // Close tooltip on click as requested
-        onClick();
+    const handleClick = (e: React.MouseEvent) => {
+        setTooltip(null);
+        onClick(e);
     };
 
     return (
@@ -81,10 +82,11 @@ const PanelIcon: React.FC<{
             onClick={handleClick} 
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
+            onContextMenu={onContextMenu}
             className={`p-2 rounded-md transition-colors ${isActive ? 'bg-yellow-700' : 'bg-gray-800 hover:bg-gray-700'}`}
-            aria-label={label}
+            aria-label={ariaLabel}
         >
-            <img src={`https://api.iconify.design/game-icons:${icon}.svg`} alt={label} className="w-6 h-6 filter invert" />
+            <img src={`https://api.iconify.design/game-icons:${icon}.svg`} alt={ariaLabel} className="w-6 h-6 filter invert" />
         </button>
     );
 };
@@ -109,6 +111,7 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
         onUseItemOn: itemActions.handleUseItemOn, isBusy, onMoveItem: inv.moveItem, setConfirmationPrompt: ui.setConfirmationPrompt,
         onExamine: handleExamine, isTouchSimulationEnabled,
         onDivine: itemActions.handleDivine,
+        onReadMap: itemActions.handleReadMap,
         setMakeXPrompt: ui.setMakeXPrompt,
         isBankOpen,
         onDeposit,
@@ -117,6 +120,9 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
         spellToCast: ui.spellToCast,
         onSpellOnItem: onSpellOnItem,
         isEquipmentStatsOpen,
+        confirmValuableDrops: ui.confirmValuableDrops,
+        valuableDropThreshold: ui.valuableDropThreshold,
+        isOneClickMode: ui.isOneClickMode,
     };
 
     const renderActivePanel = () => {
@@ -135,22 +141,40 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     addLog={addLog}
                     onExamine={handleExamine}
                     isTouchSimulationEnabled={isTouchSimulationEnabled}
+                    isOneClickMode={ui.isOneClickMode}
                 />;
             case 'skills':
                 return <SkillsPanel skills={char.skills} setTooltip={ui.setTooltip} onOpenGuide={ui.setActiveSkillGuide} />;
             case 'quests':
                  return <QuestsPanel playerQuests={quests.playerQuests} activeRepeatableQuest={repeatableQuests.activePlayerQuest} inventory={inv.inventory} slayerTask={slayer.slayerTask} onSelectQuest={(questId) => ui.setActiveQuestDetail({ questId: questId, playerQuests: quests.playerQuests })} />;
             case 'prayer':
-                return <div className="text-center text-gray-400">Prayer skill coming soon!</div>;
+                return <div className="text-center text-gray-400">Prayer skill is not yet implemented.</div>;
             case 'spellbook':
-                return <SpellbookPanel skills={char.skills} inventory={inv.inventory} onCastSpell={onCastSpell} setTooltip={ui.setTooltip} autocastSpell={char.autocastSpell} ui={ui} />;
+                return <SpellbookPanel
+                    skills={char.skills}
+                    inventory={inv.inventory}
+                    equipment={inv.equipment}
+                    onCastSpell={onCastSpell}
+                    setTooltip={ui.setTooltip}
+                    autocastSpell={char.autocastSpell}
+                    ui={ui}
+                />;
             case 'settings':
-                return <SettingsPanel onResetGame={onResetGame} onExportGame={onExportGame} onImportGame={onImportGame} isDevMode={isDevMode} onToggleDevPanel={() => ui.setIsDevPanelOpen(true)} isTouchSimulationEnabled={isTouchSimulationEnabled} onToggleTouchSimulation={onToggleTouchSimulation} />;
+                return null;
             default:
                 return <InventoryPanel {...inventoryPanelProps} />; // Default to inventory
         }
     };
     
+    const handleSaveContextMenu = (e: React.MouseEvent) => {
+        e.preventDefault();
+        ui.setContextMenu({
+            options: [{ label: 'Import Save', onClick: onImportGame }],
+            event: e,
+            isTouchInteraction: false,
+        });
+    };
+
     return (
         <div className="bg-black/70 border-2 border-gray-600 rounded-lg flex flex-col h-full">
             <div className="flex-shrink-0">
@@ -163,16 +187,19 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     onNavigate={onNavigate}
                     unlockedPois={unlockedPois}
                     addLog={addLog}
+                    isDevMode={isDevMode}
+                    onToggleDevPanel={() => ui.setIsDevPanelOpen(true)}
+                    showMinimapHealth={ui.showMinimapHealth}
                 />
                 {/* Top row */}
                 <div className="grid grid-cols-7 gap-1 p-1 bg-black/30 border-b-2 border-gray-600">
-                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-combat" icon="swords-emblem" label="Combat Styles" isActive={activePanel==='combat'} onClick={() => setActivePanel('combat')} />
-                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-skills" icon="podium" label="Skills" isActive={activePanel==='skills'} onClick={() => setActivePanel('skills')} />
-                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-quests" icon="eclipse-flare" label="Quest Journal" isActive={activePanel==='quests'} onClick={() => setActivePanel('quests')} />
-                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-inventory" icon="knapsack" label="Inventory" isActive={activePanel==='inventory'} onClick={() => setActivePanel('inventory')} />
-                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-equipment" icon="battle-gear" label="Equipment" isActive={activePanel==='equipment'} onClick={() => setActivePanel('equipment')} />
-                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-prayer" icon="polar-star" label="Prayer" isActive={activePanel==='prayer'} onClick={() => { setActivePanel('prayer'); addLog("Prayer skill is not yet implemented."); }} />
-                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-spellbook" icon="book-cover" label="Spellbook" isActive={activePanel==='spellbook'} onClick={() => setActivePanel('spellbook')} />
+                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-combat" icon="swords-emblem" label="Combat Styles" ariaLabel="Combat Styles" isActive={activePanel==='combat'} onClick={() => setActivePanel('combat')} />
+                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-skills" icon="podium" label="Skills" ariaLabel="Skills" isActive={activePanel==='skills'} onClick={() => setActivePanel('skills')} />
+                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-quests" icon="eclipse-flare" label="Quest Journal" ariaLabel="Quest Journal" isActive={activePanel==='quests'} onClick={() => setActivePanel('quests')} />
+                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-inventory" icon="knapsack" label="Inventory" ariaLabel="Inventory" isActive={activePanel==='inventory'} onClick={() => setActivePanel('inventory')} />
+                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-equipment" icon="battle-gear" label="Equipment" ariaLabel="Equipment" isActive={activePanel==='equipment'} onClick={() => setActivePanel('equipment')} />
+                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-prayer" icon="polar-star" label="Prayer" ariaLabel="Prayer" isActive={activePanel==='prayer'} onClick={() => { setActivePanel('prayer'); addLog("Prayer skill is not yet implemented."); }} />
+                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-spellbook" icon="book-cover" label="Spellbook" ariaLabel="Spellbook" isActive={activePanel==='spellbook'} onClick={() => setActivePanel('spellbook')} />
                 </div>
             </div>
             <div className="flex-grow min-h-0 p-2 overflow-y-auto">
@@ -184,10 +211,18 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     <PlaceholderIcon />
                     <PlaceholderIcon />
                     <PlaceholderIcon />
+                    <PanelIcon 
+                        setTooltip={ui.setTooltip} 
+                        icon="cloud-upload" 
+                        label={<>Export / Import Save<br/><span className="text-sm text-gray-400">Right click to import</span></>}
+                        ariaLabel="Export / Import Save"
+                        isActive={false} 
+                        onClick={(e) => { e.preventDefault(); onExportGame(); }}
+                        onContextMenu={handleSaveContextMenu}
+                    />
                     <PlaceholderIcon />
                     <PlaceholderIcon />
-                    <PlaceholderIcon />
-                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-settings" icon="gears" label="Settings" isActive={activePanel==='settings'} onClick={() => setActivePanel('settings')} />
+                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-settings" icon="gears" label="Settings" ariaLabel="Settings" isActive={ui.isSettingsViewOpen} onClick={() => ui.setIsSettingsViewOpen(true)} />
                 </div>
             </div>
         </div>

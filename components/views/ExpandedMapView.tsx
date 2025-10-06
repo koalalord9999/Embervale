@@ -257,7 +257,9 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
     const onMouseUpOrLeave = (e: React.MouseEvent | React.TouchEvent) => {
         if(isDragging) {
             setIsDragging(false);
-            if (e.currentTarget instanceof HTMLElement) e.currentTarget.style.cursor = 'grab';
+            if (e.currentTarget instanceof HTMLElement) {
+                e.currentTarget.style.cursor = 'grab';
+            }
         }
     };
     
@@ -399,6 +401,7 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                                         if (isMapManagerEnabled) handleNodeMouseDown(e, region.id, true);
                                     }}
                                     onClick={(e) => {
+                                        setTooltip(null);
                                         if (isMapManagerEnabled) {
                                             const dx = Math.abs(e.clientX - nodeDragStart.current.x);
                                             const dy = Math.abs(e.clientY - nodeDragStart.current.y);
@@ -435,6 +438,7 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                                         if (isMapManagerEnabled) handleNodeMouseDown(e, entryPoi.id, false);
                                     }}
                                     onClick={(e) => {
+                                        setTooltip(null);
                                         if (isMapManagerEnabled) {
                                             const dx = Math.abs(e.clientX - nodeDragStart.current.x);
                                             const dy = Math.abs(e.clientY - nodeDragStart.current.y);
@@ -458,7 +462,7 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                             if (!coords) return null;
                             return (
                                 <div key={poi.id} className="absolute transform -translate-x-1/2 -translate-y-1/2" style={{ top: `${coords.y}px`, left: `${coords.x}px` }} >
-                                    <div data-draggable={isMapManagerEnabled} className={`relative rounded-full hover:scale-150 ${isMapManagerEnabled ? 'cursor-move' : ''} ${isUnlocked && !isMapManagerEnabled ? 'cursor-pointer' : ''} transition-transform duration-200`} style={{ width: `${12 / view.zoom}px`, height: `${12 / view.zoom}px` }} onMouseDown={(e) => handleNodeMouseDown(e, poi.id, false)} onClick={() => {if (!isMapManagerEnabled && isUnlocked) onNavigate(poi.id)}} onMouseEnter={(e) => handleMouseEnter(e, poi)} onMouseLeave={() => setTooltip(null)} >
+                                    <div data-draggable={isMapManagerEnabled} className={`relative rounded-full hover:scale-150 ${isMapManagerEnabled ? 'cursor-move' : ''} ${isUnlocked && !isMapManagerEnabled ? 'cursor-pointer' : ''} transition-transform duration-200`} style={{ width: `${12 / view.zoom}px`, height: `${12 / view.zoom}px` }} onMouseDown={(e) => handleNodeMouseDown(e, poi.id, false)} onClick={() => {if (!isMapManagerEnabled && isUnlocked) { onNavigate(poi.id); setTooltip(null); }}} onMouseEnter={(e) => handleMouseEnter(e, poi)} onMouseLeave={() => setTooltip(null)} >
                                         <div className={`w-full h-full rounded-full ${dotColorClass}`}></div>
                                         {isCurrent && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full rounded-full border-2 border-yellow-400 animate-pulse" style={{width: `${20/view.zoom}px`, height: `${20/view.zoom}px`}}></div>}
                                     </div>
@@ -467,7 +471,7 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                         })}
                         
                          {phantomExits.map(exit => (
-                            <div key={`exit-${exit.navigationId}`} className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group" style={{ top: `${exit.y}px`, left: `${exit.x}px` }} onClick={() => onNavigate(exit.navigationId)} onMouseEnter={(e) => handleMouseEnter(e, { name: exit.gateName, description: `Exit to world map. Leads towards ${exit.displayName}.` })} onMouseLeave={() => setTooltip(null)} >
+                            <div key={`exit-${exit.navigationId}`} className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group" style={{ top: `${exit.y}px`, left: `${exit.x}px` }} onClick={() => { onNavigate(exit.navigationId); setTooltip(null); }} onMouseEnter={(e) => handleMouseEnter(e, { name: exit.gateName, description: `Exit to world map. Leads towards ${exit.displayName}.` })} onMouseLeave={() => setTooltip(null)} >
                                 <img src="https://api.iconify.design/game-icons:exit-door.svg" alt={`To ${exit.displayName}`} className="filter invert opacity-80 group-hover:opacity-100 transition-opacity" style={{width: `${32 / view.zoom}px`, height: `${32 / view.zoom}px`}} />
                             </div>
                         ))}

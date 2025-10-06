@@ -1,6 +1,5 @@
 
 
-
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useUIState } from './hooks/useUIState';
 import { useGameStateManager } from './hooks/useGameStateManager';
@@ -14,6 +13,7 @@ import SkillGuideView from './components/views/overlays/SkillGuideView';
 import QuestDetailView from './components/views/overlays/QuestDetailView';
 import ItemsOnDeathView from './components/views/overlays/ItemsOnDeathView';
 import PriceCheckerView from './components/views/overlays/PriceCheckerView';
+import DungeonMapView from './components/views/DungeonMapView';
 import Game from './components/game/Game';
 import PreloadScreen from './components/screens/PreloadScreen';
 import UsernamePrompt from './components/common/UsernamePrompt';
@@ -243,7 +243,7 @@ const App: React.FC = () => {
     };
     
     return (
-        <div className="bg-gray-800 text-white h-screen w-screen flex items-center justify-center font-serif overflow-hidden">
+        <div className="bg-gray-800 text-white h-[100svh] w-screen flex items-center justify-center font-serif overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
             <div className="w-full h-full md:max-w-[177.77vh] md:max-h-[100vh] md:aspect-[16/9] relative">
                 {renderAppContent()}
                 {GAME_VERSION && (
@@ -255,7 +255,7 @@ const App: React.FC = () => {
             
             {initialState && (
                 <>
-                    {ui.tooltip && <Tooltip tooltipState={ui.tooltip} isCtrlPressed={isCtrlPressed} />}
+                    {ui.showTooltips && ui.tooltip && <Tooltip tooltipState={ui.tooltip} isCtrlPressed={isCtrlPressed} />}
                     {ui.contextMenu && <ContextMenu options={ui.contextMenu.options} triggerEvent={ui.contextMenu.event} isTouchInteraction={ui.contextMenu.isTouchInteraction} onClose={ui.closeContextMenu} />}
                     {ui.makeXPrompt && <MakeXModal title={ui.makeXPrompt.title} maxQuantity={ui.makeXPrompt.max} onConfirm={ui.makeXPrompt.onConfirm} onCancel={ui.closeMakeXPrompt} />}
                     {ui.confirmationPrompt && <ConfirmationModal message={ui.confirmationPrompt.message} onConfirm={ui.confirmationPrompt.onConfirm} onCancel={ui.closeConfirmationPrompt} />}
@@ -265,6 +265,19 @@ const App: React.FC = () => {
                     {ui.activeQuestDetail && <QuestDetailView questId={ui.activeQuestDetail.questId} playerQuests={ui.activeQuestDetail.playerQuests} onClose={() => ui.setActiveQuestDetail(null)} />}
                     {ui.isItemsOnDeathOpen && <ItemsOnDeathView inventory={initialState.inventory} equipment={initialState.equipment} coins={initialState.coins} onClose={() => ui.setIsItemsOnDeathOpen(false)} />}
                     {ui.priceCheckerInventory && <PriceCheckerView inventory={ui.priceCheckerInventory} onClose={() => ui.setPriceCheckerInventory(null)} setTooltip={ui.setTooltip} />}
+                    {ui.activeDungeonMap && (
+                        <div className="absolute inset-0 bg-black/80 z-30 p-4">
+                            <DungeonMapView
+                                regionId={ui.activeDungeonMap.regionId}
+                                mapTitle={ui.activeDungeonMap.mapTitle}
+                                currentPoiId={initialState.currentPoiId}
+                                onClose={() => ui.setActiveDungeonMap(null)}
+                                onNavigate={(poiId: string) => { /* Navigation is disabled in this view */ }}
+                                showAllPois={DEV_MODE_ENABLED}
+                                setTooltip={ui.setTooltip}
+                            />
+                        </div>
+                    )}
                 </>
             )}
         </div>

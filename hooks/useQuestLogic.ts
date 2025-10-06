@@ -1,3 +1,5 @@
+
+
 import React, { useCallback } from 'react';
 import { PlayerQuestState, SkillName } from '../types';
 import { QUESTS, ITEMS, MONSTERS } from '../constants';
@@ -144,6 +146,7 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
 
                 const stage = questData.stages[q.currentStage];
                 if (stage?.requirement.type === 'gather') {
+                    
                     const req = stage.requirement as any;
                     const itemsToGather = req.items || [{ itemId: req.itemId, quantity: req.quantity }];
                     
@@ -154,7 +157,6 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
                 }
                 return q;
             });
-            // Check if the array has actually changed to avoid potential infinite loops
             if (JSON.stringify(qs) === JSON.stringify(newQuests)) {
                 return qs;
             }
@@ -182,7 +184,6 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
                     });
                 }
                 
-                // Grant stage-specific rewards
                 if (currentStage?.stageRewards) {
                     const rewards = currentStage.stageRewards;
                     if (rewards.coins) {
@@ -199,7 +200,6 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
                     });
                 }
 
-                // Check for POI unlocks for the NEXT stage
                 const nextStageIndex = q.currentStage + 1;
                 Object.values(POIS).forEach(poi => {
                     if (poi.unlockRequirement?.type === 'quest' && poi.unlockRequirement.questId === questId && poi.unlockRequirement.stage <= nextStageIndex) {
@@ -222,9 +222,7 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
                     rewards.items?.forEach(item => modifyItem(item.itemId, item.quantity, false, item.doses, { bypassAutoBank: true }));
                     rewards.xp?.forEach(xpReward => addXp(xpReward.skill, xpReward.amount));
                     
-                     // Special quest logic
                     if (questData.id === 'capitals_call') {
-                        // The items are now removed from the player's inventory as part of the 'gather' requirement on the stage itself.
                         setClearedSkillObstacles(prev => [...prev, 'broken_bridge-kings_road_west_2']);
                         addLog("With the supplies delivered, the Oakhaven guard repairs the bridge. The path to Silverhaven is open!");
                     }
@@ -255,17 +253,14 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
             const newQuests = [...qs];
             
             if (questIndex > -1) {
-                // Quest is already started, just mark it as complete
                 newQuests[questIndex] = { ...newQuests[questIndex], currentStage: questData.stages.length, isComplete: true };
             } else {
-                // Quest wasn't started, add it as complete
                 newQuests.push({ questId, currentStage: questData.stages.length, progress: 0, isComplete: true });
             }
             return newQuests;
         });
     
         addLog(`Quest completed: ${questData.name}!`);
-        // Special case to prevent default rewards for the tutorial quest.
         if (questId === 'embrune_101') {
             return;
         }
@@ -275,7 +270,6 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
         rewards.items?.forEach(item => modifyItem(item.itemId, item.quantity, false, item.doses, { bypassAutoBank: true }));
         rewards.xp?.forEach(xpReward => addXp(xpReward.skill, xpReward.amount));
     
-        // Unlock all POIs associated with this quest
         Object.values(POIS).forEach(poi => {
             if (poi.unlockRequirement?.type === 'quest' && poi.unlockRequirement.questId === questId) {
                 setLockedPois(prev => {
@@ -288,7 +282,6 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
             }
         });
     
-        // Clear all skill obstacles associated with this quest
         if (questData.id === 'capitals_call') {
             setClearedSkillObstacles(prev => [...new Set([...prev, 'broken_bridge-kings_road_west_2'])]);
             addLog("With the supplies delivered, the Oakhaven guard repairs the bridge. The path to Silverhaven is open!");

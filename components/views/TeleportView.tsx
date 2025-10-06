@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { TELEPORT_UNLOCK_THRESHOLD } from '../../constants';
 import { POIS } from '../../data/pois';

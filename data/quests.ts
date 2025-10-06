@@ -1,4 +1,3 @@
-
 import { Quest, RepeatableQuest, SkillName } from '../types';
 
 export const QUESTS: Record<string, Quest> = {
@@ -338,7 +337,7 @@ export const QUESTS: Record<string, Quest> = {
             },
             {
                 description: "Return to Wizard Elmsworth in Meadowdale.",
-                requirement: { type: 'talk', poiId: 'meadowdale_library', npcName: 'Wizard Elmsworth' }
+                requirement: { type: 'talk', poiId: 'meadowdale_library', npcName: 'Wizard Elmsworth' },
             },
             {
                 description: "Find the source of the talisman's pull.",

@@ -1,3 +1,4 @@
+
 import { SkillName, InventorySlot, ToolType } from './';
 import { DialogueNode } from './quests';
 
@@ -37,7 +38,7 @@ export type POIActivity =
   | { type: 'skilling'; id: string; name?: string; skill: SkillName; requiredLevel: number; loot: { itemId: string; chance: number; xp: number; requiredLevel?: number }[]; resourceCount: { min: number, max: number }; respawnTime: number; gatherTime: number; harvestBoost?: number; requiredTool?: ToolType; treeHardness?: number; questCondition?: QuestCondition; }
   | { type: 'combat'; monsterId: string }
   | { type: 'shop'; shopId: string }
-  | { type: 'npc'; name: string; icon: string; dialogue: Record<string, DialogueNode>; startNode: string; actions?: any[]; dialogueType?: 'random'; questCondition?: QuestCondition; }
+  | { type: 'npc'; name: string; icon: string; dialogue: Record<string, DialogueNode>; startNode: string; actions?: { label: string; action: 'open_bank' | 'deposit_backpack' | 'deposit_equipment' }[]; dialogueType?: 'random'; questCondition?: QuestCondition; attackableMonsterId?: string; }
   | { type: 'cooking_range' }
   | { type: 'furnace' }
   | { type: 'anvil' }
@@ -56,7 +57,7 @@ export type POIActivity =
   | { type: 'runecrafting_altar'; runeId: string; questCondition?: QuestCondition; }
   | { type: 'ancient_chest'; name: string; }
   | { type: 'quest_start'; questId: string }
-  | { type: 'ladder'; name: string; direction: 'up' | 'down'; toPoiId: string }
+  | { type: 'ladder'; name: string; direction: 'up' | 'down'; toPoiId: string; questCondition?: QuestCondition; }
   | BonfireActivity;
 
 export interface POI {

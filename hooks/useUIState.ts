@@ -1,5 +1,3 @@
-
-
 import React, { useState, useCallback, useMemo } from 'react';
 import { ActivePanel, SkillName, InventorySlot, ActiveCraftingAction, DialogueNode, CraftingContext, Equipment, PlayerQuestState, Spell, Item, DialogueResponse, DialogueCheckRequirement } from '../types';
 import { ContextMenuOption } from '../components/common/ContextMenu';
@@ -83,7 +81,21 @@ export const useUIState = () => {
     const [isExpandedMapViewOpen, setIsExpandedMapViewOpen] = useState<boolean>(false);
     const [isLootViewOpen, setIsLootViewOpen] = useState<boolean>(false);
     const [isDevPanelOpen, setIsDevPanelOpen] = useState<boolean>(false);
+    const [isSettingsViewOpen, setIsSettingsViewOpen] = useState<boolean>(false);
     const [activeMapRegionId, setActiveMapRegionId] = useState<string>('world');
+    const [activeBankTabId, setActiveBankTabId] = useState<number>(0);
+    const [activeDungeonMap, setActiveDungeonMap] = useState<{ regionId: string; mapTitle: string } | null>(null);
+
+    // New states for Settings
+    const [showTooltips, setShowTooltips] = useState<boolean>(true);
+    const [showXpDrops, setShowXpDrops] = useState<boolean>(true);
+    const [confirmValuableDrops, setConfirmValuableDrops] = useState<boolean>(true);
+    const [valuableDropThreshold, setValuableDropThreshold] = useState<number>(1000);
+    const [showMinimapHealth, setShowMinimapHealth] = useState<boolean>(false);
+    const [showCombatPlayerHealth, setShowCombatPlayerHealth] = useState<boolean>(false);
+    const [showCombatEnemyHealth, setShowCombatEnemyHealth] = useState<boolean>(false);
+    const [showHitsplats, setShowHitsplats] = useState<boolean>(true);
+    const [isOneClickMode, setIsOneClickMode] = useState<boolean>(false);
 
     const setEquipmentStats = useCallback((equipment: Equipment | null) => {
         _setEquipmentStats(equipment);
@@ -111,7 +123,9 @@ export const useUIState = () => {
         isAtlasViewOpen ||
         isExpandedMapViewOpen ||
         isLootViewOpen ||
-        isDevPanelOpen
+        activeDungeonMap ||
+        isDevPanelOpen ||
+        isSettingsViewOpen
     ), [
         activeShopId,
         activeCraftingContext,
@@ -130,7 +144,9 @@ export const useUIState = () => {
         isAtlasViewOpen,
         isExpandedMapViewOpen,
         isLootViewOpen,
-        isDevPanelOpen
+        activeDungeonMap,
+        isDevPanelOpen,
+        isSettingsViewOpen
     ]);
 
 
@@ -169,7 +185,9 @@ export const useUIState = () => {
         setIsLootViewOpen(false);
         setIsSelectingAutocastSpell(false);
         setManualCastTrigger(null);
+        setActiveDungeonMap(null);
         setIsDevPanelOpen(false);
+        setIsSettingsViewOpen(false);
     }, []);
 
     return {
@@ -202,7 +220,19 @@ export const useUIState = () => {
         isSelectingAutocastSpell, setIsSelectingAutocastSpell,
         manualCastTrigger, setManualCastTrigger,
         isDevPanelOpen, setIsDevPanelOpen,
+        activeDungeonMap, setActiveDungeonMap,
+        isSettingsViewOpen, setIsSettingsViewOpen,
+        activeBankTabId, setActiveBankTabId,
         isBusy,
+        showTooltips, setShowTooltips,
+        showXpDrops, setShowXpDrops,
+        confirmValuableDrops, setConfirmValuableDrops,
+        valuableDropThreshold, setValuableDropThreshold,
+        showMinimapHealth, setShowMinimapHealth,
+        showCombatPlayerHealth, setShowCombatPlayerHealth,
+        showCombatEnemyHealth, setShowCombatEnemyHealth,
+        showHitsplats, setShowHitsplats,
+        isOneClickMode, setIsOneClickMode,
         closeContextMenu,
         closeMakeXPrompt,
         closeConfirmationPrompt,

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { PlayerSkill, SkillName } from '../../types';
 import { XP_TABLE, SKILL_ICONS } from '../../constants';
@@ -43,7 +42,7 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ skills, setTooltip, onOpenGui
                             <div
                                 key={skill.name}
                                 className="bg-gray-900/50 p-2 h-10 rounded-md flex items-center gap-2 cursor-pointer hover:bg-gray-700/50 transition-colors"
-                                onClick={() => onOpenGuide(skill.name)}
+                                onClick={() => { onOpenGuide(skill.name); setTooltip(null); }}
                                 onMouseEnter={(e) => setTooltip({
                                     content: (
                                         <div className="text-left w-48">

@@ -44,6 +44,9 @@ export const resources: Item[] = [
     { id: 'diamond', name: 'Diamond', description: 'A brilliant, clear gemstone.', stackable: false, value: 2000, iconUrl: 'https://api.iconify.design/game-icons:rupee.svg', material: 'diamond' },
 
     // Monster Drops & Crafting Materials
+    { id: 'crystal_shard', name: 'Crystal Shard', description: 'A sharp, resonating shard of pure crystal.', stackable: true, value: 75, iconUrl: 'https://api.iconify.design/game-icons:gold-nuggets.svg', material: 'diamond' },
+    { id: 'resonating_crystal', name: 'Resonating Crystal', description: 'A larger crystal that hums with a powerful, stored energy.', stackable: false, value: 350, iconUrl: 'https://api.iconify.design/game-icons:crystal-cluster.svg', material: 'diamond' },
+    { id: 'scuttler_shell_fragment', name: 'Scuttler Shell Fragment', description: 'A hard, sharp fragment from a Crystal Scuttler\'s shell.', stackable: false, value: 40, iconUrl: 'https://api.iconify.design/game-icons:sharp-halberd.svg', material: 'steel' },
     { id: 'goblin_hide', name: 'Goblin Hide', description: 'Tough hide from a goblin.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg' },
     { id: 'rat_tail', name: 'Rat Tail', description: 'A grim trophy from a slain rodent.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:rat.svg' },
     { id: 'spider_silk', name: 'Spider Silk', description: 'Tough, sticky silk from a giant spider.', stackable: false, value: 8, iconUrl: 'https://api.iconify.design/game-icons:spider-web.svg' },

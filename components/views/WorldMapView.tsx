@@ -305,7 +305,7 @@ const WorldMapView: React.FC<WorldMapViewProps> = ({ currentPoiId, unlockedPois,
                                 key={region.id}
                                 className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
                                 style={{ top: `${region.y}px`, left: `${region.x}px` }}
-                                onClick={() => onNavigate(region.entryPoiId)}
+                                onClick={() => { onNavigate(region.entryPoiId); setTooltip(null); }}
                                 onMouseEnter={(e) => handleMouseEnter(e, region)}
                                 onMouseLeave={() => setTooltip(null)}
                             >
@@ -330,7 +330,7 @@ const WorldMapView: React.FC<WorldMapViewProps> = ({ currentPoiId, unlockedPois,
                                 <div 
                                     className={`relative rounded-full ${isUnlocked ? 'cursor-pointer hover:scale-150' : 'cursor-default'} transition-transform duration-200`}
                                     style={{ width: `${12 / view.zoom}px`, height: `${12 / view.zoom}px` }}
-                                    onClick={() => isUnlocked && onNavigate(poi.id)}
+                                    onClick={() => { if (isUnlocked) { onNavigate(poi.id); setTooltip(null); } }}
                                     onMouseEnter={(e) => handleMouseEnter(e, poi)}
                                     onMouseLeave={() => setTooltip(null)}
                                 >

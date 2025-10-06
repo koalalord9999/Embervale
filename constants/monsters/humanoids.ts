@@ -19,7 +19,7 @@ export const humanoids: Monster[] = [
             { itemId: 'tin_ore', chance: "1/50", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'bucket', chance: "3/200", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'knife', chance: "1/100", minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'stone_talisman', chance: "1/200", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'stone_talisman', chance: "1/32", minQuantity: 1, maxQuantity: 1 },
         ],
         types: [MonsterType.Humanoid], attackSpeed: 4, respawnTime: 60000, aggressive: false, attackStyle: 'crush',
     },
@@ -32,16 +32,16 @@ export const humanoids: Monster[] = [
             { itemId: 'bones', minQuantity: 1, maxQuantity: 1 },
         ],
         mainDrops: [
-            { itemId: 'gust_rune', chance: "3/10", minQuantity: 1, maxQuantity: 6 },
-            { itemId: 'aqua_rune', chance: "1/5", minQuantity: 1, maxQuantity: 3 },
-            { itemId: 'stone_rune', chance: "1/5", minQuantity: 1, maxQuantity: 3 },
-            { itemId: 'binding_rune', chance: "3/20", minQuantity: 1, maxQuantity: 2 },
+            { itemId: 'gust_rune', chance: "3/10", minQuantity: 7, maxQuantity: 7 },
+            { itemId: 'aqua_rune', chance: "1/5", minQuantity: 3, maxQuantity: 3 },
+            { itemId: 'stone_rune', chance: "1/5", minQuantity: 3, maxQuantity: 3 },
+            { itemId: 'binding_rune', chance: "3/20", minQuantity: 2, maxQuantity: 2 },
             { tableId: 'herb_table', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'copper_ore', chance: "1/50", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'tin_ore', chance: "1/50", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'bucket', chance: "3/200", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'knife', chance: "1/100", minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'stone_talisman', chance: "1/200", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'stone_talisman', chance: "1/32", minQuantity: 1, maxQuantity: 1 },
         ],
         types: [MonsterType.Humanoid], attackSpeed: 4, respawnTime: 60000, aggressive: false, attackStyle: 'crush',
     },
@@ -62,7 +62,7 @@ export const humanoids: Monster[] = [
             { tableId: 'herb_table', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'grimy_coin_pouch', chance: "1/20", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'flux_rune', chance: "1/20", minQuantity: 1, maxQuantity: 2 },
-            { itemId: 'ember_talisman', chance: "1/200", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'ember_talisman', chance: "1/32", minQuantity: 1, maxQuantity: 1 },
         ],
         tertiaryDrops: [
             { itemId: 'goblin_champion_scroll', chance: 1/5000, minQuantity: 1, maxQuantity: 1 }
@@ -87,7 +87,7 @@ export const humanoids: Monster[] = [
             { itemId: 'grimy_coin_pouch', chance: "7/100", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'flux_rune', chance: "1/20", minQuantity: 1, maxQuantity: 3 },
             { itemId: 'goblin_mail', chance: "1/50", minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'ember_talisman', chance: "1/200", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'ember_talisman', chance: "1/32", minQuantity: 1, maxQuantity: 1 },
         ],
         tertiaryDrops: [
             { itemId: 'goblin_champion_scroll', chance: 1/5000, minQuantity: 1, maxQuantity: 1 }
@@ -111,7 +111,7 @@ export const humanoids: Monster[] = [
             { itemId: 'flux_rune', chance: "3/20", minQuantity: 2, maxQuantity: 5 },
             { tableId: 'herb_table', chance: "3/25", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'grimy_coin_pouch', chance: "2/25", minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'ember_talisman', chance: "1/200", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'ember_talisman', chance: "1/32", minQuantity: 1, maxQuantity: 1 },
         ],
         tertiaryDrops: [
             { itemId: 'goblin_champion_scroll', chance: 1/5000, minQuantity: 1, maxQuantity: 1 }
@@ -135,8 +135,8 @@ export const humanoids: Monster[] = [
             { itemId: 'grimy_coin_pouch', chance: "1/10", minQuantity: 1, maxQuantity: 2 },
             { tableId: 'herb_table', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'flux_rune', chance: "1/25", minQuantity: 4, maxQuantity: 10 },
-            { itemId: 'bronze_battleaxe', chance: "1/200", minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'ember_talisman', chance: "1/400", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'steel_battleaxe', chance: "1/200", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'ember_talisman', chance: "1/32", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'nexus_rune', chance: "1/400", minQuantity: 1, maxQuantity: 5 },
         ],
         tertiaryDrops: [
@@ -147,7 +147,7 @@ export const humanoids: Monster[] = [
         aggressive: true, alwaysAggressive: true, attackStyle: 'crush',
     },
     {
-        id: 'grumlok_goblin_king', name: 'Grumlok, the Goblin King', level: 82, maxHp: 120, attack: 50,
+        id: 'grumlok_goblin_king', name: 'Grumlok, the Goblin King', level: 82, maxHp: 120, attack: 30,
         stabDefence: 120, slashDefence: 126, crushDefence: -36, rangedDefence: 166, magicDefence: -20,
         iconUrl: '/assets/npcChatHeads/grumlok_goblin_king.png',
         alwaysDrops: true,
@@ -159,6 +159,7 @@ export const humanoids: Monster[] = [
             { itemId: 'grimy_coin_pouch', chance: "1/4", minQuantity: 5, maxQuantity: 10 },
             { itemId: 'verdant_rune', chance: "1/5", minQuantity: 15, maxQuantity: 30 },
             { tableId: 'herb_table', chance: "3/20", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'goblin_dungeon_map', chance: "1/16", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'yew_logs', chance: "1/10", minQuantity: 5, maxQuantity: 10 },
             { itemId: 'hex_rune', chance: "1/10", minQuantity: 8, maxQuantity: 15 },
             { itemId: 'nexus_rune', chance: "3/40", minQuantity: 10, maxQuantity: 20 },
@@ -287,6 +288,11 @@ export const humanoids: Monster[] = [
             { tableId: 'herb_table', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'iron_warhammer', chance: "1/100", minQuantity: 1, maxQuantity: 1 }
         ],
+        tertiaryDrops: [
+            { itemId: 'gust_talisman', chance: 1/32, minQuantity: 1, maxQuantity: 1 }
+        ],
         types: [MonsterType.Humanoid], attackSpeed: 6, respawnTime: 60000, aggressive: true, attackStyle: 'crush',
     },
+    // --- New Sunken Labyrinth Humanoids ---
+    { id: 'abyssal_knight', name: 'Abyssal Knight', level: 65, maxHp: 100, attack: 55, stabDefence: 80, slashDefence: 80, crushDefence: 70, rangedDefence: 85, magicDefence: 10, iconUrl: 'https://api.iconify.design/game-icons:knight-helmet.svg', guaranteedDrops: [{ itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 }], mainDrops: [{ itemId: 'adamantite_platebody', chance: "1/128", minQuantity: 1, maxQuantity: 1 }, { itemId: 'adamantite_platelegs', chance: "1/128", minQuantity: 1, maxQuantity: 1 }, { itemId: 'runic_kiteshield', chance: "1/256", minQuantity: 1, maxQuantity: 1 }, { itemId: 'cooked_swordfish', chance: "1/4", minQuantity: 1, maxQuantity: 2, noted: true }, { itemId: 'adamantite_bar', chance: "1/10", minQuantity: 1, maxQuantity: 3, noted: true }], tertiaryDrops: [{ itemId: 'nexus_talisman', chance: 1/128, minQuantity: 1, maxQuantity: 1 }], types: [MonsterType.Humanoid, MonsterType.Armored], attackSpeed: 5, respawnTime: 90000, aggressive: true, alwaysAggressive: true, attackStyle: 'slash' },
 ];

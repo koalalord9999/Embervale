@@ -26,10 +26,13 @@ interface UseItemActionsProps {
     currentPoiId: string;
     playerQuests: PlayerQuestState[];
     isStunned: boolean;
+    setActiveDungeonMap: (mapInfo: { regionId: string; mapTitle: string; } | null) => void;
+    confirmValuableDrops: boolean;
+    valuableDropThreshold: number;
 }
 
 export const useItemActions = (props: UseItemActionsProps) => {
-    const { addLog, currentHp, maxHp, setCurrentHp, applyStatModifier, setInventory, skills, inventory, activeCraftingAction, setActiveCraftingAction, hasItems, modifyItem, addXp, openCraftingView, setItemToUse, addBuff, setMakeXPrompt, startQuest, currentPoiId, playerQuests, isStunned } = props;
+    const { addLog, currentHp, maxHp, setCurrentHp, applyStatModifier, setInventory, skills, inventory, activeCraftingAction, setActiveCraftingAction, hasItems, modifyItem, addXp, openCraftingView, setItemToUse, addBuff, setMakeXPrompt, startQuest, currentPoiId, playerQuests, isStunned, setActiveDungeonMap, confirmValuableDrops, valuableDropThreshold } = props;
 
     const handleConsume = useCallback((itemId: string, inventoryIndex: number) => {
         if (isStunned) {
@@ -62,29 +65,23 @@ export const useItemActions = (props: UseItemActionsProps) => {
 
         if (itemData.consumable.special === 'treasure_chest') {
             const freeSlots = inventory.filter(s => s === null).length;
-            // The chest takes 1 slot. Max loot is 10 items (5 gems, 3 herbs, 1 steel, 1 runic).
-            // So we need 10 slots available *after* the chest is used.
-            // This means we need 9 empty slots + the chest's slot = 10 total.
             if (freeSlots < 9) {
                 addLog("You need at least 10 free inventory slots to open this chest.");
                 return;
             }
         
-            modifyItem(itemId, -1, true); // Consume the chest
+            modifyItem(itemId, -1, true);
             addLog("You open the treasure chest and find...");
         
-            // 1. 5 random uncut gems
             const uncutGems = ['uncut_sapphire', 'uncut_emerald', 'uncut_ruby'];
             for (let i = 0; i < 5; i++) {
                 const randomGem = uncutGems[Math.floor(Math.random() * uncutGems.length)];
                 modifyItem(randomGem, 1, true, undefined, { bypassAutoBank: true });
             }
         
-            // 2. 3 rolls on the herb table
             for (let i = 0; i < 3; i++) {
                 const herb = rollOnLootTable('herb_table');
                 if (herb) {
-                    // FIX: Handle both string and LootRollResult return types from rollOnLootTable.
                     if (typeof herb === 'string') {
                         modifyItem(herb, 1, true, undefined, { bypassAutoBank: true });
                     } else {
@@ -93,7 +90,6 @@ export const useItemActions = (props: UseItemActionsProps) => {
                 }
             }
         
-            // 3. A random piece of Steel equipment (excluding warhammer)
             const steelEquipment = Object.values(ITEMS).filter(
                 item => item.material === 'steel' && item.equipment && item.id !== 'steel_warhammer'
             );
@@ -102,13 +98,12 @@ export const useItemActions = (props: UseItemActionsProps) => {
                 modifyItem(randomSteelItem.id, 1, true, undefined, { bypassAutoBank: true });
             }
         
-            // 4. 1% chance for a Runic Sword
             if (Math.random() < 0.01) {
                 modifyItem('runic_sword', 1, true, undefined, { bypassAutoBank: true });
                 addLog("Incredibly lucky! You found a Runic Sword inside!");
             }
         
-            return; // Stop further processing
+            return;
         }
 
         const hasNonHealingEffect = !!(itemData.consumable.statModifiers || itemData.consumable.buffs || itemData.consumable.givesCoins);
@@ -134,7 +129,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
                 const skillData = skills.find(s => s.name === modifier.skill);
                 const baseLevel = skillData ? skillData.level : 1;
                 
-                if (typeof modifier.value === 'number') { // For flat bonuses like beer, combo brew
+                if (typeof modifier.value === 'number') {
                     boostValue = modifier.value;
                 } else if (typeof modifier.percent === 'number' && typeof modifier.base === 'number') {
                     boostValue = Math.floor(baseLevel * modifier.percent) + modifier.base;
@@ -175,14 +170,12 @@ export const useItemActions = (props: UseItemActionsProps) => {
     
             if (!itemSlot) return prev;
     
-            // 1. Remove the consumed item by either decrementing or nullifying the slot.
             if (itemData.stackable && itemSlot.quantity > 1) {
                 newInv[inventoryIndex] = { ...itemSlot, quantity: itemSlot.quantity - 1 };
             } else {
                 newInv[inventoryIndex] = null;
             }
     
-            // 2. Add back the empty container if needed, without changing inventory size.
             if (itemData.emptyable) {
                 const emptyItemId = itemData.emptyable.emptyItemId;
                 const emptyItemData = ITEMS[emptyItemId];
@@ -199,7 +192,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
                             addLog("You drop the empty container as your inventory is full.");
                         }
                     }
-                } else { // Not stackable
+                } else {
                     const emptySlotIndex = newInv[inventoryIndex] === null ? inventoryIndex : newInv.findIndex(slot => slot === null);
                     if (emptySlotIndex > -1) {
                         newInv[inventoryIndex] = { itemId: emptyItemId, quantity: 1 };
@@ -237,22 +230,16 @@ export const useItemActions = (props: UseItemActionsProps) => {
             const newInv = [...prev];
             if (!newInv[inventoryIndex] || newInv[inventoryIndex]?.itemId !== itemId) return prev;
             
-            // Empty the slot first
             newInv[inventoryIndex] = null;
             
-            // Then add the empty container back, possibly into the same slot
             if (emptyItemData.stackable) {
                 const existingStack = newInv.find(i => i && i.itemId === emptyItemId);
                 if (existingStack) {
                     existingStack.quantity += 1;
                 } else {
-                    // It's a new stackable item, so it needs an empty slot.
-                    // The one we just cleared is guaranteed to be empty.
                     newInv[inventoryIndex] = { itemId: emptyItemId, quantity: 1 };
                 }
             } else {
-                 // The item is not stackable, so it needs a new slot.
-                 // The one we just cleared is guaranteed to be empty.
                 newInv[inventoryIndex] = { itemId: emptyItemId, quantity: 1 };
             }
             return newInv;
@@ -301,6 +288,20 @@ export const useItemActions = (props: UseItemActionsProps) => {
         addLog(`The talisman hums and pulls you towards the ${direction}.`);
     }, [currentPoiId, addLog]);
 
+    const handleReadMap = useCallback((item: Item) => {
+        if (!item.mappable) return;
+
+        const currentRegionId = POIS[currentPoiId]?.regionId;
+        if (currentRegionId === item.mappable.regionId) {
+            setActiveDungeonMap({
+                regionId: item.mappable.regionId,
+                mapTitle: item.mappable.mapTitle,
+            });
+        } else {
+            addLog("You can only read this map while inside the dungeon it depicts.");
+        }
+    }, [currentPoiId, setActiveDungeonMap, addLog]);
+
     const handleItemCombination = useCallback((used: { item: InventorySlot, index: number }, target: { item: InventorySlot, index: number }) => {
         const fletchingLevel = skills.find(s => s.name === SkillName.Fletching)?.currentLevel ?? 1;
         const herbloreLevel = skills.find(s => s.name === SkillName.Herblore)?.currentLevel ?? 1;
@@ -343,7 +344,6 @@ export const useItemActions = (props: UseItemActionsProps) => {
             return;
         }
         
-        // Tiara Crafting
         const isTiaraCrafting = (usedId === 'silver_tiara' && targetItem.divining) || (targetId === 'silver_tiara' && usedItemData.divining);
         if (isTiaraCrafting) {
             const talisman = usedItemData.divining ? usedItemData : targetItem;
@@ -368,7 +368,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
                 modifyItem('silver_tiara', -1, true);
                 modifyItem(talisman.id, -1, true);
                 modifyItem(tiaraItem.id, 1, true, undefined, { bypassAutoBank: true });
-                addXp(SkillName.Runecrafting, 50); // Some bonus XP
+                addXp(SkillName.Runecrafting, 50);
                 addLog(`You infuse the silver tiara with the power of the altar, creating a ${tiaraItem.name}.`);
             }
             return;
@@ -419,7 +419,6 @@ export const useItemActions = (props: UseItemActionsProps) => {
             return;
         }
 
-        // Hammering Golem Core
         const isHammeringCore = (usedId === 'hammer' && targetId === 'golem_core') || (targetId === 'hammer' && usedId === 'golem_core');
         if (isHammeringCore) {
             if (hasItems([{ itemId: 'golem_core', quantity: 1 }])) {
@@ -431,7 +430,6 @@ export const useItemActions = (props: UseItemActionsProps) => {
             return;
         }
 
-        // Crushing with Pestle and Mortar
         const crushableMap: Record<string, { dust: string, xp: number }> = {
             'glimmerhorn_antler': { dust: 'glimmerhorn_dust', xp: 2 },
             'serpent_scale': { dust: 'serpent_scale_dust', xp: 2 },
@@ -447,105 +445,107 @@ export const useItemActions = (props: UseItemActionsProps) => {
                 addLog(`You don't have any ${ITEMS[crushTargetId].name} to grind.`);
                 return;
             }
-            setMakeXPrompt({
-                title: `Grind ${ITEMS[crushTargetId].name}`,
-                max: maxCrushable,
-                onConfirm: (quantity) => {
-                    if (quantity > 0) {
-                        modifyItem(crushTargetId, -quantity, true);
-                        modifyItem(recipe.dust, quantity, true, undefined, { bypassAutoBank: true });
-                        const totalXp = recipe.xp * quantity;
-                        addXp(SkillName.Herblore, totalXp);
-                        addLog(`You grind ${quantity}x ${ITEMS[crushTargetId].name} into dust and gain ${totalXp} Herblore XP.`);
-                    }
+            const onConfirm = (quantity: number) => {
+                if (quantity > 0) {
+                    modifyItem(crushTargetId, -quantity, true);
+                    modifyItem(recipe.dust, quantity, true, undefined, { bypassAutoBank: true });
+                    const totalXp = recipe.xp * quantity;
+                    addXp(SkillName.Herblore, totalXp);
+                    addLog(`You grind ${quantity}x ${ITEMS[crushTargetId].name} into dust and gain ${totalXp} Herblore XP.`);
                 }
-            });
+            };
+            if (maxCrushable === 1) {
+                onConfirm(1);
+            } else {
+                setMakeXPrompt({
+                    title: `Grind ${ITEMS[crushTargetId].name}`,
+                    max: maxCrushable,
+                    onConfirm
+                });
+            }
             return;
         }
 
-        // Herblore: Making unfinished potions
         const unfRecipe = HERBLORE_RECIPES.unfinished.find(r => (r.cleanHerbId === usedId && targetId === 'vial_of_water') || (r.cleanHerbId === targetId && usedId === 'vial_of_water'));
         if (unfRecipe) {
             if (herbloreLevel < unfRecipe.level) {
                 addLog(`You need a Herblore level of ${unfRecipe.level} to make this.`);
                 return;
             }
-
             const cleanHerbCount = getItemCount(unfRecipe.cleanHerbId);
             const vialOfWaterCount = getItemCount('vial_of_water');
             const maxCreatable = Math.min(cleanHerbCount, vialOfWaterCount);
-
             if (maxCreatable < 1) {
                 addLog("You don't have enough ingredients.");
                 return;
             }
-
-            setMakeXPrompt({
-                title: `Create ${ITEMS[unfRecipe.unfinishedPotionId].name}`,
-                max: maxCreatable,
-                onConfirm: (quantity) => {
-                    if (activeCraftingAction) {
-                        addLog("You are already busy crafting something else.");
-                        return;
-                    }
-                    if (quantity > 0) {
-                        setActiveCraftingAction({
-                            recipeId: unfRecipe.unfinishedPotionId,
-                            recipeType: 'herblore-unfinished',
-                            totalQuantity: quantity,
-                            completedQuantity: 0,
-                            startTime: Date.now(),
-                            duration: 800, // Cooldown per potion
-                            payload: { cleanHerbId: unfRecipe.cleanHerbId }
-                        });
-                    }
+            const onConfirm = (quantity: number) => {
+                if (activeCraftingAction) {
+                    addLog("You are already busy crafting something else.");
+                    return;
                 }
-            });
+                if (quantity > 0) {
+                    setActiveCraftingAction({
+                        recipeId: unfRecipe.unfinishedPotionId,
+                        recipeType: 'herblore-unfinished',
+                        totalQuantity: quantity, completedQuantity: 0, successfulQuantity: 0,
+                        startTime: Date.now(), duration: 800,
+                        payload: { cleanHerbId: unfRecipe.cleanHerbId }
+                    });
+                }
+            };
+            if (maxCreatable === 1) {
+                onConfirm(1);
+            } else {
+                setMakeXPrompt({
+                    title: `Create ${ITEMS[unfRecipe.unfinishedPotionId].name}`,
+                    max: maxCreatable,
+                    onConfirm
+                });
+            }
             return;
         }
 
-        // Herblore: Making finished potions
         const finRecipe = HERBLORE_RECIPES.finished.find(r => (r.unfinishedPotionId === usedId && r.secondaryId === targetId) || (r.unfinishedPotionId === targetId && r.secondaryId === usedId));
         if (finRecipe) {
             if (herbloreLevel < finRecipe.level) {
                 addLog(`You need a Herblore level of ${finRecipe.level} to make this.`);
                 return;
             }
-    
             const unfPotionCount = inventory.reduce((count, slot) => slot?.itemId === finRecipe.unfinishedPotionId ? count + (slot.doses ?? 1) : count, 0);
             const secondaryCount = getItemCount(finRecipe.secondaryId);
             const maxCreatable = Math.min(unfPotionCount, secondaryCount);
-    
             if (maxCreatable < 1) {
                 addLog("You don't have enough ingredients.");
                 return;
             }
-    
-            setMakeXPrompt({
-                title: `Create ${ITEMS[finRecipe.finishedPotionId].name}`,
-                max: maxCreatable,
-                onConfirm: (quantity) => {
-                    if (activeCraftingAction) {
-                        addLog("You are already busy crafting something else.");
-                        return;
-                    }
-                    if (quantity > 0) {
-                        setActiveCraftingAction({
-                            recipeId: finRecipe.finishedPotionId,
-                            recipeType: 'herblore-finished',
-                            totalQuantity: quantity,
-                            completedQuantity: 0,
-                            startTime: Date.now(),
-                            duration: 800,
-                            payload: { unfinishedPotionId: finRecipe.unfinishedPotionId, secondaryId: finRecipe.secondaryId }
-                        });
-                    }
+            const onConfirm = (quantity: number) => {
+                if (activeCraftingAction) {
+                    addLog("You are already busy crafting something else.");
+                    return;
                 }
-            });
+                if (quantity > 0) {
+                    setActiveCraftingAction({
+                        recipeId: finRecipe.finishedPotionId,
+                        recipeType: 'herblore-finished',
+                        totalQuantity: quantity, completedQuantity: 0, successfulQuantity: 0,
+                        startTime: Date.now(), duration: 800,
+                        payload: { unfinishedPotionId: finRecipe.unfinishedPotionId, secondaryId: finRecipe.secondaryId }
+                    });
+                }
+            };
+            if (maxCreatable === 1) {
+                onConfirm(1);
+            } else {
+                setMakeXPrompt({
+                    title: `Create ${ITEMS[finRecipe.finishedPotionId].name}`,
+                    max: maxCreatable,
+                    onConfirm
+                });
+            }
             return;
         }
 
-        // Cleaning Grimy Coin Pouch
         const isCleaningPouch = (usedId === 'pouch_cleanser' && targetId === 'grimy_coin_pouch') || (targetId === 'pouch_cleanser' && usedId === 'grimy_coin_pouch');
         if (isCleaningPouch) {
             if (herbloreLevel < 10) {
@@ -562,7 +562,6 @@ export const useItemActions = (props: UseItemActionsProps) => {
             return;
         }
 
-        // --- JEWELRY AND AMULET COMBINATIONS ---
         const isStringing = (usedId.endsWith('_amulet_u') && targetId === 'ball_of_wool') || (targetId.endsWith('_amulet_u') && usedId === 'ball_of_wool');
         if (isStringing) {
             const unstrungId = usedId.endsWith('_amulet_u') ? usedId : targetId;
@@ -579,7 +578,6 @@ export const useItemActions = (props: UseItemActionsProps) => {
             return;
         }
 
-        // Instant combinations first
         const isRatKebab = (usedId === 'arrow_shaft' && targetId === 'rat_tail') || (targetId === 'arrow_shaft' && usedId === 'rat_tail');
         if (isRatKebab) {
             if (hasItems([{ itemId: 'arrow_shaft', quantity: 1 }, { itemId: 'rat_tail', quantity: 1 }])) {
@@ -595,7 +593,6 @@ export const useItemActions = (props: UseItemActionsProps) => {
             setActiveCraftingAction({ recipeId, recipeType, totalQuantity, completedQuantity: 0, successfulQuantity: 0, startTime: Date.now(), duration, payload });
         };
         
-        // Stringing a bow
         const stringRecipe = FLETCHING_RECIPES.stringing.find(r => (usedId === 'bow_string' && r.unstrungId === targetId) || (targetId === 'bow_string' && r.unstrungId === usedId));
         if (stringRecipe) {
             if (fletchingLevel < stringRecipe.level) { addLog(`You need a Fletching level of ${stringRecipe.level} to string this bow.`); return; }
@@ -606,7 +603,6 @@ export const useItemActions = (props: UseItemActionsProps) => {
             return;
         }
 
-        // Making headless arrows
         if ((usedId === 'arrow_shaft' && targetId === 'feathers') || (targetId === 'arrow_shaft' && usedId === 'feathers')) {
             const recipe = FLETCHING_RECIPES.headless;
             if (fletchingLevel < recipe.level) { addLog(`You need a Fletching level of ${recipe.level} to make these.`); return; }
@@ -618,7 +614,6 @@ export const useItemActions = (props: UseItemActionsProps) => {
             return;
         }
 
-        // Tipping headless arrows
         const tipRecipe = FLETCHING_RECIPES.tipping.find(r => (r.tipId === usedId && targetId === 'headless_arrow') || (r.tipId === targetId && usedId === 'headless_arrow'));
         if (tipRecipe) {
              if (fletchingLevel < tipRecipe.level) { addLog(`You need a Fletching level of ${tipRecipe.level} to attach these.`); return; }
@@ -677,5 +672,6 @@ export const useItemActions = (props: UseItemActionsProps) => {
         handleUseItemOn,
         handleDivine,
         handleExamine,
+        handleReadMap,
     };
 };

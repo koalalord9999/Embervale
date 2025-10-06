@@ -1,4 +1,5 @@
 
+
 import { POI, SkillName } from '../../types';
 
 export const minePois: Record<string, POI> = {
@@ -62,7 +63,47 @@ export const minePois: Record<string, POI> = {
         description: 'A monolithic altar carved from the very bedrock of the world. It feels solid and immovable, humming with a low, terrestrial power.',
         connections: ['crystal_cavern'],
         activities: [
-            { type: 'runecrafting_altar', runeId: 'stone_rune' }
+            { type: 'runecrafting_altar', runeId: 'stone_rune' },
+            {
+                type: 'npc',
+                name: 'Use Resonator',
+                icon: 'https://api.iconify.design/game-icons:orb-wand.svg',
+                questCondition: { questId: 'the_arcane_awakening', stages: [0] },
+                dialogue: {
+                    start: {
+                        npcName: 'Arcane Resonator', npcIcon: 'https://api.iconify.design/game-icons:orb-wand.svg',
+                        text: "You hold the Arcane Resonator up to the altar. It begins to vibrate violently, and a shimmering creature of pure energy coalesces before you!",
+                        responses: [
+                            {
+                                text: "(Face the creature)",
+                                check: {
+                                    requirements: [
+                                        { type: 'items', items: [{ itemId: 'arcane_resonator', quantity: 1 }] },
+                                        { type: 'items', items: [{ itemId: 'stone_reading', quantity: 0, operator: 'eq' }] }
+                                    ],
+                                    successNode: 'trigger_combat',
+                                    failureNode: 'already_have_reading'
+                                },
+                                actions: [
+                                    { type: 'set_quest_combat_reward', itemId: 'stone_reading', quantity: 1 },
+                                    { type: 'start_mandatory_combat', monsterId: 'mana_wisp' }
+                                ]
+                            }
+                        ]
+                    },
+                    trigger_combat: {
+                        npcName: 'Arcane Resonator', npcIcon: 'https://api.iconify.design/game-icons:orb-wand.svg',
+                        text: "The Mana Wisp shrieks and attacks!",
+                        responses: [],
+                    },
+                    already_have_reading: {
+                        npcName: 'Arcane Resonator', npcIcon: 'https://api.iconify.design/game-icons:orb-wand.svg',
+                        text: "You've already taken a reading from this altar.",
+                        responses: []
+                    }
+                },
+                startNode: 'start'
+            },
         ],
         regionId: 'wilderness',
         x: 1560, y: 1100,

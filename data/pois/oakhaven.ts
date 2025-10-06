@@ -33,6 +33,16 @@ export const oakhavenPois: Record<string, POI> = {
                         responses: [
                             { text: "What's the trouble on the King's Road?", next: 'quest_intro_capitals_call'},
                             { text: "I'll be careful.", next: 'careful_response' },
+                        ],
+                        conditionalResponses: [
+                            {
+                                text: "Captain, I've investigated the bridge. It was sabotage.",
+                                check: { requirements: [{ type: 'quest', questId: 'capitals_call', status: 'in_progress', stage: 1 }, { type: 'items', items: [{ itemId: 'torn_bandit_insignia', quantity: 1 }] }], successNode: 'in_progress_capitals_call_1', failureNode: '' }
+                            },
+                            {
+                                text: "I have the materials to repair the bridge.",
+                                check: { requirements: [{ type: 'quest', questId: 'capitals_call', status: 'in_progress', stage: 4 }, { type: 'items', items: [{ itemId: 'reinforced_bridge_cable', quantity: 1 }, { itemId: 'reinforced_bridge_supports', quantity: 1 }] }], successNode: 'in_progress_capitals_call_4', failureNode: '' }
+                            }
                         ]
                     },
                     careful_response: {
@@ -150,6 +160,8 @@ export const oakhavenPois: Record<string, POI> = {
         activities: [
             { type: 'wishing_well' },
             { type: 'water_source', name: 'Collect Water' },
+            { type: 'npc', name: 'Man', icon: '/assets/npcChatHeads/tavern_regular.png', dialogue: { start: { npcName: 'Man', npcIcon: '/assets/npcChatHeads/tavern_regular.png', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man' },
+            { type: 'npc', name: 'Woman', icon: '/assets/npcChatHeads/elara.png', dialogue: { start: { npcName: 'Woman', npcIcon: '/assets/npcChatHeads/elara.png', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'woman' },
             {
                 type: 'npc',
                 name: 'Craftsman',
@@ -163,8 +175,7 @@ export const oakhavenPois: Record<string, POI> = {
                     }
                 },
                 startNode: 'start',
-                dialogueType: 'random',
-                actions: [{ label: 'Pickpocket', disabled: true }]
+                dialogueType: 'random'
             },
         ],
         regionId: 'oakhaven',
@@ -208,7 +219,17 @@ export const oakhavenPois: Record<string, POI> = {
                         npcName: 'Finn the Rope-maker',
                         npcIcon: '/assets/npcChatHeads/finn_the_rope_maker.png',
                         text: "Welcome to my workshop. Finest rope in the kingdom, made right here. What can I do for you?",
-                        responses: []
+                        responses: [],
+                        conditionalResponses: [
+                            {
+                                text: "Captain Elara sent me regarding this insignia.",
+                                check: { requirements: [{ type: 'quest', questId: 'capitals_call', status: 'in_progress', stage: 2 }, { type: 'items', items: [{ itemId: 'torn_bandit_insignia', quantity: 1 }] }], successNode: 'in_progress_capitals_call_2', failureNode: '' }
+                            },
+                            {
+                                text: "I have the Glimmer-thread Fibers you needed.",
+                                check: { requirements: [{ type: 'quest', questId: 'capitals_call', status: 'in_progress', stage: 3 }], successNode: 'in_progress_capitals_call_3', failureNode: '' }
+                            }
+                        ]
                     },
                     in_progress_capitals_call_2: {
                         npcName: 'Finn the Rope-maker',
@@ -419,6 +440,12 @@ export const oakhavenPois: Record<string, POI> = {
                         responses: [
                             { text: "Tell me about the woods of this land.", next: 'wood_lore_pine' },
                             { text: "Just looking around." },
+                        ],
+                        conditionalResponses: [
+                            {
+                                text: "Finn sent me. I need reinforced supports for the bridge.",
+                                check: { requirements: [{ type: 'quest', questId: 'capitals_call', status: 'in_progress', stage: 3 }], successNode: 'in_progress_capitals_call_3', failureNode: '' }
+                            }
                         ]
                     },
                     in_progress_capitals_call_3: {
@@ -593,11 +620,21 @@ export const oakhavenPois: Record<string, POI> = {
                 name: 'Bronn the Retired Adventurer',
                 icon: '/assets/npcChatHeads/bronn_the_retired_adventurer.png',
                 dialogue: {
-                    start: {
+                    default_dialogue: {
                         npcName: 'Bronn the Retired Adventurer',
                         npcIcon: '/assets/npcChatHeads/bronn_the_retired_adventurer.png',
-                        text: "Hah! Seen a few things in my day, I have. Fought goblins that were bigger than a cow and twice as mean.\n\nIf you're heading up into the peaks, be wary of the harpies. Nasty creatures. Their feathers are sharp as steel, though.\n\nThey say the king of the goblins, Grumlok, has a soft spot for shiny things. Not that you'll get close enough to find out.",
-                        responses: []
+                        text: "Hah! Seen a few things in my day, I have. Fought goblins that were bigger than a cow and twice as mean.",
+                        responses: [],
+                        conditionalResponses: [
+                            {
+                                text: "Captain Elara suggested I speak with you about the Serpent Bandits.",
+                                check: { requirements: [{ type: 'quest', questId: 'capitals_call', status: 'in_progress', stage: 2 }], successNode: 'in_progress_capitals_call_2', failureNode: '' }
+                            },
+                            {
+                                text: "Captain Elara suggested I speak with you about the Serpent Bandits.",
+                                check: { requirements: [{ type: 'quest', questId: 'capitals_call', status: 'in_progress', stage: 3 }], successNode: 'in_progress_capitals_call_2', failureNode: '' }
+                            }
+                        ]
                     },
                     in_progress_capitals_call_2: {
                         npcName: 'Bronn the Retired Adventurer',
@@ -638,8 +675,7 @@ export const oakhavenPois: Record<string, POI> = {
                         responses: []
                     }
                 },
-                startNode: 'start',
-                dialogueType: 'random',
+                startNode: 'default_dialogue',
             }
         ],
         regionId: 'oakhaven',
@@ -652,17 +688,33 @@ export const oakhavenPois: Record<string, POI> = {
         description: 'A sturdy, well-guarded building. Your items will be safe here.',
         connections: ['oakhaven_square'],
         activities: [
-            { type: 'bank' },
             {
                 type: 'npc',
                 name: 'Banker Astrid',
                 icon: '/assets/npcChatHeads/banker_astrid.png',
+                actions: [
+                    { label: 'Bank', action: 'open_bank' },
+                    { label: 'Deposit Backpack', action: 'deposit_backpack' },
+                    { label: 'Deposit Equipment', action: 'deposit_equipment' },
+                ],
                 dialogue: {
                     start: {
                         npcName: 'Banker Astrid',
                         npcIcon: '/assets/npcChatHeads/banker_astrid.png',
                         text: "Bank of Embrune, Oakhaven branch. How may I assist you?",
-                        responses: []
+                        responses: [
+                            { text: "I'd like to access my bank.", next: 'access_bank' },
+                            { text: "Just looking around, thank you." }
+                        ]
+                    },
+                    access_bank: {
+                        npcName: 'Banker Astrid',
+                        npcIcon: '/assets/npcChatHeads/banker_astrid.png',
+                        text: "Certainly. We offer secure storage for all your valuable items. Would you like to view your vault?",
+                        responses: [
+                            { text: "Yes.", actions: [{ type: 'open_bank' }] },
+                            { text: "No, thank you." }
+                        ]
                     }
                 },
                 startNode: 'start'

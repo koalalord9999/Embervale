@@ -14,7 +14,8 @@ import { useQuestLogic } from '../../hooks/useQuestLogic';
 import { useSkilling } from '../../hooks/useSkilling';
 import { useInteractQuest } from '../../hooks/useInteractQuest';
 import { useGameSession } from '../../hooks/useGameSession';
-import { SkillName, InventorySlot, CombatStance, POIActivity, GroundItem, Spell, BonfireActivity, DialogueCheckRequirement, DialogueAction } from '../../types';
+import { useItemActions } from '../../hooks/useItemActions';
+import { SkillName, InventorySlot, CombatStance, POIActivity, GroundItem, Spell, BonfireActivity, DialogueCheckRequirement, DialogueAction, BankTab } from '../../types';
 import { POIS } from '../../data/pois';
 import CraftingProgressView from '../views/crafting/CraftingProgressView';
 import CombatView from '../views/CombatView';
@@ -25,6 +26,8 @@ import QuestBoardView from '../views/QuestBoardView';
 import SceneView from './SceneView';
 import TeleportView from '../views/TeleportView';
 import LootView from '../views/LootView';
+import EquipmentStatsView from '../views/overlays/EquipmentStatsView';
+import SettingsView from '../panels/SettingsPanel';
 
 interface MainViewControllerProps {
     ui: ReturnType<typeof useUIState>;
@@ -32,7 +35,7 @@ interface MainViewControllerProps {
     char: ReturnType<typeof useCharacter>;
     inv: ReturnType<typeof useInventory>;
     quests: ReturnType<typeof useQuests>;
-    bank: (InventorySlot | null)[];
+    bank: BankTab[];
     bankLogic: ReturnType<typeof useBank>;
     shops: ReturnType<typeof useShops>;
     crafting: ReturnType<typeof useCrafting>;
@@ -62,7 +65,7 @@ interface MainViewControllerProps {
     onUpdatePoiConnections?: (poiId: string, newConnections: string[]) => void;
     // Props from Game that were passed down
     initialState: any;
-    onExportGame: (gameState: object) => void;
+    onExportGame: () => void;
     onImportGame: () => void;
     onResetGame: () => void;
     showAllPois: boolean;
@@ -82,13 +85,23 @@ interface MainViewControllerProps {
     onStokeBonfire: (logId: string, bonfireId: string) => void;
     isStunned: boolean;
     addBuff: (buff: any) => void;
+    itemActions: ReturnType<typeof useItemActions>;
+    isDevMode: boolean;
+    onToggleDevPanel: () => void;
+    onToggleTouchSimulation: () => void;
+    onDepositEquipment: () => void;
 }
 
 const MainViewController: React.FC<MainViewControllerProps> = (props) => {
     const {
         ui, addLog, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, handleDialogueAction, handleDialogueCheck, combatSpeedMultiplier, activeCombatStyleHighlight, isTouchSimulationEnabled, showAllPois,
         groundItemsForCurrentPoi, onPickUpItem, onTakeAllLoot, onItemDropped, isAutoBankOn, handleCombatXpGain, immunityTimeLeft, poiImmunityTimeLeft, killTrigger,
-        bankPlaceholders, handleToggleBankPlaceholders, bonfires, onStokeBonfire, isStunned, addBuff
+        bankPlaceholders, handleToggleBankPlaceholders, bonfires, onStokeBonfire, isStunned, addBuff, onExportGame, onImportGame, onResetGame,
+        itemActions,
+        isDevMode,
+        onToggleDevPanel,
+        onToggleTouchSimulation,
+        onDepositEquipment,
     } = props;
 
     const handleTeleport = useCallback((toBoardId: string) => {
@@ -115,6 +128,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
         else if (activity.type === 'spinning_wheel') ui.openCraftingView({ type: 'spinning_wheel' });
         else if (activity.type === 'wishing_well') worldActions.handleWishingWell();
         else if (activity.type === 'water_source') worldActions.handleCollectWater();
+        else if (activity.type === 'milking') worldActions.handleMilking();
         else if (activity.type === 'quest_board') ui.setActiveQuestBoardId(session.currentPoiId);
         else if (activity.type === 'ancient_chest') worldActions.handleOpenAncientChest();
         else if (activity.type === 'runecrafting_altar') crafting.handleInstantRunecrafting(activity.runeId);
@@ -123,6 +137,21 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
     };
 
     const mainContent = (() => {
+        if (ui.isSettingsViewOpen) {
+            return <SettingsView 
+                onClose={() => ui.setIsSettingsViewOpen(false)} 
+                onExportGame={onExportGame}
+                onImportGame={onImportGame}
+                onResetGame={onResetGame}
+                isDevMode={isDevMode}
+                onToggleDevPanel={onToggleDevPanel}
+                isTouchSimulationEnabled={isTouchSimulationEnabled}
+                onToggleTouchSimulation={onToggleTouchSimulation}
+                ui={ui}
+                bankPlaceholders={bankPlaceholders}
+                handleToggleBankPlaceholders={handleToggleBankPlaceholders}
+            />
+        }
         if (ui.activeCraftingAction && ui.activeCraftingAction.recipeType !== 'firemaking-stoke') {
             return <CraftingProgressView
                 action={ui.activeCraftingAction}
@@ -164,6 +193,9 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 applyStatModifier={char.applyStatModifier}
                 isStunned={isStunned}
                 addBuff={addBuff}
+                showPlayerHealthNumbers={ui.showCombatPlayerHealth}
+                showEnemyHealthNumbers={ui.showCombatEnemyHealth}
+                showHitsplats={ui.showHitsplats}
             />;
         }
         if (ui.activeTeleportBoardId) {
@@ -174,18 +206,36 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 onClose={() => ui.setActiveTeleportBoardId(null)}
             />
         }
+        if (ui.equipmentStats) {
+            return <EquipmentStatsView 
+                equipment={inv.equipment} 
+                onClose={() => ui.setEquipmentStats(null)}
+                onUnequip={inv.handleUnequip}
+                setTooltip={ui.setTooltip}
+                ui={ui}
+                addLog={addLog}
+                onExamine={itemActions.handleExamine}
+                isTouchSimulationEnabled={isTouchSimulationEnabled}
+            />
+        }
         if (ui.activePanel === 'bank') return <BankView 
             bank={bank}
             onClose={() => ui.setActivePanel(null)}
             onWithdraw={bankLogic.handleWithdraw}
-            onDepositBackpack={bankLogic.handleDepositBackpack}
-            onDepositEquipment={bankLogic.handleDepositEquipment}
+            onDepositBackpack={() => bankLogic.handleDepositBackpack(ui.activeBankTabId)}
+            onDepositEquipment={() => bankLogic.handleDepositEquipment(ui.activeBankTabId)}
             onMoveItem={bankLogic.moveBankItem}
+            onAddTab={bankLogic.addTab}
+            onRemoveTab={bankLogic.removeTab}
+            onMoveItemToTab={bankLogic.moveItemToTab}
+            onRenameTab={bankLogic.handleRenameTab}
             setContextMenu={ui.setContextMenu}
             setMakeXPrompt={ui.setMakeXPrompt}
             setTooltip={ui.setTooltip}
             bankPlaceholders={bankPlaceholders}
             handleToggleBankPlaceholders={handleToggleBankPlaceholders}
+            ui={ui}
+            isOneClickMode={ui.isOneClickMode}
         />;
         if (ui.activeShopId) return <ShopView 
             shopId={ui.activeShopId}
@@ -239,7 +289,6 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
         }
 
         return (
-            // FIX: Remove obsolete tutorialStage and advanceTutorial props.
             <SceneView poi={poi} unlockedPois={navigation.reachablePois} onNavigate={navigation.handleNavigate} inventory={inv.inventory}
                 onActivity={onActivity}
                 worldActions={worldActions}
@@ -261,11 +310,13 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 setActiveDialogue={ui.setActiveDialogue}
                 handleDialogueAction={handleDialogueAction}
                 handleDialogueCheck={handleDialogueCheck}
-                onDepositBackpack={bankLogic.handleDepositBackpack}
+                onDepositBackpack={() => bankLogic.handleDepositBackpack(ui.activeBankTabId)}
+                onDepositEquipment={onDepositEquipment}
                 ui={ui}
                 isTouchSimulationEnabled={isTouchSimulationEnabled}
-                bonfires={bonfires}
+                bonfires={bonfires.filter(b => b.uniqueId.startsWith(session.currentPoiId))}
                 onStokeBonfire={crafting.handleStokeBonfire}
+                isOneClickMode={ui.isOneClickMode}
             />
         );
     })();

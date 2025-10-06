@@ -73,6 +73,19 @@ export const SHOPS: Record<string, Shop> = {
             { itemId: 'spider_eggs', quantity: 5, priceModifier: 1.2 },
         ]
     },
+    meadowdale_magic: {
+        id: 'meadowdale_magic',
+        name: "Elmsworth's Embryo Magicks",
+        inventory: [
+            { itemId: 'binding_rune', quantity: 1000, priceModifier: 1.4 },
+            { itemId: 'gust_rune', quantity: 1000, priceModifier: 1.4 },
+            { itemId: 'wizard_hat', quantity: 10, priceModifier: 1.4 },
+            { itemId: 'wizard_robe_top', quantity: 10, priceModifier: 1.4 },
+            { itemId: 'wizard_robe_skirt', quantity: 10, priceModifier: 1.4 },
+            { itemId: 'wizard_boots', quantity: 10, priceModifier: 1.4 },
+            { itemId: 'staff', quantity: 10, priceModifier: 1.4 },
+        ]
+    },
     silverhaven_general: {
         id: 'silverhaven_general',
         name: 'Silverhaven General',

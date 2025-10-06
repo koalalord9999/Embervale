@@ -9,6 +9,13 @@ export interface PlayerSkill {
   xp: number;
 }
 
+export interface BankTab {
+  id: number;
+  name: string;
+  icon: string | null; // ItemID
+  items: (InventorySlot | null)[];
+}
+
 export interface EquipmentStats {
     // Attack Bonuses
     stabAttack?: number;
@@ -80,6 +87,7 @@ export interface Item {
   emptyable?: { emptyItemId: string };
   divining?: { poiId: string; };
   runecrafting?: { xp: number; runeId: string; requiredLevel: number; };
+  mappable?: { regionId: string; mapTitle: string; };
   material?: 'bronze' | 'iron' | 'steel' | 'mithril' | 'adamantite' | 'runic' | 'aquatite' | 'copper' | 'tin' | 'iron-ore' | 'mithril-ore' | 'adamantite-ore' | 'titanium-ore' | 'silver' | 'coal' | 'raw-fish' | 'raw-meat' | 'cooked-fish' | 'cooked-meat' | 'burnt' | 'sapphire' | 'uncut-sapphire' | 'emerald' | 'uncut-emerald' | 'ruby' | 'uncut-ruby' | 'diamond' | 'uncut-diamond' | 'leather' | 'wizard-blue' | 'gold' | 'wood-normal' | 'wood-oak' | 'wood-willow' | 'wood-feywood' | 'wood-yew' | 'wood-driftwood' | 'wood-mahogany' | 'grimy-herb' | 'clean-herb' | 'unfinished-potion' | 'potion' | 'vial' | 'vial-water' | 'potion-weak-attack' | 'potion-attack' | 'potion-super-attack' | 'potion-weak-strength' | 'potion-strength' | 'potion-super-strength' | 'potion-weak-defence' | 'potion-defence' | 'potion-super-defence' | 'potion-weak-ranged' | 'potion-ranged' | 'potion-super-ranged' | 'potion-weak-magic' | 'potion-magic' | 'potion-super-magic' | 'potion-antipoison' | 'potion-super-antipoison' | 'potion-poison' | 'potion-restore' | 'potion-prayer' | 'potion-combo' | 'potion-weak-mining' | 'potion-mining' | 'potion-weak-smithing' | 'potion-smithing' | 'potion-weak-woodcutting' | 'potion-woodcutting' | 'potion-weak-fletching' | 'potion-fletching' | 'potion-weak-crafting' | 'potion-crafting' | 'potion-weak-fishing' | 'potion-fishing' | 'potion-weak-herblore' | 'potion-herblore' | 'potion-antifire' | 'potion-stamina' | 'rune-gust' | 'rune-binding' | 'rune-stone' | 'rune-aqua' | 'rune-ember' | 'rune-flux' | 'rune-verdant' | 'rune-nexus' | 'rune-hex' | 'rune-passage' | 'rune-anima' | 'rune-astral' | 'rune-aether';
 }
 
@@ -110,7 +118,8 @@ export type MonsterSpecialAttack =
   | { name: string; chance: number; effect: 'stat_drain'; value: number; skill: SkillName }
   | { name: string; chance: number; effect: 'stat_drain_multi'; skills: { skill: SkillName; value: number }[] }
   | { name: string; chance: number; effect: 'stun'; duration: number }
-  | { name: string; chance: number; effect: 'magic_bypass_defence'; maxHit: number };
+  | { name: string; chance: number; effect: 'magic_bypass_defence'; maxHit: number }
+  | { name: string; chance: number; effect: 'elemental_shift' };
 
 export interface Monster {
   id: string;
@@ -141,6 +150,7 @@ export interface Monster {
   alwaysDrops?: boolean;
   customMaxHit?: number;
   elementalWeakness?: SpellElement;
+  elementalWeaknessCycle?: SpellElement[];
 }
 
 export interface WorldState {
@@ -156,4 +166,5 @@ export interface WorldState {
         amount: number;
         expiresAt: number;
     } | null;
+    pendingQuestCombatReward?: InventorySlot | null;
 }

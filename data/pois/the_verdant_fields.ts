@@ -1,4 +1,5 @@
 
+
 import { POI, SkillName, ToolType } from '../../types';
 
 export const theVerdantFieldsPois: Record<string, POI> = {
@@ -51,9 +52,9 @@ export const theVerdantFieldsPois: Record<string, POI> = {
                     solution_sheep_troubles: {
                         npcName: 'Rancher McGregor',
                         npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-                        text: "It needs to be spun into proper balls of wool. I've got a spinning wheel in the barn you can use. If you can shear ten sheep, spin the wool, and bring me back ten finished balls, I'd be mighty grateful. I'll pay you well for your trouble, of course.",
+                        text: "It needs to be spun into proper balls of wool. I've got a spinning wheel in the barn you can use. If you can shear ten sheep, spin the wool, and bring me back ten finished balls, I'd be mighty grateful. Here, take these shears to get you started. I'll pay you well for your trouble, of course.",
                         responses: [
-                            { text: "You've got a deal. I'll get right on it.", actions: [{ type: 'start_quest', questId: 'sheep_troubles' }] },
+                            { text: "You've got a deal. I'll get right on it.", actions: [{ type: 'start_quest', questId: 'sheep_troubles' }, { type: 'give_item', itemId: 'shears', quantity: 1 }] },
                             { text: "That sounds like a lot of work." },
                         ],
                     },
@@ -74,7 +75,7 @@ export const theVerdantFieldsPois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
                         text: "Well I'll be! You've got the knack for it. These are perfect. Thank you kindly, adventurer. Here's your payment, as promised.",
                         responses: [
-                            { text: "Happy to help.", actions: [{ type: 'give_xp', skill: SkillName.Crafting, amount: 150 }, { type: 'give_coins', amount: 300 }, { type: 'advance_quest', questId: 'sheep_troubles' }] },
+                            { text: "Happy to help.", actions: [{ type: 'give_xp', skill: SkillName.Crafting, amount: 150 }, { type: 'give_coins', amount: 300 }, {type: 'take_item', itemId: 'ball_of_wool', quantity: 10}, { type: 'advance_quest', questId: 'sheep_troubles' }] },
                         ]
                     },
                     post_quest_sheep_troubles: {

@@ -53,6 +53,7 @@ export const tutorialZonePois: Record<string, POI> = {
         name: 'Survival Training Grounds',
         description: 'A small clearing with basic resources for survival training. A survival expert is here to help.',
         connections: ['tutorial_entrance', 'tutorial_baking_area'],
+        unlockRequirement: { type: 'quest', questId: 'embrune_101', stage: 1 },
         activities: [
             {
                 type: 'npc',
@@ -75,7 +76,7 @@ export const tutorialZonePois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/survival_guide.png',
                         text: "Right, you'll need these. Here's an axe for chopping and a tinderbox for making a fire. Your first step is to chop down a tree to get some logs.",
                         highlight: 'activity-button-1',
-                        responses: [{ text: "So I have to cut down a tree and burn the logs? That's rough, but I must carry on.", actions: [{ type: 'give_item', itemId: 'bronze_axe', quantity: 1 }, { type: 'give_item', itemId: 'tinderbox', quantity: 1 }] }]
+                        responses: [{ text: "So I have to cut down a tree and burn the logs? That's rough, but I must carry on.", actions: [{ type: 'give_item', itemId: 'bronze_axe', quantity: 1 }, { type: 'give_item', itemId: 'tinderbox', quantity: 1 }, { type: 'give_item', itemId: 'small_fishing_net', quantity: 1 }] }]
                     },
                     survival_guide_has_tools: {
                         npcName: 'Survival Guide',
@@ -143,6 +144,7 @@ export const tutorialZonePois: Record<string, POI> = {
         name: 'Baking Area',
         description: 'The smell of fresh bread hangs in the air. A baker stands near a cooking range, next to a field of wheat.',
         connections: ['tutorial_survival_grounds', 'tutorial_learning_hut'],
+        unlockRequirement: { type: 'quest', questId: 'embrune_101', stage: 3 },
         activities: [
             {
                 type: 'npc',
@@ -208,7 +210,8 @@ export const tutorialZonePois: Record<string, POI> = {
         id: 'tutorial_learning_hut',
         name: 'Learning Hut',
         description: 'A small hut filled with books and scrolls. An information guide offers to share knowledge. A ladder leads down into the darkness.',
-        connections: ['tutorial_baking_area', 'tutorial_mine'],
+        connections: ['tutorial_baking_area'],
+        unlockRequirement: { type: 'quest', questId: 'embrune_101', stage: 6 },
         activities: [
             {
                 type: 'npc',
@@ -245,6 +248,13 @@ export const tutorialZonePois: Record<string, POI> = {
                 },
                 startNode: 'default_dialogue'
             },
+            {
+                type: 'ladder',
+                name: 'Climb Down Ladder',
+                direction: 'down',
+                toPoiId: 'tutorial_mine',
+                questCondition: { questId: 'embrune_101', stages: [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24], visibleAfterCompletion: true }
+            }
         ],
         regionId: 'path_of_beginnings', x: -42, y: -109,
     },
@@ -252,7 +262,8 @@ export const tutorialZonePois: Record<string, POI> = {
         id: 'tutorial_mine',
         name: 'Tutorial Mine',
         description: 'A small cavern with deposits of copper and tin. A furnace and anvil stand ready for use.',
-        connections: ['tutorial_learning_hut', 'tutorial_combat_area'],
+        connections: ['tutorial_combat_area'],
+        unlockRequirement: { type: 'quest', questId: 'embrune_101', stage: 7 },
         activities: [
             {
                 type: 'npc',
@@ -305,6 +316,13 @@ export const tutorialZonePois: Record<string, POI> = {
             { type: 'skilling', id: 'tut_mine_tin1', name: 'Mine Tin', skill: SkillName.Mining, requiredLevel: 1, loot: [{ itemId: 'tin_ore', chance: 1, xp: 18 }], resourceCount: { min: 999, max: 999 }, respawnTime: 3000, gatherTime: 1500 },
             { type: 'furnace' },
             { type: 'anvil' },
+            {
+                type: 'ladder',
+                name: 'Climb Up Ladder',
+                direction: 'up',
+                toPoiId: 'tutorial_learning_hut',
+                questCondition: { questId: 'embrune_101', stages: [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24], visibleAfterCompletion: true }
+            }
         ],
         regionId: 'path_of_beginnings', x: 48, y: -180,
     },
@@ -313,6 +331,7 @@ export const tutorialZonePois: Record<string, POI> = {
         name: 'Combat Area',
         description: 'An area set up for combat practice. Some rats skitter in a cage.',
         connections: ['tutorial_mine', 'tutorial_bank_area'],
+        unlockRequirement: { type: 'quest', questId: 'embrune_101', stage: 10 },
         activities: [
             { type: 'npc', name: 'Weapon Guide', icon: '/assets/npcChatHeads/weapon_guide.png', dialogue: {
                 in_progress_embrune_101_10: {
@@ -371,28 +390,41 @@ export const tutorialZonePois: Record<string, POI> = {
         name: 'Bank & Finance Area',
         description: 'A small, secure building. Inside, a Banker and a Money Guide offer their services.',
         connections: ['tutorial_combat_area', 'tutorial_chapel_area'],
+        unlockRequirement: { type: 'quest', questId: 'embrune_101', stage: 15 },
         activities: [
-            { type: 'npc', name: 'Banker', icon: '/assets/npcChatHeads/banker.png', dialogue: {
-                in_progress_embrune_101_15: {
-                    npcName: 'Banker',
-                    npcIcon: '/assets/npcChatHeads/banker.png',
-                    text: "Welcome to the Bank of Embrune. Your inventory is limited, but your bank is not. Here you can store all your items safely. Open the bank and deposit something.",
-                    highlight: 'activity-button-2',
-                    responses: [{ text: "Okay, I'll try it.", actions: [{ type: 'advance_quest', questId: 'embrune_101' }] }]
+            {
+                type: 'npc',
+                name: 'Banker',
+                icon: '/assets/npcChatHeads/banker.png',
+                dialogue: {
+                    in_progress_embrune_101_15: {
+                        npcName: 'Banker',
+                        npcIcon: '/assets/npcChatHeads/banker.png',
+                        text: "Welcome to the Bank of Embrune. Your inventory is limited, but your bank is not. Here you can store all your items safely. Would you like to access it now?",
+                        highlight: 'activity-button-0',
+                        responses: [
+                            { text: "Yes, I'd like to try.", actions: [{ type: 'open_bank' }, { type: 'advance_quest', questId: 'embrune_101' }] },
+                            { text: "Not right now." }
+                        ]
+                    },
+                    in_progress_embrune_101_16: {
+                        npcName: 'Banker',
+                        npcIcon: '/assets/npcChatHeads/banker.png',
+                        text: "Good. Remember to use the bank to store items you don't need. Now, you should speak with the Money Guide next to me.",
+                        responses: []
+                    },
+                    default_dialogue: {
+                        npcName: 'Banker',
+                        npcIcon: '/assets/npcChatHeads/banker.png',
+                        text: "Your items are safe with us. Would you like to access your bank?",
+                        responses: [
+                            { text: "Yes.", actions: [{ type: 'open_bank' }] },
+                            { text: "No, thank you." }
+                        ]
+                    }
                 },
-                in_progress_embrune_101_16: {
-                    npcName: 'Banker',
-                    npcIcon: '/assets/npcChatHeads/banker.png',
-                    text: "You should speak with the Money Guide next to me now. He'll teach you about currency.",
-                    responses: []
-                },
-                default_dialogue: {
-                    npcName: 'Banker',
-                    npcIcon: '/assets/npcChatHeads/banker.png',
-                    text: "Your items are safe with us.",
-                    responses: []
-                }
-            }, startNode: 'default_dialogue' },
+                startNode: 'default_dialogue'
+            },
             { type: 'npc', name: 'Money Guide', icon: '/assets/npcChatHeads/money_guide.png', dialogue: {
                 in_progress_embrune_101_16: {
                     npcName: 'Money Guide',
@@ -407,7 +439,6 @@ export const tutorialZonePois: Record<string, POI> = {
                     responses: []
                 }
             }, startNode: 'default_dialogue' },
-            { type: 'bank' },
         ],
         regionId: 'path_of_beginnings', x: 267, y: -96,
     },
@@ -416,6 +447,7 @@ export const tutorialZonePois: Record<string, POI> = {
         name: 'Chapel Area',
         description: 'A small, peaceful chapel stands in this clearing.',
         connections: ['tutorial_bank_area', 'tutorial_tavern'],
+        unlockRequirement: { type: 'quest', questId: 'embrune_101', stage: 17 },
         activities: [
             { type: 'npc', name: 'Prayer Guide', icon: '/assets/npcChatHeads/prayer_guide.png', dialogue: {
                 in_progress_embrune_101_17: {
@@ -446,19 +478,20 @@ export const tutorialZonePois: Record<string, POI> = {
         name: 'Tutorial Tavern',
         description: 'A cozy tavern. A manager, a magic guide, and a quest board offer opportunities.',
         connections: ['tutorial_chapel_area'],
+        unlockRequirement: { type: 'quest', questId: 'embrune_101', stage: 18 },
         activities: [
             { type: 'npc', name: 'Tavern Manager', icon: '/assets/npcChatHeads/barkeep_grimley.png', dialogue: {
                 in_progress_embrune_101_18: {
                     npcName: 'Tavern Manager',
                     npcIcon: '/assets/npcChatHeads/barkeep_grimley.png',
-                    text: "Welcome to the inn! A fine place to rest or find work. See that board? That's a Quest Board. It has tasks for adventurers like you. There's a special one just for you. Go on, check the board and accept the 'Magical Pest Control' task.",
+                    text: "Welcome to the inn! A fine place to rest or find work. See that board? That's a Quest Board. It has tasks for adventurers like you. There's a special one just for you. Go on, check the board.",
                     highlight: 'activity-button-2',
                     responses: [{ text: "I'll check it out.", actions: [{ type: 'advance_quest', questId: 'embrune_101' }] }]
                 },
                 in_progress_embrune_101_19: {
                     npcName: 'Tavern Manager',
                     npcIcon: '/assets/npcChatHeads/barkeep_grimley.png',
-                    text: "The board is right over there. Just accept the 'Magical Pest Control' task.",
+                    text: "The board is right over there. Just check the posting.",
                     highlight: 'activity-button-2',
                     responses: []
                 },
@@ -471,7 +504,7 @@ export const tutorialZonePois: Record<string, POI> = {
                 in_progress_embrune_101_22: {
                     npcName: 'Tavern Manager',
                     npcIcon: '/assets/npcChatHeads/barkeep_grimley.png',
-                    text: "You've proven yourself a capable adventurer. You have learned all there is to know. Head back to the Magic Guide. He has one last thing to teach you.",
+                    text: "Excellent work with that rat! Magic is a useful tool, isn't it? Head back to the Magic Guide. He has one last thing to teach you.",
                     responses: [{ text: "Right away.", actions: [{ type: 'advance_quest', questId: 'embrune_101' }] }]
                 },
                 default_dialogue: {
@@ -492,7 +525,7 @@ export const tutorialZonePois: Record<string, POI> = {
                 in_progress_embrune_101_22: {
                     npcName: 'Magic Guide',
                     npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
-                    text: "You did it! Now, return to the Tavern Manager to turn in your task.",
+                    text: "You did it! Now, return to the Tavern Manager to report your success.",
                     responses: []
                 },
                 in_progress_embrune_101_23: {
@@ -511,7 +544,23 @@ export const tutorialZonePois: Record<string, POI> = {
                     responses: []
                 }
             }, startNode: 'default_dialogue' },
-            { type: 'quest_board' },
+            { 
+                type: 'npc',
+                name: 'Quest Board',
+                icon: 'https://api.iconify.design/game-icons:papers.svg',
+                questCondition: { questId: 'embrune_101', stages: [19] },
+                dialogue: {
+                    start: {
+                        npcName: 'Quest Board',
+                        npcIcon: 'https://api.iconify.design/game-icons:papers.svg',
+                        text: "A hastily scrawled note is pinned to the board:\n\n'Task: Magical Pest Control\n\nA rat in the tavern has been chewing on spellbooks. The Magic Guide wants it dealt with using magic. We need to test you on this, it's very important. Accept this task to proceed with your training.'",
+                        responses: [
+                            { text: "Accept Task", actions: [{ type: 'advance_quest', questId: 'embrune_101' }] }
+                        ]
+                    }
+                },
+                startNode: 'start'
+            },
             { type: 'combat', monsterId: 'tutorial_rat' },
         ],
         regionId: 'path_of_beginnings', x: 98, y: 106,

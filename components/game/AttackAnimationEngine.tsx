@@ -10,6 +10,7 @@ interface Animation {
     options: {
         arrowType?: string | null;
         spellTier?: number;
+        element?: string | null;
     };
 }
 
@@ -72,7 +73,8 @@ const Projectile: React.FC<{
         }
         if (type === 'magic') {
             const spellTier = options.spellTier ?? 1;
-            return <div className={`anim-magic anim-magic-${spellTier}`} style={{ transform: `rotate(${angle}deg)` }} />;
+            const elementClass = options.element ? `element-${options.element}` : 'element-wind';
+            return <div className={`anim-magic anim-magic-${spellTier} ${elementClass}`} style={{ transform: `rotate(${angle}deg)` }} />;
         }
         return null;
     };
@@ -111,8 +113,16 @@ const AttackAnimationEngine: React.FC<AnimationProps> = ({ triggers, playerRef, 
                     x: targetRect.left - containerRect.left + targetRect.width / 2,
                     y: targetRect.top - containerRect.top + targetRect.height / 2,
                 };
+                
+                let startPos = { ...sourceCenter };
+                if (trigger.type === 'ranged') {
+                    const randomAngle = Math.random() * 2 * Math.PI;
+                    const randomRadius = 40;
+                    startPos.x += Math.cos(randomAngle) * randomRadius;
+                    startPos.y += Math.sin(randomAngle) * randomRadius;
+                }
 
-                return { ...trigger, start: sourceCenter, end: targetCenter };
+                return { ...trigger, start: startPos, end: targetCenter };
             }).filter(Boolean);
 
             setAnimations(prev => [...prev, ...newAnimations]);
@@ -135,16 +145,7 @@ const AttackAnimationEngine: React.FC<AnimationProps> = ({ triggers, playerRef, 
                 const distance = Math.sqrt(dx*dx + dy*dy);
 
                 if (anim.type === 'ranged' || anim.type === 'magic') {
-                     // Ranged projectiles have random starting points
-                    let startPos = { ...anim.start };
-                    if (anim.type === 'ranged') {
-                        const randomAngle = Math.random() * 2 * Math.PI;
-                        const randomRadius = 40;
-                        startPos.x += Math.cos(randomAngle) * randomRadius;
-                        startPos.y += Math.sin(randomAngle) * randomRadius;
-                    }
-
-                    return <Projectile key={anim.id} id={anim.id} type={anim.type} start={startPos} end={anim.end} options={anim.options} onComplete={handleAnimationEnd} />;
+                    return <Projectile key={anim.id} id={anim.id} type={anim.type} start={anim.start} end={anim.end} options={anim.options} onComplete={handleAnimationEnd} />;
                 }
 
                 return (

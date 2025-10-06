@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import Button from '../common/Button';
 import { useInventory } from '../../hooks/useInventory';
@@ -471,6 +472,9 @@ interface DevPanelProps {
         spawnQuantity: number;
         teleportRegionId: string;
         teleportPoiId: string;
+        skillToSet: '' | SkillName;
+        levelToSet: number;
+        coinAmount: number;
         wcTestLevel: number;
         wcTestTreeId: string | null;
     };

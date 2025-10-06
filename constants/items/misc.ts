@@ -4,9 +4,14 @@ export const misc: Item[] = [
     // Currency
     { id: 'coins', name: 'Coins', description: 'Shiny gold coins.', stackable: true, value: 1, iconUrl: 'https://api.iconify.design/game-icons:coins.svg' },
     { id: 'beer_glass', name: 'Beer Glass', description: 'An empty beer glass.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:beer-stein.svg' },
-    { id: 'ashes', name: 'Ashes', description: 'A pile of ashes.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:ashes.svg' },
+    { id: 'ashes', name: 'Ashes', description: 'A pile of ashes.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:powder.svg' },
     
     // Quest & Key Items
+    { id: 'arcane_resonator', name: 'Arcane Resonator', description: 'A device given by Archmage Theron to measure arcane energy at runic altars.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:orb-wand.svg' },
+    { id: 'gust_reading', name: 'Gust Reading', description: 'A charged reading from the Gust Altar.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:wind-slap.svg', material: 'rune-gust' },
+    { id: 'stone_reading', name: 'Stone Reading', description: 'A charged reading from the Stone Altar.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:stone-block.svg', material: 'rune-stone' },
+    { id: 'aqua_reading', name: 'Aqua Reading', description: 'A charged reading from the Aqua Altar.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:water-splash.svg', material: 'rune-aqua' },
+    { id: 'resonance_dampener', name: 'Resonance Dampener', description: 'A complex dwarven device designed to stabilize a skyship against magical turbulence.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:gear-hammer.svg' },
     { id: 'elaras_signet', name: "Elara's Signet", description: 'A signet ring bearing the crest of the Oakhaven Guard. Given to you by the Captain.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:fire-gem.svg', material: 'silver' },
     { id: 'rusty_iron_sword', name: 'Rusty Iron Sword', description: 'An old, corroded sword. It feels strangely balanced despite the rust.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:gladius.svg', equipment: { slot: EquipmentSlot.Weapon, stabAttack: 1, slashAttack: 1, crushAttack: -2, rangedAttack: 0, magicAttack: 0, stabDefence: 0, slashDefence: 0, crushDefence: 0, rangedDefence: 0, magicDefence: 0, strengthBonus: 1, rangedStrength: 0, magicDamageBonus: 0, weaponType: WeaponType.Sword, speed: 3 }, material: 'iron' },
     { id: 'lost_heirloom', name: 'Lost Heirloom', description: 'An old but beautifully crafted silver necklace. It looks like it would be very important to someone.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:necklace.svg' },
@@ -14,7 +19,7 @@ export const misc: Item[] = [
     { id: 'strange_key_loop', name: 'Strange Key Loop', description: 'Half of a strange, ancient key.', stackable: false, value: 1000, iconUrl: 'https://api.iconify.design/game-icons:key.svg' },
     { id: 'strange_key_tooth', name: 'Strange Key Tooth', description: 'The other half of a strange, ancient key.', stackable: false, value: 1000, iconUrl: 'https://api.iconify.design/game-icons:key.svg' },
     { id: 'strange_key', name: 'Strange Key', description: 'A key pulsating with a faint energy. It must unlock something important.', stackable: false, value: 2500, iconUrl: 'https://api.iconify.design/game-icons:star-key.svg' },
-    { id: 'ancient_gear', name: 'Ancient Gear', description: 'A strange, intricate gear from an ancient sentinel. It hums with a faint power.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:gear-hammer.svg' },
+    { id: 'ancient_gear', name: 'Ancient Gear', description: 'A strange, intricate gear from an ancient sentinel. It hums with a faint power.', stackable: false, value: 1000, iconUrl: 'https://api.iconify.design/game-icons:gear-hammer.svg' },
     { id: 'sirens_hair', name: "Siren's Hair", description: 'A lock of long, beautiful hair that seems to shimmer with its own light. It hums a faint, enchanting melody.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:yarn.svg' },
     { id: 'slimy_egg_shells', name: 'Slimy Egg Shells', description: 'Fragments of a large, leathery egg. They are covered in swamp slime.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:egg-eye.svg' },
     { id: 'serpents_egg', name: "Serpent's Egg", description: 'A large, leathery egg, surprisingly intact. It feels warm to the touch.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:dinosaur-egg.svg' },
@@ -71,4 +76,8 @@ export const misc: Item[] = [
     { id: 'serpent_scale', name: 'Serpent Scale', description: 'A tough, iridescent scale from a Bog Serpent. Can be ground into dust.', stackable: false, value: 120, iconUrl: 'https://api.iconify.design/game-icons:scales.svg' },
     { id: 'unicorn_horn', name: 'Unicorn Horn', description: 'The horn of a unicorn. It has potent anti-poison properties. Can be ground into dust.', stackable: false, value: 200, iconUrl: 'https://api.iconify.design/game-icons:ivory-tusks.svg' },
     { id: 'wyrmscale', name: 'Wyrmscale', description: "A thick scale from a powerful wyrm. It feels warm. Can be ground into dust.", stackable: false, value: 120, iconUrl: 'https://api.iconify.design/game-icons:scales.svg' },
+    // Dungeon Maps
+    { id: 'goblin_dungeon_map', name: 'Goblin Dungeon Map', description: 'A crudely drawn map of the goblin warrens.', stackable: false, value: 500, iconUrl: 'https://api.iconify.design/game-icons:treasure-map.svg', mappable: { regionId: 'goblin_dungeon', mapTitle: 'Goblin Dungeon' } },
+    { id: 'sunken_labyrinth_map', name: 'Sunken Labyrinth Map', description: 'A waterlogged map of the ancient labyrinth.', stackable: false, value: 1500, iconUrl: 'https://api.iconify.design/game-icons:treasure-map.svg', mappable: { regionId: 'sunken_labyrinth', mapTitle: 'Sunken Labyrinth' } },
+    { id: 'magus_spire_map', name: 'Magus Spire Map', description: 'A map drawn on shimmering crystal film, showing the layout of the spire.', stackable: false, value: 2500, iconUrl: 'https://api.iconify.design/game-icons:treasure-map.svg', mappable: { regionId: 'magus_spire', mapTitle: 'Magus Spire' } },
 ];

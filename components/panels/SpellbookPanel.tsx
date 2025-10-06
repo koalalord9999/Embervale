@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
-import { Spell, PlayerSkill, SkillName, InventorySlot } from '../../types';
+import { Spell, PlayerSkill, SkillName, InventorySlot, Equipment, WeaponType } from '../../types';
 import { SPELLS, ITEMS, getIconClassName } from '../../constants';
 import { TooltipState, useUIState } from '../../hooks/useUIState';
-import { useCharacter } from '../../hooks/useCharacter';
 
 interface SpellbookPanelProps {
     skills: (PlayerSkill & { currentLevel: number; })[];
     inventory: (InventorySlot | null)[];
+    equipment: Equipment;
     onCastSpell: (spell: Spell) => void;
     setTooltip: (tooltip: TooltipState | null) => void;
     autocastSpell: Spell | null;
@@ -88,7 +88,78 @@ const getSpellIconClassName = (spell: Spell): string => {
     return 'filter invert';
 };
 
-const SpellbookPanel: React.FC<SpellbookPanelProps> = ({ skills, inventory, onCastSpell, setTooltip, autocastSpell, ui }) => {
+interface SpellDisplayProps {
+    spell: Spell;
+    magicLevel: number;
+    inventory: (InventorySlot | null)[];
+    equipment: Equipment;
+    onCastSpell: (spell: Spell) => void;
+    setTooltip: (tooltip: TooltipState | null) => void;
+    autocastSpell: Spell | null;
+}
+
+const SpellDisplay: React.FC<SpellDisplayProps> = ({ spell, magicLevel, inventory, equipment, onCastSpell, setTooltip, autocastSpell }) => {
+    const isAutocasting = autocastSpell?.id === spell.id;
+
+    const canCast = useMemo(() => {
+        const hasRequiredLevel = magicLevel >= spell.level;
+
+        const equippedStaff = equipment.weapon ? ITEMS[equipment.weapon.itemId] : null;
+        const providedRune = equippedStaff?.equipment?.weaponType === WeaponType.Staff ? equippedStaff.equipment.providesRune : null;
+        const needed = spell.runes.filter(r => r.itemId !== providedRune);
+        
+        const hasRunes = needed.every(rune => {
+            const playerHas = inventory.reduce((acc, slot) => slot?.itemId === rune.itemId ? acc + slot.quantity : acc, 0);
+            return playerHas >= rune.quantity;
+        });
+        
+        return hasRequiredLevel && hasRunes;
+    }, [magicLevel, spell, inventory, equipment.weapon]);
+
+    const handleMouseEnter = (e: React.MouseEvent) => {
+        const hasRequiredLevel = magicLevel >= spell.level;
+        const levelColor = hasRequiredLevel ? 'text-green-400' : 'text-red-400';
+        
+        const equippedStaff = equipment.weapon ? ITEMS[equipment.weapon.itemId] : null;
+        const providedRune = equippedStaff?.equipment?.weaponType === WeaponType.Staff ? equippedStaff.equipment.providesRune : null;
+
+        const runeList = spell.runes.map(r => {
+            const runeItem = ITEMS[r.itemId];
+            if (r.itemId === providedRune) {
+                return `<li class="text-green-400">∞ ${runeItem.name}</li>`;
+            }
+            const playerHas = inventory.reduce((acc, slot) => slot?.itemId === r.itemId ? acc + slot.quantity : acc, 0);
+            const color = playerHas >= r.quantity ? 'text-green-400' : 'text-red-400';
+            return `<li class="${color}">${r.quantity}  ${runeItem.name}</li>`;
+        }).join('');
+
+        setTooltip({
+            content: (
+                <div className="text-left w-48">
+                    <p className="font-bold text-yellow-300">{spell.name}</p>
+                    <p className={`text-sm italic mb-2 ${levelColor}`}>Lvl {spell.level} Magic</p>
+                    <p className="text-sm text-gray-300 mb-2">{spell.description}</p>
+                    <ul className="text-xs list-disc list-inside" dangerouslySetInnerHTML={{ __html: runeList }} />
+                </div>
+            ),
+            position: { x: e.clientX, y: e.clientY }
+        });
+    };
+
+    return (
+        <button
+            onClick={() => { onCastSpell(spell); setTooltip(null); }}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={() => setTooltip(null)}
+            className={`w-full aspect-square rounded-md transition-colors flex items-center justify-center text-center hover:bg-gray-700/20 relative isolate ${isAutocasting ? 'autocast-orb-highlight' : ''}`}
+        >
+            <img src={getSpellIconUrl(spell)} alt={spell.name} className={`w-full h-full p-1 ${getSpellIconClassName(spell)}`} style={!canCast ? { filter: 'grayscale(0.8) brightness(0.2) drop-shadow(1px 1px 0 #333) drop-shadow(-1px -1px 0 #333)', opacity: 0.9 } : {}} />
+        </button>
+    );
+};
+
+
+const SpellbookPanel: React.FC<SpellbookPanelProps> = ({ skills, inventory, equipment, onCastSpell, setTooltip, autocastSpell, ui }) => {
     const magicLevel = skills.find(s => s.name === SkillName.Magic)?.currentLevel ?? 1;
 
     const spellsToDisplay = useMemo(() => {
@@ -99,52 +170,23 @@ const SpellbookPanel: React.FC<SpellbookPanelProps> = ({ skills, inventory, onCa
         return sorted;
     }, [ui.isSelectingAutocastSpell]);
 
-    const renderSpell = (spell: Spell) => {
-        const isAutocasting = autocastSpell?.id === spell.id;
-
-        const handleMouseEnter = (e: React.MouseEvent) => {
-            const hasRequiredLevel = magicLevel >= spell.level;
-            const levelColor = hasRequiredLevel ? 'text-green-400' : 'text-red-400';
-
-            const runeList = spell.runes.map(r => {
-                const runeItem = ITEMS[r.itemId];
-                const playerHas = inventory.reduce((acc, slot) => slot?.itemId === r.itemId ? acc + slot.quantity : acc, 0);
-                const color = playerHas >= r.quantity ? 'text-green-400' : 'text-red-400';
-                return `<li class="${color}">${r.quantity} x ${runeItem.name}</li>`;
-            }).join('');
-
-            setTooltip({
-                content: (
-                    <div className="text-left w-48">
-                        <p className="font-bold text-yellow-300">{spell.name}</p>
-                        <p className={`text-sm italic mb-2 ${levelColor}`}>Lvl {spell.level} Magic</p>
-                        <p className="text-sm text-gray-300 mb-2">{spell.description}</p>
-                        <ul className="text-xs list-disc list-inside" dangerouslySetInnerHTML={{ __html: runeList }} />
-                    </div>
-                ),
-                position: { x: e.clientX, y: e.clientY }
-            });
-        };
-
-        return (
-            <button
-                key={spell.id}
-                onClick={() => onCastSpell(spell)}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={() => setTooltip(null)}
-                className={`w-full aspect-square rounded-md transition-colors flex items-center justify-center text-center hover:bg-gray-700/20 relative isolate ${isAutocasting ? 'autocast-orb-highlight' : ''}`}
-            >
-                <img src={getSpellIconUrl(spell)} alt={spell.name} className={`w-full h-full p-1 ${getSpellIconClassName(spell)}`} />
-            </button>
-        );
-    };
-    
     return (
         <div className="flex flex-col h-full text-gray-300">
             {ui.isSelectingAutocastSpell && <h3 className="text-lg font-bold text-center mb-2 text-yellow-400">Select Autocast Spell</h3>}
             <div className="flex-grow overflow-y-auto pr-1">
                 <div className="grid grid-cols-5 gap-2">
-                    {spellsToDisplay.map(renderSpell)}
+                    {spellsToDisplay.map(spell => (
+                        <SpellDisplay
+                            key={spell.id}
+                            spell={spell}
+                            magicLevel={magicLevel}
+                            inventory={inventory}
+                            equipment={equipment}
+                            onCastSpell={onCastSpell}
+                            setTooltip={setTooltip}
+                            autocastSpell={autocastSpell}
+                        />
+                    ))}
                 </div>
             </div>
         </div>

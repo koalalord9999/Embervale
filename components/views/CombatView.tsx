@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Monster, PlayerSkill, SkillName, Equipment, CombatStance, WeaponType, MonsterType, InventorySlot, WeightedDrop, Spell, MonsterSpecialAttack } from '../../types';
-import { MONSTERS, ITEMS, rollOnLootTable, REGIONS, LootRollResult } from '../../constants';
+import { Monster, PlayerSkill, SkillName, Equipment, CombatStance, WeaponType, MonsterType, InventorySlot, WeightedDrop, Spell, MonsterSpecialAttack, SpellElement, Item } from '../../types';
+import { MONSTERS, ITEMS, rollOnLootTable, REGIONS, LootRollResult, getIconClassName } from '../../constants';
 import { POIS } from '../../data/pois';
 import Button from '../common/Button';
 import ProgressBar from '../common/ProgressBar';
@@ -38,6 +39,10 @@ interface CombatViewProps {
     applyStatModifier: (skill: SkillName, value: number, duration: number, baseLevelOnConsumption: number) => void;
     isStunned: boolean;
     addBuff: (buff: Omit<ActiveBuff, 'id' | 'expiresAt'>) => void;
+    // FIX: Add missing props for UI settings
+    showPlayerHealthNumbers: boolean;
+    showEnemyHealthNumbers: boolean;
+    showHitsplats: boolean;
 }
 
 interface MonsterStatusEffect {
@@ -72,7 +77,7 @@ const HitSplat: React.FC<{ damage: number | 'miss', isPoison?: boolean, isMagic?
     );
 };
 
-const SmoothCombatCooldownBar: React.FC<{ label: string, nextAttackTime: number, attackSpeedTicks: number, combatSpeedMultiplier: number }> = ({ label, nextAttackTime, attackSpeedTicks, combatSpeedMultiplier }) => {
+const SmoothCombatCooldownBar: React.FC<{ label: string, nextAttackTime: number, attackSpeedTicks: number, combatSpeedMultiplier: number, color: string }> = ({ label, nextAttackTime, attackSpeedTicks, combatSpeedMultiplier, color }) => {
     const [progress, setProgress] = useState(0);
     const attackSpeedMs = (attackSpeedTicks * 600) / combatSpeedMultiplier;
 
@@ -98,7 +103,7 @@ const SmoothCombatCooldownBar: React.FC<{ label: string, nextAttackTime: number,
                 <span>{label}</span>
                 <span>{Math.max(0, (nextAttackTime - Date.now()) / 1000).toFixed(1)}s</span>
             </div>
-            <ProgressBar value={progress} maxValue={attackSpeedMs} color="bg-yellow-600" />
+            <ProgressBar value={progress} maxValue={attackSpeedMs} color={color} />
         </div>
     );
 };
@@ -121,7 +126,7 @@ const parseChance = (chance: number | string): number => {
     return 0; // fallback
 };
 
-const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, playerSkills, playerHp, equipment, combatStance, setCombatStance, setPlayerHp, onCombatEnd, addXp, addLoot, onDropLoot, isAutoBankOn, addLog, onPlayerDeath, onKill, onConsumeAmmo, activeBuffs, combatSpeedMultiplier, advanceTutorial, autocastSpell, inv, ui, killTrigger, applyStatModifier, isStunned, addBuff }) => {
+const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, playerSkills, playerHp, equipment, combatStance, setCombatStance, setPlayerHp, onCombatEnd, addXp, addLoot, onDropLoot, isAutoBankOn, addLog, onPlayerDeath, onKill, onConsumeAmmo, activeBuffs, combatSpeedMultiplier, advanceTutorial, autocastSpell, inv, ui, killTrigger, applyStatModifier, isStunned, addBuff, showPlayerHealthNumbers, showEnemyHealthNumbers, showHitsplats }) => {
     const [currentMonsterIndex, setCurrentMonsterIndex] = useState(0);
     const currentInstanceId = monsterQueue[currentMonsterIndex];
     const monsterId = currentInstanceId.split(':')[1];
@@ -133,18 +138,32 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
     const [monsterStatus, setMonsterStatus] = useState<MonsterStatusEffect[]>([]);
     const [queuedSpell, setQueuedSpell] = useState<Spell | null>(null);
     const [lastSpellCast, setLastSpellCast] = useState<Spell | null>(null);
+    const [currentElementalWeakness, setCurrentElementalWeakness] = useState<SpellElement | null>(null);
+    const [nextAttackName, setNextAttackName] = useState<string>('');
+    const [nextAttackColor, setNextAttackColor] = useState<string>('bg-yellow-600');
 
     const [nextPlayerAttackTime, setNextPlayerAttackTime] = useState(0);
     const [nextMonsterAttackTime, setNextMonsterAttackTime] = useState(0);
     const [isPreparing, setIsPreparing] = useState(true);
     const [isCombatEnding, setIsCombatEnding] = useState(false);
     
+    const playerAttackInProgress = useRef(false);
+    const monsterAttackInProgress = useRef(false);
+
     const playerRef = useRef<HTMLDivElement>(null);
     const monsterRef = useRef<HTMLDivElement>(null);
     const [animationTriggers, setAnimationTriggers] = useState<any[]>([]);
     const prevKillTrigger = useRef(killTrigger);
 
     const gameTickMs = 600 / combatSpeedMultiplier;
+
+    useEffect(() => {
+        playerAttackInProgress.current = false;
+    }, [nextPlayerAttackTime]);
+
+    useEffect(() => {
+        monsterAttackInProgress.current = false;
+    }, [nextMonsterAttackTime]);
 
     const playerWeapon = useMemo(() => {
         const weaponSlot = equipment.weapon;
@@ -154,6 +173,41 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
         }
         return { speed: 4, type: WeaponType.Unarmed };
     }, [equipment.weapon]);
+
+    useEffect(() => {
+        const weaponType = playerWeapon.type;
+        const isRanged = weaponType === WeaponType.Bow;
+        const isStaff = weaponType === WeaponType.Staff;
+        const isAutocasting = isStaff && autocastSpell && (combatStance === CombatStance.Autocast || combatStance === CombatStance.DefensiveAutocast);
+        let attackName = '';
+        let attackColor = 'bg-yellow-600';
+
+        const setSpellInfo = (spell: Spell) => {
+            attackName = spell.name;
+            switch (spell.element) {
+                case 'wind': attackColor = 'bg-gray-200'; break;
+                case 'water': attackColor = 'bg-blue-300'; break;
+                case 'earth': attackColor = 'bg-yellow-900'; break;
+                case 'fire': attackColor = 'bg-orange-500'; break;
+                default: attackColor = 'bg-purple-500';
+            }
+        };
+
+        if (queuedSpell) {
+            setSpellInfo(queuedSpell);
+        } else if (isAutocasting) {
+            setSpellInfo(autocastSpell);
+        } else if (isRanged) {
+            attackName = 'Ranged';
+            attackColor = 'bg-green-800';
+        } else {
+            attackName = 'Melee';
+            attackColor = 'bg-red-600';
+        }
+
+        setNextAttackName(attackName);
+        setNextAttackColor(attackColor);
+    }, [combatStance, equipment.weapon, autocastSpell, queuedSpell, playerWeapon.type]);
 
     const handleLootDistribution = useCallback(() => {
         if (!monster) return;
@@ -286,6 +340,13 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
             setMonster(monsterData);
             setMonsterHp(monsterData.maxHp);
             setMonsterStatus([]);
+            if (monsterData.elementalWeaknessCycle) {
+                const initialWeakness = monsterData.elementalWeaknessCycle[0];
+                setCurrentElementalWeakness(initialWeakness);
+                addLog(`The ${monsterData.name} is vulnerable to ${initialWeakness}!`);
+            } else {
+                setCurrentElementalWeakness(null);
+            }
             if (monsterQueue.length > 1) addLog(`(${currentMonsterIndex + 1}/${monsterQueue.length}) A ${monsterData.name} steps forward!`);
 
             setIsCombatEnding(false);
@@ -375,19 +436,27 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
         xpGains[SkillName.Magic] = (xpGains[SkillName.Magic] || 0) + spell.xp;
 
         let effectiveMagic = playerSkills.find(s => s.name === SkillName.Magic)?.currentLevel ?? 1;
-        const totalMagicAttack = effectiveMagic + playerStats.magicAttack;
+        let totalMagicAttack = (effectiveMagic * 2) + playerStats.magicAttack;
+        let damageMultiplier = 1.0;
+        
+        if (currentElementalWeakness && spell.element === currentElementalWeakness) {
+            addLog("Your spell hits a weak point!");
+            totalMagicAttack *= 3; // Massive accuracy boost
+            damageMultiplier = 2.0; // Double damage
+        }
+
         const accuracy = calculateAccuracy(totalMagicAttack, monster.magicDefence);
         
         let playerDamage = 0;
         if (Math.random() < accuracy) { 
             const baseMaxHit = spell.maxHit ?? 0;
             const bonus = 1 + (playerStats.magicDamageBonus / 100);
-            const maxHit = Math.floor(baseMaxHit * bonus);
+            const maxHit = Math.floor(baseMaxHit * bonus * damageMultiplier);
             playerDamage = Math.floor(Math.random() * (maxHit + 1));
         }
 
         const spellTier = spell.level > 80 ? 5 : spell.level > 60 ? 4 : spell.level > 40 ? 3 : spell.level > 20 ? 2 : 1;
-        setAnimationTriggers(prev => [...prev, { id: Date.now() + Math.random(), type: 'magic', source: 'player', target: 'monster', options: { spellTier } }]);
+        setAnimationTriggers(prev => [...prev, { id: Date.now() + Math.random(), type: 'magic', source: 'player', target: 'monster', options: { spellTier, element: spell.element } }]);
 
         if (playerDamage > 0) {
             xpGains[SkillName.Hitpoints] = (xpGains[SkillName.Hitpoints] || 0) + playerDamage * 1.33;
@@ -424,25 +493,36 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
             setNextPlayerAttackTime(Date.now() + castTimeTicks * gameTickMs);
         }
 
-    }, [monster, equipment.weapon, invRef, addLog, playerSkills, playerStats, monsterHp, onKill, currentInstanceId, handleLootDistribution, currentMonsterIndex, monsterQueue.length, onCombatEnd, gameTickMs, addXp, isStunned]);
+    }, [monster, equipment.weapon, invRef, addLog, playerSkills, playerStats, monsterHp, onKill, currentInstanceId, handleLootDistribution, currentMonsterIndex, monsterQueue.length, onCombatEnd, gameTickMs, addXp, isStunned, currentElementalWeakness]);
 
     const handleManualCast = useCallback((spell: Spell) => {
+        if (isStunned) {
+            addLog("You are stunned and cannot cast spells.");
+            return;
+        }
+        if (queuedSpell) {
+            addLog("You already have a spell queued.");
+            return;
+        }
+
         if (Date.now() < nextPlayerAttackTime) {
-            if (queuedSpell) {
-                addLog("You already have a spell queued.");
+            setQueuedSpell(spell);
+            addLog(`Queued ${spell.name}.`);
+        } else {
+            if (!playerAttackInProgress.current) {
+                playerAttackInProgress.current = true;
+                executeManualCast(spell);
             } else {
                 setQueuedSpell(spell);
                 addLog(`Queued ${spell.name}.`);
             }
-        } else {
-            executeManualCast(spell);
         }
-    }, [nextPlayerAttackTime, queuedSpell, addLog, executeManualCast]);
+    }, [isStunned, queuedSpell, nextPlayerAttackTime, executeManualCast, addLog]);
 
     useEffect(() => {
         if (ui.manualCastTrigger && !isPreparing && monster && playerHp > 0 && monsterHp > 0) {
             handleManualCast(ui.manualCastTrigger);
-            ui.setManualCastTrigger(null); // Clear trigger after handling
+            ui.setManualCastTrigger(null);
         }
     }, [ui.manualCastTrigger, isPreparing, monster, playerHp, monsterHp, handleManualCast, ui]);
     
@@ -456,14 +536,23 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
             const now = Date.now();
 
             if (now >= nextPlayerAttackTime) {
-                if (isStunned) {
-                    setNextPlayerAttackTime(now + gameTickMs); // Skip a turn if stunned
+                if (playerAttackInProgress.current) {
+                    combatFrameId = requestAnimationFrame(combatLoop);
                     return;
                 }
-                
+                playerAttackInProgress.current = true;
+
+                if (isStunned) {
+                    addLog("You are stunned and cannot attack.");
+                    setNextPlayerAttackTime(now + gameTickMs);
+                    combatFrameId = requestAnimationFrame(combatLoop);
+                    return;
+                }
+
                 if (queuedSpell) {
                     executeManualCast(queuedSpell);
                     setQueuedSpell(null);
+                    combatFrameId = requestAnimationFrame(combatLoop);
                     return;
                 }
                 
@@ -501,12 +590,20 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                         xpGains[SkillName.Magic] = (xpGains[SkillName.Magic] || 0) + spell.xp;
 
                         let effectiveMagic = playerSkills.find(s => s.name === SkillName.Magic)?.currentLevel ?? 1;
-                        const totalMagicAttack = effectiveMagic + playerStats.magicAttack;
+                        let totalMagicAttack = (effectiveMagic * 2) + playerStats.magicAttack;
+                        let damageMultiplier = 1.0;
+
+                        if (currentElementalWeakness && spell.element === currentElementalWeakness) {
+                            addLog("Your spell hits a weak point!");
+                            totalMagicAttack *= 3;
+                            damageMultiplier = 2.0;
+                        }
+
                         const accuracy = calculateAccuracy(totalMagicAttack, monster.magicDefence);
                         
                         const baseMaxHit = spell.maxHit ?? 0;
                         const bonus = 1 + (playerStats.magicDamageBonus / 100);
-                        const maxHit = Math.floor(baseMaxHit * bonus);
+                        const maxHit = Math.floor(baseMaxHit * bonus * damageMultiplier);
 
                         if (Math.random() < accuracy) { 
                             playerDamage = Math.floor(Math.random() * (maxHit + 1));
@@ -514,7 +611,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                         }
 
                         const spellTier = spell.level > 80 ? 5 : spell.level > 60 ? 4 : spell.level > 40 ? 3 : spell.level > 20 ? 2 : 1;
-                        setAnimationTriggers(prev => [...prev, { id: Date.now() + Math.random(), type: 'magic', source: 'player', target: 'monster', options: { spellTier } }]);
+                        setAnimationTriggers(prev => [...prev, { id: Date.now() + Math.random(), type: 'magic', source: 'player', target: 'monster', options: { spellTier, element: spell.element } }]);
                         
                         if (playerDamage > 0) {
                             xpGains[SkillName.Hitpoints] = (xpGains[SkillName.Hitpoints] || 0) + playerDamage * 1.33;
@@ -627,6 +724,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                             onCombatEnd();
                         }
                     }, 1500);
+                    combatFrameId = requestAnimationFrame(combatLoop);
                     return;
                 } else {
                     setNextPlayerAttackTime(now + effectiveSpeed * gameTickMs);
@@ -634,6 +732,12 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
             }
 
             if (now >= nextMonsterAttackTime && monsterHp > 0) {
+                if (monsterAttackInProgress.current) {
+                    combatFrameId = requestAnimationFrame(combatLoop);
+                    return;
+                }
+                monsterAttackInProgress.current = true;
+
                 setMonsterAttacking(true);
                 setTimeout(() => setMonsterAttacking(false), 300);
             
@@ -675,6 +779,15 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                             const skillData = playerSkills.find(s => s.name === drain.skill);
                             applyStatModifier(drain.skill, -drain.value, 60000, skillData?.level ?? 1);
                         });
+                    } else if (triggeredSpecial.effect === 'elemental_shift') {
+                        if (monster.elementalWeaknessCycle && currentElementalWeakness) {
+                            const cycle = monster.elementalWeaknessCycle;
+                            const currentIndex = cycle.indexOf(currentElementalWeakness);
+                            const nextIndex = (currentIndex + 1) % cycle.length;
+                            const newWeakness = cycle[nextIndex];
+                            setCurrentElementalWeakness(newWeakness);
+                            addLog(`The ${monster.name} shifts its attunement to ${newWeakness}!`);
+                        }
                     }
                 }
             
@@ -730,7 +843,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                 }
             
                 if (monsterHit) {
-                    setAnimationTriggers(prev => [...prev, { id: Date.now() + Math.random(), type: isDragonfireAttack ? 'magic' : monster.attackStyle, source: 'monster', target: 'player', options: { spellTier: isDragonfireAttack ? 5 : (monster.level > 30 ? 3 : (monster.level > 10 ? 2 : 1)) } }]);
+                    setAnimationTriggers(prev => [...prev, { id: Date.now() + Math.random(), type: isDragonfireAttack ? 'magic' : monster.attackStyle, source: 'monster', target: 'player', options: { spellTier: isDragonfireAttack ? 5 : (monster.level > 30 ? 3 : (monster.level > 10 ? 2 : 1)), element: isDragonfireAttack ? 'fire' : null } }]);
                 }
             
                 const reductionBuff = activeBuffs.find(b => b.type === 'damage_reduction');
@@ -747,6 +860,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                 if (newPlayerHp <= 0) {
                     setIsCombatEnding(true);
                     setTimeout(() => onPlayerDeath(), 1500);
+                    combatFrameId = requestAnimationFrame(combatLoop);
                     return;
                 }
                 
@@ -790,6 +904,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                                     onCombatEnd();
                                 }
                             }, 1500);
+                            combatFrameId = requestAnimationFrame(combatLoop);
                             return;
                         }
                     }
@@ -803,7 +918,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
 
         combatFrameId = requestAnimationFrame(combatLoop);
         return () => cancelAnimationFrame(combatFrameId);
-    }, [isPreparing, isCombatEnding, monster, playerHp, monsterHp, equipment, combatStance, playerSkills, addXp, addLog, onCombatEnd, onKill, onConsumeAmmo, playerWeapon.speed, playerStats, monsterQueue, currentMonsterIndex, nextPlayerAttackTime, nextMonsterAttackTime, activeBuffs, monsterStatus, gameTickMs, addLoot, onDropLoot, isAutoBankOn, handleLootDistribution, autocastSpell, inv, ui, queuedSpell, executeManualCast, onPlayerDeath, applyStatModifier, isStunned, addBuff]);
+    }, [isPreparing, isCombatEnding, monster, playerHp, monsterHp, equipment, combatStance, playerSkills, addXp, addLog, onCombatEnd, onKill, onConsumeAmmo, playerWeapon.speed, playerStats, monsterQueue, currentMonsterIndex, nextPlayerAttackTime, nextMonsterAttackTime, activeBuffs, monsterStatus, gameTickMs, addLoot, onDropLoot, isAutoBankOn, handleLootDistribution, autocastSpell, inv, ui, queuedSpell, executeManualCast, onPlayerDeath, applyStatModifier, isStunned, addBuff, currentElementalWeakness]);
 
     useEffect(() => {
         if (killTrigger > prevKillTrigger.current && monsterHp > 0 && monster) {
@@ -834,10 +949,22 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
         onCombatEnd();
     }, [onCombatEnd, isStunned]);
 
+    const monsterIconClass = useMemo(() => {
+        if (monster?.id === 'arcane_wyvern' && currentElementalWeakness) {
+            switch (currentElementalWeakness) {
+                case 'wind': return getIconClassName({ material: 'rune-gust' } as Item);
+                case 'water': return getIconClassName({ material: 'rune-aqua' } as Item);
+                case 'earth': return getIconClassName({ material: 'rune-verdant' } as Item);
+                case 'fire': return getIconClassName({ material: 'rune-ember' } as Item);
+                default: return '';
+            }
+        }
+        return '';
+    }, [monster, currentElementalWeakness]);
+
     if (!monster) return <div>Loading combat...</div>;
 
     const maxHp = playerSkills.find(s => s.name === SkillName.Hitpoints)?.level ?? 10;
-    const playerAttackLabel = 'Your Next Attack';
 
     return (
         <div className={`flex flex-col items-center justify-between h-full text-center animate-fade-in relative`}>
@@ -861,12 +988,12 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                 <div className="flex flex-col items-center w-32 md:w-48">
                     <div ref={playerRef} className="relative">
                         <img src="https://api.iconify.design/game-icons:person.svg" alt="Player" className={`w-24 h-24 md:w-32 md:h-32 p-2 bg-gray-900 border-4 border-gray-600 rounded-lg filter invert transition-transform duration-150 pixelated-image ${playerAttacking ? 'scale-110' : ''}`} />
-                         {hitSplats.filter(s => s.target === 'player').map(splat => <HitSplat key={splat.id} damage={splat.damage} isPoison={splat.isPoison} isMagic={splat.isMagic} isDragonfire={splat.isDragonfire} />)}
+                         {showHitsplats && hitSplats.filter(s => s.target === 'player').map(splat => <HitSplat key={splat.id} damage={splat.damage} isPoison={splat.isPoison} isMagic={splat.isMagic} isDragonfire={splat.isDragonfire} />)}
                     </div>
                     <span className="font-bold mt-2">You</span>
                     <div className="relative w-full mt-1">
                         <ProgressBar value={playerHp} maxValue={maxHp} isHealthBar />
-                        <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white pointer-events-none" style={{ textShadow: '1px 1px 2px black' }}>{playerHp} / {maxHp}</div>
+                        {showPlayerHealthNumbers && <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white pointer-events-none" style={{ textShadow: '1px 1px 2px black' }}>{playerHp} / {maxHp}</div>}
                     </div>
                 </div>
 
@@ -874,20 +1001,20 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
 
                 <div className="flex flex-col items-center w-32 md:w-48">
                     <div ref={monsterRef} className="relative">
-                        <img src={monster.iconUrl} alt={monster.name} className={`w-24 h-24 md:w-32 md:h-32 p-2 bg-gray-900 border-4 border-gray-600 rounded-lg transition-transform duration-150 pixelated-image ${monsterAttacking ? 'scale-110' : 'scale-100'}`} />
-                        {hitSplats.filter(s => s.target === 'monster').map(splat => <HitSplat key={splat.id} damage={splat.damage} isPoison={splat.isPoison} isMagic={splat.isMagic} isDragonfire={splat.isDragonfire} />)}
+                        <img src={monster.iconUrl} alt={monster.name} className={`w-24 h-24 md:w-32 md:h-32 p-2 bg-gray-900 border-4 border-gray-600 rounded-lg transition-transform duration-150 pixelated-image ${monsterAttacking ? 'scale-110' : 'scale-100'} ${monsterIconClass}`} />
+                        {showHitsplats && hitSplats.filter(s => s.target === 'monster').map(splat => <HitSplat key={splat.id} damage={splat.damage} isPoison={splat.isPoison} isMagic={splat.isMagic} isDragonfire={splat.isDragonfire} />)}
                     </div>
                     <span className="font-bold mt-2">{monster.name}</span>
                     <div className="relative w-full mt-1">
                         <ProgressBar value={monsterHp} maxValue={monster.maxHp} isHealthBar />
-                        <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white pointer-events-none" style={{ textShadow: '1px 1px 2px black' }}>{monsterHp} / {monster.maxHp}</div>
+                        {showEnemyHealthNumbers && <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white pointer-events-none" style={{ textShadow: '1px 1px 2px black' }}>{monsterHp} / {monster.maxHp}</div>}
                     </div>
                 </div>
             </div>
 
             <div className="w-full max-w-md bg-black/50 p-3 rounded-lg space-y-3">
-                <SmoothCombatCooldownBar label={playerAttackLabel} nextAttackTime={nextPlayerAttackTime} attackSpeedTicks={playerWeapon.speed} combatSpeedMultiplier={combatSpeedMultiplier} />
-                <SmoothCombatCooldownBar label="Monster Next Attack" nextAttackTime={nextMonsterAttackTime} attackSpeedTicks={monster.attackSpeed} combatSpeedMultiplier={combatSpeedMultiplier} />
+                <SmoothCombatCooldownBar label={`Your next attack: ${nextAttackName}`} nextAttackTime={nextPlayerAttackTime} attackSpeedTicks={playerWeapon.speed} combatSpeedMultiplier={combatSpeedMultiplier} color={nextAttackColor} />
+                <SmoothCombatCooldownBar label="Monster Next Attack" nextAttackTime={nextMonsterAttackTime} attackSpeedTicks={monster.attackSpeed} combatSpeedMultiplier={combatSpeedMultiplier} color="bg-gray-600" />
             </div>
             
             <div className="flex flex-col items-center gap-4 mt-2">
