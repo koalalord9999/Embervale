@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { DialogueAction, DialogueCheckRequirement, WorldState, InventorySlot, BankTab, ActivePanel, POIActivity, DialogueResponse } from '../types';
-import { INVENTORY_CAPACITY, QUESTS } from '../../constants';
+import { INVENTORY_CAPACITY, QUESTS } from '../constants';
 import { useQuests } from './useQuests';
 import { useQuestLogic } from './useQuestLogic';
 import { useNavigation } from './useNavigation';
