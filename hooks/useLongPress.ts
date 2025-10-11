@@ -1,4 +1,3 @@
-
 import React, { useCallback, useRef } from 'react';
 
 interface LongPressOptions {
@@ -53,9 +52,6 @@ export const useLongPress = ({ onLongPress, onClick, delay = 400 }: LongPressOpt
                 // For touch, the 'click' is handled by the onTouchEnd on the component itself
                 // to use the double-tap logic. So we only call onClick for non-touch events.
                 if (!isTouchEvent) {
-                    // FIX: The native MouseEvent `e` is not directly compatible with React.MouseEvent.
-                    // The error message suggests casting to `unknown` first to resolve this type conflict.
-                    // This is safe because the downstream `onClick` handler only uses properties common to both types.
                     onClick(e as unknown as React.MouseEvent);
                 }
             }

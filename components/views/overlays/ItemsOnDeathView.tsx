@@ -16,7 +16,11 @@ const ItemsOnDeathView: React.FC<ItemsOnDeathViewProps> = ({ inventory, equipmen
     // Calculate which items are kept
     const allItems: InventorySlot[] = [];
     inventory.forEach(slot => { if (slot) allItems.push(slot); });
-    Object.values(equipment).forEach(slot => { if (slot) allItems.push(slot); });
+    // FIX: Use Object.keys for type-safe iteration over equipment slots.
+    (Object.keys(equipment) as Array<keyof Equipment>).forEach(slotKey => {
+        const slot = equipment[slotKey];
+        if (slot) allItems.push(slot);
+    });
     
     allItems.sort((a, b) => (ITEMS[b.itemId]?.value ?? 0) - (ITEMS[a.itemId]?.value ?? 0));
     const keptItems = allItems.slice(0, 3);

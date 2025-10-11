@@ -1,4 +1,3 @@
-
 import React, { useMemo, useEffect, useState } from 'react';
 import { POI, POIActivity, PlayerQuestState, SkillName, InventorySlot, ResourceNodeState, PlayerRepeatableQuest, SkillRequirement, PlayerSkill, DialogueNode, GroundItem, DialogueResponse, Quest, BonfireActivity, DialogueAction, DialogueCheckRequirement } from '../../types';
 import { MONSTERS, QUESTS, SHOPS, ITEMS, REGIONS, FIREMAKING_RECIPES, SKILL_ICONS } from '../../constants';
@@ -8,7 +7,6 @@ import { ContextMenuOption } from '../common/ContextMenu';
 import { MakeXPrompt, TooltipState, useUIState, ContextMenuState, DialogueState } from '../../hooks/useUIState';
 import ProgressBar from '../common/ProgressBar';
 import { useSkillingAnimations } from '../../hooks/useSkillingAnimations';
-import { useSceneInteractions } from '../../hooks/useSceneInteractions';
 import { useIsTouchDevice } from '../../hooks/useIsTouchDevice';
 import { useLongPress } from '../../hooks/useLongPress';
 import { useWorldActions } from '../../hooks/useWorldActions';
@@ -46,8 +44,8 @@ interface SceneViewProps {
     skills: (PlayerSkill & { currentLevel: number; })[];
     monsterRespawnTimers: Record<string, number>;
     setActiveDialogue: (dialogue: DialogueState | null) => void;
-    handleDialogueAction: (actions: DialogueAction[]) => void;
     handleDialogueCheck: (requirements: DialogueCheckRequirement[]) => boolean;
+    onResponse: (response: DialogueResponse) => void;
     onDepositBackpack: () => void;
     onDepositEquipment: () => void;
     ui: ReturnType<typeof useUIState>;
@@ -111,11 +109,11 @@ const ActionableButton: React.FC<{
         case 'shop': text = `Visit ${SHOPS[activity.shopId].name}`; break;
         case 'quest_start': text = `Talk about '${QUESTS[activity.questId].name}'`; break;
         case 'npc': text = activity.name; break;
+        case 'slayer_master': text = `Talk to ${activity.name}`; break;
         case 'cooking_range': text = 'Use Cooking Range'; break;
         case 'furnace': text = 'Use Furnace'; break;
         case 'anvil': text = 'Use Anvil'; break;
         case 'bank': text = 'Use Bank'; break;
-        case 'shearing': text = 'Shear Sheep'; break;
         case 'wishing_well': text = 'Toss a coin in the well'; break;
         case 'bookbinding_workbench': text = 'Bind Books'; break;
         case 'quest_board': text = 'Check the Quest Board'; break;
@@ -127,17 +125,15 @@ const ActionableButton: React.FC<{
         case 'ladder': text = activity.name; break;
     }
 
+    const hasContextMenu = (activity.type === 'npc' || activity.type === 'furnace' || activity.type === 'anvil' || activity.type === 'windmill');
+
     const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
-        if (isOneClickMode) {
+        if (isOneClickMode && hasContextMenu) {
             onLongPress(e);
             return;
         }
         ui.setTooltip(null);
-        if (activity.type === 'windmill') {
-            worldActions.handleCollectFlour();
-        } else {
-            handleActivityClick(activity);
-        }
+        handleActivityClick(activity);
     };
 
     const onLongPress = (e: React.MouseEvent | React.TouchEvent) => {
@@ -188,8 +184,6 @@ const ActionableButton: React.FC<{
             setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
         }
     }
-    
-    const hasContextMenu = (activity.type === 'npc' || activity.type === 'furnace' || activity.type === 'anvil' || activity.type === 'windmill');
 
     const customHandlers = hasContextMenu ? useLongPress({
         onLongPress,
@@ -304,7 +298,7 @@ const BonfireButton: React.FC<{
 
 
 const SceneView: React.FC<SceneViewProps> = (props) => {
-    const { poi, unlockedPois, onNavigate, onActivity, onStartCombat, playerQuests, inventory, setContextMenu, setMakeXPrompt, setTooltip, addLog, startQuest, hasItems, resourceNodeStates, activeSkillingNodeId, onToggleSkilling, initializeNodeState, skillingTick, getSuccessChance, activeRepeatableQuest, activeCleanup, onStartInteractQuest, onCancelInteractQuest, clearedSkillObstacles, onClearObstacle, skills, monsterRespawnTimers, setActiveDialogue, handleDialogueAction, handleDialogueCheck, onDepositBackpack, onDepositEquipment, ui, isTouchSimulationEnabled, worldActions, bonfires, onStokeBonfire, isOneClickMode } = props;
+    const { poi, unlockedPois, onNavigate, onActivity, onStartCombat, playerQuests, inventory, setContextMenu, setMakeXPrompt, setTooltip, addLog, startQuest, hasItems, resourceNodeStates, activeSkillingNodeId, onToggleSkilling, initializeNodeState, skillingTick, getSuccessChance, activeRepeatableQuest, activeCleanup, onStartInteractQuest, onCancelInteractQuest, clearedSkillObstacles, onClearObstacle, skills, monsterRespawnTimers, setActiveDialogue, handleDialogueCheck, onResponse, onDepositBackpack, onDepositEquipment, ui, isTouchSimulationEnabled, worldActions, bonfires, onStokeBonfire, isOneClickMode } = props;
     const { depletedNodesAnimating } = useSkillingAnimations(resourceNodeStates, poi.activities);
     const [countdown, setCountdown] = useState<Record<string, number>>({});
     const [shakingNodeId, setShakingNodeId] = useState<string | null>(null);
@@ -318,19 +312,6 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
         setAreActionsVisible(true);
     }, [poi.id]);
     
-    const { handleActivityClick } = useSceneInteractions(poi.id, {
-        playerQuests,
-        startQuest,
-        hasItems,
-        addLog,
-        onActivity: (activity) => {
-            onActivity(activity);
-        },
-        setActiveDialogue,
-        handleDialogueAction,
-        handleDialogueCheck
-    });
-
     useEffect(() => {
         if (activeSkillingNodeId) {
             setShakingNodeId(activeSkillingNodeId);
@@ -626,7 +607,7 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
                 key={`${activity.type}-${index}`}
                 activity={activity}
                 index={index}
-                handleActivityClick={handleActivityClick}
+                handleActivityClick={onActivity}
                 setContextMenu={setContextMenu}
                 ui={ui}
                 onDepositBackpack={onDepositBackpack}

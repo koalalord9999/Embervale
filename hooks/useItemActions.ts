@@ -1,7 +1,8 @@
 import React, { useCallback } from 'react';
-import { InventorySlot, PlayerSkill, SkillName, ActiveCraftingAction, Item, CraftingContext, POIActivity, EquipmentSlot, PlayerQuestState, Spell, Equipment } from '../types';
-import { ITEMS, FLETCHING_RECIPES, HERBLORE_RECIPES, HERBS, INVENTORY_CAPACITY, rollOnLootTable, LootRollResult, FIREMAKING_RECIPES } from '../constants';
-import { POIS } from '../data/pois';
+// FIX: Import ActiveBuff to use its specific type instead of 'any'.
+import { InventorySlot, PlayerSkill, SkillName, ActiveCraftingAction, Item, CraftingContext, POIActivity, EquipmentSlot, PlayerQuestState, Spell, Equipment, ActiveBuff, DialogueResponse, DialogueCheckRequirement } from '../types';
+import { ITEMS, FLETCHING_RECIPES, HERBLORE_RECIPES, HERBS, INVENTORY_CAPACITY, rollOnLootTable, LootRollResult, FIREMAKING_RECIPES, QUESTS } from '../../constants';
+import { POIS } from '../../data/pois';
 import { MakeXPrompt, useUIState } from './useUIState';
 
 interface UseItemActionsProps {
@@ -20,7 +21,8 @@ interface UseItemActionsProps {
     addXp: (skill: SkillName, amount: number) => void;
     openCraftingView: (context: CraftingContext) => void;
     setItemToUse: (item: { item: InventorySlot, index: number } | null) => void;
-    addBuff: (buff: Omit<any, 'id' | 'expiresAt'>) => void;
+    // FIX: Corrected the type for addBuff to use the specific ActiveBuff type and 'durationRemaining' for consistency.
+    addBuff: (buff: Omit<ActiveBuff, 'id' | 'durationRemaining'>) => void;
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
     startQuest: (questId: string) => void;
     currentPoiId: string;
@@ -31,10 +33,13 @@ interface UseItemActionsProps {
     valuableDropThreshold: number;
     ui: ReturnType<typeof useUIState>;
     equipment: Equipment;
+    onResponse: (response: DialogueResponse) => void;
+    handleDialogueCheck: (requirements: DialogueCheckRequirement[]) => boolean;
 }
 
 export const useItemActions = (props: UseItemActionsProps) => {
-    const { addLog, currentHp, maxHp, setCurrentHp, applyStatModifier, setInventory, skills, inventory, activeCraftingAction, setActiveCraftingAction, hasItems, modifyItem, addXp, openCraftingView, setItemToUse, addBuff, setMakeXPrompt, startQuest, currentPoiId, playerQuests, isStunned, setActiveDungeonMap, confirmValuableDrops, valuableDropThreshold, ui, equipment } = props;
+    const { addLog, currentHp, maxHp, setCurrentHp, applyStatModifier, setInventory, skills, inventory, activeCraftingAction, setActiveCraftingAction, hasItems, modifyItem, addXp, openCraftingView, setItemToUse, addBuff, setMakeXPrompt, startQuest, currentPoiId, playerQuests, isStunned, setActiveDungeonMap, confirmValuableDrops, valuableDropThreshold, ui, equipment, onResponse, handleDialogueCheck } = props;
+    const { setActiveDialogue } = ui;
 
     const handleConsume = useCallback((itemId: string, inventoryIndex: number) => {
         if (isStunned) {
@@ -51,7 +56,15 @@ export const useItemActions = (props: UseItemActionsProps) => {
                 addLog(`You need a Herblore level of ${herbData.level} to clean this herb.`);
                 return;
             }
-            modifyItem(itemId, -1, true);
+            
+            // Remove the specific grimy herb from its slot
+            setInventory(prevInv => {
+                const newInv = [...prevInv];
+                newInv[inventoryIndex] = null;
+                return newInv;
+            });
+
+            // Add the clean one, letting modifyItem handle stacking/placement
             modifyItem(itemData.cleanable.cleanItemId, 1, true, undefined, { bypassAutoBank: true });
             addXp(SkillName.Herblore, itemData.cleanable.xp);
             return;
@@ -410,23 +423,28 @@ export const useItemActions = (props: UseItemActionsProps) => {
 
         const isKeyCombination = (usedId === 'strange_key_loop' && targetId === 'strange_key_tooth') || (targetId === 'strange_key_loop' && usedId === 'strange_key_tooth');
         if (isKeyCombination) {
-            if (hasItems([{ itemId: 'strange_key_loop', quantity: 1 }, { itemId: 'strange_key_tooth', quantity: 1 }])) {
-                modifyItem('strange_key_loop', -1, true);
-                modifyItem('strange_key_tooth', -1, true);
-                modifyItem('strange_key', 1, false, undefined, { bypassAutoBank: true });
-                addLog("You combine the two key halves to create a strange key.");
-            }
+            setInventory(prevInv => {
+                const newInv = [...prevInv];
+                newInv[used.index] = null;
+                newInv[target.index] = null;
+                return newInv;
+            });
+            modifyItem('strange_key', 1, false, undefined, { bypassAutoBank: true });
+            addLog("You combine the two key halves to create a strange key.");
             return;
         }
 
         const isHammeringCore = (usedId === 'hammer' && targetId === 'golem_core') || (targetId === 'hammer' && usedId === 'golem_core');
         if (isHammeringCore) {
-            if (hasItems([{ itemId: 'golem_core', quantity: 1 }])) {
-                modifyItem('golem_core', -1, true);
-                modifyItem('golem_core_shard', 10, true, undefined, { bypassAutoBank: true });
-                addXp(SkillName.Crafting, 25);
-                addLog("You carefully smash the golem core, breaking it into 10 smaller shards.");
-            }
+            const coreIndex = usedId === 'golem_core' ? used.index : target.index;
+            setInventory(prevInv => {
+                const newInv = [...prevInv];
+                newInv[coreIndex] = null;
+                return newInv;
+            });
+            modifyItem('golem_core_shard', 10, true, undefined, { bypassAutoBank: true });
+            addXp(SkillName.Crafting, 25);
+            addLog("You carefully smash the golem core, breaking it into 10 smaller shards.");
             return;
         }
 
@@ -565,25 +583,40 @@ export const useItemActions = (props: UseItemActionsProps) => {
             const unstrungId = usedId.endsWith('_amulet_u') ? usedId : targetId;
             const strungId = unstrungId.replace('_u', '');
             if (ITEMS[strungId]) {
-                if (hasItems([{ itemId: unstrungId, quantity: 1 }, { itemId: 'ball_of_wool', quantity: 1 }])) {
-                    modifyItem(unstrungId, -1, true);
-                    modifyItem('ball_of_wool', -1, true);
-                    modifyItem(strungId, 1, false, undefined, { bypassAutoBank: true });
-                    addXp(SkillName.Crafting, 5);
-                    addLog(`You string the ${ITEMS[unstrungId].name}.`);
-                }
+                setInventory(prevInv => {
+                    const newInv = [...prevInv];
+                    newInv[used.index] = null;
+                    newInv[target.index] = null;
+                    return newInv;
+                });
+                modifyItem(strungId, 1, false, undefined, { bypassAutoBank: true });
+                addXp(SkillName.Crafting, 5);
+                addLog(`You string the ${ITEMS[unstrungId].name}.`);
             }
             return;
         }
 
         const isRatKebab = (usedId === 'arrow_shaft' && targetId === 'rat_tail') || (targetId === 'arrow_shaft' && usedId === 'rat_tail');
         if (isRatKebab) {
-            if (hasItems([{ itemId: 'arrow_shaft', quantity: 1 }, { itemId: 'rat_tail', quantity: 1 }])) {
-                modifyItem('arrow_shaft', -1);
-                modifyItem('rat_tail', -1);
-                modifyItem('rat_kebab_uncooked', 1, false, undefined, { bypassAutoBank: true });
-                addLog("You skewer the rat tail with the arrow shaft, creating an uncooked kebab.");
-            }
+            setInventory(prevInv => {
+                const newInv = [...prevInv];
+                const ratTailIndex = usedId === 'rat_tail' ? used.index : target.index;
+                const shaftIndex = usedId === 'arrow_shaft' ? used.index : target.index;
+
+                newInv[ratTailIndex] = null;
+
+                const shaftSlot = newInv[shaftIndex];
+                if (shaftSlot && shaftSlot.itemId === 'arrow_shaft') {
+                    shaftSlot.quantity -= 1;
+                    if (shaftSlot.quantity <= 0) {
+                        newInv[shaftIndex] = null;
+                    }
+                }
+                return newInv;
+            });
+
+            modifyItem('rat_kebab_uncooked', 1, false, undefined, { bypassAutoBank: true });
+            addLog("You skewer the rat tail with the arrow shaft, creating an uncooked kebab.");
             return;
         }
 
@@ -655,11 +688,48 @@ export const useItemActions = (props: UseItemActionsProps) => {
         setItemToUse(null);
     }, [openCraftingView, handleItemCombination, setItemToUse]);
 
+    const handleUseItemOnActivity = useCallback((used: { item: InventorySlot, index: number }, activity: POIActivity) => {
+        if (activity.type !== 'npc') {
+            addLog("Nothing interesting happens.");
+            return;
+        }
+
+        const usedItemId = used.item.itemId;
+        const targetNpcName = activity.name;
+
+        // Check for quest triggers
+        for (const quest of Object.values(QUESTS)) {
+            const playerQuest = playerQuests.find(q => q.questId === quest.id);
+            
+            // Check if the quest can be started with an item
+            if (!playerQuest && quest.triggerItem && quest.triggerItem.itemId === usedItemId && quest.triggerItem.npcName === targetNpcName) {
+                
+                const startNodeKey = quest.triggerItem.startNode;
+                const dialogueNode = quest.dialogue?.[startNodeKey];
+
+                if (dialogueNode) {
+                    setActiveDialogue({
+                        npcName: activity.name,
+                        npcIcon: activity.icon,
+                        nodes: quest.dialogue!,
+                        currentNodeKey: startNodeKey,
+                        onEnd: () => setActiveDialogue(null),
+                        onResponse: onResponse,
+                        handleDialogueCheck: handleDialogueCheck,
+                    });
+                    return; // Interaction handled
+                }
+            }
+        }
+
+        addLog("Nothing interesting happens.");
+    }, [playerQuests, addLog, setActiveDialogue, onResponse, handleDialogueCheck]);
+
     const handleExamine = useCallback((item: Item) => {
         if (item.id === 'stolen_caravan_goods' && !playerQuests.some(q => q.questId === 'missing_shipment')) {
             startQuest('missing_shipment');
         }
-        addLog(`[Examine: ${item.name}] ${item.description}`);
+        addLog(`${item.description}`);
     }, [addLog, playerQuests, startQuest]);
 
     return {
@@ -667,6 +737,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
         handleBuryBones,
         handleEmptyItem,
         handleUseItemOn,
+        handleUseItemOnActivity,
         handleDivine,
         handleExamine,
         handleReadMap,

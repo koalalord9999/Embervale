@@ -1,4 +1,3 @@
-
 import { POI, SkillName } from '../../types';
 
 export const crystallineIslesPois: Record<string, POI> = {
@@ -12,39 +11,6 @@ export const crystallineIslesPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Skyship Captain',
                 icon: '/assets/npcChatHeads/ferryman_silas.png',
-                dialogue: {
-                    start: {
-                        npcName: 'Skyship Captain',
-                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
-                        text: "A breathtaking view, isn't it? Let me know when you're ready to return to the world below.",
-                        responses: [
-                            { text: "I'll stay a while longer." },
-                        ],
-                        conditionalResponses: [
-                            { text: "Take me back to Silverhaven. (1600 coins)", check: { requirements: [{ type: 'coins', amount: 1600 }, { type: 'quest', questId: 'the_arcane_awakening', status: 'completed'}], successNode: 'travel_success_paid', failureNode: 'travel_fail' }, actions: [{ type: 'take_coins', amount: 1600 }, { type: 'teleport', poiId: 'silverhaven_docks' }] },
-                            { text: "Theron is covering my passage. Take me back to Silverhaven.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress'}], successNode: 'travel_success_free', failureNode: '' }, actions: [{ type: 'teleport', poiId: 'silverhaven_docks' }] },
-                        ]
-                    },
-                    travel_success_paid: {
-                        npcName: 'Skyship Captain',
-                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
-                        text: "Anchors away! Back to solid ground we go.",
-                        responses: [],
-                    },
-                     travel_success_free: {
-                        npcName: 'Skyship Captain',
-                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
-                        text: "Of course. Archmage Theron's orders. Back to solid ground we go.",
-                        responses: [],
-                    },
-                    travel_fail: {
-                        npcName: 'Skyship Captain',
-                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
-                        text: "Apologies, but the charter fee is non-negotiable. The winds up here are treacherous.",
-                        responses: []
-                    }
-                },
-                startNode: 'start',
             }
         ],
         regionId: 'crystalline_isles',
@@ -247,17 +213,6 @@ export const crystallineIslesPois: Record<string, POI> = {
                 name: 'Enter the Spire',
                 icon: 'https://api.iconify.design/game-icons:rune-gate.svg',
                 questCondition: { questId: 'the_arcane_awakening', stages: [7] },
-                dialogue: {
-                    start: {
-                        npcName: 'Magus Spire',
-                        npcIcon: 'https://api.iconify.design/game-icons:rune-gate.svg',
-                        text: "The shimmering doorway hums with immense power. Stepping through it will take you into the heart of the arcane disturbance.",
-                        responses: [
-                            { text: "(Enter the Spire)", actions: [{ type: 'advance_quest', questId: 'the_arcane_awakening' }, { type: 'teleport', poiId: 'ms_f1_antechamber' }] }
-                        ]
-                    }
-                },
-                startNode: 'start'
             }
         ],
         regionId: 'magus_spire',

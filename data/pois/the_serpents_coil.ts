@@ -112,7 +112,7 @@ export const theSerpentsCoilPois: Record<string, POI> = {
         id: 'sunken_temple_altar',
         name: 'Sunken Temple Altar',
         description: 'The heart of a sunken temple. A massive stone altar, carved with images of serpents, is all that remains above the water.',
-        connections: ['sunken_temple_approach'],
+        connections: ['sunken_temple_approach', 'hex_altar'],
         activities: [
             { type: 'combat', monsterId: 'bog_serpent' },
             { type: 'combat', monsterId: 'bog_serpent' },
@@ -120,5 +120,16 @@ export const theSerpentsCoilPois: Record<string, POI> = {
         ],
         regionId: 'serpents_coil',
         x: 1569, y: 1171
+    },
+    hex_altar: {
+        id: 'hex_altar',
+        name: 'Altar of Curses',
+        description: 'A dark, foreboding altar made of black, oily stone. It radiates a palpable sense of malice and ancient curses.',
+        connections: ['sunken_temple_altar'],
+        activities: [
+            { type: 'runecrafting_altar', runeId: 'hex_rune' }
+        ],
+        regionId: 'serpents_coil',
+        x: 1600, y: 1140,
     },
 };

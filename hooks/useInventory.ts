@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { useState, useCallback } from 'react';
 // FIX: Import BankTab to support the new bank data structure.
@@ -398,6 +397,23 @@ export const useInventory = (
         if (!slot) return;
         const itemData = ITEMS[slot.itemId];
     
+        // Special case for dropping a single, unstackable item from a specific slot.
+        if (quantity === 1 && !itemData.stackable && !slot.noted) {
+            setInventory(prevInv => {
+                const newInv = [...prevInv];
+                const itemToDrop = newInv[inventoryIndex];
+                // Sanity check to make sure the item is still there
+                if (itemToDrop && itemToDrop.itemId === slot.itemId) {
+                    newInv[inventoryIndex] = null;
+                    onItemDropped({ ...itemToDrop, quantity: 1 });
+                    addLog(`You drop ${itemData.name}.`);
+                }
+                return newInv;
+            });
+            return; // Exit early as the action is fully handled.
+        }
+    
+        // Original logic for stackables, noted items, and dropping 'all' or 'X' unstackables.
         let qtyToDrop: number;
         let totalInInventory: number;
     
@@ -429,6 +445,25 @@ export const useInventory = (
     const handleSell = useCallback((itemId: string, quantity: number | 'all', inventoryIndex?: number) => {
         const itemData = ITEMS[itemId];
         if (!itemData) return;
+
+        // Special case for selling a single, unstackable, non-noted item from a specific slot.
+        if (quantity === 1 && inventoryIndex !== undefined) {
+            const slot = inventory[inventoryIndex];
+            if (slot && slot.itemId === itemId && !itemData.stackable && !slot.noted) {
+                const sellPrice = Math.floor(itemData.value * 0.2);
+                
+                setInventory(prevInv => {
+                    const newInv = [...prevInv];
+                    newInv[inventoryIndex] = null;
+                    return newInv;
+                });
+                
+                modifyItem('coins', sellPrice, true);
+                addLog(`You sold 1x ${itemData.name} for ${sellPrice} coins.`);
+                
+                return; // Exit early.
+            }
+        }
     
         const sourceSlot = inventoryIndex !== undefined ? inventory[inventoryIndex] : inventory.find(s => s?.itemId === itemId);
         if (!sourceSlot) {

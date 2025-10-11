@@ -1,3 +1,4 @@
+
 import React, { useMemo, useEffect, useState } from 'react';
 import { POI, POIActivity, PlayerQuestState, SkillName, InventorySlot, ResourceNodeState, PlayerRepeatableQuest, SkillRequirement, PlayerSkill, DialogueNode, GroundItem, DialogueResponse, Quest, BonfireActivity, DialogueAction, DialogueCheckRequirement } from '../../types';
 import { MONSTERS, QUESTS, SHOPS, ITEMS, REGIONS, FIREMAKING_RECIPES, SKILL_ICONS } from '../../constants';
@@ -7,7 +8,6 @@ import { ContextMenuOption } from '../common/ContextMenu';
 import { MakeXPrompt, TooltipState, useUIState, ContextMenuState, DialogueState } from '../../hooks/useUIState';
 import ProgressBar from '../common/ProgressBar';
 import { useSkillingAnimations } from '../../hooks/useSkillingAnimations';
-import { useSceneInteractions } from '../../hooks/useSceneInteractions';
 import { useIsTouchDevice } from '../../hooks/useIsTouchDevice';
 import { useLongPress } from '../../hooks/useLongPress';
 import { useWorldActions } from '../../hooks/useWorldActions';
@@ -45,9 +45,10 @@ interface SceneViewProps {
     skills: (PlayerSkill & { currentLevel: number; })[];
     monsterRespawnTimers: Record<string, number>;
     setActiveDialogue: (dialogue: DialogueState | null) => void;
-    handleDialogueAction: (actions: DialogueAction[]) => void;
     handleDialogueCheck: (requirements: DialogueCheckRequirement[]) => boolean;
+    onResponse: (response: DialogueResponse) => void;
     onDepositBackpack: () => void;
+    onDepositEquipment: () => void;
     ui: ReturnType<typeof useUIState>;
     isTouchSimulationEnabled: boolean;
     worldActions: ReturnType<typeof useWorldActions>;
@@ -96,21 +97,24 @@ const ActionableButton: React.FC<{
     setContextMenu: (menu: ContextMenuState | null) => void;
     ui: ReturnType<typeof useUIState>;
     onDepositBackpack: () => void;
+    onDepositEquipment: () => void;
     isTouchDevice: boolean;
     worldActions: ReturnType<typeof useWorldActions>;
     isOneClickMode: boolean;
-}> = ({ activity, index, handleActivityClick, setContextMenu, ui, onDepositBackpack, isTouchDevice, worldActions, isOneClickMode }) => {
+    poi: POI;
+    onStartCombat: (uniqueInstanceId: string) => void;
+}> = ({ activity, index, handleActivityClick, setContextMenu, ui, onDepositBackpack, onDepositEquipment, isTouchDevice, worldActions, isOneClickMode, poi, onStartCombat }) => {
     
     let text = 'Interact';
     switch (activity.type) {
         case 'shop': text = `Visit ${SHOPS[activity.shopId].name}`; break;
         case 'quest_start': text = `Talk about '${QUESTS[activity.questId].name}'`; break;
         case 'npc': text = activity.name; break;
+        case 'slayer_master': text = `Talk to ${activity.name}`; break;
         case 'cooking_range': text = 'Use Cooking Range'; break;
         case 'furnace': text = 'Use Furnace'; break;
         case 'anvil': text = 'Use Anvil'; break;
         case 'bank': text = 'Use Bank'; break;
-        case 'shearing': text = 'Shear Sheep'; break;
         case 'wishing_well': text = 'Toss a coin in the well'; break;
         case 'bookbinding_workbench': text = 'Bind Books'; break;
         case 'quest_board': text = 'Check the Quest Board'; break;
@@ -128,30 +132,50 @@ const ActionableButton: React.FC<{
             return;
         }
         ui.setTooltip(null);
-        if (activity.type === 'windmill') {
-            worldActions.handleCollectFlour();
-        } else {
-            handleActivityClick(activity);
-        }
+        handleActivityClick(activity);
     };
 
     const onLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         const event = 'touches' in e ? e.touches[0] : e;
         let options: ContextMenuOption[] = [];
 
-        if (activity.type === 'furnace') {
+        if (activity.type === 'npc') {
+            const isBanker = activity.actions && activity.actions.some(a => a.action === 'open_bank');
+            if (!isBanker) {
+                options.push({ label: 'Talk to', onClick: () => { handleActivityClick(activity); setContextMenu(null); } });
+            }
+
+            if (activity.attackableMonsterId) {
+                options.push({
+                    label: 'Attack',
+                    onClick: () => {
+                        const uniqueInstanceId = `${poi.id}:${activity.attackableMonsterId}:${index}`;
+                        onStartCombat(uniqueInstanceId);
+                        setContextMenu(null);
+                    }
+                });
+            }
+
+            if (activity.actions) {
+                activity.actions.forEach(action => {
+                    let onClick = () => {};
+                    if (action.action === 'open_bank') onClick = () => ui.setActivePanel('bank');
+                    else if (action.action === 'deposit_backpack') onClick = onDepositBackpack;
+                    else if (action.action === 'deposit_equipment') onClick = onDepositEquipment;
+                    options.push({ label: action.label, onClick: () => { onClick(); setContextMenu(null); } });
+                });
+            }
+        } else if (activity.type === 'furnace') {
             options = [
-                { label: 'Smelt', onClick: () => ui.openCraftingView({ type: 'furnace' }) },
-                { label: 'Craft Jewelry', onClick: () => ui.openCraftingView({ type: 'jewelry' }) }
+                { label: 'Smelt', onClick: () => { ui.openCraftingView({ type: 'furnace' }); setContextMenu(null); } },
+                { label: 'Craft Jewelry', onClick: () => { ui.openCraftingView({ type: 'jewelry' }); setContextMenu(null); } }
             ];
         } else if (activity.type === 'anvil') {
-            options = [{ label: 'Smith', onClick: () => ui.openCraftingView({ type: 'anvil' }) }];
-        } else if (activity.type === 'bank') {
-            options = [{ label: 'Quick Deposit', onClick: onDepositBackpack }];
+            options = [{ label: 'Smith', onClick: () => { ui.openCraftingView({ type: 'anvil' }); setContextMenu(null); } }];
         } else if (activity.type === 'windmill') {
             options = [
-                { label: 'Collect Flour', onClick: () => worldActions.handleCollectFlour() },
-                { label: 'Mill Wheat', onClick: () => worldActions.handleMillWheat() },
+                { label: 'Collect Flour', onClick: () => { worldActions.handleCollectFlour(); setContextMenu(null); } },
+                { label: 'Mill Wheat', onClick: () => { worldActions.handleMillWheat(); setContextMenu(null); } },
             ];
         }
         
@@ -159,16 +183,13 @@ const ActionableButton: React.FC<{
             setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
         }
     }
+    
+    const hasContextMenu = (activity.type === 'npc' || activity.type === 'furnace' || activity.type === 'anvil' || activity.type === 'windmill');
 
-    let customHandlers;
-    if (['furnace', 'anvil', 'bank', 'windmill'].includes(activity.type)) {
-        customHandlers = useLongPress({
-            onLongPress,
-            onClick: handleClick
-        });
-    } else {
-        customHandlers = { onClick: handleClick };
-    }
+    const customHandlers = hasContextMenu ? useLongPress({
+        onLongPress,
+        onClick: handleClick
+    }) : { onClick: handleClick };
     
     const tutorialId = `activity-button-${index}`;
 
@@ -191,7 +212,6 @@ const BonfireButton: React.FC<{
     setContextMenu: (menu: ContextMenuState | null) => void;
     isTouchDevice: boolean;
     onActivity: (activity: POIActivity) => void;
-    // FIX: Add setTooltip to props interface.
     setTooltip: (tooltip: TooltipState | null) => void;
     isOneClickMode: boolean;
 }> = ({ activity, inventory, skills, onStokeBonfire, setContextMenu, isTouchDevice, onActivity, setTooltip, isOneClickMode }) => {
@@ -279,7 +299,7 @@ const BonfireButton: React.FC<{
 
 
 const SceneView: React.FC<SceneViewProps> = (props) => {
-    const { poi, unlockedPois, onNavigate, onActivity, onStartCombat, playerQuests, inventory, setContextMenu, setMakeXPrompt, setTooltip, addLog, startQuest, hasItems, resourceNodeStates, activeSkillingNodeId, onToggleSkilling, initializeNodeState, skillingTick, getSuccessChance, activeRepeatableQuest, activeCleanup, onStartInteractQuest, onCancelInteractQuest, clearedSkillObstacles, onClearObstacle, skills, monsterRespawnTimers, setActiveDialogue, handleDialogueAction, handleDialogueCheck, onDepositBackpack, ui, isTouchSimulationEnabled, worldActions, bonfires, onStokeBonfire, isOneClickMode } = props;
+    const { poi, unlockedPois, onNavigate, onActivity, onStartCombat, playerQuests, inventory, setContextMenu, setMakeXPrompt, setTooltip, addLog, startQuest, hasItems, resourceNodeStates, activeSkillingNodeId, onToggleSkilling, initializeNodeState, skillingTick, getSuccessChance, activeRepeatableQuest, activeCleanup, onStartInteractQuest, onCancelInteractQuest, clearedSkillObstacles, onClearObstacle, skills, monsterRespawnTimers, setActiveDialogue, handleDialogueCheck, onResponse, onDepositBackpack, onDepositEquipment, ui, isTouchSimulationEnabled, worldActions, bonfires, onStokeBonfire, isOneClickMode } = props;
     const { depletedNodesAnimating } = useSkillingAnimations(resourceNodeStates, poi.activities);
     const [countdown, setCountdown] = useState<Record<string, number>>({});
     const [shakingNodeId, setShakingNodeId] = useState<string | null>(null);
@@ -292,20 +312,6 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
         // When POI changes, always show the actions list.
         setAreActionsVisible(true);
     }, [poi.id]);
-    
-    // @fix: Removed obsolete tutorialStage and advanceTutorial props, as they are no longer part of SceneInteractionDependencies. Tutorial progress is now quest-based.
-    const { handleActivityClick } = useSceneInteractions(poi.id, {
-        playerQuests,
-        startQuest,
-        hasItems,
-        addLog,
-        onActivity: (activity) => {
-            onActivity(activity);
-        },
-        setActiveDialogue,
-        handleDialogueAction,
-        handleDialogueCheck
-    });
 
     useEffect(() => {
         if (activeSkillingNodeId) {
@@ -404,7 +410,7 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
     }, [poi, clearedSkillObstacles]);
 
     const getActivityButton = (activity: POIActivity, index: number) => {
-        if ((activity.type === 'npc' || activity.type === 'skilling' || activity.type === 'runecrafting_altar') && activity.questCondition) {
+        if ((activity.type === 'npc' || activity.type === 'skilling' || activity.type === 'runecrafting_altar' || activity.type === 'ladder') && activity.questCondition) {
             const playerQuest = playerQuests.find(q => q.questId === activity.questCondition!.questId);
             const stages = activity.questCondition!.stages;
             const visibleAfter = activity.questCondition!.visibleAfterCompletion ?? false;
@@ -602,13 +608,16 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
                 key={`${activity.type}-${index}`}
                 activity={activity}
                 index={index}
-                handleActivityClick={handleActivityClick}
+                handleActivityClick={onActivity}
                 setContextMenu={setContextMenu}
                 ui={ui}
                 onDepositBackpack={onDepositBackpack}
+                onDepositEquipment={onDepositEquipment}
                 isTouchDevice={isTouchDevice}
                 worldActions={worldActions}
                 isOneClickMode={isOneClickMode}
+                poi={poi}
+                onStartCombat={onStartCombat}
             />
         );
     }

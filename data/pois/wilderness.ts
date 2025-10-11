@@ -1,5 +1,4 @@
 
-
 import { POI, SkillName, ToolType } from '../../types';
 
 export const wildernessPois: Record<string, POI> = {
@@ -90,42 +89,6 @@ export const wildernessPois: Record<string, POI> = {
                 name: 'Approach the altar',
                 icon: 'https://api.iconify.design/game-icons:rune-stone.svg',
                 questCondition: { questId: 'magical_runestone_discovery', stages: [4, 6] },
-                dialogue: {
-                    start: {
-                        npcName: 'Gust Altar',
-                        npcIcon: 'https://api.iconify.design/game-icons:rune-stone.svg',
-                        text: "The altar hums with a faint, windy energy.",
-                        responses: []
-                    },
-                    in_progress_magical_runestone_discovery_4: {
-                        npcName: 'Gust Altar',
-                        npcIcon: 'https://api.iconify.design/game-icons:rune-stone.svg',
-                        text: "As you approach the altar, the trinket and the rock chunks in your pack begin to vibrate violently, almost shaking out of your hands. They seem drawn to this place.",
-                        responses: [
-                            { text: "(Perhaps I should report this back to Elmsworth.)", actions: [{ type: 'advance_quest', questId: 'magical_runestone_discovery' }] }
-                        ]
-                    },
-                    in_progress_magical_runestone_discovery_6: {
-                        npcName: 'Gust Altar',
-                        npcIcon: 'https://api.iconify.design/game-icons:rune-stone.svg',
-                        text: "Elmsworth's words echo in your mind. He suggested placing both the trinket and the essence on the altar.",
-                        responses: [
-                            { text: "(Combine the talisman and essence on the altar)", check: { requirements: [{ type: 'items', items: [{ itemId: 'gust_talisman', quantity: 1 }, { itemId: 'rune_essence', quantity: 5 }] }], successNode: 'craft_runes_success', failureNode: 'craft_runes_fail' }, actions: [{ type: 'take_item', itemId: 'rune_essence', quantity: 5 }, { type: 'give_item', itemId: 'gust_rune', quantity: 5 }, { type: 'give_xp', skill: SkillName.Runecrafting, amount: 25 }, { type: 'advance_quest', questId: 'magical_runestone_discovery' }] }
-                        ]
-                    },
-                    craft_runes_success: {
-                        npcName: 'Gust Altar',
-                        npcIcon: 'https://api.iconify.design/game-icons:rune-stone.svg',
-                        text: "As you place the items on the altar, they are consumed in a flash of windy light! In their place, several small, flat stones inscribed with glowing runes appear.",
-                        responses: []
-                    },
-                    craft_runes_fail: {
-                        npcName: 'Gust Altar',
-                        npcIcon: 'https://api.iconify.design/game-icons:rune-stone.svg',
-                        text: "You don't have all the necessary components. Elmsworth mentioned a talisman and five rune essence chunks.",
-                        responses: []
-                    }
-                },
                 startNode: 'start'
             },
         ],
@@ -178,11 +141,11 @@ export const wildernessPois: Record<string, POI> = {
             {
                 type: 'npc',
                 name: 'Whispering Spirit',
-                icon: '/assets/npcChatHeads/whispering_spirit.png',
+                icon: 'https://api.iconify.design/game-icons:ghost-ally.svg',
                 dialogue: {
                     start: {
                         npcName: 'Whispering Spirit',
-                        npcIcon: '/assets/npcChatHeads/whispering_spirit.png',
+                        npcIcon: 'https://api.iconify.design/game-icons:ghost-ally.svg',
                         text: "The paths... they twist and turn...\n\n...do not lose your way...\n\nThe Feywood is not a place of this world. It remembers what mortals forget.\n\nThey say the trees themselves have memories older than the mountains.",
                         responses: []
                     }

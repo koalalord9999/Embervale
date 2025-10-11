@@ -1,13 +1,13 @@
-import { Monster, MonsterType, SpellElement } from '../../types';
+import { Monster, MonsterType, SkillName, SpellElement } from '@/types';
 
 export const dragons: Monster[] = [
     {
         id: 'grove_dragon', name: 'Grove Dragon', level: 75, maxHp: 80, attack: 60,
         stabDefence: 70, slashDefence: 114, crushDefence: 141, rangedDefence: 58, magicDefence: 12,
-        iconUrl: '/assets/npcChatHeads/grove_dragon.png',
+        iconUrl: 'https://api.iconify.design/game-icons:dragon-head.svg',
         guaranteedDrops: [
             { itemId: 'dragon_bones', minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'grove_hide', minQuantity: 1, maxQuantity: 1 }
+            { itemId: 'grove_hide', minQuantity: 1, maxQuantity: 1 },
         ],
         mainDrops: [
             { itemId: 'mithril_sword', chance: "1/64", minQuantity: 1, maxQuantity: 1 },
@@ -22,17 +22,17 @@ export const dragons: Monster[] = [
             { tableId: 'herb_table', chance: "3/10", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'coal', chance: "1/16", minQuantity: 15, maxQuantity: 30, noted: true },
             { itemId: 'iron_ore', chance: "1/8", minQuantity: 5, maxQuantity: 10, noted: true },
-            { itemId: 'coins', chance: "1/1", minQuantity: 500, maxQuantity: 600},
+            { itemId: 'coins', chance: "1/1", minQuantity: 500, maxQuantity: 600 },
         ],
         types: [MonsterType.Dragon], attackSpeed: 5, respawnTime: 120000, aggressive: true, attackStyle: 'slash',
     },
     {
         id: 'frosthide_dragon', name: 'Frosthide Dragon', level: 100, maxHp: 110, attack: 70,
         stabDefence: 90, slashDefence: 148, crushDefence: 183, rangedDefence: 80, magicDefence: 20,
-        iconUrl: '/assets/npcChatHeads/frosthide_dragon.png',
+        iconUrl: 'https://api.iconify.design/game-icons:dragon-head.svg',
         guaranteedDrops: [
             { itemId: 'dragon_bones', minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'frost_hide', minQuantity: 1, maxQuantity: 1 }
+            { itemId: 'frost_hide', minQuantity: 1, maxQuantity: 1 },
         ],
         mainDrops: [
             { itemId: 'adamantite_sword', chance: "1/64", minQuantity: 1, maxQuantity: 1 },
@@ -47,17 +47,17 @@ export const dragons: Monster[] = [
             { tableId: 'herb_table', chance: "3/10", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'mithril_ore', chance: "1/16", minQuantity: 10, maxQuantity: 20, noted: true },
             { itemId: 'coal', chance: "1/8", minQuantity: 25, maxQuantity: 50, noted: true },
-            { itemId: 'coins', chance: "1/1", minQuantity: 700, maxQuantity: 800},
+            { itemId: 'coins', chance: "1/1", minQuantity: 700, maxQuantity: 800 },
         ],
         types: [MonsterType.Dragon], attackSpeed: 5, respawnTime: 140000, aggressive: true, attackStyle: 'slash',
     },
     {
         id: 'emberscale_dragon', name: 'Emberscale Dragon', level: 135, maxHp: 150, attack: 85,
         stabDefence: 120, slashDefence: 192, crushDefence: 238, rangedDefence: 110, magicDefence: 30,
-        iconUrl: '/assets/npcChatHeads/emberscale_dragon.png',
+        iconUrl: 'https://api.iconify.design/game-icons:dragon-head.svg',
         guaranteedDrops: [
             { itemId: 'dragon_bones', minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'emberscale_hide', minQuantity: 1, maxQuantity: 1 }
+            { itemId: 'emberscale_hide', minQuantity: 1, maxQuantity: 1 },
         ],
         mainDrops: [
             { itemId: 'adamantite_platebody', chance: "1/64", minQuantity: 1, maxQuantity: 1 },
@@ -73,17 +73,17 @@ export const dragons: Monster[] = [
             { tableId: 'herb_table', chance: "3/10", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'adamantite_ore', chance: "1/16", minQuantity: 5, maxQuantity: 15, noted: true },
             { itemId: 'gold_ore', chance: "1/8", minQuantity: 10, maxQuantity: 20, noted: true },
-            { itemId: 'coins', chance: "1/1", minQuantity: 900, maxQuantity: 1000},
+            { itemId: 'coins', chance: "1/1", minQuantity: 900, maxQuantity: 1000 },
         ],
         types: [MonsterType.Dragon], attackSpeed: 5, respawnTime: 160000, aggressive: true, attackStyle: 'slash',
     },
     {
         id: 'deathscythe', name: 'Deathscythe', level: 180, maxHp: 200, attack: 100,
         stabDefence: 160, slashDefence: 250, crushDefence: 310, rangedDefence: 150, magicDefence: 45,
-        iconUrl: '/assets/npcChatHeads/deathscythe_dragon.png',
+        iconUrl: 'https://api.iconify.design/game-icons:spiked-dragon-head.svg',
         guaranteedDrops: [
             { itemId: 'dragon_bones', minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'deathscythe_hide', minQuantity: 1, maxQuantity: 1 }
+            { itemId: 'deathscythe_hide', minQuantity: 1, maxQuantity: 1 },
         ],
         mainDrops: [
             { itemId: 'runic_platebody', chance: "1/64", minQuantity: 1, maxQuantity: 1 },
@@ -99,13 +99,13 @@ export const dragons: Monster[] = [
             { tableId: 'herb_table', chance: "3/10", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'titanium_ore', chance: "1/16", minQuantity: 3, maxQuantity: 8, noted: true },
             { itemId: 'yew_logs', chance: "1/8", minQuantity: 20, maxQuantity: 40, noted: true },
-            { itemId: 'coins', chance: "1/1", minQuantity: 1800, maxQuantity: 2000},
+            { itemId: 'coins', chance: "1/1", minQuantity: 1800, maxQuantity: 2000 },
         ],
         types: [MonsterType.Dragon], attackSpeed: 5, respawnTime: 180000, aggressive: true, attackStyle: 'slash',
     },
     {
-        id: 'arcane_wyvern', name: 'Arcane Wyvern', level: 115, maxHp: 200, attack: 1, magic: 100,
-        stabDefence: 120, slashDefence: 120, crushDefence: 120, rangedDefence: 260, magicDefence: 500, customMaxHit: 18,
+        id: 'arcane_wyvern', name: 'Arcane Wyvern', level: 115, maxHp: 200, attack: 1, magic: 100, customMaxHit: 18,
+        stabDefence: 120, slashDefence: 120, crushDefence: 120, rangedDefence: 260, magicDefence: 500,
         iconUrl: 'https://api.iconify.design/game-icons:wyvern.svg',
         guaranteedDrops: [
             { itemId: 'dragon_bones', minQuantity: 2, maxQuantity: 2 },
@@ -122,13 +122,11 @@ export const dragons: Monster[] = [
             { itemId: 'mystic_page', chance: "1/2", minQuantity: 50, maxQuantity: 100, noted: true },
             { itemId: 'magus_spire_map', chance: "1/16", minQuantity: 1, maxQuantity: 1 },
         ],
-        types: [MonsterType.Dragon], attackSpeed: 4, respawnTime: 300000, aggressive: true, attackStyle: 'magic',
         specialAttacks: [
             { name: 'Arcane Stun', chance: 0.15, effect: 'stun', duration: 3000 },
             { name: 'Arcane Blast', chance: 0.2, effect: 'magic_bypass_defence', maxHit: 22 },
-            { name: 'Arcane Shift', chance: 0.1, effect: 'elemental_shift' }
+            { name: 'Arcane Shift', chance: 0.1, effect: 'elemental_shift' },
         ],
-        // FIX: Replaced enum-style access with string literals for SpellElement type alias.
-        elementalWeaknessCycle: ['wind', 'water', 'earth', 'fire'],
+        types: [MonsterType.Dragon], attackSpeed: 4, respawnTime: 300000, aggressive: true, attackStyle: 'magic', elementalWeaknessCycle: ['wind', 'water', 'earth', 'fire'],
     },
 ];

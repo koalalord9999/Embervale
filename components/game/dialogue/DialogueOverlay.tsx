@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ActivePanel, DialogueNode, DialogueResponse } from '../../../types';
 import Button from '../../common/Button';
@@ -152,11 +151,11 @@ const DialogueOverlay: React.FC<DialogueOverlayProps> = ({ dialogue, setActivePa
     const displayedResponses = hasResponses ? visibleResponses.slice(optionSliceStart, optionSliceEnd) : [];
 
     return (
-        <div className="absolute inset-0 bg-gray-900/90 border-2 border-yellow-700 rounded-lg shadow-2xl p-3 pointer-events-auto transition-opacity duration-300 ease-in-out opacity-100 flex flex-col md:flex-row h-full gap-3 animate-fade-in">
+        <div className="absolute inset-0 bg-gray-900/90 border-2 border-yellow-700 rounded-lg shadow-2xl p-3 pointer-events-auto transition-opacity duration-300 ease-in-out opacity-100 flex flex-col md:flex-row h-full gap-3 animate-fade-in md:overflow-y-hidden overflow-y-auto">
             {/* Left part: Guide info */}
             <div className="flex items-center gap-3 w-full md:w-1/2">
                 <img src={npcIcon} alt={npcName} className="w-16 h-16 bg-gray-800 border-2 border-gray-600 rounded-full flex-shrink-0 pixelated-image" />
-                <div className="h-full overflow-y-auto pr-1">
+                <div className="pr-1">
                     <h3 className="text-lg font-bold text-yellow-400">{npcName}</h3>
                     <p className="text-base text-gray-300 italic">"{paginatedText[textPage]}"</p>
                 </div>

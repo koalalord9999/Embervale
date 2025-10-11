@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Equipment, InventorySlot, Item } from '../../types';
 import { ITEMS, getIconClassName } from '../../constants';
@@ -63,12 +62,7 @@ const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, it
         setTooltip({ item, slot: itemSlot, position: { x: e.clientX, y: e.clientY } });
     };
 
-    const handleUnequip = () => {
-        if (item) {
-            onUnequip(slotKey);
-            setTooltip(null);
-        }
-    };
+    const handleUnequip = () => { if (item) { onUnequip(slotKey); setTooltip(null); } };
     
     const handleContextMenu = (e: React.MouseEvent | React.TouchEvent) => {
         if (!item || !itemSlot) return;
@@ -77,11 +71,7 @@ const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, it
         
         const options: ContextMenuOption[] = [];
         
-        const performAction = (action: () => void) => {
-            action();
-            setTooltip(null);
-            setContextMenu(null);
-        };
+        const performAction = (action: () => void) => { action(); setTooltip(null); setContextMenu(null); };
         
         options.push({ label: 'Unequip', onClick: () => performAction(handleUnequip) });
         
@@ -94,7 +84,6 @@ const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, it
         }
         
         options.push({ label: 'Examine', onClick: () => performAction(() => onExamine(item)) });
-        
         setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
     };
 

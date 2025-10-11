@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { saveGameState, loadGameState, deleteGameState } from '../db';
-import { ALL_SKILLS, REPEATABLE_QUEST_POOL, ITEMS, MONSTERS, SPELLS, QUESTS, BANK_CAPACITY } from '../constants';
+import { ALL_SKILLS, REPEATABLE_QUEST_POOL, ITEMS, MONSTERS, SPELLS, BANK_CAPACITY, QUESTS } from '../constants';
 import { POIS } from '../data/pois';
-import { CombatStance, PlayerSlayerTask, GeneratedRepeatableQuest, InventorySlot, WorldState, Spell, BankTab } from '../types';
+import { CombatStance, PlayerSlayerTask, GeneratedRepeatableQuest, InventorySlot, WorldState, Spell, BankTab, ActiveStatModifier, ActiveBuff, PlayerType } from '../types';
 import { useUIState } from './useUIState';
 
 // Define the shape of the game state
@@ -22,6 +22,7 @@ const defaultSettings = {
 
 const defaultState = {
     username: '',
+    playerType: PlayerType.Cheats, // Default new characters to Cheats mode for testing.
     skills: ALL_SKILLS,
     inventory: [],
     bank: [{ id: 0, name: 'Main', icon: null, items: [] }] as BankTab[],
@@ -48,11 +49,21 @@ const defaultState = {
     worldState: { windmillFlour: 0, deathMarker: null, bankPlaceholders: false, hpBoost: null } as WorldState,
     autocastSpell: null as Spell | null,
     settings: defaultSettings,
+    statModifiers: [] as ActiveStatModifier[],
+    activeBuffs: [] as ActiveBuff[],
 };
 
 const validateAndMergeState = (parsedData: any): GameState => {
-    const validatedState: GameState & { skills: any[]; playerQuests: any[], worldState: WorldState, bank: BankTab[] } = { ...defaultState };
+    const validatedState: GameState & { playerType: PlayerType; skills: any[]; playerQuests: any[], worldState: WorldState, bank: BankTab[] } = { ...defaultState };
     if (typeof parsedData.username === 'string') validatedState.username = parsedData.username;
+
+    // Validate playerType, defaulting to Cheats for old saves.
+    if (parsedData.playerType && Object.values(PlayerType).includes(parsedData.playerType)) {
+        validatedState.playerType = parsedData.playerType;
+    } else {
+        validatedState.playerType = PlayerType.Cheats;
+    }
+
     if (Array.isArray(parsedData.skills) && parsedData.skills.length > 0) validatedState.skills = parsedData.skills;
     
     // Potion Migration Logic
@@ -269,6 +280,64 @@ const validateAndMergeState = (parsedData: any): GameState => {
         if (parsedData.worldState.hpBoost) {
              validatedState.worldState.hpBoost = parsedData.worldState.hpBoost;
         }
+    }
+    
+    if (Array.isArray(parsedData.activeBuffs)) {
+        const now = Date.now();
+        validatedState.activeBuffs = parsedData.activeBuffs.map((buff: any) => {
+            // Migration from old format (expiresAt timestamp)
+            if (buff.expiresAt) {
+                const durationRemaining = buff.expiresAt - now;
+                if (durationRemaining <= 0) return null;
+                const { expiresAt, ...rest } = buff;
+                return { ...rest, durationRemaining };
+            }
+            // Handle new format or invalid entries
+            if (buff.durationRemaining > 0) {
+                return buff;
+            }
+            return null;
+        }).filter((b): b is ActiveBuff => b !== null);
+    }
+
+    if (Array.isArray(parsedData.statModifiers)) {
+        const now = Date.now();
+        validatedState.statModifiers = parsedData.statModifiers.map((mod: any) => {
+            // Migration from old format (nextDecayAt timestamp)
+            if (mod.nextDecayAt) {
+                if (!mod.durationPerLevel) return null;
+                const timeSinceScheduledDecay = now - mod.nextDecayAt;
+
+                if (timeSinceScheduledDecay >= 0) {
+                    // Decay was due while offline, calculate how many levels were lost
+                    const levelsDecayed = Math.floor(timeSinceScheduledDecay / mod.durationPerLevel) + 1;
+                    const isBoost = mod.initialValue > 0;
+                    const decayAmount = isBoost ? -levelsDecayed : levelsDecayed;
+                    const newValue = mod.currentValue + decayAmount;
+
+                    // Check if the modifier expired completely
+                    if ((isBoost && newValue <= 0) || (!isBoost && newValue >= 0)) {
+                        return null;
+                    }
+                    
+                    const timeIntoLastCycle = timeSinceScheduledDecay % mod.durationPerLevel;
+                    const decayTimer = mod.durationPerLevel - timeIntoLastCycle;
+
+                    const { nextDecayAt, ...rest } = mod;
+                    return { ...rest, currentValue: newValue, decayTimer };
+                } else {
+                    // Decay was not due yet, calculate remaining time
+                    const decayTimer = mod.nextDecayAt - now;
+                    const { nextDecayAt, ...rest } = mod;
+                    return { ...rest, decayTimer };
+                }
+            }
+            // Handle new format or invalid entries
+            if (mod.decayTimer > 0) {
+                return mod;
+            }
+            return null;
+        }).filter((m): m is ActiveStatModifier => m !== null);
     }
 
     validatedState.settings = { ...defaultState.settings, ...(parsedData.settings || {}) };

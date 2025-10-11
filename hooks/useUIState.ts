@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo } from 'react';
 import { ActivePanel, SkillName, InventorySlot, ActiveCraftingAction, DialogueNode, CraftingContext, Equipment, PlayerQuestState, Spell, Item, DialogueResponse, DialogueCheckRequirement } from '../types';
 import { ContextMenuOption } from '../components/common/ContextMenu';
@@ -44,7 +43,8 @@ export interface QuestDetailState {
 }
 
 export interface ExportDataState {
-    data: string;
+    data: string | { filePath: string; content: string }[];
+    onClose?: () => void;
     onCopy?: () => void;
     title?: string;
     copyButtonText?: string;
@@ -89,6 +89,7 @@ export const useUIState = () => {
     const [isExpandedMapViewOpen, setIsExpandedMapViewOpen] = useState<boolean>(false);
     const [isLootViewOpen, setIsLootViewOpen] = useState<boolean>(false);
     const [isDevPanelOpen, setIsDevPanelOpen] = useState<boolean>(false);
+    const [isMonsterDBOpen, setIsMonsterDBOpen] = useState<boolean>(false);
     const [isSettingsViewOpen, setIsSettingsViewOpen] = useState<boolean>(false);
     const [activeMapRegionId, setActiveMapRegionId] = useState<string>('world');
     const [activeBankTabId, setActiveBankTabId] = useState<number>(0);
@@ -125,7 +126,6 @@ export const useUIState = () => {
         activeSkillGuide ||
         activeCraftingAction ||
         activeQuestDetail ||
-        equipmentStats ||
         itemsOnDeathData ||
         priceCheckerInventory ||
         isAtlasViewOpen ||
@@ -133,7 +133,8 @@ export const useUIState = () => {
         isLootViewOpen ||
         activeDungeonMap ||
         isDevPanelOpen ||
-        isSettingsViewOpen
+        isSettingsViewOpen ||
+        isMonsterDBOpen
     ), [
         activeShopId,
         activeCraftingContext,
@@ -146,7 +147,6 @@ export const useUIState = () => {
         activeSkillGuide,
         activeCraftingAction,
         activeQuestDetail,
-        equipmentStats,
         itemsOnDeathData,
         priceCheckerInventory,
         isAtlasViewOpen,
@@ -154,7 +154,8 @@ export const useUIState = () => {
         isLootViewOpen,
         activeDungeonMap,
         isDevPanelOpen,
-        isSettingsViewOpen
+        isSettingsViewOpen,
+        isMonsterDBOpen
     ]);
 
 
@@ -196,6 +197,7 @@ export const useUIState = () => {
         setActiveDungeonMap(null);
         setIsDevPanelOpen(false);
         setIsSettingsViewOpen(false);
+        setIsMonsterDBOpen(false);
     }, []);
 
     return {
@@ -228,6 +230,7 @@ export const useUIState = () => {
         isSelectingAutocastSpell, setIsSelectingAutocastSpell,
         manualCastTrigger, setManualCastTrigger,
         isDevPanelOpen, setIsDevPanelOpen,
+        isMonsterDBOpen, setIsMonsterDBOpen,
         activeDungeonMap, setActiveDungeonMap,
         isSettingsViewOpen, setIsSettingsViewOpen,
         activeBankTabId, setActiveBankTabId,

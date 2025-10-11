@@ -14,7 +14,6 @@ interface UseWorldActionsProps {
     addXp: (skill: SkillName, amount: number) => void;
     setClearedSkillObstacles: React.Dispatch<React.SetStateAction<string[]>>;
     playerQuests: PlayerQuestState[];
-    checkQuestProgressOnShear: () => void;
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
     windmillFlour: number;
     setWindmillFlour: React.Dispatch<React.SetStateAction<number>>;
@@ -22,26 +21,7 @@ interface UseWorldActionsProps {
 }
 
 export const useWorldActions = (props: UseWorldActionsProps) => {
-    const { hasItems, inventory, modifyItem, addLog, coins, skills, addXp, setClearedSkillObstacles, playerQuests, checkQuestProgressOnShear, setMakeXPrompt, windmillFlour, setWindmillFlour, setActiveCraftingAction } = props;
-
-    const handleSimpleSkilling = useCallback((activity: Extract<POIActivity, { type: 'shearing' }>) => {
-        if (activity.type === 'shearing') {
-            if (!hasItems([{ itemId: 'shears', quantity: 1 }])) {
-                addLog("You need a pair of shears to shear sheep.");
-                return;
-            }
-        }
-        if (inventory.filter(Boolean).length >= INVENTORY_CAPACITY) {
-            addLog("Your inventory is full.");
-            return;
-        }
-        if (activity.loot) {
-            modifyItem(activity.loot.itemId, 1, false, undefined, { bypassAutoBank: true });
-            if (activity.type === 'shearing') {
-                checkQuestProgressOnShear();
-            }
-        }
-    }, [inventory, modifyItem, addLog, checkQuestProgressOnShear, hasItems]);
+    const { hasItems, inventory, modifyItem, addLog, coins, skills, addXp, setClearedSkillObstacles, playerQuests, setMakeXPrompt, windmillFlour, setWindmillFlour, setActiveCraftingAction } = props;
 
     const handleMilking = useCallback(() => {
         if (!hasItems([{ itemId: 'bucket', quantity: 1 }])) {
@@ -246,7 +226,6 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
     }, [hasItems, modifyItem, addLog, inventory]);
 
     return {
-        handleSimpleSkilling,
         handleMilking,
         handleTanning,
         handleWishingWell,

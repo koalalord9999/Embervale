@@ -1,4 +1,3 @@
-
 import { POI, SkillName } from '../../types';
 
 export const oakhavenRoadPois: Record<string, POI> = {
@@ -57,17 +56,6 @@ export const oakhavenRoadPois: Record<string, POI> = {
                 name: 'Investigate Debris',
                 icon: 'https://api.iconify.design/game-icons:magnifying-glass.svg',
                 questCondition: { questId: 'capitals_call', stages: [0] },
-                dialogue: {
-                    start: {
-                        npcName: 'Investigation',
-                        npcIcon: 'https://api.iconify.design/game-icons:magnifying-glass.svg',
-                        text: "The bridge supports look like they were cut with an axe, and there are scorch marks here. It was sabotage! You find a torn piece of cloth with a strange coiled serpent insignia nearby.",
-                        responses: [
-                            { text: "(Take the insignia)", actions: [{ type: 'advance_quest', questId: 'capitals_call' }] }
-                        ]
-                    }
-                },
-                startNode: 'start'
             }
         ],
         connectionRequirements: {

@@ -1,5 +1,4 @@
 
-
 import { POI, SkillName, ToolType } from '../../types';
 
 export const theVerdantFieldsPois: Record<string, POI> = {
@@ -14,78 +13,6 @@ export const theVerdantFieldsPois: Record<string, POI> = {
                 type: 'npc', 
                 name: 'Rancher McGregor', 
                 icon: '/assets/npcChatHeads/rancher_mcgregor.png',
-                dialogue: {
-                    default_dialogue: {
-                        npcName: 'Rancher McGregor',
-                        npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-                        text: "Well howdy, partner. Good of you to stop by. I've got a bit of a situation here... my sheep have gotten... well, 'fluffy' is an understatement.",
-                        responses: [
-                            { text: "Everything alright? You look a bit frazzled.", next: 'quest_intro_sheep_troubles' },
-                            { text: "Just passing through." },
-                        ]
-                    },
-                    quest_intro_sheep_troubles: {
-                        npcName: 'Rancher McGregor',
-                        npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-                        text: "Frazzled? That's putting it mildly! Look at 'em! My prize sheep have gotten so woolly they're starting to roll instead of walk. They're like fluffy, bleating boulders! It's a woolly catastrophe!",
-                        responses: [
-                            { text: "They do look rather spherical. What happened?", next: 'problem_sheep_troubles' },
-                            { text: "Sounds like a you problem.", next: 'you_problem_response' },
-                        ],
-                    },
-                    you_problem_response: {
-                        npcName: 'Rancher McGregor',
-                        npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-                        text: "Well, it'll be your problem too when the price of wool blankets skyrockets before winter! A little help here benefits everyone, you know.",
-                        responses: [
-                            { text: "Alright, you've got a point. What's the issue?", next: 'problem_sheep_troubles' }
-                        ]
-                    },
-                    problem_sheep_troubles: {
-                        npcName: 'Rancher McGregor',
-                        npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-                        text: "Spherical! Exactly! It's a woolly catastrophe. My usual shearer is out with a case of the sniffles, and I can't keep up myself. The wool is so thick the poor things can barely see! I need someone to shear ten of 'em for me. The raw wool isn't much use to the weavers in Oakhaven on its own, though.",
-                        responses: [
-                            { text: "What needs to be done with it?", next: 'solution_sheep_troubles' },
-                        ],
-                    },
-                    solution_sheep_troubles: {
-                        npcName: 'Rancher McGregor',
-                        npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-                        text: "It needs to be spun into proper balls of wool. I've got a spinning wheel in the barn you can use. If you can shear ten sheep, spin the wool, and bring me back ten finished balls, I'd be mighty grateful. Here, take these shears to get you started. I'll pay you well for your trouble, of course.",
-                        responses: [
-                            { text: "You've got a deal. I'll get right on it.", actions: [{ type: 'start_quest', questId: 'sheep_troubles' }, { type: 'give_item', itemId: 'shears', quantity: 1 }] },
-                            { text: "That sounds like a lot of work." },
-                        ],
-                    },
-                    in_progress_sheep_troubles_0: {
-                        npcName: 'Rancher McGregor',
-                        npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-                        text: "Those sheep aren't going to shear themselves! Grab some shears and get to it. You'll find plenty in the pen.",
-                        responses: []
-                    },
-                    in_progress_sheep_troubles_1: {
-                        npcName: 'Rancher McGregor',
-                        npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-                        text: "That's a fine pile of wool! Now head into the barn and use the spinning wheel to turn it into balls of wool.",
-                        responses: []
-                    },
-                    in_progress_sheep_troubles_2: {
-                        npcName: 'Rancher McGregor',
-                        npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-                        text: "Well I'll be! You've got the knack for it. These are perfect. Thank you kindly, adventurer. Here's your payment, as promised.",
-                        responses: [
-                            { text: "Happy to help.", actions: [{ type: 'give_xp', skill: SkillName.Crafting, amount: 150 }, { type: 'give_coins', amount: 300 }, {type: 'take_item', itemId: 'ball_of_wool', quantity: 10}, { type: 'advance_quest', questId: 'sheep_troubles' }] },
-                        ]
-                    },
-                    post_quest_sheep_troubles: {
-                        npcName: 'Rancher McGregor',
-                        npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-                        text: "Thanks again for helping me with those sheep. It's a relief to have that sorted!",
-                        responses: []
-                    }
-                },
-                startNode: 'default_dialogue'
             },
             { type: 'skilling', id: 'mcgregors_ranch_tree', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 1, xp: 25 }], resourceCount: { min: 1, max: 3 }, respawnTime: 15000, gatherTime: 2000 },
         ],
@@ -120,7 +47,11 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         description: "A large pen filled with incredibly fluffy sheep. They bleat lazily as you approach.",
         connections: ['mcgregors_ranch'],
         activities: [
-            { type: 'shearing', loot: { itemId: 'wool', chance: 1 } }
+            { type: 'skilling', id: 'sheep_pen_sheep_1', name: 'Shear Sheep', skill: SkillName.Crafting, requiredLevel: 1, loot: [{ itemId: 'wool', chance: 1, xp: 0 }], resourceCount: { min: 1, max: 1 }, respawnTime: 20000, gatherTime: 1800 },
+            { type: 'skilling', id: 'sheep_pen_sheep_2', name: 'Shear Sheep', skill: SkillName.Crafting, requiredLevel: 1, loot: [{ itemId: 'wool', chance: 1, xp: 0 }], resourceCount: { min: 1, max: 1 }, respawnTime: 20000, gatherTime: 1800 },
+            { type: 'skilling', id: 'sheep_pen_sheep_3', name: 'Shear Sheep', skill: SkillName.Crafting, requiredLevel: 1, loot: [{ itemId: 'wool', chance: 1, xp: 0 }], resourceCount: { min: 1, max: 1 }, respawnTime: 20000, gatherTime: 1800 },
+            { type: 'skilling', id: 'sheep_pen_sheep_4', name: 'Shear Sheep', skill: SkillName.Crafting, requiredLevel: 1, loot: [{ itemId: 'wool', chance: 1, xp: 0 }], resourceCount: { min: 1, max: 1 }, respawnTime: 20000, gatherTime: 1800 },
+            { type: 'skilling', id: 'sheep_pen_sheep_5', name: 'Shear Sheep', skill: SkillName.Crafting, requiredLevel: 1, loot: [{ itemId: 'wool', chance: 1, xp: 0 }], resourceCount: { min: 1, max: 1 }, respawnTime: 20000, gatherTime: 1800 },
         ],
         regionId: 'the_verdant_fields',
         x: 760, y: 1160
@@ -442,5 +373,16 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         activities: [ { type: 'combat', monsterId: 'unicorn' } ],
         regionId: 'the_verdant_fields',
         x: 450, y: 800
+    },
+    forgotten_barrow: {
+        id: 'forgotten_barrow',
+        name: 'Forgotten Barrow',
+        description: 'A low, grass-covered mound with a single stone door, sealed shut with an ancient lock.',
+        connections: ['ancient_standing_stones'],
+        activities: [
+            { type: 'npc', name: 'Examine Seal', icon: 'https://api.iconify.design/game-icons:locked-fortress.svg', questCondition: { questId: 'an_echo_of_battle', stages: [0] } }
+        ],
+        regionId: 'the_verdant_fields',
+        x: 400, y: 950
     },
 };

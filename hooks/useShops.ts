@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ShopStates } from '../types';
+import { ShopStates, InventorySlot } from '../types';
 import { SHOPS, ITEMS } from '../constants';
 
 export const useShops = (
     initialShopStates: ShopStates, // This is kept for signature compatibility but is no longer used.
     playerCoins: number,
     modifyItem: (itemId: string, quantity: number, quiet?: boolean, doses?: number, options?: { bypassAutoBank?: boolean }) => void,
-    addLog: (message: string) => void
+    addLog: (message: string) => void,
+    inventory: (InventorySlot | null)[]
 ) => {
     const [shopStates, setShopStates] = useState<ShopStates>(() => {
         // Always initialize shops from the master list, ignoring saved state.
@@ -80,31 +81,59 @@ export const useShops = (
             addLog("Error: Item not found in shop.");
             return;
         }
-
-        if (itemState.currentStock < quantity) {
+    
+        let actualQuantityToBuy = Math.min(quantity, itemState.currentStock);
+        if (actualQuantityToBuy <= 0) {
             addLog("The shop does not have enough stock.");
             return;
         }
+    
+        const freeSlots = inventory.filter(s => s === null).length;
+        let maxCanHold = 0;
+    
+        if (itemData.stackable) {
+            const hasStack = inventory.some(slot => slot?.itemId === itemId);
+            maxCanHold = (hasStack || freeSlots > 0) ? actualQuantityToBuy : 0;
+        } else {
+            maxCanHold = Math.min(actualQuantityToBuy, freeSlots);
+        }
         
-        const buyPrice = Math.ceil(itemData.value * defaultShopItem.priceModifier);
-        const totalCost = buyPrice * quantity;
-
-        if (playerCoins < totalCost) {
-            addLog("You don't have enough coins.");
+        if (maxCanHold <= 0) {
+            addLog("Your inventory is full.");
             return;
         }
-
+    
+        if (maxCanHold < actualQuantityToBuy) {
+            addLog(`You only have room for ${maxCanHold}.`);
+            actualQuantityToBuy = maxCanHold;
+        }
+    
+        const buyPrice = Math.ceil(itemData.value * defaultShopItem.priceModifier);
+        let totalCost = buyPrice * actualQuantityToBuy;
+    
+        if (playerCoins < totalCost) {
+            const affordAmount = Math.floor(playerCoins / buyPrice);
+            if (affordAmount > 0) {
+                actualQuantityToBuy = affordAmount;
+                totalCost = buyPrice * actualQuantityToBuy;
+                addLog(`You can only afford ${actualQuantityToBuy}.`);
+            } else {
+                addLog("You don't have enough coins.");
+                return;
+            }
+        }
+    
         modifyItem('coins', -totalCost, true);
-        modifyItem(itemId, quantity, true, itemData.initialDoses, { bypassAutoBank: true });
+        modifyItem(itemId, actualQuantityToBuy, true, itemData.initialDoses, { bypassAutoBank: true });
         
         setShopStates(prev => {
             const newStates = JSON.parse(JSON.stringify(prev));
-            newStates[shopId][itemId].currentStock -= quantity;
+            newStates[shopId][itemId].currentStock -= actualQuantityToBuy;
             return newStates;
         });
-
-        addLog(`You bought ${quantity}x ${itemData.name} for ${totalCost} coins.`);
-    }, [shopStates, playerCoins, modifyItem, addLog]);
+    
+        addLog(`You bought ${actualQuantityToBuy}x ${itemData.name} for ${totalCost} coins.`);
+    }, [shopStates, playerCoins, modifyItem, addLog, inventory]);
 
     return { shopStates, handleBuy };
 };

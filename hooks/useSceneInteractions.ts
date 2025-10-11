@@ -1,4 +1,3 @@
-
 import React, { useCallback } from 'react';
 import { POIActivity, PlayerQuestState, DialogueNode, Quest, DialogueResponse, DialogueCheckRequirement, DialogueAction } from '../types';
 import { QUESTS } from '../constants';
@@ -6,101 +5,143 @@ import { DialogueState, useUIState } from './useUIState';
 
 interface SceneInteractionDependencies {
     playerQuests: PlayerQuestState[];
-    startQuest: (questId: string, addLog: (message: string) => void) => void;
-    hasItems: (items: { itemId: string; quantity: number }[]) => boolean;
-    addLog: (message: string) => void;
-    onActivity: (activity: POIActivity) => void;
     setActiveDialogue: React.Dispatch<React.SetStateAction<DialogueState | null>>;
-    handleDialogueAction: (actions: DialogueAction[]) => void;
     handleDialogueCheck: (requirements: DialogueCheckRequirement[]) => boolean;
+    onResponse: (response: DialogueResponse) => void;
+    addLog: (message: string) => void;
 }
 
 export const useSceneInteractions = (poiId: string, deps: SceneInteractionDependencies) => {
-    const { playerQuests, startQuest, hasItems, addLog, onActivity, setActiveDialogue, handleDialogueAction, handleDialogueCheck } = deps;
-
-    const onResponse = useCallback((response: DialogueResponse) => {
-        if (response.check) {
-            const checkResult = handleDialogueCheck(response.check.requirements);
-            if (checkResult) {
-                if (response.actions) {
-                    handleDialogueAction(response.actions);
-                }
-                setActiveDialogue(prev => prev ? { ...prev, currentNodeKey: response.check!.successNode } : null);
-            } else {
-                setActiveDialogue(prev => prev ? { ...prev, currentNodeKey: response.check!.failureNode } : null);
-            }
-        } else {
-            if (response.actions) {
-                handleDialogueAction(response.actions);
-            }
-            if (response.next) {
-                setActiveDialogue(prev => prev ? { ...prev, currentNodeKey: response.next! } : null);
-            } else {
-                setActiveDialogue(null);
-            }
-        }
-    }, [handleDialogueCheck, handleDialogueAction, setActiveDialogue]);
+    const { playerQuests, setActiveDialogue, handleDialogueCheck, onResponse, addLog } = deps;
 
     const handleActivityClick = useCallback((activity: POIActivity) => {
-        if (activity.type === 'npc') {
-            const { name, icon, dialogue, startNode, dialogueType } = activity;
-            let finalDialogue = { ...dialogue };
+        if (activity.type !== 'npc') {
+            return;
+        }
+    
+        const { name, icon, dialogue: npcDialogue, startNode: defaultStartNode, dialogueType } = activity;
 
-            // Determine effective start node based on quest state
-            let effectiveStartNode = startNode;
-            let foundInProgress = false;
-            let firstPostQuestNode: string | null = null;
+        const startDialogue = (startNodeKey: string, primarySource: Record<string, DialogueNode>) => {
+            const allNodes: Record<string, DialogueNode> = {};
 
-            // Sort quests to ensure a consistent priority if multiple match (unlikely but good practice)
-            const sortedPlayerQuests = [...playerQuests].sort((a, b) => a.questId.localeCompare(b.questId));
-
-            for (const pq of sortedPlayerQuests) {
-                // Check for in-progress stage first
-                if (!pq.isComplete) {
-                    const nodeKeyInProgress = `in_progress_${pq.questId}_${pq.currentStage}`;
-                    if (dialogue[nodeKeyInProgress]) {
-                        effectiveStartNode = nodeKeyInProgress;
-                        foundInProgress = true;
-                        break; // In-progress takes highest priority
-                    }
-                }
-                
-                // If no in-progress found yet, check for post-quest dialogue
-                if (!foundInProgress && pq.isComplete) {
-                    const nodeKeyPostQuest = `post_quest_${pq.questId}`;
-                    if (dialogue[nodeKeyPostQuest] && !firstPostQuestNode) {
-                        firstPostQuestNode = nodeKeyPostQuest;
-                    }
+            // Aggregate all quest dialogues first
+            for (const quest of Object.values(QUESTS)) {
+                if (quest.dialogue) {
+                    Object.assign(allNodes, quest.dialogue);
                 }
             }
-
-            if (!foundInProgress && firstPostQuestNode) {
-                effectiveStartNode = firstPostQuestNode;
+            // Then, merge the NPC's own dialogue from the POI file.
+            if (npcDialogue) {
+                Object.assign(allNodes, npcDialogue);
             }
+            // Finally, ensure the primary source (the one that triggered the dialogue) overwrites any remaining conflicts.
+            // This is important to ensure the correct 'start' node is used if multiple exist.
+            Object.assign(allNodes, primarySource);
 
-            if (dialogueType === 'random') {
-                const nodeToDisplay = finalDialogue[startNode];
-                if (nodeToDisplay && nodeToDisplay.responses.length === 0 && nodeToDisplay.text.includes('\n\n')) {
+            if (dialogueType === 'random' && allNodes[startNodeKey]) {
+                const nodeToDisplay = allNodes[startNodeKey];
+                if (nodeToDisplay.responses.length === 0 && nodeToDisplay.text.includes('\n\n')) {
                     const dialogueOptions = nodeToDisplay.text.split('\n\n');
                     const randomDialogueText = dialogueOptions[Math.floor(Math.random() * dialogueOptions.length)];
-                    finalDialogue[startNode] = { ...nodeToDisplay, text: randomDialogueText };
+                    allNodes[startNodeKey] = { ...nodeToDisplay, text: randomDialogueText };
                 }
             }
-
+            
             setActiveDialogue({
                 npcName: name,
                 npcIcon: icon,
-                nodes: finalDialogue,
-                currentNodeKey: effectiveStartNode,
+                nodes: allNodes,
+                currentNodeKey: startNodeKey,
                 onEnd: () => setActiveDialogue(null),
                 onResponse: onResponse,
                 handleDialogueCheck: handleDialogueCheck,
             });
-            return;
-        }
+        };
         
-        onActivity(activity);
-    }, [onActivity, setActiveDialogue, onResponse, handleDialogueCheck, playerQuests]);
+        let effectiveStartNode: string | null = null;
+        let dialogueSource: Record<string, DialogueNode> | null = null;
+
+        // Priority 1: In-progress quest dialogue for this specific NPC.
+        for (const pq of playerQuests) {
+            if (effectiveStartNode) break;
+            if (!pq.isComplete) {
+                const questData = QUESTS[pq.questId];
+                if (!questData) {
+                    continue;
+                }
+                if (!questData.dialogue) {
+                    continue; 
+                }
+                
+                const nodeKey = `in_progress_${pq.questId}_${pq.currentStage}`;
+                const node = questData.dialogue[nodeKey];
+                if (node) {
+                    if (node.npcName.trim() === name.trim()) {
+                        effectiveStartNode = nodeKey;
+                        dialogueSource = questData.dialogue;
+                    }
+                }
+            }
+        }
+
+        // Priority 2: Quest start dialogue initiated by this NPC.
+        if (!effectiveStartNode) {
+            for (const quest of Object.values(QUESTS)) {
+                if (effectiveStartNode) break;
+                const isStarted = playerQuests.some(pq => pq.questId === quest.id);
+                if (!isStarted && quest.dialogue) {
+                    
+                    const explicitStartNode = quest.startDialogueNode;
+                    if (explicitStartNode) {
+                        const node = quest.dialogue[explicitStartNode];
+                        if (node?.npcName.trim() === name.trim()) {
+                            effectiveStartNode = explicitStartNode;
+                            dialogueSource = quest.dialogue;
+                        }
+                    }
+        
+                    const conventionalStartNode = `quest_intro_${quest.id}`;
+                    if (!effectiveStartNode && quest.dialogue[conventionalStartNode]) {
+                        const node = quest.dialogue[conventionalStartNode];
+                        if (node?.npcName.trim() === name.trim()) {
+                            effectiveStartNode = conventionalStartNode;
+                            dialogueSource = quest.dialogue;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Priority 3: Post-quest dialogue for this NPC.
+        if (!effectiveStartNode) {
+            for (const pq of playerQuests) {
+                if (effectiveStartNode) break;
+                if (pq.isComplete) {
+                    const questData = QUESTS[pq.questId];
+                    if (questData?.dialogue) {
+                        const nodeKey = `post_quest_${pq.questId}`;
+                        const node = questData.dialogue[nodeKey];
+                        if (node?.npcName.trim() === name.trim()) {
+                            effectiveStartNode = nodeKey;
+                            dialogueSource = questData.dialogue;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Priority 4 (Lowest): Fallback to the default dialogue from the POI definition.
+        if (!effectiveStartNode && npcDialogue && defaultStartNode) {
+            if (npcDialogue[defaultStartNode]) {
+                effectiveStartNode = defaultStartNode;
+                dialogueSource = npcDialogue;
+            }
+        }
+
+        if (effectiveStartNode && dialogueSource) {
+            startDialogue(effectiveStartNode, dialogueSource);
+        }
+    }, [playerQuests, setActiveDialogue, handleDialogueCheck, onResponse, addLog]);
 
     return { handleActivityClick };
 };

@@ -18,15 +18,14 @@ export const isleOfWhispersPois: Record<string, POI> = {
                         npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
                         text: "Ready to leave the isle? Or perhaps venture somewhere new?",
                         responses: [
-                            { text: "Yes, take me back to Silverhaven.", actions: [{ type: 'teleport', poiId: 'silverhaven_docks' }] },
-                            { text: "I've heard tales of floating islands... (1600 coins)", check: { requirements: [{ type: 'coins', amount: 1600 }], successNode: 'travel_crystalline_success', failureNode: 'travel_fail' }, actions: [{ type: 'take_coins', amount: 1600 }, { type: 'teleport', poiId: 'crystalline_isles_landing' }] },
+                            { text: "Take the ferry to Silverhaven. (10 coins)", check: { requirements: [{ type: 'coins', amount: 10 }], successNode: 'travel_silverhaven_success', failureNode: 'travel_fail' }, actions: [{ type: 'take_coins', amount: 10 }, { type: 'teleport', poiId: 'silverhaven_docks' }] },
                             { text: "Not just yet." },
                         ],
                     },
-                    travel_crystalline_success: {
+                    travel_silverhaven_success: {
                         npcName: 'Ferryman Silas',
                         npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
-                        text: "To the skies! The Crystalline Isles await!",
+                        text: "All aboard for Silverhaven!",
                         responses: []
                     },
                     travel_fail: {
@@ -90,11 +89,11 @@ export const isleOfWhispersPois: Record<string, POI> = {
             {
                 type: 'npc',
                 name: 'Salty Sam',
-                icon: '/assets/npcChatHeads/ferryman_silas.png',
+                icon: 'https://api.iconify.design/game-icons:pirate-captain.svg',
                 dialogue: {
                     start: {
                         npcName: 'Salty Sam',
-                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
+                        npcIcon: 'https://api.iconify.design/game-icons:pirate-captain.svg',
                         text: "Welcome to The Barnacle's Bite. Don't mind the creaking, she's an old ship. What'll it be?",
                         responses: [
                             { text: "What's on tap?", next: 'buy_drink_intro' },
@@ -103,7 +102,7 @@ export const isleOfWhispersPois: Record<string, POI> = {
                     },
                     buy_drink_intro: {
                         npcName: 'Salty Sam',
-                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
+                        npcIcon: 'https://api.iconify.design/game-icons:pirate-captain.svg',
                         text: "Got some grog. Strong enough to strip barnacles, which is how the place got its name. 5 coins.",
                         responses: [
                             { text: "Pour me one.", check: { requirements: [{ type: 'coins', amount: 5 }], successNode: 'buy_drink_success', failureNode: 'buy_drink_fail' }, actions: [{ type: 'take_coins', amount: 5 }, { type: 'give_item', itemId: 'beer', quantity: 1 }] },
@@ -112,19 +111,19 @@ export const isleOfWhispersPois: Record<string, POI> = {
                     },
                     buy_drink_success: {
                         npcName: 'Salty Sam',
-                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
+                        npcIcon: 'https://api.iconify.design/game-icons:pirate-captain.svg',
                         text: "There ya go. Put some hair on your chest!",
                         responses: []
                     },
                     buy_drink_fail: {
                         npcName: 'Salty Sam',
-                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
+                        npcIcon: 'https://api.iconify.design/game-icons:pirate-captain.svg',
                         text: "No coin, no grog. That's the rule.",
                         responses: []
                     },
                     rent_room_intro: {
                         npcName: 'Salty Sam',
-                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
+                        npcIcon: 'https://api.iconify.design/game-icons:pirate-captain.svg',
                         text: "A hammock, eh? It's not the Silverhaven suite, but it's dry and keeps the crabs from nibblin' your toes. 25 coins for the night, and you'll wake up feeling brand new.",
                         responses: [
                             { text: "Sounds good to me.", check: { requirements: [{ type: 'coins', amount: 25 }], successNode: 'rent_room_success', failureNode: 'buy_drink_fail' }, actions: [{ type: 'take_coins', amount: 25 }, { type: 'heal', amount: 'full' }] },
@@ -133,7 +132,7 @@ export const isleOfWhispersPois: Record<string, POI> = {
                     },
                     rent_room_success: {
                         npcName: 'Salty Sam',
-                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
+                        npcIcon: 'https://api.iconify.design/game-icons:pirate-captain.svg',
                         text: "Attaboy. Sleep tight.",
                         responses: []
                     }
@@ -153,7 +152,7 @@ export const isleOfWhispersPois: Record<string, POI> = {
             { type: 'shop', shopId: 'isle_of_whispers_general' }
         ],
         regionId: 'isle_of_whispers',
-        x: 500, y: 2380,
+        x: 483, y: 2371,
     },
     port_wreckage_bank: {
         id: 'port_wreckage_bank',
@@ -367,6 +366,6 @@ export const isleOfWhispersPois: Record<string, POI> = {
             { type: 'skilling', id: 'isle_ocean_trap_lobster', name: 'Set Ocean Trap', skill: SkillName.Fishing, requiredLevel: 50, loot: [{ itemId: 'raw_lobster', chance: 1, xp: 90 }], resourceCount: { min: 4, max: 9 }, respawnTime: 35000, gatherTime: 4500, requiredTool: ToolType.OceanBoxTrap },
         ],
         regionId: 'isle_of_whispers',
-        x: 350, y: 2450,
+        x: 400, y: 2460,
     },
 };

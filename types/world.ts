@@ -21,7 +21,7 @@ export interface Region {
   recommendedCombatLevel?: number;
 }
 
-export type BonfireActivity = { type: 'bonfire', uniqueId: string, logId: string, expiresAt: number };
+export type BonfireActivity = { type: 'bonfire', uniqueId: string, logId: string, expiresAt: number, poiId: string };
 
 // Defines the structure for quest-based activity visibility.
 // - questId: The ID of the quest to check.
@@ -37,15 +37,15 @@ export type POIActivity =
   | { type: 'skilling'; id: string; name?: string; skill: SkillName; requiredLevel: number; loot: { itemId: string; chance: number; xp: number; requiredLevel?: number }[]; resourceCount: { min: number, max: number }; respawnTime: number; gatherTime: number; harvestBoost?: number; requiredTool?: ToolType; treeHardness?: number; questCondition?: QuestCondition; }
   | { type: 'combat'; monsterId: string }
   | { type: 'shop'; shopId: string }
-  | { type: 'npc'; name: string; icon: string; dialogue: Record<string, DialogueNode>; startNode: string; actions?: { label: string; action: 'open_bank' | 'deposit_backpack' | 'deposit_equipment' }[]; dialogueType?: 'random'; questCondition?: QuestCondition; attackableMonsterId?: string; }
+  | { type: 'npc'; name: string; icon: string; dialogue?: Record<string, DialogueNode>; startNode?: string; actions?: { label: string; action: 'open_bank' | 'deposit_backpack' | 'deposit_equipment' }[]; dialogueType?: 'random'; questCondition?: QuestCondition; attackableMonsterId?: string; }
   | { type: 'cooking_range' }
   | { type: 'furnace' }
   | { type: 'anvil' }
   | { type: 'bookbinding_workbench' }
-  | { type: 'shearing'; loot: { itemId: 'wool'; chance: 1 } }
   | { type: 'egg_collecting'; loot: { itemId: 'eggs'; chance: 1 } }
   | { type: 'wishing_well' }
-  | { type: 'quest_board' }
+  // FIX: Added optional questCondition property to allow quest boards to be conditionally visible.
+  | { type: 'quest_board'; questCondition?: QuestCondition; }
   | { type: 'bank' }
   | { type: 'spinning_wheel' }
   | { type: 'blimp_travel'; requiredSlayerLevel: number; }

@@ -134,7 +134,6 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
                 addLog("You do not have enough runes to cast this spell.");
                 return;
             }
-            addLog(`You begin to cast ${spell.name}... Select an item from your inventory.`);
             ui.setSpellToCast(spell);
             ui.setActivePanel('inventory');
             return;

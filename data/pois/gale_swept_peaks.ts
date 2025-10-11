@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 
 export const galeSweptPeaksPois: Record<string, POI> = {
@@ -24,11 +25,11 @@ export const galeSweptPeaksPois: Record<string, POI> = {
             {
                 type: 'npc',
                 name: 'Echo of a Watchman',
-                icon: '/assets/npcChatHeads/echo_of_a_watchman.png',
+                icon: 'https://api.iconify.design/game-icons:ghost-ally.svg',
                 dialogue: {
                     start: {
                         npcName: 'Echo of a Watchman',
-                        npcIcon: '/assets/npcChatHeads/echo_of_a_watchman.png',
+                        npcIcon: 'https://api.iconify.design/game-icons:ghost-ally.svg',
                         text: "...always watching... the north...\n\nThe great metal... they forged it with the mountain's heart... runs with purple fire...\n\nWe failed... the darkness from the swamp... it rose...",
                         responses: []
                     }

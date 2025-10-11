@@ -1,16 +1,16 @@
-
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { PlayerRepeatableQuest, GeneratedRepeatableQuest, RepeatableQuestsState, SkillName, PlayerSkill } from '../types';
 import { REPEATABLE_QUEST_POOL, MONSTERS, ITEMS, XP_TABLE, TELEPORT_UNLOCK_THRESHOLD } from '../constants';
 import { POIS } from '../data/pois';
 
-const BOARD_IDS = ['the_rusty_flagon', 'the_carved_mug', 'tutorial_tavern'];
+const BOARD_IDS = ['the_rusty_flagon', 'the_carved_mug', 'tutorial_tavern', 'the_barnacles_bite', 'the_gilded_goblet'];
 const BOARD_RESET_INTERVAL = 30 * 60 * 1000; // 30 minutes
 
-const getTownForBoard = (boardId: string): 'meadowdale' | 'oakhaven' => {
+const getTownForBoard = (boardId: string): 'meadowdale' | 'oakhaven' | 'isle_of_whispers' | 'silverhaven' => {
     if (boardId === 'the_rusty_flagon') return 'meadowdale';
     if (boardId === 'the_carved_mug') return 'oakhaven';
+    if (boardId === 'the_barnacles_bite') return 'isle_of_whispers';
+    if (boardId === 'the_gilded_goblet') return 'silverhaven';
     return 'meadowdale'; // Default for tutorial or others
 };
 
@@ -47,13 +47,16 @@ const generateNewQuestsForBoard = (boardId: string, playerSkills: (PlayerSkill &
                 console.error(`Repeatable quest with id '${quest.id}' is of type 'gather' but has no itemId.`);
                 return null;
             }
-            const requiredQuantity = Math.floor(Math.random() * 11) + 5; // 5-15
-            const itemValue = ITEMS[quest.target.itemId]?.value ?? 1;
-            const finalCoinReward = Math.ceil(requiredQuantity * itemValue * 0.4);
+            const min = quest.minQuantity ?? 5;
+            const max = quest.maxQuantity ?? 15;
+            const requiredQuantity = Math.floor(Math.random() * (max - min + 1)) + min;
+            const finalCoinReward = quest.baseCoinReward * requiredQuantity;
             const finalXpAmount = requiredQuantity * quest.xpReward.amount;
             return { ...quest, requiredQuantity, finalCoinReward, xpReward: { ...quest.xpReward, amount: finalXpAmount } };
         } else if (quest.type === 'kill') {
-            const requiredQuantity = Math.floor(Math.random() * 6) + 3; // 3-8 kills
+            const min = quest.minQuantity ?? 3;
+            const max = quest.maxQuantity ?? 8;
+            const requiredQuantity = Math.floor(Math.random() * (max - min + 1)) + min;
             const finalCoinReward = quest.baseCoinReward * requiredQuantity;
             
             const monster = MONSTERS[quest.target.monsterId!];

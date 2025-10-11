@@ -1,7 +1,9 @@
-import { useEffect } from 'react';
+
+
+import React, { useEffect } from 'react';
 import { MONSTERS } from '../constants';
 import { POIS } from '../data/pois';
-import { POIActivity, Equipment, WorldState } from '../types';
+import { POIActivity, Equipment, WorldState, PlayerRepeatableQuest } from '../types';
 
 export const useAggression = (
     currentPoiId: string,
@@ -17,7 +19,8 @@ export const useAggression = (
     isPlayerImmune: boolean,
     equipment: Equipment,
     setEquipment: React.Dispatch<React.SetStateAction<Equipment>>,
-    worldState: WorldState
+    worldState: WorldState,
+    activeRepeatableQuest: PlayerRepeatableQuest | null
 ) => {
     useEffect(() => {
         const isPoiImmune = (worldState.poiImmunity?.[currentPoiId] ?? 0) > Date.now();
@@ -39,18 +42,30 @@ export const useAggression = (
                 return { monster, uniqueInstanceId };
             })
             .filter(({ monster, uniqueInstanceId }) => {
-                if (devAggroIds.includes(uniqueInstanceId)) {
-                    return true;
-                }
-
                 const respawnTime = monsterRespawnTimers[uniqueInstanceId];
                 if (respawnTime && respawnTime > Date.now()) {
                     return false; // Monster is respawning
                 }
 
-                if (!monster?.aggressive) return false;
+                let isQuestAggressive = false;
+                if (activeRepeatableQuest) {
+                    const quest = activeRepeatableQuest.generatedQuest;
+                    if (quest.aggressionToggle && quest.aggressionToggle.poiId === currentPoiId && quest.aggressionToggle.monsterId === monster.id) {
+                        isQuestAggressive = true;
+                    }
+                    if (quest.isInstance && quest.instancePoiId === currentPoiId && quest.target.monsterId === monster.id) {
+                        isQuestAggressive = true;
+                    }
+                }
+
+                if (!monster?.aggressive && !isQuestAggressive) return false;
+                
+                if (devAggroIds.includes(uniqueInstanceId)) {
+                    return true;
+                }
 
                 if (monster.alwaysAggressive) return true;
+                if (isQuestAggressive) return true;
                 return playerCombatLevel < monster.level * 2;
             });
         
@@ -71,5 +86,5 @@ export const useAggression = (
                 startCombat(aggressiveMonsterInstances.map(m => m.uniqueInstanceId));
             }
         }
-    }, [currentPoiId, isGameLoaded, isBusy, isInCombat, playerCombatLevel, startCombat, addLog, monsterRespawnTimers, devAggroIds, isPlayerInvisible, isPlayerImmune, equipment, setEquipment, worldState]);
+    }, [currentPoiId, isGameLoaded, isBusy, isInCombat, playerCombatLevel, startCombat, addLog, monsterRespawnTimers, devAggroIds, isPlayerInvisible, isPlayerImmune, equipment, setEquipment, worldState, activeRepeatableQuest]);
 };

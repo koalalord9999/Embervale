@@ -1,4 +1,3 @@
-
 import { Item, SkillName } from '../../types';
 
 export const foodAndPotions: Item[] = [
@@ -69,7 +68,7 @@ export const foodAndPotions: Item[] = [
     { id: 'cake_batter', name: 'Cake Batter', description: 'A sweet batter, ready to be baked into a cake.', stackable: false, value: 30, iconUrl: 'https://api.iconify.design/game-icons:cake-slice.svg' },
     
     // Potions & Drinks
-    { id: 'beer', name: 'Beer', description: 'A frothy mug of ale. Heals a little, and temporarily boosts your Strength.', stackable: false, value: 2, iconUrl: 'https://api.iconify.design/game-icons:beer-stein.svg', consumable: { healAmount: 1, statModifiers: [{ skill: SkillName.Strength, percent: 0.02, base: 2, duration: 30000 }] }, emptyable: { emptyItemId: 'beer_glass' }, material: 'copper' },
+    { id: 'beer', name: 'Beer', description: 'A frothy mug of ale. Heals a little, and temporarily boosts your Strength while lowering your Attack.', stackable: false, value: 2, iconUrl: 'https://api.iconify.design/game-icons:beer-stein.svg', consumable: { healAmount: 1, statModifiers: [{ skill: SkillName.Strength, percent: 0.01, base: 2, duration: 30000 }, { skill: SkillName.Attack, percent: -0.03, base: 0, duration: 30000 }] }, emptyable: { emptyItemId: 'beer_glass' }, material: 'copper' },
     { id: 'bandit_brew', name: 'Bandit\'s Brew', description: 'A rough, potent brew. Temporarily boosts Strength but lowers Defence.', stackable: false, value: 20, iconUrl: 'https://api.iconify.design/game-icons:potion-ball.svg', consumable: { healAmount: 2, statModifiers: [ { skill: SkillName.Strength, percent: 0.033, base: 4, duration: 30000 }, { skill: SkillName.Defence, percent: 0.02, base: -2, duration: 30000 } ] }, material: 'ruby' },
     { id: 'vial', name: 'Vial', description: 'An empty glass vial.', stackable: true, value: 2, iconUrl: 'https://api.iconify.design/game-icons:round-potion.svg', material: 'vial' },
     { id: 'vial_of_water', name: 'Vial of Water', description: 'A vial filled with water.', stackable: true, value: 2, iconUrl: 'https://api.iconify.design/game-icons:round-potion.svg', emptyable: { emptyItemId: 'vial' }, material: 'vial-water' },

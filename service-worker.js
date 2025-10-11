@@ -1,5 +1,4 @@
 const CACHE_NAME = 'embrune-cache-v1';
-const OLD_CACHE_NAME = 'embervale-cache-v1';
 const DYNAMICALLY_CACHED_HOSTS = [
     'api.iconify.design',
     'aistudiocdn.com',
@@ -22,9 +21,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-    // Add the old cache name to the whitelist to prevent it from being deleted.
-    // This ensures returning players don't lose their cached assets.
-    const cacheWhitelist = [CACHE_NAME, OLD_CACHE_NAME];
+    const cacheWhitelist = [CACHE_NAME];
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
@@ -48,7 +45,6 @@ self.addEventListener('fetch', (event) => {
     }
 
     // Use a cache-first strategy for all assets we want to make available offline.
-    // caches.match() will search across ALL caches, so it will find assets in the old cache if they exist.
     if (event.request.url.startsWith(self.location.origin) || DYNAMICALLY_CACHED_HOSTS.some(host => requestUrl.hostname.includes(host))) {
         event.respondWith(
             caches.match(event.request).then((cachedResponse) => {

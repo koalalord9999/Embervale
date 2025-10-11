@@ -334,6 +334,7 @@ export const useCrafting = (props: UseCraftingProps) => {
             if (Math.random() < 0.5) { // 50% success chance
                 modifyItem('iron_bar', 1, true, undefined, { bypassAutoBank: true });
                 addXp(SkillName.Smithing, 12.5); // Full XP on success
+                checkQuestProgressOnSmith('iron_bar', 1);
                 return { success: true, wasItemMade: true };
             } else {
                 addXp(SkillName.Smithing, 2); // Consolation XP on failure
@@ -693,17 +694,15 @@ export const useCrafting = (props: UseCraftingProps) => {
         if (action.recipeType === 'spinning') {
             checkQuestProgressOnSpin(product.itemId, product.quantity);
         }
-        if (action.recipeType === 'smithing-item') {
+        if (action.recipeType === 'smithing-item' || action.recipeType === 'smithing-bar') {
             checkQuestProgressOnSmith(product.itemId, product.quantity);
         }
         
         if (action.recipeType === 'smithing-bar' && product.itemId === 'bronze_bar') {
             advanceTutorial('smelt-bar');
-            closeCraftingView();
         }
         if (action.recipeType === 'smithing-item' && product.itemId === 'bronze_dagger') {
             advanceTutorial('smith-dagger');
-            closeCraftingView();
         }
 
         return { success: true, wasItemMade: true };
@@ -771,6 +770,7 @@ export const useCrafting = (props: UseCraftingProps) => {
                     }
                 }
                 setActiveCraftingAction(null);
+                closeCraftingView();
             } else {
                 nextAction.startTime = Date.now();
                 setActiveCraftingAction(nextAction);
@@ -779,7 +779,7 @@ export const useCrafting = (props: UseCraftingProps) => {
         }, activeCraftingAction.duration);
     
         return () => clearTimeout(handle);
-    }, [activeCraftingAction, addLog, setActiveCraftingAction]);
+    }, [activeCraftingAction, addLog, setActiveCraftingAction, closeCraftingView]);
 
     return {
         handleCrafting,

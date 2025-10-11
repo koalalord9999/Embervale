@@ -17,3 +17,5 @@ export * from './map_features';
 export * from './dialogue';
 export * from './firemaking';
 export * from './woodcutting';
+export * from './repeatableQuests';
+export * from './mining';

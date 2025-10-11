@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useUIState } from './hooks/useUIState';
 import { useGameStateManager } from './hooks/useGameStateManager';
@@ -17,7 +18,7 @@ import Game from './components/game/Game';
 import PreloadScreen from './components/screens/PreloadScreen';
 import UsernamePrompt from './components/common/UsernamePrompt';
 import { imagePaths, loadImagesAsBase64 } from './imageLoader';
-import { GAME_VERSION, DEV_MODE_ENABLED } from './config';
+import { GAME_VERSION } from './config';
 
 type AppState = 'LOADING_DB' | 'LOADING_ASSETS' | 'PRELOAD' | 'USERNAME_PROMPT' | 'GAME';
 type PromptReason = 'new_game' | 'set_username' | 'set_username_import' | null;
@@ -233,7 +234,6 @@ const App: React.FC = () => {
                             onImportGame={handleImportSave} 
                             onResetGame={requestNewGame} 
                             ui={ui} 
-                            devModeOverride={DEV_MODE_ENABLED}
                             assets={loadedAssets}
                         />
                     </div>
@@ -258,9 +258,8 @@ const App: React.FC = () => {
                     {ui.contextMenu && <ContextMenu options={ui.contextMenu.options} triggerEvent={ui.contextMenu.event} isTouchInteraction={ui.contextMenu.isTouchInteraction} onClose={ui.closeContextMenu} />}
                     {ui.makeXPrompt && <MakeXModal title={ui.makeXPrompt.title} maxQuantity={ui.makeXPrompt.max} onConfirm={ui.makeXPrompt.onConfirm} onCancel={ui.closeMakeXPrompt} />}
                     {ui.confirmationPrompt && <ConfirmationModal message={ui.confirmationPrompt.message} onConfirm={ui.confirmationPrompt.onConfirm} onCancel={ui.closeConfirmationPrompt} />}
-                    {ui.exportData && <ExportModal exportState={ui.exportData} onClose={ui.closeExportModal} />}
+                    {ui.exportData && <ExportModal exportState={ui.exportData} onClose={ui.exportData.onClose ?? ui.closeExportModal} />}
                     {ui.isImportModalOpen && <ImportModal onImport={loadFromImportedData} onClose={ui.closeImportModal} />}
-                    {ui.activeSkillGuide && <SkillGuideView activeSkill={ui.activeSkillGuide} setActiveSkill={ui.setActiveSkillGuide} onClose={ui.closeSkillGuide} playerSkills={initialState.skills as any[]} />}
                     {ui.activeQuestDetail && <QuestDetailView questId={ui.activeQuestDetail.questId} playerQuests={ui.activeQuestDetail.playerQuests} onClose={() => ui.setActiveQuestDetail(null)} />}
                     {ui.itemsOnDeathData && <ItemsOnDeathView inventory={ui.itemsOnDeathData.inventory} equipment={ui.itemsOnDeathData.equipment} coins={ui.itemsOnDeathData.coins} onClose={() => ui.setItemsOnDeathData(null)} />}
                     {ui.priceCheckerInventory && <PriceCheckerView inventory={ui.priceCheckerInventory} onClose={() => ui.setPriceCheckerInventory(null)} setTooltip={ui.setTooltip} setContextMenu={ui.setContextMenu} setMakeXPrompt={ui.setMakeXPrompt} />}
@@ -272,7 +271,7 @@ const App: React.FC = () => {
                                 currentPoiId={initialState.currentPoiId}
                                 onClose={() => ui.setActiveDungeonMap(null)}
                                 onNavigate={(poiId: string) => { /* Navigation is disabled in this view */ }}
-                                showAllPois={DEV_MODE_ENABLED}
+                                showAllPois={initialState.playerType === 'Cheats'}
                                 setTooltip={ui.setTooltip}
                             />
                         </div>

@@ -1,8 +1,6 @@
-
-
 import React, { useCallback } from 'react';
-import { DialogueAction, DialogueCheckRequirement, WorldState, InventorySlot, BankTab, ActivePanel, POIActivity } from '../types';
-import { INVENTORY_CAPACITY } from '../constants';
+import { DialogueAction, DialogueCheckRequirement, WorldState, InventorySlot, BankTab, ActivePanel, POIActivity, DialogueResponse } from '../types';
+import { INVENTORY_CAPACITY, QUESTS } from '../../constants';
 import { useQuests } from './useQuests';
 import { useQuestLogic } from './useQuestLogic';
 import { useNavigation } from './useNavigation';
@@ -33,6 +31,7 @@ interface DialogueActionDependencies {
 
 export const useDialogueActions = (deps: DialogueActionDependencies) => {
     const { quests, questLogic, navigation, inv, char, worldActions, addLog, worldState, setBank, setActivityLog, repeatableQuests, ui, setWorldState, session } = deps;
+    const { setActiveDialogue } = ui;
 
     const handleDialogueCheck = useCallback((requirements: DialogueCheckRequirement[]): boolean => {
         return requirements.every(req => {
@@ -169,5 +168,28 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
         }
     }, [inv, char, quests, questLogic, navigation, addLog, setBank, setActivityLog, repeatableQuests, worldState, ui, setWorldState, session.currentPoiId]);
 
-    return { handleDialogueAction, handleDialogueCheck };
+    const onResponse = useCallback((response: DialogueResponse) => {
+        if (response.check) {
+            const checkResult = handleDialogueCheck(response.check.requirements);
+            if (checkResult) {
+                if (response.actions) {
+                    handleDialogueAction(response.actions);
+                }
+                setActiveDialogue(prev => prev ? { ...prev, currentNodeKey: response.check!.successNode } : null);
+            } else {
+                setActiveDialogue(prev => prev ? { ...prev, currentNodeKey: response.check!.failureNode } : null);
+            }
+        } else {
+            if (response.actions) {
+                handleDialogueAction(response.actions);
+            }
+            if (response.next) {
+                setActiveDialogue(prev => prev ? { ...prev, currentNodeKey: response.next! } : null);
+            } else {
+                setActiveDialogue(null);
+            }
+        }
+    }, [handleDialogueCheck, handleDialogueAction, setActiveDialogue]);
+
+    return { handleDialogueAction, handleDialogueCheck, onResponse };
 };

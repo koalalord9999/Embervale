@@ -46,17 +46,17 @@ const ShopSlot: React.FC<{
     slot: InventorySlot;
     price: number;
     stock?: number;
-    onSingleTap: (e: React.MouseEvent | React.TouchEvent) => void;
+    onBuyOne: () => void;
     onDoubleTap: () => void;
     onContextMenu: (e: React.MouseEvent | React.TouchEvent) => void;
     setTooltip: (tooltip: TooltipState | null) => void;
-}> = ({ slot, price, stock, onSingleTap, onDoubleTap, onContextMenu, setTooltip }) => {
+}> = ({ slot, price, stock, onBuyOne, onDoubleTap, onContextMenu, setTooltip }) => {
     const item = ITEMS[slot.itemId];
     if (!item) {
         return <div className="w-full aspect-square bg-gray-900 border border-gray-700 rounded-md" />;
     }
 
-    const doubleTapHandlers = useDoubleTap({ onSingleTap, onDoubleTap });
+    const doubleTapHandlers = useDoubleTap({ onSingleTap: onBuyOne, onDoubleTap });
     const longPressHandlers = useLongPress({ onLongPress: onContextMenu, onClick: doubleTapHandlers.onClick });
     
     const combinedHandlers = {
@@ -144,21 +144,6 @@ const ShopView: React.FC<ShopViewProps> = ({ shopId, playerCoins, shopStates, on
 
     if (!shop || !currentShopState) return <div>Loading shop...</div>;
 
-    const handleBuyTap = (e: React.MouseEvent | React.TouchEvent, itemId: string) => {
-        const itemData = ITEMS[itemId];
-        const defaultShopItem = shop?.inventory.find(i => i.itemId === itemId);
-        const itemState = currentShopState?.[itemId];
-        if (!itemData || !defaultShopItem || !itemState) return;
-
-        if ('shiftKey' in e && e.shiftKey) {
-            performActionAndCloseTooltip(() => onBuy(shopId, itemId, 1));
-        } else {
-            setTooltip(null);
-            const buyPrice = Math.ceil(itemData.value * defaultShopItem.priceModifier);
-            addLog(`[${itemData.name}] Buy price: ${buyPrice} coins. Stock: ${itemState.currentStock ?? 0}`);
-        }
-    };
-
     return (
         <div className="flex flex-col h-full text-gray-200 animate-fade-in">
             <div className="flex justify-between items-center p-4 border-b-2 border-gray-600 flex-shrink-0">
@@ -181,7 +166,7 @@ const ShopView: React.FC<ShopViewProps> = ({ shopId, playerCoins, shopStates, on
                                     slot={{ itemId, quantity: 1, doses: item.initialDoses }}
                                     price={buyPrice}
                                     stock={itemState?.currentStock}
-                                    onSingleTap={(e) => handleBuyTap(e, itemId)}
+                                    onBuyOne={() => performActionAndCloseTooltip(() => onBuy(shopId, itemId, 1))}
                                     onDoubleTap={() => addLog(`[Examine: ${item.name}] ${item.description}`)}
                                     onContextMenu={(e) => createBuyContextMenu(e, itemId)}
                                     setTooltip={setTooltip}

@@ -29,6 +29,8 @@ export const useBank = (bankState: BankState, deps: BankDependencies) => {
         if (!itemSlot) return;
         const itemData = ITEMS[itemSlot.itemId];
         if (!itemData) return;
+
+        const isSingleUnstackable = quantity === 1 && !itemData.stackable && !itemSlot.noted;
     
         let qtyToDeposit: number;
         if (itemSlot.noted || itemData.stackable) {
@@ -84,12 +86,18 @@ export const useBank = (bankState: BankState, deps: BankDependencies) => {
                         if (slot.quantity <= 0) newInv[inventoryIndex] = null;
                     }
                 } else {
-                    let removedCount = 0;
-                    for (let i = 0; i < newInv.length && removedCount < qtyToDeposit; i++) {
-                        const s = newInv[i];
-                        if (s && s.itemId === itemSlot.itemId && !s.noted) {
-                            newInv[i] = null;
-                            removedCount++;
+                    if (isSingleUnstackable) {
+                        // FIX: Remove from the specific index for single, unstackable items.
+                        newInv[inventoryIndex] = null;
+                    } else {
+                        // Original logic for 'all' or 'X'
+                        let removedCount = 0;
+                        for (let i = 0; i < newInv.length && removedCount < qtyToDeposit; i++) {
+                            const s = newInv[i];
+                            if (s && s.itemId === itemSlot.itemId && !s.noted) {
+                                newInv[i] = null;
+                                removedCount++;
+                            }
                         }
                     }
                 }

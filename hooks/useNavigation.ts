@@ -61,6 +61,9 @@ export const useNavigation = (deps: NavigationDependencies) => {
 
     const navigateToPoi = useCallback((poiId: string) => {
         ui.closeAllModals();
+        if (ui.activePanel === 'bank') {
+            ui.setActivePanel(null); // This will default to inventory panel
+        }
         skilling.stopSkilling();
         interactQuest.handleCancelInteractQuest();
         session.setCurrentPoiId(poiId);

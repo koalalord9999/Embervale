@@ -15,7 +15,8 @@ import { useSkilling } from '../../hooks/useSkilling';
 import { useInteractQuest } from '../../hooks/useInteractQuest';
 import { useGameSession } from '../../hooks/useGameSession';
 import { useItemActions } from '../../hooks/useItemActions';
-import { SkillName, InventorySlot, CombatStance, POIActivity, GroundItem, Spell, BonfireActivity, DialogueCheckRequirement, DialogueAction, BankTab, WorldState } from '../../types';
+// FIX: Import ActiveBuff to use its specific type instead of 'any'.
+import { SkillName, InventorySlot, CombatStance, POIActivity, GroundItem, Spell, BonfireActivity, DialogueCheckRequirement, DialogueAction, BankTab, WorldState, PlayerRepeatableQuest, ActiveBuff, DialogueResponse } from '../../types';
 import { POIS } from '../../data/pois';
 import CraftingProgressView from '../views/crafting/CraftingProgressView';
 import CombatView from '../views/CombatView';
@@ -53,8 +54,8 @@ interface MainViewControllerProps {
     handleKill: (uniqueInstanceId: string, attackStyle?: 'melee' | 'ranged' | 'magic') => void;
     onWinCombat: () => void;
     onFleeFromCombat: () => void;
-    handleDialogueAction: (actions: DialogueAction[]) => void;
     handleDialogueCheck: (requirements: DialogueCheckRequirement[]) => boolean;
+    onResponse: (response: DialogueResponse) => void;
     combatSpeedMultiplier: number;
     activeCombatStyleHighlight?: CombatStance | null;
     isTouchSimulationEnabled: boolean;
@@ -67,6 +68,7 @@ interface MainViewControllerProps {
     onUpdatePoiConnections?: (poiId: string, newConnections: string[]) => void;
     // Props from Game that were passed down
     initialState: any;
+    onActivity: (activity: POIActivity) => void;
     onExportGame: () => void;
     onImportGame: () => void;
     onResetGame: () => void;
@@ -86,18 +88,21 @@ interface MainViewControllerProps {
     bonfires: BonfireActivity[];
     onStokeBonfire: (logId: string, bonfireId: string) => void;
     isStunned: boolean;
-    addBuff: (buff: any) => void;
+    // FIX: Corrected the type for addBuff to use the specific ActiveBuff type for type safety.
+    addBuff: (buff: Omit<ActiveBuff, 'id' | 'durationRemaining'>) => void;
     itemActions: ReturnType<typeof useItemActions>;
     isDevMode: boolean;
     onToggleDevPanel: () => void;
     onToggleTouchSimulation: () => void;
     onDepositEquipment: () => void;
     deathMarker?: WorldState['deathMarker'];
+    activeRepeatableQuest: PlayerRepeatableQuest | null;
+    onEncounterWin: (defeatedMonsterIds: string[]) => void;
 }
 
 const MainViewController: React.FC<MainViewControllerProps> = (props) => {
     const {
-        ui, addLog, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, onWinCombat, onFleeFromCombat, handleDialogueAction, handleDialogueCheck, combatSpeedMultiplier, activeCombatStyleHighlight, isTouchSimulationEnabled, showAllPois,
+        ui, addLog, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, onWinCombat, onFleeFromCombat, handleDialogueCheck, onResponse, combatSpeedMultiplier, activeCombatStyleHighlight, isTouchSimulationEnabled, showAllPois,
         groundItemsForCurrentPoi, onPickUpItem, onTakeAllLoot, onItemDropped, isAutoBankOn, handleCombatXpGain, immunityTimeLeft, poiImmunityTimeLeft, killTrigger,
         bankPlaceholders, handleToggleBankPlaceholders, bonfires, onStokeBonfire, isStunned, addBuff, onExportGame, onImportGame, onResetGame,
         itemActions,
@@ -106,6 +111,9 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
         onToggleTouchSimulation,
         onDepositEquipment,
         deathMarker,
+        activeRepeatableQuest,
+        onActivity,
+        onEncounterWin
     } = props;
 
     const handleTeleport = useCallback((toBoardId: string) => {
@@ -114,31 +122,6 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
         navigation.handleForcedNavigate(toBoardId);
         ui.closeAllModals(); // This will close the teleport modal
     }, [addLog, navigation, ui, isStunned]);
-
-    const onActivity = (activity: POIActivity) => {
-        if (isStunned) { addLog("You are stunned and cannot perform actions."); return; }
-        if (activity.type === 'shop') ui.setActiveShopId(activity.shopId);
-        else if (activity.type === 'bank') ui.setActivePanel('bank');
-        else if (activity.type === 'slayer_master') slayer.handleSlayerMasterInteraction();
-        else if (activity.type === 'blimp_travel') {
-            const slayerLevel = char.skills.find(s => s.name === SkillName.Slayer)?.level ?? 1;
-            if (slayerLevel < activity.requiredSlayerLevel) addLog(`You need a Slayer level of ${activity.requiredSlayerLevel} to use this service.`);
-            else addLog("The blimp service to other regions is not yet available.");
-        }
-        else if (activity.type === 'cooking_range') ui.openCraftingView({ type: 'cooking_range' });
-        else if (activity.type === 'furnace') ui.openCraftingView({ type: 'furnace' });
-        else if (activity.type === 'anvil') ui.openCraftingView({ type: 'anvil' });
-        else if (activity.type === 'bookbinding_workbench') ui.openCraftingView({ type: 'bookbinding' });
-        else if (activity.type === 'spinning_wheel') ui.openCraftingView({ type: 'spinning_wheel' });
-        else if (activity.type === 'wishing_well') worldActions.handleWishingWell();
-        else if (activity.type === 'water_source') worldActions.handleCollectWater();
-        else if (activity.type === 'milking') worldActions.handleMilking();
-        else if (activity.type === 'quest_board') ui.setActiveQuestBoardId(session.currentPoiId);
-        else if (activity.type === 'ancient_chest') worldActions.handleOpenAncientChest();
-        else if (activity.type === 'runecrafting_altar') crafting.handleInstantRunecrafting(activity.runeId);
-        else if (activity.type === 'shearing') worldActions.handleSimpleSkilling(activity);
-        else if (activity.type === 'ladder') navigation.handleForcedNavigate(activity.toPoiId);
-    };
 
     const mainContent = (() => {
         if (ui.isSettingsViewOpen) {
@@ -185,6 +168,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 onConsumeAmmo={inv.handleConsumeAmmo} 
                 onPlayerDeath={handlePlayerDeath} 
                 onKill={handleKill} 
+                onEncounterWin={onEncounterWin}
                 activeBuffs={char.activeBuffs}
                 combatSpeedMultiplier={combatSpeedMultiplier}
                 advanceTutorial={() => {}}
@@ -206,18 +190,6 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 boardCompletions={repeatableQuests.boardCompletions}
                 onTeleport={handleTeleport}
                 onClose={() => ui.setActiveTeleportBoardId(null)}
-            />
-        }
-        if (ui.equipmentStats) {
-            return <EquipmentStatsView 
-                equipment={inv.equipment} 
-                onClose={() => ui.setEquipmentStats(null)}
-                onUnequip={inv.handleUnequip}
-                setTooltip={ui.setTooltip}
-                ui={ui}
-                addLog={addLog}
-                onExamine={itemActions.handleExamine}
-                isTouchSimulationEnabled={isTouchSimulationEnabled}
             />
         }
         if (ui.activePanel === 'bank') return <BankView 
@@ -292,6 +264,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
 
         return (
             <SceneView poi={poi} unlockedPois={navigation.reachablePois} onNavigate={navigation.handleNavigate} inventory={inv.inventory}
+                // FIX: Pass the `onActivity` prop from Game.tsx as `handleActivityClick`
                 onActivity={onActivity}
                 worldActions={worldActions}
                 onStartCombat={(uniqueInstanceId) => { ui.setCombatQueue([uniqueInstanceId]); ui.setIsMandatoryCombat(false); }}
@@ -300,7 +273,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 resourceNodeStates={skilling.resourceNodeStates} activeSkillingNodeId={skilling.activeSkillingNodeId} onToggleSkilling={skilling.handleToggleSkilling} initializeNodeState={skilling.initializeNodeState}
                 skillingTick={skilling.skillingTick}
                 getSuccessChance={skilling.getSuccessChance}
-                activeRepeatableQuest={repeatableQuests.activePlayerQuest} 
+                activeRepeatableQuest={activeRepeatableQuest} 
                 activeCleanup={interactQuest.activeCleanup}
                 onStartInteractQuest={interactQuest.handleStartInteractQuest}
                 onCancelInteractQuest={interactQuest.handleCancelInteractQuest}
@@ -310,8 +283,8 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 monsterRespawnTimers={monsterRespawnTimers}
                 setTooltip={ui.setTooltip}
                 setActiveDialogue={ui.setActiveDialogue}
-                handleDialogueAction={handleDialogueAction}
                 handleDialogueCheck={handleDialogueCheck}
+                onResponse={onResponse}
                 onDepositBackpack={() => bankLogic.handleDepositBackpack(ui.activeBankTabId)}
                 onDepositEquipment={onDepositEquipment}
                 ui={ui}
@@ -345,6 +318,20 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                     onClose={() => ui.setIsLootViewOpen(false)}
                     setTooltip={ui.setTooltip}
                 />
+            )}
+            {ui.equipmentStats && (
+                <div className="absolute inset-0 bg-black/80 z-30 p-4">
+                    <EquipmentStatsView 
+                        equipment={ui.equipmentStats} 
+                        onClose={() => ui.setEquipmentStats(null)}
+                        onUnequip={inv.handleUnequip}
+                        setTooltip={ui.setTooltip}
+                        ui={ui}
+                        addLog={addLog}
+                        onExamine={itemActions.handleExamine}
+                        isTouchSimulationEnabled={isTouchSimulationEnabled}
+                    />
+                </div>
             )}
         </>
     );

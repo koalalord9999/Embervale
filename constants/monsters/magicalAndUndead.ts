@@ -1,4 +1,3 @@
-
 import { Monster, MonsterType, SkillName } from '../../types';
 
 export const magicalAndUndead: Monster[] = [
@@ -24,7 +23,7 @@ export const magicalAndUndead: Monster[] = [
     {
         id: 'cave_slime', name: 'Cave Slime', level: 3, maxHp: 10, attack: 2,
         stabDefence: 3, slashDefence: 3, crushDefence: 1, rangedDefence: 5, magicDefence: 0,
-        iconUrl: '/assets/npcChatHeads/cave_slime.png',
+        iconUrl: 'https://api.iconify.design/game-icons:gooey-daemon.svg',
         mainDrops: [
             { itemId: 'cave_slime_globule', chance: "1/2", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'aqua_rune', chance: "1/10", minQuantity: 1, maxQuantity: 3 },
@@ -34,7 +33,7 @@ export const magicalAndUndead: Monster[] = [
     {
         id: 'stone_golem', name: 'Stone Golem', level: 50, maxHp: 100, attack: 28,
         stabDefence: 30, slashDefence: 30, crushDefence: 10, rangedDefence: 40, magicDefence: 0,
-        iconUrl: '/assets/npcChatHeads/stone_golem.png',
+        iconUrl: 'https://api.iconify.design/game-icons:rock-golem.svg',
         guaranteedDrops: [
             { itemId: 'iron_ore', minQuantity: 5, maxQuantity: 10 },
             { itemId: 'coal', minQuantity: 10, maxQuantity: 20 },
@@ -49,7 +48,7 @@ export const magicalAndUndead: Monster[] = [
     {
         id: 'harpy', name: 'Harpy', level: 22, maxHp: 35, attack: 1, ranged: 20,
         stabDefence: 12, slashDefence: 12, crushDefence: 10, rangedDefence: 15, magicDefence: 5,
-        iconUrl: '/assets/npcChatHeads/harpy.png',
+        iconUrl: 'https://api.iconify.design/game-icons:harpy.svg',
         guaranteedDrops: [
             { itemId: 'feathers', minQuantity: 10, maxQuantity: 30 },
             { itemId: 'gust_rune', minQuantity: 10, maxQuantity: 20 },
@@ -63,7 +62,7 @@ export const magicalAndUndead: Monster[] = [
     {
         id: 'fey_sprite', name: 'Fey Sprite', level: 20, maxHp: 30, attack: 1, ranged: 15,
         stabDefence: 18, slashDefence: 18, crushDefence: 18, rangedDefence: 25, magicDefence: 25,
-        iconUrl: '/assets/npcChatHeads/fey_sprite.png',
+        iconUrl: 'https://api.iconify.design/game-icons:fairy.svg',
         mainDrops: [
             { itemId: 'fey_dust', chance: "2/5", minQuantity: 1, maxQuantity: 3 },
             { itemId: 'enchanted_bark', chance: "3/20", minQuantity: 1, maxQuantity: 1 },
@@ -78,7 +77,7 @@ export const magicalAndUndead: Monster[] = [
     {
         id: 'swamp_horror', name: 'Swamp Horror', level: 28, maxHp: 60, attack: 22,
         stabDefence: 20, slashDefence: 20, crushDefence: 25, rangedDefence: 15, magicDefence: 10,
-        iconUrl: '/assets/npcChatHeads/swamp_horror.png',
+        iconUrl: 'https://api.iconify.design/game-icons:lizardman.svg',
         mainDrops: [
             { itemId: 'uncut_emerald', chance: "3/100", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'yew_logs', chance: "1/6", minQuantity: 1, maxQuantity: 3 },
@@ -92,7 +91,7 @@ export const magicalAndUndead: Monster[] = [
     {
         id: 'shipwreck_specter', name: 'Shipwreck Specter', level: 39, maxHp: 75, attack: 1, magic: 38,
         stabDefence: 32, slashDefence: 32, crushDefence: 32, rangedDefence: 40, magicDefence: 40,
-        iconUrl: '/assets/npcChatHeads/shipwreck_specter.png',
+        iconUrl: 'https://api.iconify.design/game-icons:ghost.svg',
         mainDrops: [
             { itemId: 'eldritch_pearl', chance: "1/40", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'driftwood_logs', chance: "3/20", minQuantity: 1, maxQuantity: 3 },
@@ -105,7 +104,7 @@ export const magicalAndUndead: Monster[] = [
     {
         id: 'siren', name: 'Siren', level: 44, maxHp: 90, attack: 1, ranged: 55,
         stabDefence: 30, slashDefence: 30, crushDefence: 30, rangedDefence: 35, magicDefence: 35,
-        iconUrl: '/assets/npcChatHeads/siren.png',
+        iconUrl: 'https://api.iconify.design/game-icons:siren.svg',
         guaranteedDrops: [
             { itemId: 'sirens_hair', minQuantity: 1, maxQuantity: 1 },
             { itemId: 'aqua_rune', minQuantity: 30, maxQuantity: 50 },
@@ -124,7 +123,7 @@ export const magicalAndUndead: Monster[] = [
     {
         id: 'magma_imp', name: 'Magma Imp', level: 43, maxHp: 60, attack: 1, ranged: 50,
         stabDefence: 25, slashDefence: 25, crushDefence: 25, rangedDefence: 30, magicDefence: 30,
-        iconUrl: '/assets/npcChatHeads/magma_imp.png',
+        iconUrl: 'https://api.iconify.design/game-icons:imp.svg',
         guaranteedDrops: [
             { itemId: 'ember_rune', minQuantity: 40, maxQuantity: 80 },
         ],
@@ -138,7 +137,7 @@ export const magicalAndUndead: Monster[] = [
     {
         id: 'unicorn', name: 'Unicorn', level: 20, maxHp: 40, attack: 10, magic: 15,
         stabDefence: 15, slashDefence: 15, crushDefence: 15, rangedDefence: 20, magicDefence: 25,
-        iconUrl: '/assets/npcChatHeads/unicorn.png',
+        iconUrl: 'https://api.iconify.design/game-icons:unicorn.svg',
         guaranteedDrops: [
             { itemId: 'unicorn_horn', minQuantity: 1, maxQuantity: 1 },
             { itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 },
@@ -154,7 +153,7 @@ export const magicalAndUndead: Monster[] = [
     {
         id: 'forest_spirit', name: 'Forest Spirit', level: 16, maxHp: 30, attack: 1, magic: 14,
         stabDefence: 20, slashDefence: 20, crushDefence: 20, rangedDefence: 25, magicDefence: 30,
-        iconUrl: '/assets/npcChatHeads/forest_spirit.png',
+        iconUrl: 'https://api.iconify.design/game-icons:tree-face.svg',
         mainDrops: [
             { itemId: 'fey_dust', chance: "1/4", minQuantity: 1, maxQuantity: 2 },
             { itemId: 'enchanted_bark', chance: "2/5", minQuantity: 1, maxQuantity: 1 },
@@ -168,7 +167,7 @@ export const magicalAndUndead: Monster[] = [
     {
         id: 'treant_sapling', name: 'Treant Sapling', level: 17, maxHp: 38, attack: 15,
         stabDefence: 5, slashDefence: 20, crushDefence: 20, rangedDefence: 10, magicDefence: 5,
-        iconUrl: '/assets/npcChatHeads/treant_sapling.png',
+        iconUrl: 'https://api.iconify.design/game-icons:evil-tree.svg',
         guaranteedDrops: [
             { itemId: 'willow_logs', minQuantity: 1, maxQuantity: 3 },
         ],
@@ -186,7 +185,7 @@ export const magicalAndUndead: Monster[] = [
     {
         id: 'brine_elemental', name: 'Brine Elemental', level: 42, maxHp: 90, attack: 1, magic: 40,
         stabDefence: 30, slashDefence: 30, crushDefence: 30, rangedDefence: 45, magicDefence: 40,
-        iconUrl: '/assets/npcChatHeads/brine_elemental.png',
+        iconUrl: 'https://api.iconify.design/game-icons:water-splash.svg',
         guaranteedDrops: [
             { itemId: 'aqua_rune', minQuantity: 40, maxQuantity: 80 },
         ],
@@ -198,7 +197,7 @@ export const magicalAndUndead: Monster[] = [
     {
         id: 'salt_cryst_golem', name: 'Salt-cryst Golem', level: 37, maxHp: 80, attack: 30,
         stabDefence: 40, slashDefence: 20, crushDefence: 40, rangedDefence: 30, magicDefence: 15,
-        iconUrl: '/assets/npcChatHeads/salt_cryst_golem.png',
+        iconUrl: 'https://api.iconify.design/game-icons:rock-golem.svg',
         guaranteedDrops: [
             { itemId: 'rock_salt', minQuantity: 3, maxQuantity: 8 },
         ],
@@ -210,7 +209,7 @@ export const magicalAndUndead: Monster[] = [
     {
         id: 'mirage_weaver', name: 'Mirage Weaver', level: 41, maxHp: 60, attack: 1, magic: 45,
         stabDefence: 10, slashDefence: 10, crushDefence: 10, rangedDefence: 30, magicDefence: 50,
-        iconUrl: '/assets/npcChatHeads/mirage_weaver.png',
+        iconUrl: 'https://api.iconify.design/game-icons:glowing-artifact.svg',
         guaranteedDrops: [
             { itemId: 'gust_rune', minQuantity: 20, maxQuantity: 50 },
         ],
@@ -223,7 +222,7 @@ export const magicalAndUndead: Monster[] = [
     {
         id: 'salt_wraith', name: 'Salt Wraith', level: 45, maxHp: 100, attack: 1, magic: 48,
         stabDefence: 25, slashDefence: 25, crushDefence: 25, rangedDefence: 40, magicDefence: 45,
-        iconUrl: '/assets/npcChatHeads/salt_wraith.png',
+        iconUrl: 'https://api.iconify.design/game-icons:ghost-ally.svg',
         guaranteedDrops: [
             { itemId: 'nexus_rune', minQuantity: 15, maxQuantity: 30 },
         ],
@@ -280,7 +279,7 @@ export const magicalAndUndead: Monster[] = [
     {
         id: 'lesser_crystal_construct', name: 'Lesser Crystal Construct', level: 65, maxHp: 85, attack: 1, magic: 55,
         stabDefence: 45, slashDefence: 45, crushDefence: 45, rangedDefence: 15, magicDefence: 20, customMaxHit: 13,
-        iconUrl: 'https://api.iconify.design/game-icons:crystal-golem.svg',
+        iconUrl: 'https://api.iconify.design/game-icons:ice-golem.svg',
         guaranteedDrops: [{ itemId: 'crystal_shard', minQuantity: 1, maxQuantity: 3 }],
         mainDrops: [
             { itemId: 'uncut_sapphire', chance: '1/16', minQuantity: 1, maxQuantity: 1 },
@@ -319,7 +318,7 @@ export const magicalAndUndead: Monster[] = [
             { itemId: 'astral_rune', chance: '1/5', minQuantity: 3, maxQuantity: 8 },
             { itemId: 'rune_essence', chance: '1/3', minQuantity: 10, maxQuantity: 25, noted: true },
             { itemId: 'cooked_tuna', chance: '1/4', minQuantity: 1, maxQuantity: 2 },
-            { itemId: 'mithril_dagger', chance: '1/64', minQuantity: 1, maxQuantity: 1 }
+            { itemId: 'runic-dagger', chance: '1/64', minQuantity: 1, maxQuantity: 1 }
         ],
         types: [MonsterType.Beast, MonsterType.Elemental], attackSpeed: 4, respawnTime: 28000, aggressive: true, attackStyle: 'magic',
     },
@@ -334,7 +333,7 @@ export const magicalAndUndead: Monster[] = [
             { itemId: 'rune_essence', chance: '1/2', minQuantity: 20, maxQuantity: 40, noted: true },
             { itemId: 'cooked_lobster', chance: '1/4', minQuantity: 1, maxQuantity: 1 },
             { itemId: 'adamantite_mace', chance: '1/128', minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'mithril_full_helm', chance: '1/64', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'runic_full_helm', chance: '1/64', minQuantity: 1, maxQuantity: 1 },
             { itemId: 'affinity_gloves', chance: '1/128', minQuantity: 1, maxQuantity: 1 }
         ],
         types: [MonsterType.Elemental, MonsterType.Armored], attackSpeed: 5, respawnTime: 32000, aggressive: true, attackStyle: 'magic',
@@ -375,7 +374,7 @@ export const magicalAndUndead: Monster[] = [
         iconUrl: 'https://api.iconify.design/game-icons:wizard-face.svg',
         guaranteedDrops: [{ itemId: 'bones', minQuantity: 1, maxQuantity: 1 }],
         mainDrops: [
-            { tableId: 'herb_table', chance: '1/5', minQuantity: 2, maxQuantity: 4, noted: true },
+            { tableId: 'herb_table', chance: '1/5', minQuantity: 2, maxQuantity: 3, noted: true },
             { itemId: 'affinity_top', chance: '1/128', minQuantity: 1, maxQuantity: 1 },
             { itemId: 'affinity_bottoms', chance: '1/128', minQuantity: 1, maxQuantity: 1 },
             { tableId: 'robes_of_power_table', chance: '1/512', minQuantity: 1, maxQuantity: 1 },
@@ -388,7 +387,7 @@ export const magicalAndUndead: Monster[] = [
     {
         id: 'greater_crystal_construct', name: 'Greater Crystal Construct', level: 82, maxHp: 120, attack: 1, magic: 72,
         stabDefence: 70, slashDefence: 70, crushDefence: 70, rangedDefence: 30, magicDefence: 35, customMaxHit: 16,
-        iconUrl: 'https://api.iconify.design/game-icons:crystal-golem.svg',
+        iconUrl: 'https://api.iconify.design/game-icons:ice-golem.svg',
         guaranteedDrops: [{ itemId: 'crystal_shard', minQuantity: 2, maxQuantity: 5 }],
         mainDrops: [
             { itemId: 'uncut_ruby', chance: '1/20', minQuantity: 1, maxQuantity: 1 },
@@ -455,7 +454,7 @@ export const magicalAndUndead: Monster[] = [
         {
         id: 'sunken_zombie', name: 'Sunken Zombie', level: 50, maxHp: 65, attack: 45,
         stabDefence: 10, slashDefence: 10, crushDefence: 5, rangedDefence: 15, magicDefence: 0,
-        iconUrl: 'https://api.iconify.design/game-icons:zombie-head.svg',
+        iconUrl: 'https://api.iconify.design/game-icons:shambling-zombie.svg',
         guaranteedDrops: [{ itemId: 'bones', minQuantity: 1, maxQuantity: 1 }],
         mainDrops: [
             { itemId: 'grimy_coin_pouch', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
@@ -496,7 +495,7 @@ export const magicalAndUndead: Monster[] = [
         iconUrl: 'https://api.iconify.design/game-icons:skeletal-hand.svg',
         guaranteedDrops: [{ itemId: 'bones', minQuantity: 1, maxQuantity: 1 }],
         mainDrops: [
-            { itemId: 'mithril_arrow', chance: "1/2", minQuantity: 5, maxQuantity: 15 },
+            { itemId: 'mithril_arrow', chance: "1/2", minQuantity: 15, maxQuantity: 40 },
             { itemId: 'adamantite_arrow', chance: "1/4", minQuantity: 5, maxQuantity: 15 },
         ],
         tertiaryDrops: [{ itemId: 'nexus_talisman', chance: 1 / 128, minQuantity: 1, maxQuantity: 1 }],
@@ -505,7 +504,7 @@ export const magicalAndUndead: Monster[] = [
     {
         id: 'labyrinth_guardian', name: 'Labyrinth Guardian', level: 60, maxHp: 90, attack: 55,
         stabDefence: 40, slashDefence: 40, crushDefence: 80, rangedDefence: 50, magicDefence: 5,
-        iconUrl: 'https://api.iconify.design/game-icons:stone-golem.svg',
+        iconUrl: 'https://api.iconify.design/game-icons:minotaur.svg',
         mainDrops: [
             { itemId: 'adamantite_ore', chance: "1/8", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'runic_bar', chance: "1/64", minQuantity: 1, maxQuantity: 1 },
@@ -539,7 +538,7 @@ export const magicalAndUndead: Monster[] = [
     {
         id: 'grave_revenant', name: 'Grave Revenant', level: 62, maxHp: 85, attack: 58,
         stabDefence: 40, slashDefence: 40, crushDefence: 40, rangedDefence: 35, magicDefence: 35,
-        iconUrl: 'https://api.iconify.design/game-icons:revenant.svg',
+        iconUrl: 'https://api.iconify.design/game-icons:grim-reaper.svg',
         guaranteedDrops: [{ itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 }],
         mainDrops: [
             { itemId: 'nexus_rune', chance: "1/2", minQuantity: 2, maxQuantity: 12 },
@@ -578,5 +577,81 @@ export const magicalAndUndead: Monster[] = [
         ],
         tertiaryDrops: [{ itemId: 'nexus_talisman', chance: 1 / 128, minQuantity: 1, maxQuantity: 1 }],
         types: [MonsterType.Elemental, MonsterType.Armored], attackSpeed: 4, respawnTime: 300000, aggressive: true, alwaysAggressive: true, attackStyle: 'stab'
-    }
+    },
+    {
+        id: 'blight_imp', name: 'Blight Imp', level: 7, maxHp: 18, attack: 1, magic: 8,
+        stabDefence: 5, slashDefence: 5, crushDefence: 5, rangedDefence: 10, magicDefence: 0,
+        iconUrl: 'https://api.iconify.design/game-icons:imp-laugh.svg',
+        guaranteedDrops: [
+            { itemId: 'ashes', minQuantity: 1, maxQuantity: 1 }
+        ],
+        mainDrops: [
+            { tableId: 'herb_table', chance: "1/4", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'binding_rune', chance: "1/5", minQuantity: 5, maxQuantity: 10 },
+        ],
+        types: [MonsterType.Demon], attackSpeed: 4, respawnTime: 600000, aggressive: true, alwaysAggressive: true,        attackStyle: 'magic',
+        specialAttacks: [{ name: 'Wilt', chance: 0.2, effect: 'stat_drain', skill: SkillName.Strength, value: -2 }],
+        elementalWeakness: 'fire', // Quest-specific summon
+    },
+    {
+        id: 'grave_revenant_lord', name: 'Grave Revenant Lord', level: 72, maxHp: 110, attack: 65,
+        stabDefence: 80, slashDefence: 90, crushDefence: 40, rangedDefence: 70, magicDefence: 60,
+        iconUrl: 'https://api.iconify.design/game-icons:grim-reaper.svg',
+        guaranteedDrops: [
+            { itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 },
+        ],
+        mainDrops: [
+            { itemId: 'adamantite_battleaxe', chance: "1/16", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'runic_sword', chance: "1/32", minQuantity: 1, maxQuantity: 1 },
+            { tableId: 'herb_table', chance: "1/4", minQuantity: 2, maxQuantity: 3, noted: true },
+            { itemId: 'coins', chance: "1/1", minQuantity: 800, maxQuantity: 1500},
+            { itemId: 'nexus_rune', chance: "1/5", minQuantity: 10, maxQuantity: 20 },
+        ],
+        types: [MonsterType.Undead, MonsterType.Armored],
+        attackSpeed: 4, respawnTime: 600000, aggressive: true, alwaysAggressive: true, attackStyle: 'slash',
+        specialAttacks: [{ name: 'Soul Drain', chance: 0.25, effect: 'damage_multiplier', value: 1.2 }], //quest boss
+    },
+    {
+        id: 'chasm_crawler', name: 'Chasm Crawler', level: 48, maxHp: 55, attack: 40,
+        stabDefence: 40, slashDefence: 30, crushDefence: 35, rangedDefence: 25, magicDefence: 20,
+        iconUrl: 'https://api.iconify.design/game-icons:insect-jaws.svg',
+        guaranteedDrops: [
+            { itemId: 'bones', minQuantity: 1, maxQuantity: 1 },
+        ],
+        mainDrops: [
+            { itemId: 'coal', chance: "1/5", minQuantity: 1, maxQuantity: 3, noted: true },
+            { itemId: 'mithril_ore', chance: "1/20", minQuantity: 1, maxQuantity: 1, noted: true },
+        ],
+        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 30000, aggressive: true, attackStyle: 'stab',
+    },
+{
+    id: 'rock_golem', name: 'Rock Golem', level: 52, maxHp: 70, attack: 45,
+    stabDefence: 60, slashDefence: 60, crushDefence: 20, rangedDefence: 70, magicDefence: 10,
+    iconUrl: 'https://api.iconify.design/game-icons:rock-golem.svg',
+    guaranteedDrops: [
+        { itemId: 'stone_rune', minQuantity: 15, maxQuantity: 30 },
+    ],
+    mainDrops: [
+        { tableId: 'gem_table', chance: "1/20", minQuantity: 1, maxQuantity: 1 },
+        { itemId: 'iron_ore', chance: "1/2", minQuantity: 2, maxQuantity: 5, noted: true },
+        { itemId: 'coal', chance: "1/4", minQuantity: 3, maxQuantity: 6, noted: true },
+    ],
+    types: [MonsterType.Elemental, MonsterType.Armored], attackSpeed: 6, respawnTime: 45000, aggressive: true, attackStyle: 'crush',
+},
+{
+    id: 'the_earth_render', name: 'The Earth-Render', level: 85, maxHp: 160, attack: 75,
+    stabDefence: 100, slashDefence: 100, crushDefence: 50, rangedDefence: 120, magicDefence: 30,
+    iconUrl: 'https://api.iconify.design/game-icons:elf-helmet.svg',
+    guaranteedDrops: [
+        { itemId: 'heart_of_the_mountain', minQuantity: 1, maxQuantity: 1 },
+    ],
+    mainDrops: [
+        { itemId: 'adamantite_ore', chance: "1/2", minQuantity: 3, maxQuantity: 6, noted: true },
+        { itemId: 'runic_bar', chance: "1/10", minQuantity: 1, maxQuantity: 2, noted: true },
+        { itemId: 'uncut_diamond', chance: "1/8", minQuantity: 1, maxQuantity: 2, noted: true },
+        { itemId: 'coins', chance: "1/1", minQuantity: 5000, maxQuantity: 7500},
+    ],
+    types: [MonsterType.Elemental, MonsterType.Armored], attackSpeed: 7, respawnTime: 600000, aggressive: true, alwaysAggressive: true, attackStyle: 'crush',
+    specialAttacks: [{ name: 'Tremor', chance: 0.3, effect: 'stun', duration: 3000 }], //quest boss
+},
 ];

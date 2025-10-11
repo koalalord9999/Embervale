@@ -1,11 +1,10 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import Button from '../common/Button';
 import { useInventory } from '../../hooks/useInventory';
 import { Item, SkillName, ToolType } from '../../types';
 import { ITEMS, INVENTORY_CAPACITY, getIconClassName, REGIONS, ALL_SKILLS, QUESTS, LOG_HARDNESS } from '../../constants';
 import { POIS } from '../../data/pois';
-import { TooltipState } from '../../hooks/useUIState';
+import { TooltipState, useUIState } from '../../hooks/useUIState';
 
 interface CheatsComponentProps {
     combatSpeedMultiplier: number;
@@ -466,7 +465,7 @@ interface DevPanelProps {
     isXpBoostEnabled: boolean;
     setIsXpBoostEnabled: (isOn: boolean) => void;
     devPanelState: {
-        activeTab: 'cheats' | 'items' | 'teleport' | 'woodcutting';
+        activeTab: 'cheats' | 'items' | 'teleport' | 'woodcutting' | 'monsters';
         itemSearchTerm: string;
         selectedItemId: string | null;
         spawnQuantity: number;
@@ -485,13 +484,15 @@ interface DevPanelProps {
     onAddCoins: (amount: number) => void;
     onSetSkillLevel: (skill: SkillName, level: number) => void;
     onResetQuest: (questId: string) => void;
+    // FIX: Add ui prop to fix error on line 524
+    ui: ReturnType<typeof useUIState>;
 }
 
 const DevPanel: React.FC<DevPanelProps> = (props) => {
-    const { inv, setTooltip, devPanelState, updateDevPanelState, onClose, ...otherProps } = props;
+    const { inv, setTooltip, devPanelState, updateDevPanelState, onClose, ui, ...otherProps } = props;
     const { activeTab, itemSearchTerm, selectedItemId, spawnQuantity, teleportRegionId, teleportPoiId, wcTestLevel, wcTestTreeId } = devPanelState;
 
-    const setActiveTab = (tab: 'cheats' | 'items' | 'teleport' | 'woodcutting') => updateDevPanelState({ activeTab: tab });
+    const setActiveTab = (tab: 'cheats' | 'items' | 'teleport' | 'woodcutting' | 'monsters') => updateDevPanelState({ activeTab: tab });
 
     const selectedItem = useMemo(() => selectedItemId ? ITEMS[selectedItemId] : null, [selectedItemId]);
 
@@ -504,6 +505,7 @@ const DevPanel: React.FC<DevPanelProps> = (props) => {
             <div className="flex border-b-2 border-gray-700 mb-2 flex-shrink-0">
                 <button onClick={() => setActiveTab('cheats')} className={`flex-1 py-1 text-sm font-semibold rounded-t-md transition-colors ${activeTab === 'cheats' ? 'bg-gray-700 text-yellow-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Cheats</button>
                 <button onClick={() => setActiveTab('items')} className={`flex-1 py-1 text-sm font-semibold rounded-t-md transition-colors ${activeTab === 'items' ? 'bg-gray-700 text-yellow-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Items</button>
+                <button onClick={() => setActiveTab('monsters')} className={`flex-1 py-1 text-sm font-semibold rounded-t-md transition-colors ${activeTab === 'monsters' ? 'bg-gray-700 text-yellow-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Monsters</button>
                 <button onClick={() => setActiveTab('woodcutting')} className={`flex-1 py-1 text-sm font-semibold rounded-t-md transition-colors ${activeTab === 'woodcutting' ? 'bg-gray-700 text-yellow-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Woodcutting</button>
                 <button onClick={() => setActiveTab('teleport')} className={`flex-1 py-1 text-sm font-semibold rounded-t-md transition-colors ${activeTab === 'teleport' ? 'bg-gray-700 text-yellow-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Teleport</button>
             </div>
@@ -519,6 +521,11 @@ const DevPanel: React.FC<DevPanelProps> = (props) => {
                     quantity={spawnQuantity}
                     setQuantity={(qty) => updateDevPanelState({ spawnQuantity: qty })}
                 />}
+                {activeTab === 'monsters' && (
+                    <div className="p-4 text-center">
+                        <Button onClick={() => { ui.setIsMonsterDBOpen(true); onClose(); }}>Open Monster Database</Button>
+                    </div>
+                )}
                 {activeTab === 'woodcutting' && <WoodcuttingCalculatorComponent
                     level={wcTestLevel}
                     setLevel={(level) => updateDevPanelState({ wcTestLevel: level })}

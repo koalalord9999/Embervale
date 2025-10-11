@@ -1,4 +1,6 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+
+
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { PlayerSkill, SkillName, CombatStance, Spell, WorldState } from '../types';
 import { XP_TABLE } from '../constants';
 
@@ -13,13 +15,13 @@ interface CharacterCallbacks {
     onLevelUp: (skillName: SkillName, newLevel: number) => void;
 }
 
-interface ActiveStatModifier {
+export interface ActiveStatModifier {
     id: number;
     skill: SkillName;
     initialValue: number;
     currentValue: number;
-    durationPerLevel: number;
-    nextDecayAt: number;
+    durationPerLevel: number; // ms per level decay
+    decayTimer: number; // ms until next decay
     baseLevelOnConsumption: number;
 }
 
@@ -27,14 +29,14 @@ export interface ActiveBuff {
     id: number;
     type: 'recoil' | 'flat_damage' | 'poison_on_hit' | 'accuracy_boost' | 'evasion_boost' | 'damage_on_hit' | 'attack_speed_boost' | 'poison_immunity' | 'damage_reduction' | 'antifire' | 'stun';
     value: number;
-    duration: number;
-    expiresAt: number;
+    duration: number; // initial duration in ms
+    durationRemaining: number; // ms remaining
     chance?: number;
     style?: 'melee' | 'ranged' | 'all';
 }
 
 export const useCharacter = (
-    initialData: { skills: PlayerSkill[], combatStance: CombatStance, currentHp: number, autocastSpell: Spell | null }, 
+    initialData: { skills: PlayerSkill[], combatStance: CombatStance, currentHp: number, autocastSpell: Spell | null, statModifiers: ActiveStatModifier[], activeBuffs: ActiveBuff[] }, 
     callbacks: CharacterCallbacks, 
     worldState: WorldState,
     setWorldState: React.Dispatch<React.SetStateAction<WorldState>>,
@@ -46,8 +48,8 @@ export const useCharacter = (
     const [skills, setSkills] = useState<PlayerSkill[]>(initialData.skills);
     const [combatStance, setCombatStance] = useState<CombatStance>(initialData.combatStance);
     const [currentHp, setCurrentHp] = useState<number>(initialData.currentHp);
-    const [statModifiers, setStatModifiers] = useState<ActiveStatModifier[]>([]);
-    const [activeBuffs, setActiveBuffs] = useState<ActiveBuff[]>([]);
+    const [statModifiers, setStatModifiers] = useState<ActiveStatModifier[]>(initialData.statModifiers ?? []);
+    const [activeBuffs, setActiveBuffs] = useState<ActiveBuff[]>(initialData.activeBuffs ?? []);
     const [autocastSpell, setAutocastSpell] = useState<Spell | null>(initialData.autocastSpell ?? null);
 
     const baseMaxHp = useMemo(() => skills.find(s => s.name === SkillName.Hitpoints)?.level ?? 10, [skills]);
@@ -107,27 +109,25 @@ export const useCharacter = (
 
     useEffect(() => {
         const interval = setInterval(() => {
-            const now = Date.now();
             setStatModifiers(prev => {
                 const updatedModifiers = prev.map(mod => {
-                    if (now >= mod.nextDecayAt) {
+                    const newTimer = mod.decayTimer - 1000;
+                    if (newTimer <= 0) {
                         const isBoost = mod.initialValue > 0;
                         const decayAmount = isBoost ? -1 : 1;
                         const newValue = mod.currentValue + decayAmount;
 
-                        // Check for expiration (when boost hits 0 or drain hits 0)
                         if ((isBoost && newValue <= 0) || (!isBoost && newValue >= 0)) {
                             return null;
                         }
-
-                        // addLog(`Your ${mod.skill} ${isBoost ? 'boost' : 'drain'} has weakened.`);
+                        
                         return {
                             ...mod,
                             currentValue: newValue,
-                            nextDecayAt: now + mod.durationPerLevel,
+                            decayTimer: mod.durationPerLevel, // reset timer
                         };
                     }
-                    return mod;
+                    return { ...mod, decayTimer: newTimer };
                 });
 
                 const newModifiersFiltered = updatedModifiers.filter((m): m is ActiveStatModifier => m !== null);
@@ -136,10 +136,6 @@ export const useCharacter = (
                     const expiredSkills = prev
                         .filter(p => !newModifiersFiltered.some(n => n.id === p.id))
                         .map(m => m.skill);
-                    
-                    // expiredSkills.forEach(skillName => {
-                    //     addLog(`You feel your ${skillName} level returning to normal.`);
-                    // });
                 }
                 
                 return newModifiersFiltered;
@@ -150,11 +146,19 @@ export const useCharacter = (
 
     useEffect(() => {
         const interval = setInterval(() => {
-            const now = Date.now();
             setActiveBuffs(prev => {
-                const active = prev.filter(b => b.expiresAt > now);
+                const updatedBuffs = prev.map(b => ({
+                    ...b,
+                    durationRemaining: b.durationRemaining - 1000
+                }));
+                
+                const active = updatedBuffs.filter(b => b.durationRemaining > 0);
+                
                 if (active.length < prev.length) {
-                    addLog("A magical effect has worn off.");
+                    const expiredBuffTypes = prev.filter(p => !active.some(a => a.id === p.id)).map(b => b.type);
+                    if (!expiredBuffTypes.includes('stun')) {
+                        addLog("A magical effect has worn off.");
+                    }
                 }
                 return active;
             });
@@ -210,12 +214,8 @@ export const useCharacter = (
 
         setStatModifiers(prev => {
             const existingModifier = prev.find(m => m.skill === skill);
-            const now = Date.now();
 
             if (existingModifier) {
-                // For boosts, a higher value is stronger.
-                // For drains, a more negative value is stronger.
-                // This single condition works for both.
                 if (value > 0 && value < existingModifier.initialValue) {
                     addLog(`You already have a stronger ${skill} boost active.`);
                     return prev;
@@ -232,7 +232,7 @@ export const useCharacter = (
                 initialValue: value,
                 currentValue: value,
                 durationPerLevel,
-                nextDecayAt: now + durationPerLevel,
+                decayTimer: durationPerLevel,
                 baseLevelOnConsumption,
             };
             addLog(value > 0 ? `You feel your ${skill} level increase.` : `You feel your ${skill} level decrease.`);
@@ -240,11 +240,11 @@ export const useCharacter = (
         });
     }, [addLog]);
 
-    const addBuff = useCallback((buff: Omit<ActiveBuff, 'id' | 'expiresAt'>) => {
+    const addBuff = useCallback((buff: Omit<ActiveBuff, 'id' | 'durationRemaining'>) => {
         const newBuff: ActiveBuff = {
             ...buff,
             id: Date.now() + Math.random(),
-            expiresAt: Date.now() + buff.duration,
+            durationRemaining: buff.duration,
         };
         setActiveBuffs(prev => [...prev.filter(b => b.type !== buff.type), newBuff]);
         
@@ -308,6 +308,7 @@ export const useCharacter = (
         addXp, 
         applyStatModifier,
         activeBuffs,
+        statModifiers,
         addBuff,
         clearStatModifiers,
         autocastSpell,

@@ -1,6 +1,7 @@
 import React from 'react';
 import { PlayerQuestState, PlayerRepeatableQuest, InventorySlot, PlayerSlayerTask } from '../../types';
-import { QUESTS, ITEMS, MONSTERS } from '../../constants';
+import { ITEMS, MONSTERS } from '../../constants';
+import { QUESTS } from '../../data/quests';
 
 interface QuestsPanelProps {
     playerQuests: PlayerQuestState[];

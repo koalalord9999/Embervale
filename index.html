@@ -22,6 +22,7 @@
         -webkit-user-select: none; /* Safari */
         -moz-user-select: none; /* Firefox */
         -ms-user-select: none; /* IE */
+        -webkit-touch-callout: none; /* iOS Safari - Disable long-press menu */
       }
       /* Re-enable text selection specifically for the activity log text */
       .activity-log-wrapper .text-sm {
@@ -513,6 +514,7 @@
           padding: 1px 4px;
           border-radius: 0.25rem; /* rounded-sm */
           line-height: 1;
+          z-index: 10;
       }
 
       .crafting-slot-level.met {
@@ -580,6 +582,9 @@
       img[src*="game-icons:key-skeleton"]:not(.item-note-icon) {
         transform: rotate(180deg);
       }
+      img[src*="game-icons:key.svg#loop"]:not(.item-note-icon) {
+        transform: rotate(180deg);
+      }
       
       /* Apply combined transform for noted items that need rotation */
       .item-note-icon[src*="game-icons:bone-knife"] {
@@ -594,6 +599,9 @@
         transform: translate(-50%, -50%) rotate(-90deg);
       }
       .item-note-icon[src*="game-icons:key-skeleton"] {
+        transform: translate(-50%, -50%) rotate(180deg);
+      }
+      .item-note-icon[src*="game-icons:key.svg#loop"] {
         transform: translate(-50%, -50%) rotate(180deg);
       }
 

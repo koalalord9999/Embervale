@@ -52,7 +52,6 @@ interface InventorySlotProps {
     onBury: (itemId: string, index: number) => void;
     onEmpty: (itemId: string, index: number) => void;
     onDivine: (itemId: string, index: number) => void;
-    onReadMap: (item: Item) => void;
     setTooltip: (tooltip: { content?: React.ReactNode; item?: Item; slot?: InventorySlot; position: { x: number; y: number; } } | null) => void;
     setContextMenu: (menu: ContextMenuState | null) => void;
     addLog: (message: string) => void;
@@ -77,14 +76,14 @@ interface InventorySlotProps {
     onSell?: (itemId: string, quantity: number | 'all', inventoryIndex?: number) => void;
     spellToCast: Spell | null;
     onSpellOnItem: (spell: Spell, target: { item: InventorySlot, index: number }) => void;
-    isEquipmentStatsOpen?: boolean;
     confirmValuableDrops: boolean;
     valuableDropThreshold: number;
     isOneClickMode: boolean;
+    onReadMap: (item: Item) => void;
 }
 
 const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
-    const { index, slot, inventory, skills, onEquip, onConsume, onDropItem, onBury, onEmpty, setTooltip, setContextMenu, addLog, isBankOpen = false, onDeposit = () => {}, itemToUse, setItemToUse, onUseItemOn, isBusy = false, setConfirmationPrompt, onExamine, draggingIndex, setDraggingIndex, dragOverIndex, setDragOverIndex, onDrop, isTouchSimulationEnabled, onDivine, onReadMap, isShopOpen = false, onSell = () => {}, spellToCast, onSpellOnItem, isEquipmentStatsOpen = false, confirmValuableDrops, valuableDropThreshold, isOneClickMode } = props;
+    const { index, slot, inventory, skills, onEquip, onConsume, onDropItem, onBury, onEmpty, setTooltip, setContextMenu, addLog, isBankOpen = false, onDeposit = () => {}, itemToUse, setItemToUse, onUseItemOn, isBusy = false, setConfirmationPrompt, onExamine, draggingIndex, setDraggingIndex, dragOverIndex, setDragOverIndex, onDrop, isTouchSimulationEnabled, onDivine, onReadMap, isShopOpen = false, onSell = () => {}, spellToCast, onSpellOnItem, confirmValuableDrops, valuableDropThreshold, isOneClickMode } = props;
 
     const isTouchDevice = useIsTouchDevice(isTouchSimulationEnabled);
 
@@ -119,15 +118,12 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
 
         const options: ContextMenuOption[] = [];
         
-        if (isEquipmentStatsOpen) {
-            if (item.equipment) {
-                options.push({ label: 'Equip', onClick: () => performAction(() => onEquip(slot, index)) });
-            }
-            options.push({ label: 'Examine', onClick: () => onExamine(item) });
-            setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
-            return;
-        }
-
+        const performActionAndClose = (action: () => void) => {
+            action();
+            setTooltip(null);
+            setContextMenu(null);
+        };
+        
         if (isBankOpen) {
             let totalQuantity = 0;
             if (item.stackable || slot.noted) {
@@ -138,16 +134,16 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
                 }, 0);
             }
     
-            options.push({ label: 'Deposit 1', onClick: () => performAction(() => onDeposit(index, 1)), disabled: totalQuantity < 1 });
+            options.push({ label: 'Deposit 1', onClick: () => performActionAndClose(() => onDeposit(index, 1)), disabled: totalQuantity < 1 });
             if (totalQuantity > 1) {
-                options.push({ label: 'Deposit 5', onClick: () => performAction(() => onDeposit(index, 5)), disabled: totalQuantity < 5 });
-                options.push({ label: 'Deposit 10', onClick: () => performAction(() => onDeposit(index, 10)), disabled: totalQuantity < 10 });
+                options.push({ label: 'Deposit 5', onClick: () => performActionAndClose(() => onDeposit(index, 5)), disabled: totalQuantity < 5 });
+                options.push({ label: 'Deposit 10', onClick: () => performActionAndClose(() => onDeposit(index, 10)), disabled: totalQuantity < 10 });
             }
             
             options.push({
                 label: 'Deposit X...',
                 onClick: () => {
-                    setConfirmationPrompt(null); // Close confirmation if open
+                    setContextMenu(null);
                     props.setMakeXPrompt({
                         title: `Deposit ${item.name}`,
                         max: totalQuantity,
@@ -157,7 +153,7 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
                 disabled: totalQuantity < 1
             });
     
-            options.push({ label: 'Deposit All', onClick: () => performAction(() => onDeposit(index, 'all')) });
+            options.push({ label: 'Deposit All', onClick: () => performActionAndClose(() => onDeposit(index, 'all')) });
         } else if (isShopOpen) {
             if (item.value === 0) {
                 options.push({ label: 'Examine', onClick: () => onExamine(item) });
@@ -173,7 +169,7 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
             }
             
             const sellAction = (quantity: number | 'all') => {
-                performAction(() => onSell(slot.itemId, quantity, index));
+                performActionAndClose(() => onSell(slot.itemId, quantity, index));
             };
 
             options.push({ label: 'Sell 1', onClick: () => sellAction(1), disabled: totalQuantity < 1 });
@@ -186,26 +182,26 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
             options.push({ label: 'Use', onClick: () => { setItemToUse({ item: slot, index }); }, disabled: isBusy });
             options.push({ label: 'Drop', onClick: handleDropClick, disabled: isBusy });
         } else {
-            if (item.mappable) options.push({ label: 'Read', onClick: () => performAction(() => onReadMap(item)), disabled: isBusy });
-            if (item.equipment) options.push({ label: 'Equip', onClick: () => performAction(() => onEquip(slot, index)), disabled: isBusy });
-            if (item.buryable) options.push({ label: 'Bury', onClick: () => performAction(() => onBury(item.id, index)), disabled: isBusy });
-            if (item.cleanable) options.push({ label: 'Clean', onClick: () => performAction(() => onConsume(item.id, index)), disabled: isBusy });
+            if (item.mappable) options.push({ label: 'Read', onClick: () => performActionAndClose(() => onReadMap(item)), disabled: isBusy });
+            if (item.equipment) options.push({ label: 'Equip', onClick: () => performActionAndClose(() => onEquip(slot, index)), disabled: isBusy });
+            if (item.buryable) options.push({ label: 'Bury', onClick: () => performActionAndClose(() => onBury(item.id, index)), disabled: isBusy });
+            if (item.cleanable) options.push({ label: 'Clean', onClick: () => performActionAndClose(() => onConsume(item.id, index)), disabled: isBusy });
             if (item.consumable) {
                 let actionText = 'Consume';
                 if (item.consumable.givesCoins) actionText = 'Open';
                 else if (item.doseable) actionText = 'Drink';
                 else if (item.consumable.healAmount) actionText = 'Eat';
-                options.push({ label: actionText, onClick: () => performAction(() => onConsume(item.id, index)), disabled: isBusy });
+                options.push({ label: actionText, onClick: () => performActionAndClose(() => onConsume(item.id, index)), disabled: isBusy });
             }
             if (item.divining) {
-                options.push({ label: 'Divine', onClick: () => performAction(() => onDivine(item.id, index)), disabled: isBusy });
+                options.push({ label: 'Divine', onClick: () => performActionAndClose(() => onDivine(item.id, index)), disabled: isBusy });
             }
 
             options.push({ label: 'Use', onClick: () => { setItemToUse({ item: slot, index }); }, disabled: isBusy });
             
             const isTutorialItem = false; // Tutorial stage logic is removed
 
-            if (item.emptyable) options.push({ label: 'Empty', onClick: () => performAction(() => onEmpty(item.id, index)), disabled: isBusy });
+            if (item.emptyable) options.push({ label: 'Empty', onClick: () => performActionAndClose(() => onEmpty(item.id, index)), disabled: isBusy });
             
             options.push({ label: 'Drop', onClick: handleDropClick, disabled: isBusy || isTutorialItem });
         }
@@ -215,7 +211,7 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
     };
 
     const handleSingleTap = (e: React.MouseEvent | React.TouchEvent) => {
-        if (isOneClickMode && slot) {
+        if (isOneClickMode) {
             handleLongPress(e);
             return;
         }
@@ -224,13 +220,10 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
         const item = ITEMS[slot.itemId];
         if (!item) return;
 
-        if (isEquipmentStatsOpen) {
+        if (isShopOpen) {
             setTooltip(null);
-            if (item.equipment) {
-                performAction(() => onEquip(slot, index));
-            } else {
-                onExamine(item);
-            }
+            const sellPrice = Math.floor(item.value * 0.2);
+            addLog(`[${getDisplayName(slot)}] Sell price: ${sellPrice} coins.`);
             return;
         }
 
@@ -270,14 +263,7 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
             performAction(() => onDeposit(index, 1));
             return;
         }
-
-        if (isShopOpen) {
-            setTooltip(null);
-            const sellPrice = Math.floor(item.value * 0.2);
-            addLog(`[${getDisplayName(slot)}] Sell price: ${sellPrice} coins.`);
-            return;
-        }
-
+        
         if (slot.noted) {
             setTooltip(null);
             setItemToUse({ item: slot, index: index });
@@ -309,16 +295,14 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
         setTooltip(null);
         onExamine(item);
     };
-
-    const doubleTapHandlers = useDoubleTap({
-        onSingleTap: handleSingleTap,
-        onDoubleTap: handleDoubleTap
-    });
-
-    const longPressHandlers = useLongPress({
-        onLongPress: handleLongPress,
-        onClick: doubleTapHandlers.onClick, // Pass the double-tap handler as the single click
-    });
+    
+    // FIX: Pass handleDoubleTap function to onDoubleTap property
+    const doubleTapHandlers = useDoubleTap({ onSingleTap: handleSingleTap, onDoubleTap: handleDoubleTap });
+    const longPressHandlers = useLongPress({ onLongPress: handleLongPress, onClick: doubleTapHandlers.onClick });
+    
+    const combinedHandlers = isOneClickMode && isTouchDevice
+        ? { onContextMenu: handleLongPress, onClick: (e: any) => e.preventDefault(), onTouchEnd: (e: React.TouchEvent) => { e.preventDefault(); handleLongPress(e); } }
+        : { ...longPressHandlers, onTouchEnd: doubleTapHandlers.onTouchEnd };
 
     const handleDragStart = (e: React.DragEvent, index: number) => {
         if (isBusy || itemToUse) { e.preventDefault(); return; }
@@ -348,8 +332,7 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
             onDrop={(e) => onDrop(e, index)}
             onDragEnd={() => { setDraggingIndex(null); setDragOverIndex(null); setTooltip(null); }}
             className={`w-full aspect-square bg-gray-900 border-2 border-gray-600 rounded-md flex items-center justify-center p-1 relative transition-all duration-150 ${slot ? 'cursor-pointer' : ''} ${slotClasses}`}
-            {...longPressHandlers}
-            onTouchEnd={doubleTapHandlers.onTouchEnd}
+            {...combinedHandlers}
             onMouseEnter={(e) => {
                 if (item && slot) {
                     setTooltip({ item, slot, position: { x: e.clientX, y: e.clientY } });

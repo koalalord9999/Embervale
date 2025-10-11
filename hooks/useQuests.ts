@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { PlayerQuestState } from '../types';
-import { QUESTS } from '../constants';
+import { QUESTS } from '../data/quests';
 
 export const useQuests = (initialData: { playerQuests: PlayerQuestState[], lockedPois: string[] }) => {
     const [playerQuests, setPlayerQuests] = useState<PlayerQuestState[]>(initialData.playerQuests);

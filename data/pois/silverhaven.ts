@@ -1,6 +1,5 @@
-
 import { POI, SkillName } from '../../types';
-import { CIVILLIAN_DIALOGUE } from '../../constants';
+import { CIVILLIAN_DIALOGUE } from '../../constants/dialogue';
 
 export const silverhavenPois: Record<string, POI> = {
     silverhaven_gates: {
@@ -34,16 +33,16 @@ export const silverhavenPois: Record<string, POI> = {
                 dialogueType: 'random',
             },
             { type: 'water_source', name: 'Collect Water' },
-            { type: 'npc', name: 'Man', icon: '/assets/npcChatHeads/tavern_regular.png', dialogue: { start: { npcName: 'Man', npcIcon: '/assets/npcChatHeads/tavern_regular.png', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man' },
-            { type: 'npc', name: 'Woman', icon: '/assets/npcChatHeads/elara.png', dialogue: { start: { npcName: 'Woman', npcIcon: '/assets/npcChatHeads/elara.png', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'woman' },
+            { type: 'npc', name: 'Man', icon: 'https://api.iconify.design/game-icons:person.svg', dialogue: { start: { npcName: 'Man', npcIcon: 'https://api.iconify.design/game-icons:person.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man' },
+            { type: 'npc', name: 'Woman', icon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', dialogue: { start: { npcName: 'Woman', npcIcon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'woman' },
             {
                 type: 'npc',
                 name: 'Citizen',
-                icon: '/assets/npcChatHeads/tavern_regular.png',
+                icon: 'https://api.iconify.design/game-icons:person.svg',
                 dialogue: {
                      start: {
                         npcName: 'Citizen',
-                        npcIcon: '/assets/npcChatHeads/tavern_regular.png',
+                        npcIcon: 'https://api.iconify.design/game-icons:person.svg',
                         text: CIVILLIAN_DIALOGUE.silverhaven.join('\n\n'),
                         responses: []
                     }
@@ -63,35 +62,12 @@ export const silverhavenPois: Record<string, POI> = {
         connections: ['silverhaven_square', 'silverhaven_bank'],
         activities: [
             { type: 'shop', shopId: 'silverhaven_general' },
-            { type: 'npc', name: 'Man', icon: '/assets/npcChatHeads/tavern_regular.png', dialogue: { start: { npcName: 'Man', npcIcon: '/assets/npcChatHeads/tavern_regular.png', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man' },
-            { type: 'npc', name: 'Woman', icon: '/assets/npcChatHeads/elara.png', dialogue: { start: { npcName: 'Woman', npcIcon: '/assets/npcChatHeads/elara.png', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'woman' },
+            { type: 'npc', name: 'Man', icon: 'https://api.iconify.design/game-icons:person.svg', dialogue: { start: { npcName: 'Man', npcIcon: 'https://api.iconify.design/game-icons:person.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man' },
+            { type: 'npc', name: 'Woman', icon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', dialogue: { start: { npcName: 'Woman', npcIcon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'woman' },
             {
                 type: 'npc',
                 name: 'Merchant Theron',
                 icon: '/assets/npcChatHeads/merchant_theron.png',
-                dialogue: {
-                    default_dialogue: {
-                        npcName: 'Merchant Theron',
-                        npcIcon: '/assets/npcChatHeads/merchant_theron.png',
-                        text: "Welcome to the grandest market in the land! What can I get for you?\n\nMy latest caravan from the south is overdue... I'm starting to worry.",
-                        responses: []
-                    },
-                    in_progress_missing_shipment_0: {
-                        npcName: 'Merchant Theron',
-                        npcIcon: '/assets/npcChatHeads/merchant_theron.png',
-                        text: "My caravan goods! You found them! I thought they were lost forever. The bandits on the King's Road have been a plague on my business. Thank you, adventurer. Please, take this for your trouble.",
-                        responses: [
-                            { text: "Glad I could help.", actions: [{ type: 'give_xp', skill: SkillName.Slayer, amount: 1000 }, { type: 'give_coins', amount: 2000 }, { type: 'give_item', itemId: 'uncut_emerald', quantity: 1 }, { type: 'advance_quest', questId: 'missing_shipment' }] }
-                        ]
-                    },
-                    post_quest_missing_shipment: {
-                        npcName: 'Merchant Theron',
-                        npcIcon: '/assets/npcChatHeads/merchant_theron.png',
-                        text: "Thanks to you, my shipments are getting through again. I'm in your debt.",
-                        responses: []
-                    }
-                },
-                startNode: 'default_dialogue',
                 dialogueType: 'random',
             },
             {
@@ -211,80 +187,6 @@ export const silverhavenPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Archmage Theron',
                 icon: 'https://api.iconify.design/game-icons:wizard-face.svg',
-                dialogue: {
-                    start: {
-                        npcName: 'Archmage Theron',
-                        npcIcon: 'https://api.iconify.design/game-icons:wizard-face.svg',
-                        text: "Welcome, traveler. In need of arcane supplies? You've come to the right place.\n\nAn elemental staff is a mage's best friend. It can act as an endless source of a particular elemental rune.",
-                        responses: [],
-                        conditionalResponses: [
-                            { text: "I sense a magical disturbance...", check: { requirements: [{ type: 'quest', questId: 'capitals_call', status: 'completed' }, { type: 'skill', skill: SkillName.Magic, level: 40 }, { type: 'quest', questId: 'the_arcane_awakening', status: 'not_started' }], successNode: 'quest_intro_the_arcane_awakening', failureNode: '' }},
-                            { text: "Archmage, I have the altar readings.", check: { requirements: [
-                                { type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 1 },
-                                { type: 'items', items: [{itemId: 'gust_reading', quantity: 1}, {itemId: 'stone_reading', quantity: 1}, {itemId: 'aqua_reading', quantity: 1}] }
-                            ], successNode: 'in_progress_the_arcane_awakening_1', failureNode: '' }},
-                            { text: "I have defeated the Arcane Wyvern and stabilized the Weave.", check: { requirements: [
-                                { type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 9 }
-                            ], successNode: 'in_progress_the_arcane_awakening_9', failureNode: '' }}
-                        ]
-                    },
-                    quest_intro_the_arcane_awakening: {
-                        npcName: 'Archmage Theron',
-                        npcIcon: 'https://api.iconify.design/game-icons:wizard-face.svg',
-                        text: "You sense it too? Grave concern is an understatement. I've detected a growing instability in the world's 'Arcane Weave'—a magical feedback loop I call the Resonance Cascade. Higher-level spells tap directly into this Weave, and if uncontrolled, it could tear reality apart.",
-                        responses: [
-                            { text: "What needs to be done?", next: 'taa_intro_2' }
-                        ]
-                    },
-                    taa_intro_2: {
-                        npcName: 'Archmage Theron',
-                        npcIcon: 'https://api.iconify.design/game-icons:wizard-face.svg',
-                        text: "I must find the source of this disturbance. I've constructed this Arcane Resonator. I need you to take it to the three major runic altars—Gust, Stone, and Aqua—and take a reading from each. This will allow me to triangulate the source.",
-                        responses: [
-                            { text: "I will handle this. The fate of the world may depend on it.", actions: [{ type: 'start_quest', questId: 'the_arcane_awakening' }, { type: 'give_item', itemId: 'arcane_resonator', quantity: 1 }] }
-                        ]
-                    },
-                    in_progress_the_arcane_awakening_0: {
-                        npcName: 'Archmage Theron',
-                        npcIcon: 'https://api.iconify.design/game-icons:wizard-face.svg',
-                        text: "Have you taken the readings from the three altars yet? Time is of the essence.",
-                        responses: []
-                    },
-                    in_progress_the_arcane_awakening_1: {
-                        npcName: 'Archmage Theron',
-                        npcIcon: 'https://api.iconify.design/game-icons:wizard-face.svg',
-                        text: "You have them! Let me see... By the arcane! This is worse than I feared. The readings... they don't point to anywhere on the ground. They point... up. High into the sky. To a place of legend: The Crystalline Isles.",
-                        responses: [
-                            { text: "What are the Crystalline Isles?", next: 'taa_stage_1_2' }
-                        ]
-                    },
-                    taa_stage_1_2: {
-                        npcName: 'Archmage Theron',
-                        npcIcon: 'https://api.iconify.design/game-icons:wizard-face.svg',
-                        text: "Floating islands of pure magic, normally shielded from our world. The Resonance Cascade must have weakened their defenses, making them accessible but dangerously unstable. The source is there. You must go. Find the Skyship Captain at the docks. He is your only way up.",
-                        responses: [
-                            { text: "I'll speak with him at once.", actions: [{ type: 'advance_quest', questId: 'the_arcane_awakening' }, { type: 'take_item', itemId: 'gust_reading', quantity: 1 }, { type: 'take_item', itemId: 'stone_reading', quantity: 1 }, { type: 'take_item', itemId: 'aqua_reading', quantity: 1 }] }
-                        ]
-                    },
-                    in_progress_the_arcane_awakening_9: {
-                        npcName: 'Archmage Theron',
-                        npcIcon: 'https://api.iconify.design/game-icons:wizard-face.svg',
-                        text: "You've returned! And the Weave... it's stable! Calm! You defeated the Arcane Wyvern? Astounding! You have not just stopped the cascade but stabilized the entire world's magic. You are truly a master of the arcane.",
-                        responses: [
-                            { text: "It was a difficult battle, but I prevailed.", next: 'taa_reward' }
-                        ]
-                    },
-                    taa_reward: {
-                        npcName: 'Archmage Theron',
-                        npcIcon: 'https://api.iconify.design/game-icons:wizard-face.svg',
-                        text: "For this grand service, I will teach you the highest tier of magic. You have proven yourself worthy. Take this as well, a small token of my immense gratitude. You have saved us all.",
-                        responses: [
-                            { text: "Thank you, Archmage.", actions: [{ type: 'advance_quest', questId: 'the_arcane_awakening' }] }
-                        ]
-                    },
-                },
-                startNode: 'start',
-                dialogueType: 'random',
             }
         ],
         regionId: 'silverhaven',
@@ -357,51 +259,6 @@ export const silverhavenPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Skyship Captain',
                 icon: '/assets/npcChatHeads/ferryman_silas.png', // Reusing icon for now
-                dialogue: {
-                    start: {
-                        npcName: 'Skyship Captain',
-                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
-                        text: "The skies call to you, adventurer? For a fee, I can take you to the Crystalline Isles. It's a breathtaking sight, but not for the faint of heart.",
-                        responses: [
-                            { text: "I'll keep my feet on the ground for now." },
-                        ],
-                        conditionalResponses: [
-                            {
-                                text: "Archmage Theron sent me. I need passage to the Crystalline Isles.",
-                                check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 2 }], successNode: 'in_progress_the_arcane_awakening_2', failureNode: '' }
-                            },
-                            {
-                                text: "I have the Resonance Dampener.",
-                                check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 6 }, { type: 'items', items: [{ itemId: 'resonance_dampener', quantity: 1 }] }], successNode: 'in_progress_the_arcane_awakening_6', failureNode: '' }
-                            }
-                        ]
-                    },
-                    in_progress_the_arcane_awakening_2: {
-                        npcName: 'Skyship Captain',
-                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
-                        text: "To the Crystalline Isles? Are you mad? The magical turbulence up there would tear my ship apart! The arcane energies are too severe.",
-                        responses: [
-                            { text: "Is there anything that can be done?", next: 'taa_captain_2' }
-                        ]
-                    },
-                    taa_captain_2: {
-                        npcName: 'Skyship Captain',
-                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
-                        text: "I'd need a special component, a 'Resonance Dampener', to navigate that storm. I'm a captain, not an engineer. But I've heard tales of a master craftsman known for working with exotic materials—Durin, at the Dwarven Outpost. If anyone can build such a thing, it's him.",
-                        responses: [
-                            { text: "Thank you, Captain. I'll find this Durin.", actions: [{ type: 'advance_quest', questId: 'the_arcane_awakening' }] }
-                        ]
-                    },
-                    in_progress_the_arcane_awakening_6: {
-                        npcName: 'Skyship Captain',
-                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
-                        text: "By my beard... is that a Resonance Dampener? I never thought I'd see one! The dwarf actually built it! With this... yes, with this, we can make the voyage. Prepare yourself, adventurer. The skies await!",
-                        responses: [
-                            { text: "(Board the Skyship)", actions: [{ type: 'take_item', itemId: 'resonance_dampener', quantity: 1 }, { type: 'advance_quest', questId: 'the_arcane_awakening' }, { type: 'teleport', poiId: 'crystalline_isles_landing' }] }
-                        ]
-                    },
-                },
-                startNode: 'start',
             }
         ],
         regionId: 'silverhaven',
@@ -424,48 +281,98 @@ export const silverhavenPois: Record<string, POI> = {
         id: 'silverhaven_residential_district',
         name: 'Residential District',
         description: 'A quieter area with well-kept houses. Citizens go about their daily lives.',
-        connections: ['silverhaven_square'],
+        connections: ['silverhaven_square', 'the_gilded_goblet'],
         activities: [
-             { type: 'npc', name: 'Man', icon: '/assets/npcChatHeads/tavern_regular.png', dialogue: { start: { npcName: 'Man', npcIcon: '/assets/npcChatHeads/tavern_regular.png', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man' },
+             { type: 'npc', name: 'Man', icon: 'https://api.iconify.design/game-icons:person.svg', dialogue: { start: { npcName: 'Man', npcIcon: 'https://api.iconify.design/game-icons:person.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man' },
              {
                 type: 'npc',
                 name: 'Elara',
-                icon: '/assets/npcChatHeads/elara.png',
-                dialogue: {
-                    default_dialogue: {
-                        npcName: 'Elara',
-                        npcIcon: '/assets/npcChatHeads/elara.png',
-                        text: "Oh, excuse me. I'm just a bit distracted today. I seem to have misplaced a family heirloom, a beautiful silver necklace. I fear I may have dropped it during my last trip along the King's Road...",
-                        responses: []
-                    },
-                    item_trigger_lost_heirloom: {
-                        npcName: 'Elara',
-                        npcIcon: '/assets/npcChatHeads/elara.png',
-                        text: "Is that... could it be? My heirloom necklace! I thought it was lost forever! Oh, thank you, thank you, kind stranger! I don't have much, but please, take this as a reward for your honesty.",
-                        responses: [
-                            { text: "You're welcome. I'm glad I could return it.", actions: [{ type: 'start_quest', questId: 'lost_heirloom' }] },
-                        ]
-                    },
-                    in_progress_lost_heirloom_0: {
-                        npcName: 'Elara',
-                        npcIcon: '/assets/npcChatHeads/elara.png',
-                        text: "You've made an old woman very happy today. Thank you again.",
-                        responses: [
-                            { text: "It was my pleasure.", actions: [{ type: 'give_xp', skill: SkillName.Slayer, amount: 350 }, { type: 'give_coins', amount: 1500 }, { type: 'advance_quest', questId: 'lost_heirloom' }] },
-                        ]
-                    },
-                    post_quest_lost_heirloom: {
-                        npcName: 'Elara',
-                        npcIcon: '/assets/npcChatHeads/elara.png',
-                        text: "It's so good to see you again! I haven't taken off my necklace since you returned it to me. Thank you forever.",
-                        responses: []
-                    }
-                },
-                startNode: 'default_dialogue'
+                icon: 'https://api.iconify.design/game-icons:woman-elf-face.svg',
             }
         ],
         regionId: 'silverhaven',
         x: 250, y: 280,
+        type: 'internal',
+    },
+    the_gilded_goblet: {
+        id: 'the_gilded_goblet',
+        name: 'The Gilded Goblet',
+        description: 'An upscale tavern popular with wealthy merchants and off-duty guards. The ale is expensive, but potent.',
+        connections: ['silverhaven_residential_district'],
+        activities: [
+            { type: 'quest_board' },
+            { type: 'cooking_range' },
+            {
+                type: 'npc',
+                name: 'Barkeep Sterling',
+                icon: '/assets/npcChatHeads/barkeep_freya.png',
+                dialogue: {
+                    start: {
+                        npcName: 'Barkeep Sterling',
+                        npcIcon: '/assets/npcChatHeads/barkeep_freya.png',
+                        text: "Welcome to The Gilded Goblet. We serve the finest spirits in the capital. What's your pleasure?",
+                        responses: [
+                            { text: "A pint of your best.", next: 'buy_drink_intro' },
+                            { text: "I'd like to rent a room.", next: 'rent_room_intro' },
+                        ]
+                    },
+                    buy_drink_intro: {
+                        npcName: 'Barkeep Sterling',
+                        npcIcon: '/assets/npcChatHeads/barkeep_freya.png',
+                        text: "An excellent choice. This is Dragon's Breath Stout, imported from the Dwarven Outpost. Smooth, with a fiery finish. 10 coins.",
+                        responses: [
+                            { text: "Here you go.", check: { requirements: [{ type: 'coins', amount: 10 }], successNode: 'buy_drink_success', failureNode: 'buy_drink_fail' }, actions: [{ type: 'take_coins', amount: 10 }, { type: 'give_item', itemId: 'beer', quantity: 1 }] },
+                            { text: "A bit rich for my blood." },
+                        ]
+                    },
+                    buy_drink_success: {
+                        npcName: 'Barkeep Sterling',
+                        npcIcon: '/assets/npcChatHeads/barkeep_freya.png',
+                        text: "Enjoy. And try not to breathe fire on the drapes.",
+                        responses: []
+                    },
+                    buy_drink_fail: {
+                        npcName: 'Barkeep Sterling',
+                        npcIcon: '/assets/npcChatHeads/barkeep_freya.png',
+                        text: "Perhaps a water, then? It's free.",
+                        responses: []
+                    },
+                    rent_room_intro: {
+                        npcName: 'Barkeep Sterling',
+                        npcIcon: '/assets/npcChatHeads/barkeep_freya.png',
+                        text: "We have the finest rooms in the city. Feather beds, clean sheets... a world away from the straw pallets in the countryside. A night's rest will cost you 50 coins.",
+                        responses: [
+                            { text: "I'll take it.", check: { requirements: [{ type: 'coins', amount: 50 }], successNode: 'rent_room_success', failureNode: 'buy_drink_fail' }, actions: [{ type: 'take_coins', amount: 50 }, { type: 'heal', amount: 'full' }] },
+                            { text: "I think I'll find somewhere cheaper." },
+                        ]
+                    },
+                    rent_room_success: {
+                        npcName: 'Barkeep Sterling',
+                        npcIcon: '/assets/npcChatHeads/barkeep_freya.png',
+                        text: "Excellent. The room at the top of the stairs is yours. Sleep well.",
+                        responses: []
+                    }
+                },
+                startNode: 'start',
+            },
+            {
+                type: 'npc',
+                name: 'Retired Royal Guard',
+                icon: '/assets/npcChatHeads/bronn_the_retired_adventurer.png',
+                dialogue: {
+                    start: {
+                        npcName: 'Retired Royal Guard',
+                        npcIcon: '/assets/npcChatHeads/bronn_the_retired_adventurer.png',
+                        text: "This city isn't as safe as it looks. The walls keep out the monsters, but the real threats are often inside. Keep your wits about you.",
+                        responses: []
+                    }
+                },
+                startNode: 'start'
+            },
+            { type: 'npc', name: 'Merchant', icon: '/assets/npcChatHeads/merchant_theron.png', dialogue: { start: { npcName: 'Merchant', npcIcon: '/assets/npcChatHeads/merchant_theron.png', text: CIVILLIAN_DIALOGUE.silverhaven.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random' },
+        ],
+        regionId: 'silverhaven',
+        x: 250, y: 240,
         type: 'internal',
     },
     silverhaven_castle_approach: {

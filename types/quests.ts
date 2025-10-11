@@ -87,12 +87,17 @@ export interface Quest {
   stages: QuestStage[];
   rewards: { xp?: { skill: SkillName; amount: number }[]; items?: InventorySlot[]; coins?: number };
   isHidden?: boolean;
-  dialogue?: Record<string, DialogueNode>; // This is now primarily for reference and will be stored in POI data
-  startDialogueNode?: string; // This is now primarily for reference and will be stored in POI data
+  dialogue?: Record<string, DialogueNode>;
+  startDialogueNode?: string;
   startHint: string;
   playerStagePerspectives: string[];
   completionSummary: string;
   startPoi?: string;
+  triggerItem?: {
+    itemId: string;
+    npcName: string;
+    startNode: string;
+  };
 }
 
 export interface RepeatableQuest {
@@ -100,7 +105,8 @@ export interface RepeatableQuest {
     type: 'gather' | 'interact' | 'kill';
     title: string;
     description: string;
-    location: 'meadowdale' | 'oakhaven' | 'general';
+    // FIX: Add 'isle_of_whispers' to the location type to allow quests for this region.
+    location: 'meadowdale' | 'oakhaven' | 'general' | 'isle_of_whispers' | 'silverhaven';
     locationPoiId?: string; // For 'interact' type
     target: {
         itemId?: string; // For 'gather' type
@@ -111,6 +117,14 @@ export interface RepeatableQuest {
     xpReward: {
         skill: SkillName;
         amount: number;
+    };
+    minQuantity?: number;
+    maxQuantity?: number;
+    isInstance?: boolean;
+    instancePoiId?: string;
+    aggressionToggle?: {
+        poiId: string;
+        monsterId: string;
     };
 }
 

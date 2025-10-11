@@ -168,3 +168,23 @@ export interface WorldState {
     } | null;
     pendingQuestCombatReward?: InventorySlot | null;
 }
+
+export interface ActiveStatModifier {
+    id: number;
+    skill: SkillName;
+    initialValue: number;
+    currentValue: number;
+    durationPerLevel: number; // ms per level decay
+    decayTimer: number; // ms until next decay
+    baseLevelOnConsumption: number;
+}
+
+export interface ActiveBuff {
+    id: number;
+    type: 'recoil' | 'flat_damage' | 'poison_on_hit' | 'accuracy_boost' | 'evasion_boost' | 'damage_on_hit' | 'attack_speed_boost' | 'poison_immunity' | 'damage_reduction' | 'antifire' | 'stun';
+    value: number;
+    duration: number; // initial duration in ms
+    durationRemaining: number; // ms remaining
+    chance?: number;
+    style?: 'melee' | 'ranged' | 'all';
+}

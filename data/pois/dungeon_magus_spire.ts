@@ -1,4 +1,3 @@
-
 import { POI, SkillName } from '../../types';
 
 export const magusSpirePois: Record<string, POI> = {

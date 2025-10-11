@@ -155,11 +155,11 @@ const AttackAnimationEngine: React.FC<AnimationProps> = ({ triggers, playerRef, 
                         onAnimationEnd={() => handleAnimationEnd(anim.id)}
                         style={{
                             top: anim.type === 'stab' ? `${anim.start.y}px` : `${anim.end.y - 60}px`,
-                            left: anim.type === 'stab' ? `${anim.start.x}px` : `${anim.end.y - 60}px`,
+                            left: anim.type === 'stab' ? `${anim.start.x}px` : `${anim.end.x - 60}px`,
                             transform: anim.type === 'stab' ? `rotate(${angle}deg)` : 'none',
                         }}
                     >
-                        {anim.type === 'stab' && <div className="anim-stab" style={{width: `${distance}px`}} />}
+                        {anim.type === 'stab' && <div className="anim-stab" style={{width: `${distance}px`, transform: dx < 0 ? 'scaleX(-1)' : 'none'}} />}
                         {anim.type === 'slash' && (
                             <div className="anim-slash">
                                 <svg viewBox="0 0 100 100">

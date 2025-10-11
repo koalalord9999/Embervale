@@ -173,6 +173,16 @@ export const SHOPS: Record<string, Shop> = {
     isle_of_whispers_general: {
         id: 'isle_of_whispers_general',
         name: 'Salty Supplies',
-        inventory: []
+        inventory: [
+            { itemId: 'small_fishing_net', quantity: 5, priceModifier: 1.2 },
+            { itemId: 'fishing_rod', quantity: 5, priceModifier: 1.2 },
+            { itemId: 'fishing_bait', quantity: 500, priceModifier: 1.0},
+            { itemId: 'harpoon', quantity: 2, priceModifier: 1.5 },
+            { itemId: 'fishing_bait', quantity: 100, priceModifier: 1.1 },
+            { itemId: 'vial_of_water', quantity: 50, priceModifier: 1.1 },
+            { itemId: 'cooked_pike', quantity: 5, priceModifier: 1.2 },
+            { itemId: 'rope', quantity: 10, priceModifier: 1.2 },
+            { itemId: 'bronze_sword', quantity: 2, priceModifier: 1.3 },
+        ]
     }
 }

@@ -103,7 +103,7 @@ const PlaceholderIcon: React.FC = () => (
 
 
 const SidePanel: React.FC<SidePanelProps> = (props) => {
-    const { ui, char, inv, quests, repeatableQuests, slayer, onExportGame, onImportGame, onResetGame, isDevMode, isTouchSimulationEnabled, onToggleTouchSimulation, itemActions, isBusy, handleExamine, session, addLog, activeCombatStyleHighlight, isBankOpen, isShopOpen, onDeposit, onNavigate, unlockedPois, onCastSpell, onSpellOnItem, isEquipmentStatsOpen = false } = props;
+    const { ui, char, inv, quests, repeatableQuests, slayer, onExportGame, onImportGame, onResetGame, isDevMode, isTouchSimulationEnabled, onToggleTouchSimulation, itemActions, isBusy, handleExamine, session, addLog, activeCombatStyleHighlight, isBankOpen, isShopOpen, onDeposit, onNavigate, unlockedPois, onCastSpell, onSpellOnItem, isEquipmentStatsOpen = false, initialState } = props;
     const { activePanel, setActivePanel } = ui;
     
     const inventoryPanelProps = {

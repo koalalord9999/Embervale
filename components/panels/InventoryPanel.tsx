@@ -32,9 +32,7 @@ interface InventoryPanelProps {
     onSell?: (itemId: string, quantity: number | 'all', inventoryIndex?: number) => void;
     spellToCast: Spell | null;
     onSpellOnItem: (spell: Spell, target: { item: InventorySlot, index: number }) => void;
-    isEquipmentStatsOpen?: boolean;
     onReadMap: (item: Item) => void;
-    // FIX: Add missing props required by InventorySlotDisplay
     confirmValuableDrops: boolean;
     valuableDropThreshold: number;
     isOneClickMode: boolean;
