@@ -1,8 +1,8 @@
 import React, { useCallback } from 'react';
 // FIX: Import ActiveBuff to use its specific type instead of 'any'.
 import { InventorySlot, PlayerSkill, SkillName, ActiveCraftingAction, Item, CraftingContext, POIActivity, EquipmentSlot, PlayerQuestState, Spell, Equipment, ActiveBuff, DialogueResponse, DialogueCheckRequirement } from '../types';
-import { ITEMS, FLETCHING_RECIPES, HERBLORE_RECIPES, HERBS, INVENTORY_CAPACITY, rollOnLootTable, LootRollResult, FIREMAKING_RECIPES, QUESTS } from '../../constants';
-import { POIS } from '../../data/pois';
+import { ITEMS, FLETCHING_RECIPES, HERBLORE_RECIPES, HERBS, INVENTORY_CAPACITY, rollOnLootTable, LootRollResult, FIREMAKING_RECIPES, QUESTS } from '../constants';
+import { POIS } from '../data/pois';
 import { MakeXPrompt, useUIState } from './useUIState';
 
 interface UseItemActionsProps {
