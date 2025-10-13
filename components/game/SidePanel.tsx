@@ -103,7 +103,7 @@ const PlaceholderIcon: React.FC = () => (
 
 
 const SidePanel: React.FC<SidePanelProps> = (props) => {
-    const { ui, char, inv, quests, repeatableQuests, slayer, onExportGame, onImportGame, onResetGame, isDevMode, isTouchSimulationEnabled, onToggleTouchSimulation, itemActions, isBusy, handleExamine, session, addLog, activeCombatStyleHighlight, isBankOpen, isShopOpen, onDeposit, onNavigate, unlockedPois, onCastSpell, onSpellOnItem, isEquipmentStatsOpen = false } = props;
+    const { ui, char, inv, quests, repeatableQuests, slayer, onExportGame, onImportGame, onResetGame, isDevMode, isTouchSimulationEnabled, onToggleTouchSimulation, itemActions, isBusy, handleExamine, session, addLog, activeCombatStyleHighlight, isBankOpen, isShopOpen, onDeposit, onNavigate, unlockedPois, onCastSpell, onSpellOnItem, isEquipmentStatsOpen = false, initialState } = props;
     const { activePanel, setActivePanel } = ui;
     
     const inventoryPanelProps = {
@@ -168,15 +168,6 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                 return <InventoryPanel {...inventoryPanelProps} />; // Default to inventory
         }
     };
-    
-    const handleSaveContextMenu = (e: React.MouseEvent) => {
-        e.preventDefault();
-        ui.setContextMenu({
-            options: [{ label: 'Import Save', onClick: onImportGame }],
-            event: e,
-            isTouchInteraction: false,
-        });
-    };
 
     return (
         <div className="bg-black/70 border-2 border-gray-600 rounded-lg flex flex-col h-full">
@@ -217,11 +208,10 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     <PanelIcon 
                         setTooltip={ui.setTooltip} 
                         icon="cloud-upload" 
-                        label={<>Export / Import Save<br/><span className="text-sm text-gray-400">Right click to import</span></>}
-                        ariaLabel="Export / Import Save"
+                        label="Export Save"
+                        ariaLabel="Export Save"
                         isActive={false} 
                         onClick={(e) => { e.preventDefault(); onExportGame(); }}
-                        onContextMenu={handleSaveContextMenu}
                     />
                     <PlaceholderIcon />
                     <PlaceholderIcon />

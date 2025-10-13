@@ -1,8 +1,7 @@
 
-
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useUIState } from './hooks/useUIState';
-import { useGameStateManager } from './hooks/useGameStateManager';
+import { useSaveSlotManager } from './hooks/useSaveSlotManager';
 import Tooltip from './components/common/Tooltip';
 import ContextMenu from './components/common/ContextMenu';
 import MakeXModal from './components/common/MakeXModal';
@@ -15,31 +14,34 @@ import ItemsOnDeathView from './components/views/overlays/ItemsOnDeathView';
 import PriceCheckerView from './components/views/overlays/PriceCheckerView';
 import DungeonMapView from './components/views/DungeonMapView';
 import Game from './components/game/Game';
-import PreloadScreen from './components/screens/PreloadScreen';
+import SaveSlotScreen from './components/screens/SaveSlotScreen';
+import GameModeSelection from './components/screens/GameModeSelection';
 import UsernamePrompt from './components/common/UsernamePrompt';
 import { imagePaths, loadImagesAsBase64 } from './imageLoader';
 import { GAME_VERSION } from './config';
+import { PlayerType, Slot } from './types';
 
-type AppState = 'LOADING_DB' | 'LOADING_ASSETS' | 'PRELOAD' | 'USERNAME_PROMPT' | 'GAME';
-type PromptReason = 'new_game' | 'set_username' | 'set_username_import' | null;
+type AppState = 'LOADING_DB' | 'LOADING_ASSETS' | 'SLOT_SELECTION' | 'GAME_MODE_SELECTION' | 'USERNAME_PROMPT' | 'GAME';
 
 const App: React.FC = () => {
     const ui = useUIState();
     const { 
-        initialState, 
-        gameKey, 
-        handleExportSave, 
-        handleImportSave, 
-        startNewGame,
-        updateUsernameAndSave,
-        loadImportedState,
-        parseSaveData
-    } = useGameStateManager(ui);
+        slots,
+        gameKey,
+        loadGameForSlot,
+        createNewCharacter,
+        deleteCharacter,
+        exportSlot,
+        importToSlot,
+        isLoading: isDbLoading,
+    } = useSaveSlotManager(ui);
     
     const [appState, setAppState] = useState<AppState>('LOADING_DB');
     const [loadedAssets, setLoadedAssets] = useState<Record<string, string> | null>(null);
-    const [promptReason, setPromptReason] = useState<PromptReason>(null);
-    const [pendingImportState, setPendingImportState] = useState<any | null>(null);
+    const [activeGameState, setActiveGameState] = useState<any | null>(null);
+    const [activeSlotId, setActiveSlotId] = useState<number | null>(null);
+    const [pendingSlotId, setPendingSlotId] = useState<number | null>(null);
+    const [pendingPlayerType, setPendingPlayerType] = useState<PlayerType | null>(null);
     const [isCtrlPressed, setIsCtrlPressed] = useState(false);
 
     const gameContainerStyle = useMemo(() => (
@@ -49,143 +51,106 @@ const App: React.FC = () => {
     ), [loadedAssets]);
 
     useEffect(() => {
-        if (initialState && appState === 'LOADING_DB') {
+        if (!isDbLoading && appState === 'LOADING_DB') {
             setAppState('LOADING_ASSETS');
             loadImagesAsBase64(imagePaths).then(assets => {
                 setLoadedAssets(assets);
-                setAppState('PRELOAD');
+                setAppState('SLOT_SELECTION');
             }).catch(error => {
                 console.error("Failed to load image assets:", error);
-                // Handle error case, maybe proceed without images or show an error
                 setLoadedAssets({});
-                setAppState('PRELOAD');
+                setAppState('SLOT_SELECTION');
             });
         }
-    }, [initialState, appState]);
+    }, [isDbLoading, appState]);
     
-    // Globally disable the default browser right-click context menu.
     useEffect(() => {
-        const handleContextMenu = (e: MouseEvent) => {
-            e.preventDefault();
-        };
-
+        const handleContextMenu = (e: MouseEvent) => e.preventDefault();
         document.addEventListener('contextmenu', handleContextMenu);
-
-        return () => {
-            document.removeEventListener('contextmenu', handleContextMenu);
-        };
+        return () => document.removeEventListener('contextmenu', handleContextMenu);
     }, []);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => e.key === 'Control' && setIsCtrlPressed(true);
         const handleKeyUp = (e: KeyboardEvent) => e.key === 'Control' && setIsCtrlPressed(false);
-        
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
         window.addEventListener('blur', () => setIsCtrlPressed(false));
-
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
         };
     }, []);
     
-    const loadingTips = useMemo(() => [
-        "The Whispering Woods are older than Meadowdale itself.",
-        "Bronze is a simple alloy of copper and tin. Use a furnace to smelt them.",
-        "Different combat stances provide bonuses to Attack, Strength, or Defence.",
-        "Check the quest board in the local tavern for repeatable tasks and good coin.",
-        "A sharp axe is for trees; a sturdy pickaxe is for rocks. Bring the right tool.",
-        "Cooking on a range can turn a simple fish into a life-saving meal.",
-        "Iron is stronger than bronze, but requires coal to smelt into steel for the best results.",
-        "Oak logs can be fletched into more powerful bows than standard logs.",
-        "Monsters in plate armor are often weaker to crush attacks from weapons like maces and warhammers.",
-        "Higher-level fish not only give more Fishing XP but also heal more hitpoints when cooked.",
-        "The goblins in the Stonebreak Mine are a nuisance, but some say a powerful king rules their warrens deeper in.",
-        "Shear sheep for wool, then use a spinning wheel to create balls of wool for crafting.",
-        "The Feywood is a magical place, but its inhabitants don't always take kindly to outsiders.",
-        "Many herbs you find are grimy. Clean them to unlock their potential in potion-making.",
-        "Your inventory is limited. Use a bank to store items you don't need right now.",
-        "Burying the bones of your enemies can grant you Prayer experience, a valuable skill in tough fights.",
-        "Unfinished potions need a secondary ingredient to become useful. Experiment to discover new recipes!",
-        "Upgrading your pickaxe and axe will allow you to gather higher-tier resources.",
-        "The 'Defensive' stance is slower, but grants both Defence and Hitpoints experience with every successful hit.",
-        "The road south of Meadowdale is known to be plagued by bandits. Travel with caution.",
-        "Talk to everyone you meet. Some may have quests or valuable information.",
-        "Long-press or right-click on items in your inventory to see all available actions, like 'Use' or 'Drop'.",
-        "Failing an action, like burning a fish, will still grant a small amount of experience.",
-        "You'll need a knife to fletch logs into arrow shafts or unstrung bows.",
-        "A shield can significantly boost your defensive stats, but prevents you from using powerful two-handed weapons.",
-        "The Gale-Swept Peaks are treacherous but hold rare minerals for high-level smiths.",
-        "Some monsters have special attacks. Be prepared for anything when facing a new foe.",
-        "Flax can be picked from fields and spun into bowstrings, a key component for any aspiring ranger."
-    ], []);
-
-    const handleContinue = useCallback(() => {
-        if (initialState && (!initialState.username || initialState.username.trim() === '')) {
-            setPromptReason('set_username');
-            setAppState('USERNAME_PROMPT');
-        } else {
+    const handleSelectSlot = async (slotId: number) => {
+        const gameState = await loadGameForSlot(slotId);
+        if (gameState) {
+            setActiveGameState(gameState);
+            setActiveSlotId(slotId);
             setAppState('GAME');
-        }
-    }, [initialState]);
-
-    const onConfirmImport = useCallback(async (state: any) => {
-        if (!state.username || state.username.trim() === '') {
-            setPendingImportState(state);
-            setPromptReason('set_username_import');
-            setAppState('USERNAME_PROMPT');
         } else {
-            await loadImportedState(state);
-            setAppState('GAME');
+            console.error("Failed to load game state for slot", slotId);
         }
-    }, [loadImportedState]);
-    
-    const loadFromImportedData = useCallback((data: string): boolean => {
-        const state = parseSaveData(data);
-        if (state) {
-            ui.closeImportModal();
-            ui.setConfirmationPrompt({
-                message: "Are you sure you want to import this save? This will overwrite your current progress.",
-                onConfirm: () => onConfirmImport(state)
-            });
-            return true;
-        }
-        return false;
-    }, [parseSaveData, ui, onConfirmImport]);
-    
-    const requestNewGame = useCallback(() => {
-        ui.setConfirmationPrompt({
-            message: "Are you sure you want to start a new game? All progress will be lost.",
-            onConfirm: () => {
-                setPromptReason('new_game');
-                setAppState('USERNAME_PROMPT');
+    };
+
+    const handleCreateNew = (slotId: number) => {
+        setPendingSlotId(slotId);
+        setAppState('GAME_MODE_SELECTION');
+    };
+
+    const handleModeSelected = (playerType: PlayerType) => {
+        setPendingPlayerType(playerType);
+        setAppState('USERNAME_PROMPT');
+    };
+
+    const handleUsernameConfirm = async (username: string) => {
+        if (pendingSlotId !== null && pendingPlayerType) {
+            const newGameState = await createNewCharacter(pendingSlotId, username, pendingPlayerType);
+            if (newGameState) {
+                setActiveGameState(newGameState);
+                setActiveSlotId(pendingSlotId);
+                setAppState('GAME');
             }
-        });
-    }, [ui]);
-    
-    const handleUsernameConfirm = useCallback(async (username: string) => {
-        if (promptReason === 'new_game') {
-            await startNewGame(username);
-        } else if (promptReason === 'set_username') {
-            await updateUsernameAndSave(username);
-        } else if (promptReason === 'set_username_import' && pendingImportState) {
-            const newState = { ...pendingImportState, username };
-            await loadImportedState(newState);
         }
-        setPendingImportState(null);
-        setPromptReason(null);
-        setAppState('GAME');
-    }, [promptReason, startNewGame, updateUsernameAndSave, pendingImportState, loadImportedState]);
+        setPendingSlotId(null);
+        setPendingPlayerType(null);
+    };
 
-    const handleUsernameCancel = useCallback(() => {
-        setPendingImportState(null);
-        setPromptReason(null);
-        setAppState('PRELOAD');
-    }, []);
+    const handleReturnToMenu = () => {
+        setActiveGameState(null);
+        setActiveSlotId(null);
+        setAppState('SLOT_SELECTION');
+    };
+
+    const handleImportData = (slotId: number, data: string): boolean => {
+        const success = importToSlot(slotId, data);
+        if (success) {
+            ui.closeImportModal();
+        }
+        return success;
+    };
+    
+    const handleExport = () => { if (activeSlotId !== null) exportSlot(activeSlotId); };
+    const handleImport = () => {
+        if (activeSlotId !== null) {
+            setPendingSlotId(activeSlotId);
+            ui.setIsImportModalOpen(true);
+        }
+    };
+    const handleReset = () => {
+        if (activeSlotId !== null) {
+            ui.setConfirmationPrompt({
+                message: "Are you sure you want to delete this character and start a new game? This is irreversible.",
+                onConfirm: () => {
+                    deleteCharacter(activeSlotId);
+                    handleReturnToMenu();
+                }
+            });
+        }
+    };
 
     const renderAppContent = () => {
-        if (!initialState || appState === 'LOADING_DB' || appState === 'LOADING_ASSETS') {
+        if (isDbLoading || appState === 'LOADING_ASSETS') {
             return (
                 <div className="w-full h-full game-container bg-cover bg-top bg-no-repeat md:bg-[length:100%_100%] border-8 border-gray-900 shadow-2xl p-4 flex flex-col items-center justify-center relative filter brightness-110 saturate-125" style={gameContainerStyle}>
                     <div className="absolute inset-0 bg-black/30"></div>
@@ -202,39 +167,49 @@ const App: React.FC = () => {
         }
 
         switch (appState) {
-            case 'PRELOAD':
+            case 'SLOT_SELECTION':
                 return (
                     <div className="w-full h-full game-container bg-cover bg-top bg-no-repeat md:bg-[length:100%_100%]" style={gameContainerStyle}>
-                        <PreloadScreen 
-                            loadingTips={loadingTips} 
-                            onContinue={handleContinue} 
-                            onNewGame={requestNewGame} 
-                            onImport={handleImportSave}
-                            setContextMenu={ui.setContextMenu}
+                        <SaveSlotScreen 
+                            slots={slots as Slot[]}
+                            onSelectSlot={handleSelectSlot}
+                            onCreateNew={handleCreateNew}
+                            onDelete={deleteCharacter}
+                            onExport={exportSlot}
+                            onImport={(slotId) => { setPendingSlotId(slotId); ui.setIsImportModalOpen(true); }}
                             assets={loadedAssets}
                         />
                     </div>
+                );
+            case 'GAME_MODE_SELECTION':
+                 return (
+                     <div className="w-full h-full game-container bg-cover bg-top bg-no-repeat md:bg-[length:100%_100%] border-8 border-gray-900 shadow-2xl p-2 md:p-4 flex items-center justify-center relative filter brightness-110 saturate-125" style={gameContainerStyle}>
+                        <div className="absolute inset-0 bg-black/30"></div>
+                        <GameModeSelection onSelect={handleModeSelected} onCancel={() => setAppState('SLOT_SELECTION')} />
+                     </div>
                 );
             case 'USERNAME_PROMPT':
                 return (
                      <div className="w-full h-full game-container bg-cover bg-top bg-no-repeat md:bg-[length:100%_100%] border-8 border-gray-900 shadow-2xl p-2 md:p-4 flex items-center justify-center relative filter brightness-110 saturate-125" style={gameContainerStyle}>
                         <div className="absolute inset-0 bg-black/30"></div>
-                        <UsernamePrompt onConfirm={handleUsernameConfirm} onCancel={handleUsernameCancel} />
+                        <UsernamePrompt onConfirm={handleUsernameConfirm} onCancel={() => setAppState('GAME_MODE_SELECTION')} />
                      </div>
                 );
             case 'GAME':
             default:
-                if (!loadedAssets) return null; // Should not happen if logic is correct
+                if (!loadedAssets || !activeGameState || activeSlotId === null) return null;
                 return (
                     <div className="w-full h-full game-container border-8 border-gray-900 shadow-2xl p-2 flex flex-col md:flex-row gap-2 relative overflow-y-auto md:overflow-hidden">
                         <Game 
-                            key={gameKey} 
-                            initialState={initialState} 
-                            onExportGame={handleExportSave} 
-                            onImportGame={handleImportSave} 
-                            onResetGame={requestNewGame} 
+                            key={`${activeSlotId}-${gameKey}`} 
+                            initialState={activeGameState} 
+                            slotId={activeSlotId}
+                            onReturnToMenu={handleReturnToMenu}
                             ui={ui} 
                             assets={loadedAssets}
+                            onExportGame={handleExport}
+                            onImportGame={handleImport}
+                            onResetGame={handleReset}
                         />
                     </div>
                 );
@@ -252,14 +227,17 @@ const App: React.FC = () => {
                 )}
             </div>
             
-            {initialState && (
+            {/* Global Modals & Overlays */}
+            {ui.showTooltips && ui.tooltip && <Tooltip tooltipState={ui.tooltip} isCtrlPressed={isCtrlPressed} />}
+            {ui.contextMenu && <ContextMenu options={ui.contextMenu.options} triggerEvent={ui.contextMenu.event} isTouchInteraction={ui.contextMenu.isTouchInteraction} onClose={ui.closeContextMenu} />}
+            {ui.makeXPrompt && <MakeXModal title={ui.makeXPrompt.title} maxQuantity={ui.makeXPrompt.max} onConfirm={ui.makeXPrompt.onConfirm} onCancel={ui.closeMakeXPrompt} />}
+            {ui.confirmationPrompt && <ConfirmationModal message={ui.confirmationPrompt.message} onConfirm={ui.confirmationPrompt.onConfirm} onCancel={ui.closeConfirmationPrompt} />}
+            {ui.exportData && <ExportModal exportState={ui.exportData} onClose={ui.exportData.onClose ?? ui.closeExportModal} />}
+            {ui.isImportModalOpen && <ImportModal onImport={(data) => handleImportData(pendingSlotId!, data)} onClose={() => { ui.closeImportModal(); setPendingSlotId(null); }} />}
+
+            {/* In-Game Only Overlays */}
+            {appState === 'GAME' && activeGameState && (
                 <>
-                    {ui.showTooltips && ui.tooltip && <Tooltip tooltipState={ui.tooltip} isCtrlPressed={isCtrlPressed} />}
-                    {ui.contextMenu && <ContextMenu options={ui.contextMenu.options} triggerEvent={ui.contextMenu.event} isTouchInteraction={ui.contextMenu.isTouchInteraction} onClose={ui.closeContextMenu} />}
-                    {ui.makeXPrompt && <MakeXModal title={ui.makeXPrompt.title} maxQuantity={ui.makeXPrompt.max} onConfirm={ui.makeXPrompt.onConfirm} onCancel={ui.closeMakeXPrompt} />}
-                    {ui.confirmationPrompt && <ConfirmationModal message={ui.confirmationPrompt.message} onConfirm={ui.confirmationPrompt.onConfirm} onCancel={ui.closeConfirmationPrompt} />}
-                    {ui.exportData && <ExportModal exportState={ui.exportData} onClose={ui.exportData.onClose ?? ui.closeExportModal} />}
-                    {ui.isImportModalOpen && <ImportModal onImport={loadFromImportedData} onClose={ui.closeImportModal} />}
                     {ui.activeQuestDetail && <QuestDetailView questId={ui.activeQuestDetail.questId} playerQuests={ui.activeQuestDetail.playerQuests} onClose={() => ui.setActiveQuestDetail(null)} />}
                     {ui.itemsOnDeathData && <ItemsOnDeathView inventory={ui.itemsOnDeathData.inventory} equipment={ui.itemsOnDeathData.equipment} coins={ui.itemsOnDeathData.coins} onClose={() => ui.setItemsOnDeathData(null)} />}
                     {ui.priceCheckerInventory && <PriceCheckerView inventory={ui.priceCheckerInventory} onClose={() => ui.setPriceCheckerInventory(null)} setTooltip={ui.setTooltip} setContextMenu={ui.setContextMenu} setMakeXPrompt={ui.setMakeXPrompt} />}
@@ -268,10 +246,10 @@ const App: React.FC = () => {
                             <DungeonMapView
                                 regionId={ui.activeDungeonMap.regionId}
                                 mapTitle={ui.activeDungeonMap.mapTitle}
-                                currentPoiId={initialState.currentPoiId}
+                                currentPoiId={activeGameState.currentPoiId}
                                 onClose={() => ui.setActiveDungeonMap(null)}
                                 onNavigate={(poiId: string) => { /* Navigation is disabled in this view */ }}
-                                showAllPois={initialState.playerType === 'Cheats'}
+                                showAllPois={activeGameState.playerType === 'Cheats'}
                                 setTooltip={ui.setTooltip}
                             />
                         </div>

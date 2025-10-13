@@ -8,6 +8,7 @@ export * from './crafting';
 export * from './drops';
 export * from './spells';
 export * from './player';
+export * from './save';
 export type { POIActivity } from './world';
 export type { Spell } from './spells';
 export type { BankTab } from './entities';

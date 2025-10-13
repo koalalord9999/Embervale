@@ -21,7 +21,7 @@ const UsernamePrompt: React.FC<UsernamePromptProps> = ({ onConfirm, onCancel }) 
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[90]">
             <div className="bg-gray-800 border-2 border-gray-600 rounded-lg shadow-xl p-6 w-full max-w-md">
                 <h2 className="text-xl md:text-2xl font-bold text-yellow-400 mb-4 text-center">Create Your Character</h2>
                 <p className="text-gray-300 text-center mb-6">Please enter a name for your adventurer.</p>

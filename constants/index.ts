@@ -12,6 +12,8 @@ export * from './fletching';
 export * from './herblore';
 export * from './lootTables';
 export * from './spells';
+// FIX: Add export for POIs
+export * from '../data/pois';
 export * from '../data/regions';
 export * from './map_features';
 export * from './dialogue';

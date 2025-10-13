@@ -1,32 +1,30 @@
-
-
 import { useEffect, useRef } from 'react';
-import { saveGameState } from '../db';
+import { saveSlotState } from '../db';
 
-export const useSaveGame = (gameState: object) => {
+export const useSaveGame = (gameState: any, slotId: number) => {
     const isInitialMount = useRef(true);
+    const saveTimeoutRef = useRef<number | null>(null);
 
     useEffect(() => {
-        // On the very first render of the hook, don't save.
-        // This prevents the initial state (especially the default "new game" state
-        // after a DB wipe) from being immediately written back to the database,
-        // which would cement the data loss. Saving will commence only after the
-        // first player action changes the state.
         if (isInitialMount.current) {
             isInitialMount.current = false;
             return;
         }
 
-        // Debounce saving to improve performance on subsequent state changes.
-        const handler = setTimeout(() => {
-            // Create a copy of the state to save, excluding shopStates.
-            const stateToSave = { ...gameState };
-            delete (stateToSave as any).shopStates;
-            saveGameState(stateToSave);
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+        }
+
+        saveTimeoutRef.current = window.setTimeout(() => {
+            if (gameState) {
+                saveSlotState(slotId, gameState);
+            }
         }, 1000);
 
         return () => {
-            clearTimeout(handler);
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+            }
         };
-    }, [gameState]);
+    }, [gameState, slotId]);
 };

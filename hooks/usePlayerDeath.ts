@@ -1,5 +1,3 @@
-
-
 import React, { useCallback } from 'react';
 import { useSkilling } from './useSkilling';
 import { useInteractQuest } from './useInteractQuest';
@@ -7,9 +5,10 @@ import { useUIState } from './useUIState';
 import { useGameSession } from './useGameSession';
 import { useCharacter } from './useCharacter';
 import { useInventory } from './useInventory';
-import { WorldState, InventorySlot, Equipment, PlayerQuestState } from '../types';
+import { WorldState, InventorySlot, Equipment, PlayerQuestState, PlayerType } from '../types';
 import { ITEMS, INVENTORY_CAPACITY, REGIONS } from '../constants';
 import { POIS } from '../data/pois';
+import { saveSlotState } from '../db';
 
 interface PlayerDeathDependencies {
     skilling: ReturnType<typeof useSkilling>;
@@ -22,12 +21,16 @@ interface PlayerDeathDependencies {
     playerQuests: PlayerQuestState[];
     onItemDropped: (item: InventorySlot, overridePoiId?: string, isDeathPile?: boolean) => void;
     setWorldState: React.Dispatch<React.SetStateAction<WorldState>>;
+    playerType: PlayerType;
+    slotId: number;
+    gameState: any;
+    onReturnToMenu: () => void;
 }
 
 export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
-    const { skilling, interactQuest, ui, session, char, inv, addLog, playerQuests, onItemDropped, setWorldState } = deps;
+    const { skilling, interactQuest, ui, session, char, inv, addLog, playerQuests, onItemDropped, setWorldState, playerType, slotId, gameState, onReturnToMenu } = deps;
 
-    const handlePlayerDeath = useCallback(() => {
+    const handlePlayerDeath = useCallback(async () => {
         skilling.stopSkilling();
         interactQuest.handleCancelInteractQuest();
         ui.setCombatQueue([]);
@@ -44,9 +47,18 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
             return;
         }
 
-        // --- Full Death Mechanics ---
+        // --- Hardcore Death ---
+        if (playerType === PlayerType.Hardcore) {
+            addLog("You have fallen in Hardcore mode. Your journey ends here. Your character will be saved as a memorial.");
+            const deadState = { ...gameState, isDead: true };
+            await saveSlotState(slotId, deadState);
+            setTimeout(() => {
+                onReturnToMenu();
+            }, 3000);
+            return;
+        }
 
-        // 1. Get all player items from inventory and equipment
+        // --- Normal/Cheats Death Mechanics ---
         const allItems: { slot: InventorySlot; from: 'inventory' | keyof Equipment }[] = [];
         inv.inventory.forEach((slot) => {
             if (slot) allItems.push({ slot, from: 'inventory' });
@@ -56,14 +68,11 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
             if (slot) allItems.push({ slot, from: slotKey });
         });
 
-        // 2. Sort by single-item value, descending
         allItems.sort((a, b) => (ITEMS[b.slot.itemId]?.value ?? 0) - (ITEMS[a.slot.itemId]?.value ?? 0));
         
-        // 3. Determine kept and dropped items
         const keptItems = allItems.slice(0, 3);
         const droppedItems = allItems.slice(3);
 
-        // 4. Determine final death POI and handle dropped items/coins
         let finalDeathPoiId = session.currentPoiId;
         const currentPoi = POIS[session.currentPoiId];
         if (currentPoi) {
@@ -82,7 +91,6 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
             onItemDropped(item.slot, finalDeathPoiId, true);
         });
 
-        // 5. Update inventory and equipment with only the kept items
         const newInventory: (InventorySlot | null)[] = new Array(INVENTORY_CAPACITY).fill(null);
         const newEquipment: Equipment = { weapon: null, shield: null, head: null, body: null, legs: null, ammo: null, gloves: null, boots: null, cape: null, necklace: null, ring: null };
         
@@ -101,7 +109,6 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
         inv.setEquipment(newEquipment);
         inv.setCoins(0);
 
-        // 6. Set the death marker and timer
         setWorldState(ws => ({
             ...ws,
             deathMarker: {
@@ -111,12 +118,11 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
             }
         }));
 
-        // 7. Respawn player
         session.setCurrentPoiId('meadowdale_square');
         char.setCurrentHp(char.maxHp);
         addLog(`You have died! Your 3 most valuable items have been kept. The rest, including ${lostCoins.toLocaleString()} coins, have been dropped at ${POIS[finalDeathPoiId].name}. You have 10 minutes of in-game time to retrieve them.`);
 
-    }, [session, char, inv, addLog, ui, skilling, interactQuest, playerQuests, onItemDropped, setWorldState]);
+    }, [session, char, inv, addLog, ui, skilling, interactQuest, playerQuests, onItemDropped, setWorldState, playerType, slotId, gameState, onReturnToMenu]);
 
     return { handlePlayerDeath };
 };
