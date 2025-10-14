@@ -153,8 +153,7 @@ export const meadowdalePois: Record<string, POI> = {
                 type: 'ladder', 
                 name: 'Go to Cellar', 
                 direction: 'down', 
-                toPoiId: 'tavern_cellar',
-                questCondition: { questId: 'kill_rats_meadowdale', stages: [] }
+                toPoiId: 'tavern_cellar'
             },
             {
                 type: 'npc',

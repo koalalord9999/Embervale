@@ -27,9 +27,7 @@ interface SidePanelProps {
     quests: ReturnType<typeof useQuests>;
     repeatableQuests: ReturnType<typeof useRepeatableQuests>;
     slayer: ReturnType<typeof useSlayer>;
-    onExportGame: () => void;
-    onImportGame: () => void;
-    onResetGame: () => void;
+    onReturnToMenu: () => void;
     isDevMode: boolean;
     isTouchSimulationEnabled: boolean;
     onToggleTouchSimulation: () => void;
@@ -103,7 +101,7 @@ const PlaceholderIcon: React.FC = () => (
 
 
 const SidePanel: React.FC<SidePanelProps> = (props) => {
-    const { ui, char, inv, quests, repeatableQuests, slayer, onExportGame, onImportGame, onResetGame, isDevMode, isTouchSimulationEnabled, onToggleTouchSimulation, itemActions, isBusy, handleExamine, session, addLog, activeCombatStyleHighlight, isBankOpen, isShopOpen, onDeposit, onNavigate, unlockedPois, onCastSpell, onSpellOnItem, isEquipmentStatsOpen = false, initialState } = props;
+    const { ui, char, inv, quests, repeatableQuests, slayer, onReturnToMenu, isDevMode, isTouchSimulationEnabled, onToggleTouchSimulation, itemActions, isBusy, handleExamine, session, addLog, activeCombatStyleHighlight, isBankOpen, isShopOpen, onDeposit, onNavigate, unlockedPois, onCastSpell, onSpellOnItem, isEquipmentStatsOpen = false, initialState } = props;
     const { activePanel, setActivePanel } = ui;
     
     const inventoryPanelProps = {
@@ -138,7 +136,6 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     setTooltip={ui.setTooltip} 
                     ui={ui} 
                     inventory={inv.inventory} 
-                    // FIX: Pass the 'coins' prop to the EquipmentPanel component.
                     coins={inv.coins}
                     addLog={addLog}
                     onExamine={handleExamine}
@@ -155,7 +152,6 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                 return <SpellbookPanel
                     skills={char.skills}
                     inventory={inv.inventory}
-                    // FIX: Pass the 'equipment' prop to the SpellbookPanel component.
                     equipment={inv.equipment}
                     onCastSpell={onCastSpell}
                     setTooltip={ui.setTooltip}
@@ -168,7 +164,7 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                 return <InventoryPanel {...inventoryPanelProps} />; // Default to inventory
         }
     };
-
+    
     return (
         <div className="bg-black/70 border-2 border-gray-600 rounded-lg flex flex-col h-full">
             <div className="flex-shrink-0">
@@ -192,7 +188,7 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-quests" icon="eclipse-flare" label="Quest Journal" ariaLabel="Quest Journal" isActive={activePanel==='quests'} onClick={() => setActivePanel('quests')} />
                     <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-inventory" icon="knapsack" label="Inventory" ariaLabel="Inventory" isActive={activePanel==='inventory'} onClick={() => setActivePanel('inventory')} />
                     <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-equipment" icon="battle-gear" label="Equipment" ariaLabel="Equipment" isActive={activePanel==='equipment'} onClick={() => setActivePanel('equipment')} />
-                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-prayer" icon="polar-star" label="Prayer" ariaLabel="Prayer" isActive={activePanel==='prayer'} onClick={() => { setActivePanel('prayer'); addLog("Prayer skill is not yet implemented."); }} />
+                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-prayer" icon="polar-star" label="Prayer" ariaLabel="Prayer" isActive={activePanel==='prayer'} onClick={() => { setActivePanel('prayer'); }} />
                     <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-spellbook" icon="book-cover" label="Spellbook" ariaLabel="Spellbook" isActive={activePanel==='spellbook'} onClick={() => setActivePanel('spellbook')} />
                 </div>
             </div>
@@ -207,11 +203,11 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     <PlaceholderIcon />
                     <PanelIcon 
                         setTooltip={ui.setTooltip} 
-                        icon="cloud-upload" 
-                        label="Export Save"
-                        ariaLabel="Export Save"
+                        icon="closed-doors" 
+                        label="Logout"
+                        ariaLabel="Logout"
                         isActive={false} 
-                        onClick={(e) => { e.preventDefault(); onExportGame(); }}
+                        onClick={onReturnToMenu}
                     />
                     <PlaceholderIcon />
                     <PlaceholderIcon />

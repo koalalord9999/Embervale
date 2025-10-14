@@ -47,17 +47,7 @@ export const useKillHandler = (deps: KillHandlerDependencies) => {
         const poi = POIS[poiId];
         if (!poi) return;
 
-        // Grant POI immunity (Room Cleared event)
-        const immunityDuration = 60 * 1000;
-        const expiryTime = Date.now() + immunityDuration;
-        setWorldState(ws => ({
-            ...ws,
-            poiImmunity: {
-                ...(ws.poiImmunity ?? {}),
-                [poiId]: expiryTime
-            }
-        }));
-        addLog(`You have cleared the area! You are immune to aggression here for 60 seconds.`);
+        addLog(`You have cleared the area!`);
 
         // Set respawn timers for all defeated monsters simultaneously
         const now = Date.now();
@@ -75,7 +65,7 @@ export const useKillHandler = (deps: KillHandlerDependencies) => {
         });
         setMonsterRespawnTimers(prev => ({ ...prev, ...newTimers }));
 
-    }, [isInstantRespawnOn, setMonsterRespawnTimers, setWorldState, addLog]);
+    }, [isInstantRespawnOn, setMonsterRespawnTimers, addLog]);
 
     return { handleKill, handleEncounterWin };
 }

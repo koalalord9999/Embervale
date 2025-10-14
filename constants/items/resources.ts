@@ -64,7 +64,7 @@ export const resources: Item[] = [
     { id: 'flax', name: 'Flax', description: 'A plant that can be spun into a bow string.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:flax.svg' },
     { id: 'bow_string', name: 'Bow String', description: 'A string for a bow.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:whiplash.svg' },
     { id: 'rope', name: 'Rope', description: 'A sturdy length of rope.', stackable: false, value: 15, iconUrl: 'https://api.iconify.design/game-icons:rope-coil.svg' },
-    { id: 'mystic_page', name: 'Mystic Page', description: 'A page from an arcane text, humming with magical potential.', stackable: true, value: 20, iconUrl: 'https://api.iconify.design/game-icons:written-scroll.svg', material: 'rune-aqua' },
+    { id: 'mystic_page', name: 'Mystic Page', description: 'A page from an arcane text, humming with magical potential.', stackable: true, value: 20, iconUrl: 'https://api.iconify.design/game-icons:scroll-unfurled.svg', material: 'rune-aqua' },
     { id: 'harpy_feather', name: 'Harpy Feather', description: 'A large, sharp feather from a harpy. Could be used in fletching.', stackable: true, value: 50, iconUrl: 'https://api.iconify.design/game-icons:feather.svg', material: 'uncut-sapphire' },
     { id: 'golem_core', name: 'Golem Core', description: 'A faintly glowing stone that was the heart of a stone golem. Can be shattered with a hammer.', stackable: false, value: 500, iconUrl: 'https://api.iconify.design/game-icons:glowing-artifact.svg' },
     { id: 'straw', name: 'Straw', description: 'A bundle of dry straw. It smells faintly of hay and old magic.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:wheat.svg' },
@@ -86,7 +86,7 @@ export const resources: Item[] = [
     { id: 'wheat', name: 'Wheat', description: 'A stalk of wheat.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:grain-bundle.svg' },
     { id: 'flour', name: 'Sack of Flour', description: 'A sack filled with finely milled flour.', stackable: false, value: 3, iconUrl: 'https://api.iconify.design/game-icons:flour.svg' },
     { id: 'bucket_of_water', name: 'Bucket of Water', description: 'A bucket filled with water.', stackable: false, value: 2, iconUrl: 'https://api.iconify.design/game-icons:full-wood-bucket.svg', emptyable: { emptyItemId: 'bucket' }, material: 'vial-water' },
-    { id: 'bucket_of_milk', name: 'Bucket of Milk', description: 'A bucket filled with fresh milk.', stackable: false, value: 4, iconUrl: 'https://api.iconify.design/game-icons:milk-carton.svg', emptyable: { emptyItemId: 'bucket' } },
+    { id: 'bucket_of_milk', name: 'Bucket of Milk', description: 'A bucket filled with fresh milk.', stackable: false, value: 4, iconUrl: 'https://api.iconify.design/game-icons:wood-bucket.svg', emptyable: { emptyItemId: 'bucket' } },
     // New Salt Flats resources
     { id: 'rock_salt', name: 'Rock Salt', description: 'A sharp, crystalline chunk of salt.', stackable: false, value: 15, iconUrl: 'https://api.iconify.design/game-icons:salt-shaker.svg', material: 'tin' },
     { id: 'brine_crystal', name: 'Brine Crystal', description: 'A perfectly formed crystal, saturated with magical brine.', stackable: false, value: 100, iconUrl: 'https://api.iconify.design/game-icons:crystal-cluster.svg', material: 'sapphire' },

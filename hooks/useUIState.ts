@@ -82,7 +82,7 @@ export const useUIState = () => {
 
 
     // New state for equipment overlays
-    const [equipmentStats, _setEquipmentStats] = useState<Equipment | null>(null);
+    const [isEquipmentStatsViewOpen, setIsEquipmentStatsViewOpen] = useState<boolean>(false);
     const [itemsOnDeathData, setItemsOnDeathData] = useState<ItemsOnDeathData | null>(null);
     const [priceCheckerInventory, setPriceCheckerInventory] = useState<(InventorySlot | null)[] | null>(null);
     const [isAtlasViewOpen, setIsAtlasViewOpen] = useState<boolean>(false);
@@ -106,14 +106,6 @@ export const useUIState = () => {
     const [showHitsplats, setShowHitsplats] = useState<boolean>(true);
     const [isOneClickMode, setIsOneClickMode] = useState<boolean>(false);
 
-    const setEquipmentStats = useCallback((equipment: Equipment | null) => {
-        _setEquipmentStats(equipment);
-        if (equipment) {
-            setActivePanel('inventory');
-        }
-    }, [setActivePanel]);
-
-    // FIX: Define isBusy based on whether any modal or blocking UI is active.
     const isBusy = useMemo(() => !!(
         activeShopId ||
         activeCraftingContext ||
@@ -126,6 +118,7 @@ export const useUIState = () => {
         activeSkillGuide ||
         activeCraftingAction ||
         activeQuestDetail ||
+        isEquipmentStatsViewOpen ||
         itemsOnDeathData ||
         priceCheckerInventory ||
         isAtlasViewOpen ||
@@ -147,6 +140,7 @@ export const useUIState = () => {
         activeSkillGuide,
         activeCraftingAction,
         activeQuestDetail,
+        isEquipmentStatsViewOpen,
         itemsOnDeathData,
         priceCheckerInventory,
         isAtlasViewOpen,
@@ -185,7 +179,7 @@ export const useUIState = () => {
         setActiveSkillGuide(null);
         setActiveCraftingAction(null);
         setActiveQuestDetail(null);
-        setEquipmentStats(null);
+        setIsEquipmentStatsViewOpen(false);
         setItemsOnDeathData(null);
         setPriceCheckerInventory(null);
         setIsAtlasViewOpen(false);
@@ -220,7 +214,7 @@ export const useUIState = () => {
         activeSkillGuide, setActiveSkillGuide,
         activeCraftingAction, setActiveCraftingAction,
         activeQuestDetail, setActiveQuestDetail,
-        equipmentStats, setEquipmentStats,
+        isEquipmentStatsViewOpen, setIsEquipmentStatsViewOpen,
         itemsOnDeathData, setItemsOnDeathData,
         priceCheckerInventory, setPriceCheckerInventory,
         isAtlasViewOpen, setIsAtlasViewOpen,

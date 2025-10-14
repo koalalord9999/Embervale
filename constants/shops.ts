@@ -14,6 +14,9 @@ export const SHOPS: Record<string, Shop> = {
             { itemId: 'cake_tin', quantity: 50, priceModifier: 1.0 },
             { itemId: 'bronze_axe', quantity: 10, priceModifier: 1.1 },
             { itemId: 'bronze_pickaxe', quantity: 10, priceModifier: 1.1 },
+            { itemId: 'small_fishing_net', quantity: 10, priceModifier: 1.1 },
+            { itemId: 'fishing_rod', quantity: 10, priceModifier: 1.1 },
+            { itemId: 'fishing_bait', quantity: 1000, priceModifier: 1.0 },
             { itemId: 'shortbow', quantity: 5, priceModifier: 1.1 },
             { itemId: 'bronze_arrow', quantity: 1000, priceModifier: 1.1 },
             { itemId: 'bronze_sword', quantity: 10, priceModifier: 1.1},
@@ -60,6 +63,7 @@ export const SHOPS: Record<string, Shop> = {
             { itemId: 'ring_mould', quantity: 10, priceModifier: 1.0 },
             { itemId: 'necklace_mould', quantity: 10, priceModifier: 1.0 },
             { itemId: 'amulet_mould', quantity: 10, priceModifier: 1.0 },
+            { itemId: 'tiara_mould', quantity: 10, priceModifier: 1.0 },
             { itemId: 'vial', quantity: 1000, priceModifier: 1.0 },
             { itemId: 'fire_resistant_shield', quantity: 5, priceModifier: 1.2 },
         ]

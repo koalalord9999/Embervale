@@ -27,9 +27,7 @@ interface SidePanelProps {
     quests: ReturnType<typeof useQuests>;
     repeatableQuests: ReturnType<typeof useRepeatableQuests>;
     slayer: ReturnType<typeof useSlayer>;
-    onExportGame: () => void;
-    onImportGame: () => void;
-    onResetGame: () => void;
+    onReturnToMenu: () => void;
     isDevMode: boolean;
     isTouchSimulationEnabled: boolean;
     onToggleTouchSimulation: () => void;
@@ -103,7 +101,7 @@ const PlaceholderIcon: React.FC = () => (
 
 
 const SidePanel: React.FC<SidePanelProps> = (props) => {
-    const { ui, char, inv, quests, repeatableQuests, slayer, onExportGame, onImportGame, onResetGame, isDevMode, isTouchSimulationEnabled, onToggleTouchSimulation, itemActions, isBusy, handleExamine, session, addLog, activeCombatStyleHighlight, isBankOpen, isShopOpen, onDeposit, onNavigate, unlockedPois, onCastSpell, onSpellOnItem, isEquipmentStatsOpen = false, initialState } = props;
+    const { ui, char, inv, quests, repeatableQuests, slayer, onReturnToMenu, isDevMode, isTouchSimulationEnabled, onToggleTouchSimulation, itemActions, isBusy, handleExamine, session, addLog, activeCombatStyleHighlight, isBankOpen, isShopOpen, onDeposit, onNavigate, unlockedPois, onCastSpell, onSpellOnItem, isEquipmentStatsOpen = false, initialState } = props;
     const { activePanel, setActivePanel } = ui;
     
     const inventoryPanelProps = {
@@ -138,7 +136,6 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     setTooltip={ui.setTooltip} 
                     ui={ui} 
                     inventory={inv.inventory} 
-                    // FIX: Pass the 'coins' prop to the EquipmentPanel component.
                     coins={inv.coins}
                     addLog={addLog}
                     onExamine={handleExamine}
@@ -155,7 +152,6 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                 return <SpellbookPanel
                     skills={char.skills}
                     inventory={inv.inventory}
-                    // FIX: Pass the 'equipment' prop to the SpellbookPanel component.
                     equipment={inv.equipment}
                     onCastSpell={onCastSpell}
                     setTooltip={ui.setTooltip}
@@ -169,15 +165,6 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
         }
     };
     
-    const handleSaveContextMenu = (e: React.MouseEvent) => {
-        e.preventDefault();
-        ui.setContextMenu({
-            options: [{ label: 'Import Save', onClick: onImportGame }],
-            event: e,
-            isTouchInteraction: false,
-        });
-    };
-
     return (
         <div className="bg-black/70 border-2 border-gray-600 rounded-lg flex flex-col h-full">
             <div className="flex-shrink-0">
@@ -216,12 +203,11 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     <PlaceholderIcon />
                     <PanelIcon 
                         setTooltip={ui.setTooltip} 
-                        icon="cloud-upload" 
-                        label={<>Export / Import Save<br/><span className="text-sm text-gray-400">Right click to import</span></>}
-                        ariaLabel="Export / Import Save"
+                        icon="exit-door" 
+                        label="Logout"
+                        ariaLabel="Logout"
                         isActive={false} 
-                        onClick={(e) => { e.preventDefault(); onExportGame(); }}
-                        onContextMenu={handleSaveContextMenu}
+                        onClick={onReturnToMenu}
                     />
                     <PlaceholderIcon />
                     <PlaceholderIcon />

@@ -166,7 +166,7 @@ const EquipmentPanel: React.FC<EquipmentPanelProps> = (props) => {
             </div>
             
             <div className="mt-auto pt-4 p-2 bg-gray-900 rounded-md border border-gray-600 flex justify-around gap-2">
-                <button onClick={() => ui.setEquipmentStats(equipment)} className="flex-1 text-center py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded border border-gray-500 transition-colors">
+                <button onClick={() => ui.setIsEquipmentStatsViewOpen(true)} className="flex-1 text-center py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded border border-gray-500 transition-colors">
                     Equipment Stats
                 </button>
                  <button onClick={() => ui.setItemsOnDeathData({ inventory, equipment, coins })} className="flex-1 text-center py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded border border-gray-500 transition-colors">

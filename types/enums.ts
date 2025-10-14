@@ -1,3 +1,4 @@
+
 export enum SkillName {
   Attack = "Attack",
   Strength = "Strength",
@@ -17,6 +18,8 @@ export enum SkillName {
   Herblore = "Herblore",
   Runecrafting = "Runecrafting",
   Slayer = "Slayer",
+  Thieving = "Thieving",
+  Agility = "Agility",
 }
 
 export enum EquipmentSlot {

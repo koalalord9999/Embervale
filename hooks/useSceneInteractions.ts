@@ -1,7 +1,29 @@
+
 import React, { useCallback } from 'react';
-import { POIActivity, PlayerQuestState, DialogueNode, Quest, DialogueResponse, DialogueCheckRequirement, DialogueAction } from '../types';
+import { POIActivity, PlayerQuestState, DialogueNode, Quest, DialogueResponse, DialogueCheckRequirement, DialogueAction, InventorySlot } from '../types';
 import { QUESTS } from '../constants';
 import { DialogueState, useUIState } from './useUIState';
+
+const TANNABLE_HIDES: Record<string, { cost: number }> = {
+    'cowhide': { cost: 5 },
+    'boar_hide': { cost: 8 },
+    'wolf_pelt': { cost: 15 },
+    'bear_pelt': { cost: 25 },
+};
+
+const calculateTanningCost = (inventory: (InventorySlot | null)[]) => {
+    let totalCost = 0;
+    for (const hideId in TANNABLE_HIDES) {
+        const count = inventory.reduce((acc, slot) => 
+            (slot && slot.itemId === hideId && !slot.noted) ? acc + slot.quantity : acc, 
+        0);
+        if (count > 0) {
+            totalCost += count * TANNABLE_HIDES[hideId].cost;
+        }
+    }
+    return totalCost;
+};
+
 
 interface SceneInteractionDependencies {
     playerQuests: PlayerQuestState[];
@@ -9,14 +31,80 @@ interface SceneInteractionDependencies {
     handleDialogueCheck: (requirements: DialogueCheckRequirement[]) => boolean;
     onResponse: (response: DialogueResponse) => void;
     addLog: (message: string) => void;
+    inventory: (InventorySlot | null)[];
 }
 
 export const useSceneInteractions = (poiId: string, deps: SceneInteractionDependencies) => {
-    const { playerQuests, setActiveDialogue, handleDialogueCheck, onResponse, addLog } = deps;
+    const { playerQuests, setActiveDialogue, handleDialogueCheck, onResponse, addLog, inventory } = deps;
 
     const handleActivityClick = useCallback((activity: POIActivity) => {
         if (activity.type !== 'npc') {
             return;
+        }
+        
+        if (activity.name === 'Tanner Sven') {
+            const totalCost = calculateTanningCost(inventory);
+            let svenDialogue: DialogueState;
+
+            if (totalCost > 0) {
+                svenDialogue = {
+                    npcName: 'Tanner Sven',
+                    npcIcon: '/assets/npcChatHeads/tanner_sven.png',
+                    nodes: {
+                        start: {
+                            npcName: 'Tanner Sven',
+                            npcIcon: '/assets/npcChatHeads/tanner_sven.png',
+                            text: "Need some hides tanned? You've come to the right place. What have you got for me?",
+                            responses: [
+                                {
+                                    text: `Tan all hides (${totalCost} coins)`,
+                                    check: {
+                                        requirements: [{ type: 'coins', amount: totalCost }],
+                                        successNode: 'tan_success',
+                                        failureNode: 'tan_fail_coins'
+                                    },
+                                    actions: [{ type: 'tan_all_hides' }]
+                                },
+                                { text: "Just looking, thanks." }
+                            ]
+                        },
+                        tan_success: {
+                            npcName: 'Tanner Sven',
+                            npcIcon: '/assets/npcChatHeads/tanner_sven.png',
+                            text: "Here is your finished leather.",
+                            responses: []
+                        },
+                        tan_fail_coins: {
+                             npcName: 'Tanner Sven',
+                             npcIcon: '/assets/npcChatHeads/tanner_sven.png',
+                             text: "You don't have enough coins for that.",
+                             responses: []
+                        }
+                    },
+                    currentNodeKey: 'start',
+                    onEnd: () => setActiveDialogue(null),
+                    onResponse: onResponse,
+                    handleDialogueCheck: handleDialogueCheck,
+                };
+            } else {
+                svenDialogue = {
+                    npcName: 'Tanner Sven',
+                    npcIcon: '/assets/npcChatHeads/tanner_sven.png',
+                    nodes: {
+                       start: {
+                           npcName: 'Tanner Sven',
+                           npcIcon: '/assets/npcChatHeads/tanner_sven.png',
+                           text: "You don't seem to have any hides for me to tan. Come back when you do.",
+                           responses: []
+                       }
+                   },
+                   currentNodeKey: 'start',
+                   onEnd: () => setActiveDialogue(null),
+                   onResponse: onResponse,
+                };
+            }
+            setActiveDialogue(svenDialogue);
+            return; // Exit early to bypass the normal dialogue flow
         }
     
         const { name, icon, dialogue: npcDialogue, startNode: defaultStartNode, dialogueType } = activity;
@@ -130,9 +218,19 @@ export const useSceneInteractions = (poiId: string, deps: SceneInteractionDepend
             }
         }
 
-        // Priority 4 (Lowest): Fallback to the default dialogue from the POI definition.
-        if (!effectiveStartNode && npcDialogue && defaultStartNode) {
-            if (npcDialogue[defaultStartNode]) {
+        // Priority 4: Explicitly defined startNode on the POI activity.
+        if (!effectiveStartNode && defaultStartNode) {
+            // Check if the node exists in any quest dialogue first
+            for (const quest of Object.values(QUESTS)) {
+                if (quest.dialogue && quest.dialogue[defaultStartNode]) {
+                    effectiveStartNode = defaultStartNode;
+                    dialogueSource = quest.dialogue;
+                    break;
+                }
+            }
+
+            // If not found in quests, check the inline dialogue object on the activity itself
+            if (!effectiveStartNode && npcDialogue && npcDialogue[defaultStartNode]) {
                 effectiveStartNode = defaultStartNode;
                 dialogueSource = npcDialogue;
             }
@@ -141,7 +239,7 @@ export const useSceneInteractions = (poiId: string, deps: SceneInteractionDepend
         if (effectiveStartNode && dialogueSource) {
             startDialogue(effectiveStartNode, dialogueSource);
         }
-    }, [playerQuests, setActiveDialogue, handleDialogueCheck, onResponse, addLog]);
+    }, [playerQuests, setActiveDialogue, handleDialogueCheck, onResponse, addLog, inventory]);
 
     return { handleActivityClick };
 };

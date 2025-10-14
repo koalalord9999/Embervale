@@ -39,7 +39,8 @@ export type DialogueAction =
   | { type: 'open_bank' }
   | { type: 'complete_tutorial' }
   | { type: 'set_quest_combat_reward'; itemId: string; quantity: number }
-  | { type: 'start_mandatory_combat'; monsterId: string };
+  | { type: 'start_mandatory_combat'; monsterId: string }
+  | { type: 'tan_all_hides' };
 
 export type DialogueCheckRequirement = 
     | { type: 'items'; items: { itemId: string, quantity: number, operator?: 'gte' | 'lt' | 'eq' }[] }

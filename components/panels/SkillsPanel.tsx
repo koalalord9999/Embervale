@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PlayerSkill, SkillName } from '../../types';
-import { XP_TABLE, SKILL_ICONS } from '../../constants';
+// FIX: Import SKILL_DISPLAY_ORDER from shared constants.
+import { XP_TABLE, SKILL_ICONS, SKILL_DISPLAY_ORDER } from '../../constants';
 import { TooltipState } from '../../hooks/useUIState';
 
 interface SkillsPanelProps {
@@ -8,15 +9,6 @@ interface SkillsPanelProps {
     setTooltip: (tooltip: TooltipState | null) => void;
     onOpenGuide: (skill: SkillName) => void;
 }
-
-const SKILL_DISPLAY_ORDER: SkillName[] = [
-    SkillName.Attack, SkillName.Hitpoints, SkillName.Mining,
-    SkillName.Strength, SkillName.Prayer, SkillName.Smithing,
-    SkillName.Defence, SkillName.Crafting, SkillName.Woodcutting,
-    SkillName.Ranged, SkillName.Fletching, SkillName.Firemaking,
-    SkillName.Magic, SkillName.Cooking, SkillName.Fishing,
-    SkillName.Runecrafting, SkillName.Herblore, SkillName.Slayer,
-];
 
 const SkillsPanel: React.FC<SkillsPanelProps> = ({ skills, setTooltip, onOpenGuide }) => {
     const [hoveredSkillInfo, setHoveredSkillInfo] = useState<{ name: SkillName; event: React.MouseEvent } | null>(null);

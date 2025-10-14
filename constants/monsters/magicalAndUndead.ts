@@ -459,6 +459,7 @@ export const magicalAndUndead: Monster[] = [
         mainDrops: [
             { itemId: 'grimy_coin_pouch', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'fishing_bait', chance: "1/4", minQuantity: 5, maxQuantity: 15 },
+            { itemId: 'runic_bar', chance: "1/64", minQuantity: 1, maxQuantity: 1 },
         ],
         tertiaryDrops: [{ itemId: 'nexus_talisman', chance: 1 / 128, minQuantity: 1, maxQuantity: 1 }],
         types: [MonsterType.Undead], attackSpeed: 4, respawnTime: 30000, aggressive: true, attackStyle: 'crush'
@@ -472,6 +473,7 @@ export const magicalAndUndead: Monster[] = [
             { itemId: 'nexus_rune', chance: "1/3", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'anima_rune', chance: "1/8", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'aether_rune', chance: "1/20", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'runic_bar', chance: "1/64", minQuantity: 1, maxQuantity: 1 },
         ],
         tertiaryDrops: [{ itemId: 'nexus_talisman', chance: 1 / 128, minQuantity: 1, maxQuantity: 1 }],
         types: [MonsterType.Beast], attackSpeed: 3, respawnTime: 90000, aggressive: true, alwaysAggressive: true, attackStyle: 'slash'
@@ -485,6 +487,7 @@ export const magicalAndUndead: Monster[] = [
             { itemId: 'wyrmscale', chance: "1/12", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'passage_rune', chance: "1/3", minQuantity: 3, maxQuantity: 3 },
             { itemId: 'astral_rune', chance: "1/5", minQuantity: 2, maxQuantity: 2 },
+            { itemId: 'runic_bar', chance: "1/32", minQuantity: 1, maxQuantity: 2 },
         ],
         tertiaryDrops: [{ itemId: 'nexus_talisman', chance: 1 / 128, minQuantity: 1, maxQuantity: 1 }],
         types: [MonsterType.Undead, MonsterType.Armored], attackSpeed: 6, respawnTime: 180000, aggressive: true, alwaysAggressive: true, attackStyle: 'crush'
@@ -495,8 +498,9 @@ export const magicalAndUndead: Monster[] = [
         iconUrl: 'https://api.iconify.design/game-icons:skeletal-hand.svg',
         guaranteedDrops: [{ itemId: 'bones', minQuantity: 1, maxQuantity: 1 }],
         mainDrops: [
-            { itemId: 'mithril_arrow', chance: "1/2", minQuantity: 15, maxQuantity: 40 },
-            { itemId: 'adamantite_arrow', chance: "1/4", minQuantity: 5, maxQuantity: 15 },
+            { itemId: 'mithril_arrow', chance: "1/2", minQuantity: 30, maxQuantity: 65 },
+            { itemId: 'adamantite_arrow', chance: "1/4", minQuantity: 15, maxQuantity: 20 },
+            { itemId: 'runic_arrow', chance: "1/16", minQuantity: 10, maxQuantity: 10 },
         ],
         tertiaryDrops: [{ itemId: 'nexus_talisman', chance: 1 / 128, minQuantity: 1, maxQuantity: 1 }],
         types: [MonsterType.Undead], attackSpeed: 4, respawnTime: 45000, aggressive: true, alwaysAggressive: true, attackStyle: 'ranged'
@@ -555,6 +559,7 @@ export const magicalAndUndead: Monster[] = [
         mainDrops: [
             { itemId: 'uncut_ruby', chance: "1/50", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'sunken_labyrinth_map', chance: "1/16", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'runic_bar', chance: "1/32", minQuantity: 1, maxQuantity: 3, noted: true },
         ],
         tertiaryDrops: [{ itemId: 'nexus_talisman', chance: 1 / 128, minQuantity: 1, maxQuantity: 1 }],
         types: [MonsterType.Elemental, MonsterType.Armored], attackSpeed: 5, respawnTime: 150000, aggressive: true, alwaysAggressive: true, attackStyle: 'crush'
@@ -619,8 +624,8 @@ export const magicalAndUndead: Monster[] = [
             { itemId: 'bones', minQuantity: 1, maxQuantity: 1 },
         ],
         mainDrops: [
-            { itemId: 'coal', chance: "1/5", minQuantity: 1, maxQuantity: 3, noted: true },
-            { itemId: 'mithril_ore', chance: "1/20", minQuantity: 1, maxQuantity: 1, noted: true },
+            { itemId: 'coal', chance: "1/5", minQuantity: 3, maxQuantity: 9, noted: true },
+            { itemId: 'mithril_ore', chance: "1/20", minQuantity: 1, maxQuantity: 5, noted: true },
         ],
         types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 30000, aggressive: true, attackStyle: 'stab',
     },
@@ -633,8 +638,8 @@ export const magicalAndUndead: Monster[] = [
     ],
     mainDrops: [
         { tableId: 'gem_table', chance: "1/20", minQuantity: 1, maxQuantity: 1 },
-        { itemId: 'iron_ore', chance: "1/2", minQuantity: 2, maxQuantity: 5, noted: true },
-        { itemId: 'coal', chance: "1/4", minQuantity: 3, maxQuantity: 6, noted: true },
+        { itemId: 'iron_ore', chance: "1/2", minQuantity: 15, maxQuantity: 26, noted: true },
+        { itemId: 'coal', chance: "1/4", minQuantity: 35, maxQuantity: 60, noted: true },
     ],
     types: [MonsterType.Elemental, MonsterType.Armored], attackSpeed: 6, respawnTime: 45000, aggressive: true, attackStyle: 'crush',
 },

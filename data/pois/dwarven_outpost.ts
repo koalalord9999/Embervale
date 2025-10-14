@@ -22,6 +22,7 @@ export const dwarvenOutpostPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Durin',
                 icon: '/assets/npcChatHeads/prospector_gudrun.png',
+                startNode: 'durin_default',
              }
         ],
         regionId: 'dwarven_outpost',

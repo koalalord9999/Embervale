@@ -11,7 +11,6 @@ interface SettingsViewProps {
     onToggleDevPanel: () => void;
     isTouchSimulationEnabled: boolean;
     onToggleTouchSimulation: () => void;
-    // FIX: Add ui, bankPlaceholders, and handleToggleBankPlaceholders to props
     ui: ReturnType<typeof useUIState>;
     bankPlaceholders: boolean;
     handleToggleBankPlaceholders: () => void;
@@ -29,9 +28,17 @@ const SettingRow: React.FC<{ label: string, description?: string, children: Reac
     </div>
 );
 
-const ToggleButton: React.FC<{ enabled: boolean, onClick: () => void }> = ({ enabled, onClick }) => (
-    <button onClick={onClick} className={`px-4 py-1 text-xs rounded font-bold transition-colors ${enabled ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-600 hover:bg-gray-500'}`}>{enabled ? 'ON' : 'OFF'}</button>
-);
+const ToggleButton: React.FC<{ enabled: boolean, onClick: () => void }> = ({ enabled, onClick }) => {
+    const handleClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onClick();
+    };
+
+    return (
+        <button onClick={handleClick} className={`px-4 py-1 text-xs rounded font-bold transition-colors ${enabled ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-600 hover:bg-gray-500'}`}>{enabled ? 'ON' : 'OFF'}</button>
+    );
+};
+
 
 const QualitySelector: React.FC<{ value: string, onChange: (value: 'Low' | 'Medium' | 'High') => void }> = ({ value, onChange }) => (
     <div className="flex gap-1 bg-gray-900/50 p-1 rounded-md">
@@ -45,6 +52,39 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onResetGame, onExportGame, 
     const [activeTab, setActiveTab] = useState<SettingTab>('Video');
     const [quality, setQuality] = useState<'Low' | 'Medium' | 'High'>('High');
 
+    // Local state to prevent UI jitter on re-render from parent
+    const [localShowTooltips, setLocalShowTooltips] = useState(ui.showTooltips);
+    const [localShowXpDrops, setLocalShowXpDrops] = useState(ui.showXpDrops);
+    const [localConfirmValuableDrops, setLocalConfirmValuableDrops] = useState(ui.confirmValuableDrops);
+    const [localShowMinimapHealth, setLocalShowMinimapHealth] = useState(ui.showMinimapHealth);
+    const [localShowCombatPlayerHealth, setLocalShowCombatPlayerHealth] = useState(ui.showCombatPlayerHealth);
+    const [localShowCombatEnemyHealth, setLocalShowCombatEnemyHealth] = useState(ui.showCombatEnemyHealth);
+    const [localShowHitsplats, setLocalShowHitsplats] = useState(ui.showHitsplats);
+    const [localIsOneClickMode, setLocalIsOneClickMode] = useState(ui.isOneClickMode);
+    const [localBankPlaceholders, setLocalBankPlaceholders] = useState(bankPlaceholders);
+
+    const createToggleHandler = <T extends boolean>(
+        localSetter: React.Dispatch<React.SetStateAction<T>>,
+        parentSetter: (value: T) => void
+    ) => {
+        return () => {
+            localSetter(prev => {
+                const newValue = !prev as T;
+                parentSetter(newValue);
+                return newValue;
+            });
+        };
+    };
+
+    const handleBankPlaceholderToggle = () => {
+        setLocalBankPlaceholders(prev => {
+            const newValue = !prev;
+            // The parent handler toggles the state, so we just call it.
+            handleToggleBankPlaceholders(); 
+            return newValue;
+        });
+    };
+
     const renderTabContent = () => {
         switch (activeTab) {
             case 'Video': return (
@@ -53,23 +93,22 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onResetGame, onExportGame, 
                         <QualitySelector value={quality} onChange={setQuality} />
                     </SettingRow>
                     <SettingRow label="Show Tooltips" description="Display helpful popups when hovering over items and UI elements.">
-                        <ToggleButton enabled={ui.showTooltips} onClick={() => ui.setShowTooltips(!ui.showTooltips)} />
+                        <ToggleButton enabled={localShowTooltips} onClick={createToggleHandler(setLocalShowTooltips, ui.setShowTooltips)} />
                     </SettingRow>
                     <SettingRow label="Show XP Drops" description="Display experience gains on-screen.">
-                        <ToggleButton enabled={ui.showXpDrops} onClick={() => ui.setShowXpDrops(!ui.showXpDrops)} />
+                        <ToggleButton enabled={localShowXpDrops} onClick={createToggleHandler(setLocalShowXpDrops, ui.setShowXpDrops)} />
                     </SettingRow>
-                    {/* FIX: Add missing UI settings toggles */}
                     <SettingRow label="Show Hitsplats" description="Display damage numbers in combat.">
-                        <ToggleButton enabled={ui.showHitsplats} onClick={() => ui.setShowHitsplats(!ui.showHitsplats)} />
+                        <ToggleButton enabled={localShowHitsplats} onClick={createToggleHandler(setLocalShowHitsplats, ui.setShowHitsplats)} />
                     </SettingRow>
                     <SettingRow label="Player Health in Combat" description="Show player's HP numbers in the combat view.">
-                        <ToggleButton enabled={ui.showCombatPlayerHealth} onClick={() => ui.setShowCombatPlayerHealth(!ui.showCombatPlayerHealth)} />
+                        <ToggleButton enabled={localShowCombatPlayerHealth} onClick={createToggleHandler(setLocalShowCombatPlayerHealth, ui.setShowCombatPlayerHealth)} />
                     </SettingRow>
                     <SettingRow label="Enemy Health in Combat" description="Show enemy's HP numbers in the combat view.">
-                        <ToggleButton enabled={ui.showCombatEnemyHealth} onClick={() => ui.setShowCombatEnemyHealth(!ui.showCombatEnemyHealth)} />
+                        <ToggleButton enabled={localShowCombatEnemyHealth} onClick={createToggleHandler(setLocalShowCombatEnemyHealth, ui.setShowCombatEnemyHealth)} />
                     </SettingRow>
                     <SettingRow label="Player Health on Minimap" description="Show player's HP numbers on the minimap orb.">
-                        <ToggleButton enabled={ui.showMinimapHealth} onClick={() => ui.setShowMinimapHealth(!ui.showMinimapHealth)} />
+                        <ToggleButton enabled={localShowMinimapHealth} onClick={createToggleHandler(setLocalShowMinimapHealth, ui.setShowMinimapHealth)} />
                     </SettingRow>
                 </div>
             );
@@ -90,14 +129,13 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onResetGame, onExportGame, 
             case 'Gameplay': return (
                 <div>
                     <SettingRow label="Bank Placeholders" description="Leave a 0-stack placeholder in the bank when withdrawing all of an item.">
-                         <ToggleButton enabled={bankPlaceholders} onClick={handleToggleBankPlaceholders} />
+                         <ToggleButton enabled={localBankPlaceholders} onClick={handleBankPlaceholderToggle} />
                     </SettingRow>
-                    {/* FIX: Wire up One-Click Mode toggle */}
                     <SettingRow label="One-Click Mode" description="Makes single-clicks act like long-presses for context menus.">
-                        <ToggleButton enabled={ui.isOneClickMode} onClick={() => ui.setIsOneClickMode(!ui.isOneClickMode)} />
+                        <ToggleButton enabled={localIsOneClickMode} onClick={createToggleHandler(setLocalIsOneClickMode, ui.setIsOneClickMode)} />
                     </SettingRow>
                     <SettingRow label="Confirm Valuable Drops" description={`Show a confirmation before dropping items worth over ${ui.valuableDropThreshold.toLocaleString()} coins.`}>
-                        <ToggleButton enabled={ui.confirmValuableDrops} onClick={() => ui.setConfirmValuableDrops(!ui.confirmValuableDrops)} />
+                        <ToggleButton enabled={localConfirmValuableDrops} onClick={createToggleHandler(setLocalConfirmValuableDrops, ui.setConfirmValuableDrops)} />
                     </SettingRow>
                     {isDevMode && (
                         <SettingRow label="Simulate Touch" description="Force touch-based controls for testing on desktop.">
@@ -108,6 +146,12 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onResetGame, onExportGame, 
             );
             case 'Account': return (
                 <div className="space-y-4 pt-4">
+                     {isDevMode && (
+                        <>
+                            <Button onClick={onExportGame} variant="secondary" className="w-full">Export Save</Button>
+                            <Button onClick={onImportGame} variant="secondary" className="w-full">Import Save</Button>
+                        </>
+                    )}
                      <Button onClick={onResetGame} variant="secondary" className="w-full">New Game (Reset Progress)</Button>
                 </div>
             );

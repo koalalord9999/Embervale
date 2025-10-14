@@ -1,10 +1,8 @@
-
-
 import { useState, useEffect, useCallback } from 'react';
 import { saveSlotState, loadAllSlots, deleteSlot, loadSlotState } from '../db';
-import { ALL_SKILLS } from '../constants';
+import { ALL_SKILLS, REPEATABLE_QUEST_POOL, ITEMS, MONSTERS, SPELLS, BANK_CAPACITY, QUESTS } from '../constants';
 import { POIS } from '../data/pois';
-import { CombatStance, PlayerSlayerTask, WorldState, Spell, BankTab, ActiveStatModifier, ActiveBuff, PlayerType, Slot } from '../types';
+import { CombatStance, PlayerSlayerTask, GeneratedRepeatableQuest, InventorySlot, WorldState, Spell, BankTab, ActiveStatModifier, ActiveBuff, PlayerType, Slot } from '../types';
 import { useUIState } from './useUIState';
 
 const defaultSettings = {
@@ -67,6 +65,17 @@ const hydrateGameState = (loadedState: any): GameState => {
         return { ...defaultState };
     }
 
+    // Skill hydration: Ensure existing saves get new skills.
+    if (loadedState.skills && Array.isArray(loadedState.skills)) {
+        const loadedSkillNames = new Set(loadedState.skills.map((s: any) => s.name));
+        const missingSkills = ALL_SKILLS.filter(s => !loadedSkillNames.has(s.name));
+
+        if (missingSkills.length > 0) {
+            // Add missing skills to the loaded state's skills array before the main hydration merge
+            loadedState.skills.push(...missingSkills);
+        }
+    }
+
     const hydrated = { ...defaultState, ...loadedState };
 
     // Deep merge for nested objects
@@ -115,6 +124,12 @@ const hydrateGameState = (loadedState: any): GameState => {
     // Ensure nullable properties are handled (if they exist in loaded but are undefined, fall back to default)
     hydrated.slayerTask = loadedState.slayerTask === undefined ? defaultState.slayerTask : loadedState.slayerTask;
     hydrated.autocastSpell = loadedState.autocastSpell === undefined ? defaultState.autocastSpell : loadedState.autocastSpell;
+
+    // Migration for legacy saves without a playerType
+    if (!loadedState.playerType) {
+        hydrated.playerType = PlayerType.Cheats;
+        console.log("Legacy save detected without playerType. Migrating to Cheats mode.");
+    }
 
     return hydrated;
 };
@@ -217,5 +232,6 @@ export const useSaveSlotManager = (ui: ReturnType<typeof useUIState>) => {
         exportSlot,
         importToSlot,
         isLoading,
+        refreshSlots,
     };
 };

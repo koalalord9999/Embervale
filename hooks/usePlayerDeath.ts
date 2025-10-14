@@ -24,7 +24,7 @@ interface PlayerDeathDependencies {
     playerType: PlayerType;
     slotId: number;
     gameState: any;
-    onReturnToMenu: () => void;
+    onReturnToMenu: (currentState?: any) => void;
 }
 
 export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
@@ -51,10 +51,8 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
         if (playerType === PlayerType.Hardcore) {
             addLog("You have fallen in Hardcore mode. Your journey ends here. Your character will be saved as a memorial.");
             const deadState = { ...gameState, isDead: true };
-            await saveSlotState(slotId, deadState);
-            setTimeout(() => {
-                onReturnToMenu();
-            }, 3000);
+            // The onReturnToMenu function will handle the final save and navigation.
+            onReturnToMenu(deadState);
             return;
         }
 

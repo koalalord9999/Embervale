@@ -80,7 +80,6 @@ interface MainViewControllerProps {
     onItemDropped: (item: InventorySlot, overridePoiId?: string) => void;
     isAutoBankOn: boolean;
     handleCombatXpGain: (skill: SkillName, amount: number) => void;
-    immunityTimeLeft: number;
     poiImmunityTimeLeft: number;
     killTrigger: number;
     bankPlaceholders: boolean;
@@ -102,8 +101,8 @@ interface MainViewControllerProps {
 
 const MainViewController: React.FC<MainViewControllerProps> = (props) => {
     const {
-        ui, addLog, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, onWinCombat, onFleeFromCombat, handleDialogueCheck, onResponse, combatSpeedMultiplier, activeCombatStyleHighlight, isTouchSimulationEnabled, showAllPois,
-        groundItemsForCurrentPoi, onPickUpItem, onTakeAllLoot, onItemDropped, isAutoBankOn, handleCombatXpGain, immunityTimeLeft, poiImmunityTimeLeft, killTrigger,
+        ui, addLog, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, onWinCombat, onFleeFromCombat, onResponse, handleDialogueCheck, combatSpeedMultiplier, activeCombatStyleHighlight, isTouchSimulationEnabled, showAllPois,
+        groundItemsForCurrentPoi, onPickUpItem, onTakeAllLoot, onItemDropped, isAutoBankOn, handleCombatXpGain, poiImmunityTimeLeft, killTrigger,
         bankPlaceholders, handleToggleBankPlaceholders, bonfires, onStokeBonfire, isStunned, addBuff, onExportGame, onImportGame, onResetGame,
         itemActions,
         isDevMode,
@@ -124,21 +123,6 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
     }, [addLog, navigation, ui, isStunned]);
 
     const mainContent = (() => {
-        if (ui.isSettingsViewOpen) {
-            return <SettingsView 
-                onClose={() => ui.setIsSettingsViewOpen(false)} 
-                onExportGame={onExportGame}
-                onImportGame={onImportGame}
-                onResetGame={onResetGame}
-                isDevMode={isDevMode}
-                onToggleDevPanel={onToggleDevPanel}
-                isTouchSimulationEnabled={isTouchSimulationEnabled}
-                onToggleTouchSimulation={onToggleTouchSimulation}
-                ui={ui}
-                bankPlaceholders={bankPlaceholders}
-                handleToggleBankPlaceholders={handleToggleBankPlaceholders}
-            />
-        }
         if (ui.activeCraftingAction && ui.activeCraftingAction.recipeType !== 'firemaking-stoke') {
             return <CraftingProgressView
                 action={ui.activeCraftingAction}
@@ -200,6 +184,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
             onDepositEquipment={() => bankLogic.handleDepositEquipment(ui.activeBankTabId)}
             onMoveItem={bankLogic.moveBankItem}
             onAddTab={bankLogic.addTab}
+            // FIX: Corrected property name from onRemoveTab to removeTab to match the hook's return value.
             onRemoveTab={bankLogic.removeTab}
             onMoveItemToTab={bankLogic.moveItemToTab}
             onRenameTab={bankLogic.handleRenameTab}
@@ -264,7 +249,6 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
 
         return (
             <SceneView poi={poi} unlockedPois={navigation.reachablePois} onNavigate={navigation.handleNavigate} inventory={inv.inventory}
-                // FIX: Pass the `onActivity` prop from Game.tsx as `handleActivityClick`
                 onActivity={onActivity}
                 worldActions={worldActions}
                 onStartCombat={(uniqueInstanceId) => { ui.setCombatQueue([uniqueInstanceId]); ui.setIsMandatoryCombat(false); }}
@@ -298,14 +282,9 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
     
     return (
         <>
-            {immunityTimeLeft > 0 && (
+            {poiImmunityTimeLeft > 0 && (
                 <div className="absolute top-2 left-2 bg-blue-900/80 text-blue-200 border border-blue-500 rounded-lg px-3 py-1 text-sm font-semibold animate-pulse z-20">
-                    Death Immunity: {immunityTimeLeft}s
-                </div>
-            )}
-             {poiImmunityTimeLeft > 0 && (
-                <div className="absolute top-2 left-2 bg-green-900/80 text-green-200 border border-green-500 rounded-lg px-3 py-1 text-sm font-semibold animate-pulse z-20">
-                    Room Cleared! Immunity: {poiImmunityTimeLeft}s
+                    Aggression Immunity: {poiImmunityTimeLeft}s
                 </div>
             )}
             {mainContent}
@@ -319,11 +298,11 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                     setTooltip={ui.setTooltip}
                 />
             )}
-            {ui.equipmentStats && (
+            {ui.isEquipmentStatsViewOpen && (
                 <div className="absolute inset-0 bg-black/80 z-30 p-4">
                     <EquipmentStatsView 
-                        equipment={ui.equipmentStats} 
-                        onClose={() => ui.setEquipmentStats(null)}
+                        equipment={inv.equipment} 
+                        onClose={() => ui.setIsEquipmentStatsViewOpen(false)}
                         onUnequip={inv.handleUnequip}
                         setTooltip={ui.setTooltip}
                         ui={ui}

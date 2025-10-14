@@ -274,16 +274,31 @@ export const magusSpirePois: Record<string, POI> = {
                 name: 'Slumped Adventurer',
                 icon: 'https://api.iconify.design/game-icons:dead-head.svg',
                 dialogue: {
-                    start: {
+                    main: {
                         npcName: 'Slumped Adventurer',
                         npcIcon: 'https://api.iconify.design/game-icons:dead-head.svg',
                         text: "The adventurer is slumped against the wall, clearly deceased. Their shield seems to be radiating a faint warmth.",
-                        responses: [
-                            { text: "(Take the Mysterious Shield)", actions: [{ type: 'give_item', itemId: 'fire_resistant_shield', quantity: 1 }] }
+                        responses: [ { text: "Leave them be." } ],
+                        conditionalResponses: [
+                            {
+                                text: "(Take the Mysterious Shield)",
+                                check: {
+                                    requirements: [{ type: 'items', items: [{ itemId: 'fire_resistant_shield', quantity: 0, operator: 'eq' }] }],
+                                    successNode: 'shield_taken',
+                                    failureNode: '' // Unused
+                                },
+                                actions: [{ type: 'give_item', itemId: 'fire_resistant_shield', quantity: 1 }]
+                            }
                         ]
+                    },
+                    shield_taken: {
+                        npcName: 'Slumped Adventurer',
+                        npcIcon: 'https://api.iconify.design/game-icons:dead-head.svg',
+                        text: "You take the shield. It feels surprisingly light. You have already taken what you can.",
+                        responses: []
                     }
                 },
-                startNode: 'start'
+                startNode: 'main'
             }
         ],
         regionId: 'magus_spire',

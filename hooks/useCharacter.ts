@@ -1,5 +1,4 @@
 
-
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { PlayerSkill, SkillName, CombatStance, Spell, WorldState } from '../types';
 import { XP_TABLE } from '../constants';
@@ -167,12 +166,12 @@ export const useCharacter = (
     }, [addLog]);
 
     const addXp = useCallback((skillName: SkillName, amount: number) => {
-      if (amount <= 0) return;
-      const multipliedAmount = amount * xpMultiplier;
-      const roundedAmount = Math.floor(multipliedAmount);
-      if (roundedAmount <= 0) return;
-      
-      onXpGain(skillName, roundedAmount);
+        if (amount <= 0) return;
+        const multipliedAmount = amount * xpMultiplier;
+        const roundedAmount = Math.floor(multipliedAmount);
+        if (roundedAmount <= 0) return;
+
+        onXpGain(skillName, roundedAmount);
         setSkills(prevSkills => {
             const newSkills = [...prevSkills];
             const skillIndex = newSkills.findIndex(s => s.name === skillName);
@@ -182,30 +181,23 @@ export const useCharacter = (
                 const oldLevel = oldSkill.level;
                 const newLevel = getLevelForXp(newXp);
                 
-                if (newLevel >= 99) {
-                     newSkills[skillIndex] = { ...oldSkill, xp: newXp, level: 99 };
-                     if (newLevel > oldLevel) {
-                        addLog(`Congratulations, you just advanced a ${skillName} level! Your ${skillName} level is now ${newLevel}.`);
-                        onLevelUp(skillName, newLevel);
-                        if (skillName === SkillName.Hitpoints) {
-                            setCurrentHp(hp => hp + (newLevel - oldLevel));
-                        }
-                     }
-                     return newSkills;
-                }
+                const finalLevel = Math.min(99, newLevel);
+                newSkills[skillIndex] = { ...oldSkill, xp: newXp, level: finalLevel };
 
-                newSkills[skillIndex] = { ...oldSkill, xp: newXp, level: newLevel };
-                if (newLevel > oldLevel) {
-                    addLog(`Congratulations, you just advanced a ${skillName} level! Your ${skillName} level is now ${newLevel}.`);
-                    onLevelUp(skillName, newLevel);
+                if (finalLevel > oldLevel) {
+                    addLog(`Congratulations, you just advanced a ${skillName} level! Your ${skillName} level is now ${finalLevel}.`);
+                    onLevelUp(skillName, finalLevel);
                     if (skillName === SkillName.Hitpoints) {
-                        setCurrentHp(hp => hp + (newLevel - oldLevel));
+                        setCurrentHp(hp => hp + (finalLevel - oldLevel));
+                    }
+                    if (skillName === SkillName.Magic && finalLevel >= 40 && oldLevel < 40) {
+                        addLog("As your magical power grows, a deep sense of dread washes over you. You feel a subtle, yet profound, disturbance in the world's magical weave.");
                     }
                 }
             }
             return newSkills;
         });
-    }, [addLog, onXpGain, onLevelUp, xpMultiplier]);
+    }, [addLog, onXpGain, onLevelUp, xpMultiplier, setCurrentHp]);
     
     const applyStatModifier = useCallback((skill: SkillName, value: number, totalDuration: number, baseLevelOnConsumption: number) => {
         if (totalDuration <= 0 || value === 0) return;

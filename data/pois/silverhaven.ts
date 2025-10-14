@@ -187,6 +187,7 @@ export const silverhavenPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Archmage Theron',
                 icon: 'https://api.iconify.design/game-icons:wizard-face.svg',
+                startNode: 'theron_default'
             }
         ],
         regionId: 'silverhaven',
@@ -234,7 +235,7 @@ export const silverhavenPois: Record<string, POI> = {
                     start: {
                         npcName: 'Ferryman Silas',
                         npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
-                        text: "Where can I take you today? The Isle of Whispers awaits the brave... or the foolish.",
+                        text: "Ready to leave the isle? Or perhaps venture somewhere new?",
                         responses: [
                             { text: "Take the ferry to the Isle of Whispers. (10 coins)", check: { requirements: [{ type: 'coins', amount: 10 }], successNode: 'travel_whispers_success', failureNode: 'travel_fail' }, actions: [{ type: 'take_coins', amount: 10 }, { type: 'teleport', poiId: 'port_wreckage_docks' }] },
                             { text: "Nowhere for now, thanks." },
@@ -259,6 +260,7 @@ export const silverhavenPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Skyship Captain',
                 icon: '/assets/npcChatHeads/ferryman_silas.png', // Reusing icon for now
+                startNode: 'captain_default',
             }
         ],
         regionId: 'silverhaven',

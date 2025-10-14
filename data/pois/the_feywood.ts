@@ -1,4 +1,3 @@
-
 import { POI, SkillName, ToolType } from '../../types';
 
 export const theFeywoodPois: Record<string, POI> = {
@@ -152,6 +151,7 @@ export const theFeywoodPois: Record<string, POI> = {
                 name: 'Use Resonator',
                 icon: 'https://api.iconify.design/game-icons:orb-wand.svg',
                 questCondition: { questId: 'the_arcane_awakening', stages: [0] },
+                startNode: 'use_resonator_aqua',
             },
         ],
         regionId: 'feywood',

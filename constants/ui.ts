@@ -1,3 +1,4 @@
+
 import { SkillName, Item } from '../types';
 
 export const SKILL_ICONS: Record<SkillName, string> = {
@@ -19,7 +20,20 @@ export const SKILL_ICONS: Record<SkillName, string> = {
     [SkillName.Herblore]: 'https://api.iconify.design/game-icons:apothecary.svg',
     [SkillName.Runecrafting]: 'https://api.iconify.design/game-icons:rune-stone.svg',
     [SkillName.Slayer]: 'https://api.iconify.design/game-icons:blade-bite.svg',
+    [SkillName.Thieving]: 'https://api.iconify.design/game-icons:domino-mask.svg',
+    [SkillName.Agility]: 'https://api.iconify.design/game-icons:sprint.svg',
 };
+
+// FIX: Added SKILL_DISPLAY_ORDER constant for consistent skill display order across components.
+export const SKILL_DISPLAY_ORDER: SkillName[] = [
+    SkillName.Attack, SkillName.Hitpoints, SkillName.Mining,
+    SkillName.Strength, SkillName.Prayer, SkillName.Smithing,
+    SkillName.Defence, SkillName.Crafting, SkillName.Woodcutting,
+    SkillName.Ranged, SkillName.Fletching, SkillName.Firemaking,
+    SkillName.Magic, SkillName.Cooking, SkillName.Fishing,
+    SkillName.Runecrafting, SkillName.Herblore, SkillName.Slayer,
+    SkillName.Thieving, SkillName.Agility,
+];
 
 export const getIconClassName = (item?: Item | null): string => {
     if (!item) return 'item-icon-default';

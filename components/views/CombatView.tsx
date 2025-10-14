@@ -582,7 +582,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                         setCombatStance(CombatStance.Accurate);
                     } else {
                         const equippedStaff = equipment.weapon ? ITEMS[equipment.weapon.itemId] : null;
-                        const providedRune = equippedStaff?.equipment?.providesRune;
+                        const providedRune = equippedStaff?.equipment?.weaponType === WeaponType.Staff ? equippedStaff.equipment.providesRune : null;
                         const runesNeeded = spell.runes.filter((r: { itemId: string; quantity: number }) => r.itemId !== providedRune);
 
                         if (!inv.hasItems(runesNeeded)) {
@@ -705,7 +705,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                         } else {
                             if (combatStance === CombatStance.Accurate) addXp(SkillName.Attack, playerDamage * 4);
                             else if (combatStance === CombatStance.Aggressive) addXp(SkillName.Strength, playerDamage * 4);
-                            else if (combatStance === CombatStance.Defensive) { addXp(SkillName.Attack, playerDamage * 2); addXp(SkillName.Defence, playerDamage * 2); }
+                            else if (combatStance === CombatStance.Defensive) { addXp(SkillName.Defence, playerDamage * 4); }
                         }
                     }
                     addHitSplat(playerDamage > 0 ? playerDamage : 'miss', 'monster');
@@ -897,9 +897,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                 }
                 
                 if (monsterDamage > 0) {
-                    if (combatStance === CombatStance.RangedDefence) { addXp(SkillName.Ranged, monsterDamage * 2); addXp(SkillName.Defence, monsterDamage * 2); } 
-                    else if (combatStance === CombatStance.DefensiveAutocast) { addXp(SkillName.Magic, monsterDamage * 2); addXp(SkillName.Defence, monsterDamage * 2); } 
-                    else if (combatStance !== CombatStance.Defensive) { addXp(SkillName.Defence, monsterDamage * 4); }
+                    addXp(SkillName.Defence, Math.round(monsterDamage * 4));
             
                     const isMeleeAttack = !isDragonfireAttack && (monster.attackStyle === 'stab' || monster.attackStyle === 'slash' || monster.attackStyle === 'crush');
                     const hasSpikedCape = equipment.cape?.itemId === 'spiked_cape';

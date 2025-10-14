@@ -11,6 +11,7 @@ export const crystallineIslesPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Skyship Captain',
                 icon: '/assets/npcChatHeads/ferryman_silas.png',
+                startNode: 'captain_isles_default',
             }
         ],
         regionId: 'crystalline_isles',
@@ -213,6 +214,7 @@ export const crystallineIslesPois: Record<string, POI> = {
                 name: 'Enter the Spire',
                 icon: 'https://api.iconify.design/game-icons:rune-gate.svg',
                 questCondition: { questId: 'the_arcane_awakening', stages: [7] },
+                startNode: 'enter_spire_start',
             }
         ],
         regionId: 'magus_spire',

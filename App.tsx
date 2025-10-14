@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useUIState } from './hooks/useUIState';
 import { useSaveSlotManager } from './hooks/useSaveSlotManager';
@@ -20,6 +19,7 @@ import UsernamePrompt from './components/common/UsernamePrompt';
 import { imagePaths, loadImagesAsBase64 } from './imageLoader';
 import { GAME_VERSION } from './config';
 import { PlayerType, Slot } from './types';
+import { saveSlotState } from './db';
 
 type AppState = 'LOADING_DB' | 'LOADING_ASSETS' | 'SLOT_SELECTION' | 'GAME_MODE_SELECTION' | 'USERNAME_PROMPT' | 'GAME';
 
@@ -34,6 +34,7 @@ const App: React.FC = () => {
         exportSlot,
         importToSlot,
         isLoading: isDbLoading,
+        refreshSlots,
     } = useSaveSlotManager(ui);
     
     const [appState, setAppState] = useState<AppState>('LOADING_DB');
@@ -116,7 +117,12 @@ const App: React.FC = () => {
         setPendingPlayerType(null);
     };
 
-    const handleReturnToMenu = () => {
+    const handleReturnToMenu = async (currentState: any) => {
+        if (activeSlotId !== null && currentState) {
+            await saveSlotState(activeSlotId, currentState);
+            await refreshSlots();
+        }
+        ui.closeAllModals();
         setActiveGameState(null);
         setActiveSlotId(null);
         setAppState('SLOT_SELECTION');
@@ -141,9 +147,11 @@ const App: React.FC = () => {
         if (activeSlotId !== null) {
             ui.setConfirmationPrompt({
                 message: "Are you sure you want to delete this character and start a new game? This is irreversible.",
-                onConfirm: () => {
-                    deleteCharacter(activeSlotId);
-                    handleReturnToMenu();
+                onConfirm: async () => {
+                    await deleteCharacter(activeSlotId);
+                    setActiveGameState(null);
+                    setActiveSlotId(null);
+                    setAppState('SLOT_SELECTION');
                 }
             });
         }
@@ -178,6 +186,7 @@ const App: React.FC = () => {
                             onExport={exportSlot}
                             onImport={(slotId) => { setPendingSlotId(slotId); ui.setIsImportModalOpen(true); }}
                             assets={loadedAssets}
+                            setTooltip={ui.setTooltip}
                         />
                     </div>
                 );

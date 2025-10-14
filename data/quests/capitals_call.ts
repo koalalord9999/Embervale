@@ -43,6 +43,34 @@ export const capitalsCall: Quest = {
         coins: 2500,
     },
     dialogue: {
+        elara_default: {
+            npcName: 'Guard Captain Elara',
+            npcIcon: '/assets/npcChatHeads/guard_captain_elara.png',
+            text: "Keep the roads safe, adventurer. A watchful eye prevents a bandit's blade.",
+            responses: [],
+            conditionalResponses: [
+                {
+                    text: "You mentioned trouble with the bridge?",
+                    check: { requirements: [{ type: 'quest', questId: 'capitals_call', status: 'not_started' }], successNode: 'quest_intro_capitals_call', failureNode: '' }
+                },
+                {
+                    text: "I have news about the bridge.",
+                    check: { requirements: [{ type: 'quest', questId: 'capitals_call', status: 'in_progress', stage: 0 }], successNode: 'in_progress_capitals_call_0', failureNode: '' }
+                },
+                {
+                    text: "I've investigated the bridge wreckage.",
+                    check: { requirements: [{ type: 'quest', questId: 'capitals_call', status: 'in_progress', stage: 1 }], successNode: 'in_progress_capitals_call_1', failureNode: '' }
+                },
+                {
+                    text: "I have the components to repair the bridge.",
+                    check: { requirements: [{ type: 'quest', questId: 'capitals_call', status: 'in_progress', stage: 4 }], successNode: 'in_progress_capitals_call_4', failureNode: '' }
+                },
+                {
+                    text: "It's good to see the bridge is repaired.",
+                    check: { requirements: [{ type: 'quest', questId: 'capitals_call', status: 'completed' }], successNode: 'post_quest_capitals_call', failureNode: '' }
+                }
+            ]
+        },
         quest_intro_capitals_call: {
             npcName: 'Guard Captain Elara',
             npcIcon: '/assets/npcChatHeads/guard_captain_elara.png',
@@ -88,44 +116,12 @@ export const capitalsCall: Quest = {
                 { text: "I'll see what he knows.", actions: [{ type: 'advance_quest', questId: 'capitals_call' }] }
             ]
         },
-        in_progress_capitals_call_2: {
-            npcName: 'Guard Captain Elara',
-            npcIcon: '/assets/npcChatHeads/guard_captain_elara.png',
-            text: "Any news on the insignia? I've been doing some digging myself. The 'Serpent Bandits' are more like ghosts. They strike trade routes, disable infrastructure, but rarely engage in straight fights. They seem more interested in causing chaos than in simple plunder.",
-            responses: [
-                { text: "Where do they come from?", next: 'cc_elara_lore_1' },
-                { text: "I'm focusing on the repairs for now.", next: 'elara_exit_working' },
-            ]
-        },
-        in_progress_capitals_call_3: {
-            npcName: 'Guard Captain Elara',
-            npcIcon: '/assets/npcChatHeads/guard_captain_elara.png',
-            text: "Have you managed to acquire the reinforced cable and supports yet? The whole town is counting on you.",
-            responses: [
-                { text: "Any more information on the Serpent Bandits?", next: 'cc_elara_lore_1' },
-                { text: "I'm still working on it.", next: 'elara_exit_working' },
-            ]
-        },
-        elara_exit_working: {
-            npcName: 'Guard Captain Elara',
-            npcIcon: '/assets/npcChatHeads/guard_captain_elara.png',
-            text: "Understood. The safety of two towns rests on your shoulders. Don't fail us.",
-            responses: []
-        },
-        cc_elara_lore_1: {
-            npcName: 'Guard Captain Elara',
-            npcIcon: '/assets/npcChatHeads/guard_captain_elara.png',
-            text: "No one knows. They leave no tracks. Some of the older folk have superstitions, of course. If you want to hear some stories, try talking to Bronn, the old adventurer who's always warming a stool at The Carved Mug. He's seen more of this world than I have.",
-            responses: [
-                { text: "I'll talk to him. Thanks, Captain." },
-            ]
-        },
         in_progress_capitals_call_4: {
             npcName: 'Guard Captain Elara',
             npcIcon: '/assets/npcChatHeads/guard_captain_elara.png',
             text: "You have them! By the forge, you've done it! With these specialized materials, my engineers can finally repair the bridge properly. You've saved this town from economic collapse. Thank you, adventurer.",
             responses: [
-                { text: "Happy to help restore the trade route.", actions: [{ type: 'give_xp', skill: SkillName.Crafting, amount: 2000 }, { type: 'give_xp', skill: SkillName.Woodcutting, amount: 2000 }, { type: 'give_coins', amount: 2500 }, { type: 'advance_quest', questId: 'capitals_call' }] },
+                { text: "Happy to help restore the trade route.", actions: [{ type: 'take_item', itemId: 'reinforced_bridge_cable', quantity: 1 }, { type: 'take_item', itemId: 'reinforced_bridge_supports', quantity: 1 }, { type: 'advance_quest', questId: 'capitals_call' }] },
             ]
         },
         post_quest_capitals_call: {
@@ -142,7 +138,32 @@ export const capitalsCall: Quest = {
                 { text: "(Take the insignia)", actions: [{ type: 'advance_quest', questId: 'capitals_call' }] }
             ]
         },
-        finn_in_progress_capitals_call_2: {
+        finn_default: {
+            npcName: 'Finn the Rope-maker',
+            npcIcon: '/assets/npcChatHeads/finn_the_rope_maker.png',
+            text: "Need some rope? I make the strongest in the land.",
+            responses: [],
+            conditionalResponses: [
+                {
+                    text: "Captain Elara sent me about the bridge.",
+                    check: { requirements: [{ type: 'quest', questId: 'capitals_call', status: 'in_progress', stage: 2 }], successNode: 'finn_recognizes_insignia', failureNode: '' }
+                },
+                {
+                    text: "I have the Glimmer-thread Fibers you needed.",
+                    check: { requirements: [{ type: 'quest', questId: 'capitals_call', status: 'in_progress', stage: 3 }, { type: 'items', items: [{ itemId: 'glimmer_thread_fiber', quantity: 5 }] }], successNode: 'craft_cable_success', failureNode: 'fibers_fail' },
+                    actions: [{ type: 'take_item', itemId: 'glimmer_thread_fiber', quantity: 5 }, { type: 'give_item', itemId: 'reinforced_bridge_cable', quantity: 1 }]
+                },
+                {
+                    text: "I'm still working on getting those fibers.",
+                    check: { requirements: [{ type: 'quest', questId: 'capitals_call', status: 'in_progress', stage: 3 }, { type: 'items', items: [{ itemId: 'glimmer_thread_fiber', quantity: 5, operator: 'lt' }] }], successNode: 'finn_exit_working', failureNode: '' }
+                },
+                {
+                    text: "It's good to see you again.",
+                    check: { requirements: [{ type: 'quest', questId: 'capitals_call', status: 'completed' }], successNode: 'finn_post_quest_capitals_call', failureNode: '' }
+                }
+            ]
+        },
+        finn_recognizes_insignia: {
             npcName: 'Finn the Rope-maker',
             npcIcon: '/assets/npcChatHeads/finn_the_rope_maker.png',
             text: "An insignia? Let me see... By my grandfather's beard, it's the mark of the Serpent Bandits! A nasty clan known for economic sabotage. They must be behind the bridge collapse!",
@@ -161,18 +182,9 @@ export const capitalsCall: Quest = {
         cc_finn_explain_alaric: {
             npcName: 'Finn the Rope-maker',
             npcIcon: '/assets/npcChatHeads/finn_the_rope_maker.png',
-            text: "The engineers also need new anchor supports. You'll need to speak with Alaric the Woodworker. He's the only one skilled enough to make them. He'll tell you what he needs. His shop is just around the corner in the Artisan's Quarter. Get both components, and we can save this town.",
+            text: "The engineers also need new anchor supports. You'll need to speak with Alaric the Woodworker. He's the only one skilled enough to make them. He's been grumbling about needing 10 Yew Logs to make the supports. His shop is just around the corner in the Artisan's Quarter. Get both components, and we can save this town.",
             responses: [
                 { text: "I'll get the materials.", actions: [{ type: 'advance_quest', questId: 'capitals_call' }] }
-            ]
-        },
-        finn_in_progress_capitals_call_3: {
-            npcName: 'Finn the Rope-maker',
-            npcIcon: '/assets/npcChatHeads/finn_the_rope_maker.png',
-            text: "Have you managed to get those five Glimmer-thread Fibers? The looms are waiting.",
-            responses: [
-                { text: "I have them right here.", check: { requirements: [{ type: 'items', items: [{ itemId: 'glimmer_thread_fiber', quantity: 5 }] }], successNode: 'craft_cable_success', failureNode: 'fibers_fail' }, actions: [{ type: 'take_item', itemId: 'glimmer_thread_fiber', quantity: 5 }, { type: 'give_item', itemId: 'reinforced_bridge_cable', quantity: 1 }] },
-                { text: "Not yet, I'm still working on it.", next: 'finn_exit_working' },
             ]
         },
         craft_cable_success: {
@@ -200,6 +212,22 @@ export const capitalsCall: Quest = {
             npcIcon: '/assets/npcChatHeads/finn_the_rope_maker.png',
             text: "Good to see you again! Thanks to you, my ropes are securing the King's Road once more. A fine day's work!",
             responses: []
+        },
+        alaric_default: {
+            npcName: 'Alaric the Woodworker',
+            npcIcon: '/assets/npcChatHeads/artisan.png',
+            text: "Welcome to my workshop. Finest woods in the land, shaped by a master's hand.",
+            responses: [],
+            conditionalResponses: [
+                {
+                    text: "Finn sent me about the bridge.",
+                    check: { requirements: [{ type: 'quest', questId: 'capitals_call', status: 'in_progress', stage: 3 }], successNode: 'alaric_in_progress_capitals_call_3', failureNode: '' }
+                },
+                {
+                    text: "It's good to see the bridge is repaired.",
+                    check: { requirements: [{ type: 'quest', questId: 'capitals_call', status: 'completed' }], successNode: 'alaric_post_quest_capitals_call', failureNode: '' }
+                }
+            ]
         },
         alaric_in_progress_capitals_call_3: {
             npcName: 'Alaric the Woodworker',

@@ -67,6 +67,7 @@ export const minePois: Record<string, POI> = {
                 name: 'Use Resonator',
                 icon: 'https://api.iconify.design/game-icons:orb-wand.svg',
                 questCondition: { questId: 'the_arcane_awakening', stages: [0] },
+                startNode: 'use_resonator_stone',
             },
         ],
         regionId: 'wilderness',

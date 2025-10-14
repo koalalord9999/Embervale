@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { DialogueAction, DialogueCheckRequirement, WorldState, InventorySlot, BankTab, ActivePanel, POIActivity, DialogueResponse } from '../types';
+import { DialogueAction, DialogueCheckRequirement, WorldState, InventorySlot, BankTab, ActivePanel, POIActivity, DialogueResponse, SkillName } from '../types';
 import { INVENTORY_CAPACITY, QUESTS } from '../constants';
 import { useQuests } from './useQuests';
 import { useQuestLogic } from './useQuestLogic';
@@ -11,6 +11,13 @@ import { useRepeatableQuests } from './useRepeatableQuests';
 import { useUIState } from './useUIState';
 import { POIS } from '../data/pois';
 import { useGameSession } from './useGameSession';
+
+const TANNING_RECIPES: Record<string, { leatherId: string; cost: number; xp: number }> = {
+    'cowhide': { leatherId: 'leather', cost: 5, xp: 2 },
+    'boar_hide': { leatherId: 'boar_leather', cost: 8, xp: 4 },
+    'wolf_pelt': { leatherId: 'wolf_leather', cost: 15, xp: 8 },
+    'bear_pelt': { leatherId: 'bear_leather', cost: 25, xp: 12 },
+};
 
 interface DialogueActionDependencies {
     quests: ReturnType<typeof useQuests>;
@@ -162,6 +169,41 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                     const uniqueId = `${session.currentPoiId}:${action.monsterId}:quest`;
                     ui.setCombatQueue([uniqueId]);
                     ui.setIsMandatoryCombat(true);
+                    break;
+                }
+                case 'tan_all_hides': {
+                    let totalCost = 0;
+                    const hidesToTan: { hideId: string; quantity: number; leatherId: string; xp: number }[] = [];
+
+                    for (const hideId in TANNING_RECIPES) {
+                        const count = inv.inventory.reduce((acc, slot) => 
+                            (slot && slot.itemId === hideId && !slot.noted) ? acc + slot.quantity : acc, 0);
+                        if (count > 0) {
+                            const recipe = TANNING_RECIPES[hideId];
+                            totalCost += count * recipe.cost;
+                            hidesToTan.push({ hideId, quantity: count, ...recipe });
+                        }
+                    }
+                    
+                    if (inv.coins < totalCost) {
+                        // This case is handled by the failureNode in the dialogue, but as a safeguard:
+                        addLog("You can't afford to tan all your hides.");
+                        break;
+                    } 
+
+                    inv.modifyItem('coins', -totalCost, true);
+                    let totalTanned = 0;
+
+                    hidesToTan.forEach(hide => {
+                        inv.modifyItem(hide.hideId, -hide.quantity, true);
+                        inv.modifyItem(hide.leatherId, hide.quantity, false, undefined, { bypassAutoBank: true });
+                        totalTanned += hide.quantity;
+                    });
+
+                    if (totalTanned > 0) {
+                        addLog(`You pay Sven ${totalCost} coins to tan ${totalTanned} hides.`);
+                    }
+                    
                     break;
                 }
             }

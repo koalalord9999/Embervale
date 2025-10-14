@@ -1,7 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import { Slot, PlayerType } from '../../types';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Slot, PlayerType, PlayerSkill, SkillName } from '../../types';
+import { SKILL_ICONS, SKILL_DISPLAY_ORDER, XP_TABLE } from '../../constants';
 import Button from '../common/Button';
 import DeadCharacterView from './DeadCharacterView';
+import { TooltipState } from '../../hooks/useUIState';
 
 interface SaveSlotScreenProps {
     slots: Slot[];
@@ -11,6 +13,7 @@ interface SaveSlotScreenProps {
     onExport: (slotId: number) => void;
     onImport: (slotId: number) => void;
     assets: Record<string, string> | null;
+    setTooltip: (tooltip: TooltipState | null) => void;
 }
 
 const formatDate = (date: Date | string | undefined): string => {
@@ -20,7 +23,69 @@ const formatDate = (date: Date | string | undefined): string => {
     return d.toLocaleString();
 };
 
-const SaveSlotScreen: React.FC<SaveSlotScreenProps> = ({ slots, onSelectSlot, onCreateNew, onDelete, onExport, onImport, assets }) => {
+const SkillDisplay: React.FC<{
+    skillName: SkillName;
+    skills: PlayerSkill[];
+    setTooltip: (tooltip: TooltipState | null) => void;
+}> = ({ skillName, skills, setTooltip }) => {
+    const skill = skills.find(s => s.name === skillName);
+    if (!skill) {
+        return <div className="bg-gray-900/50 p-2 h-10 rounded-md" />;
+    }
+
+    const handleMouseEnter = (e: React.MouseEvent) => {
+        const isMaxLevel = skill.level >= 99;
+        const xpForCurrentLevel = XP_TABLE[skill.level - 1] ?? 0;
+        const xpForNextLevel = isMaxLevel ? skill.xp : (XP_TABLE[skill.level] ?? skill.xp);
+        
+        const xpInLevel = skill.xp - xpForCurrentLevel;
+        const xpToNextLevel = xpForNextLevel - xpForCurrentLevel;
+        const progress = (isMaxLevel || xpToNextLevel <= 0) ? 100 : Math.max(0, (xpInLevel / xpToNextLevel) * 100);
+        const remainingXp = isMaxLevel ? 0 : xpForNextLevel - skill.xp;
+
+        const tooltipContent = (
+            <div className="text-left w-56">
+                <p className="font-bold text-yellow-300">{skill.name}</p>
+                <div className="text-xs mt-1 space-y-0.5 text-gray-300">
+                    <p>Total XP: <span className="font-semibold text-white">{skill.xp.toLocaleString()}</span></p>
+                </div>
+                {!isMaxLevel && (
+                    <>
+                        <div className="w-full h-4 bg-red-600/80 rounded-sm relative mt-2 overflow-hidden border border-black/50">
+                            <div className="absolute left-0 top-0 h-full bg-green-600/80" style={{ width: `${progress}%` }}></div>
+                        </div>
+                        <div className="flex justify-between text-xs font-semibold mt-1">
+                            <span className="text-gray-400">{xpForCurrentLevel.toLocaleString()}</span>
+                            <span className="text-yellow-300">({remainingXp.toLocaleString()} remaining)</span>
+                            <span className="text-gray-400">{xpForNextLevel.toLocaleString()}</span>
+                        </div>
+                    </>
+                )}
+            </div>
+        );
+
+        setTooltip({
+            content: tooltipContent,
+            position: { x: e.clientX, y: e.clientY }
+        });
+    };
+
+    return (
+        <div
+            className="bg-gray-900/50 p-2 h-10 rounded-md flex items-center gap-2 cursor-pointer hover:bg-gray-700/50 transition-colors"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={() => setTooltip(null)}
+        >
+            <img src={SKILL_ICONS[skill.name]} alt={skill.name} className="w-6 h-6 filter invert flex-shrink-0" />
+            <div className="flex-1 text-right leading-none">
+                <span className="text-base font-bold align-super text-white">{skill.level}</span>
+            </div>
+        </div>
+    );
+};
+
+
+const SaveSlotScreen: React.FC<SaveSlotScreenProps> = ({ slots, onSelectSlot, onCreateNew, onDelete, onExport, onImport, assets, setTooltip }) => {
     const [selectedSlotId, setSelectedSlotId] = useState<number>(0);
     const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
     const [confirmDeleteText, setConfirmDeleteText] = useState('');
@@ -42,13 +107,13 @@ const SaveSlotScreen: React.FC<SaveSlotScreenProps> = ({ slots, onSelectSlot, on
     };
 
     return (
-        <div className="w-full h-full p-4 flex items-center justify-center relative">
-            <div className="relative z-10 w-full max-w-6xl h-full max-h-[700px] bg-gray-900/80 border-2 border-gray-700 rounded-lg p-6 flex gap-6">
+        <div className="w-full h-full p-4 flex items-start justify-center relative pt-48 md:pt-56">
+            <div className="relative z-10 w-11/12 max-w-screen-xl rounded-lg flex flex-col md:flex-row gap-6">
                 
                 {/* Left Panel - Slot Details */}
-                <div className="w-2/3 flex flex-col justify-center items-center text-center">
+                <div className="w-full md:w-2/3 flex flex-col justify-center items-center text-center p-6">
                     {isSelectedDead ? (
-                        <DeadCharacterView slot={selectedSlot!} onDelete={() => setConfirmDelete(selectedSlotId)} />
+                        <DeadCharacterView slot={selectedSlot!} onDelete={() => setConfirmDelete(selectedSlotId)} setTooltip={setTooltip} />
                     ) : isSelectedEmpty ? (
                         <div className="space-y-4">
                             <h2 className="text-4xl font-bold text-gray-400">Empty Slot</h2>
@@ -56,28 +121,45 @@ const SaveSlotScreen: React.FC<SaveSlotScreenProps> = ({ slots, onSelectSlot, on
                             <Button onClick={() => onImport(selectedSlotId)} size="md" variant="secondary">Import Save</Button>
                         </div>
                     ) : selectedSlot && selectedSlot.metadata ? (
-                        <div className="animate-fade-in space-y-4">
-                            <h2 className="text-5xl font-bold text-yellow-300">{selectedSlot.metadata.username}</h2>
-                            <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-lg">
-                                <p>Combat Level:</p><p className="font-semibold">{selectedSlot.metadata.combatLevel}</p>
-                                <p>Total Level:</p><p className="font-semibold">{selectedSlot.metadata.totalLevel}</p>
-                                <p>Location:</p><p className="font-semibold">{selectedSlot.metadata.currentPoiName}</p>
-                                <p>Game Mode:</p><p className="font-semibold">{selectedSlot.metadata.playerType}</p>
+                        <div className="animate-fade-in space-y-2 w-full max-w-lg">
+                            
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm my-2 text-left">
+                                <p>Combat Level:</p><p className="font-semibold text-right">{selectedSlot.metadata.combatLevel}</p>
+                                <p>Location:</p><p className="font-semibold text-right">{selectedSlot.metadata.currentPoiName}</p>
+                                <p>Game Mode:</p><p className="font-semibold text-right">{selectedSlot.metadata.playerType}</p>
                             </div>
-                            <Button onClick={() => onSelectSlot(selectedSlotId)} size="md" variant="primary" className="mt-8">Play</Button>
-                             <div className="flex gap-4 justify-center mt-4">
-                                {selectedSlot.metadata.playerType === PlayerType.Cheats && (
-                                    <Button onClick={() => onExport(selectedSlotId)} size="sm" variant="secondary">Export</Button>
+                            
+                            <div className="p-4 bg-black/20 rounded-lg border border-gray-700">
+                                <h3 className="font-bold text-yellow-300 mb-2">Total Level: {selectedSlot.metadata.totalLevel}</h3>
+                                {selectedSlot.data.skills ? (
+                                    <div className="grid grid-cols-4 gap-1">
+                                        {SKILL_DISPLAY_ORDER.map(skillName => (
+                                            <SkillDisplay key={skillName} skillName={skillName} skills={selectedSlot.data.skills} setTooltip={setTooltip} />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-gray-500">Skill data not available.</p>
                                 )}
-                                <Button onClick={() => onImport(selectedSlotId)} size="sm" variant="secondary">Import</Button>
-                                <Button onClick={() => setConfirmDelete(selectedSlotId)} size="sm" variant="secondary">Delete</Button>
+                            </div>
+                            
+                            <div className="pt-2 flex flex-col items-center gap-2">
+                                <Button onClick={() => onSelectSlot(selectedSlotId)} size="md" variant="primary">Play</Button>
+                                <div className="flex gap-4 justify-center">
+                                    {selectedSlot.metadata.playerType === PlayerType.Cheats && (
+                                        <Button onClick={() => onExport(selectedSlotId)} size="sm" variant="secondary">Export</Button>
+                                    )}
+                                    {selectedSlot.metadata.playerType === PlayerType.Cheats && (
+                                        <Button onClick={() => onImport(selectedSlotId)} size="sm" variant="secondary">Import</Button>
+                                    )}
+                                    <Button onClick={() => setConfirmDelete(selectedSlotId)} size="sm" variant="secondary">Delete</Button>
+                                </div>
                             </div>
                         </div>
                     ) : <div className="text-gray-400">Loading slot...</div>}
                 </div>
 
                 {/* Right Panel - Slot List */}
-                <div className="w-1/3 flex flex-col gap-3 overflow-y-auto pr-2">
+                <div className="w-full md:w-1/3 flex flex-col gap-3 overflow-y-auto px-4">
                     <h3 className="text-2xl font-bold text-yellow-400 text-center mb-2">Save Slots</h3>
                     {slots.map(slot => {
                         const isSelected = slot.slotId === selectedSlotId;

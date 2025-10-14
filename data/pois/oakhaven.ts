@@ -24,6 +24,7 @@ export const oakhavenPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Guard Captain Elara',
                 icon: '/assets/npcChatHeads/guard_captain_elara.png',
+                startNode: 'elara_default',
             },
         ],
         regionId: 'wilderness',
@@ -94,6 +95,7 @@ export const oakhavenPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Finn the Rope-maker',
                 icon: '/assets/npcChatHeads/finn_the_rope_maker.png',
+                startNode: 'finn_default',
             }
         ],
         regionId: 'oakhaven',
@@ -173,50 +175,6 @@ export const oakhavenPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Tanner Sven',
                 icon: '/assets/npcChatHeads/tanner_sven.png',
-                dialogue: {
-                    start: {
-                        npcName: 'Tanner Sven',
-                        npcIcon: '/assets/npcChatHeads/tanner_sven.png',
-                        text: "Need some hides tanned? You've come to the right place. What have you got for me?",
-                        responses: [
-                            { text: "Tan Cowhide (5 coins)", check: { requirements: [{ type: 'items', items: [{ itemId: 'cowhide', quantity: 1 }] }, { type: 'coins', amount: 5 }], successNode: 'tan_cowhide_success', failureNode: 'tan_fail' }, actions: [{ type: 'take_item', itemId: 'cowhide', quantity: 1 }, { type: 'take_coins', amount: 5 }, { type: 'give_item', itemId: 'leather', quantity: 1 }, { type: 'give_xp', skill: SkillName.Crafting, amount: 2 }] },
-                            { text: "Tan Boar Hide (8 coins)", check: { requirements: [{ type: 'items', items: [{ itemId: 'boar_hide', quantity: 1 }] }, { type: 'coins', amount: 8 }], successNode: 'tan_boar_hide_success', failureNode: 'tan_fail' }, actions: [{ type: 'take_item', itemId: 'boar_hide', quantity: 1 }, { type: 'take_coins', amount: 8 }, { type: 'give_item', itemId: 'boar_leather', quantity: 1 }, { type: 'give_xp', skill: SkillName.Crafting, amount: 4 }] },
-                            { text: "Tan Wolf Pelt (15 coins)", check: { requirements: [{ type: 'items', items: [{ itemId: 'wolf_pelt', quantity: 1 }] }, { type: 'coins', amount: 15 }], successNode: 'tan_wolf_pelt_success', failureNode: 'tan_fail' }, actions: [{ type: 'take_item', itemId: 'wolf_pelt', quantity: 1 }, { type: 'take_coins', amount: 15 }, { type: 'give_item', itemId: 'wolf_leather', quantity: 1 }, { type: 'give_xp', skill: SkillName.Crafting, amount: 8 }] },
-                            { text: "Tan Bear Pelt (25 coins)", check: { requirements: [{ type: 'items', items: [{ itemId: 'bear_pelt', quantity: 1 }] }, { type: 'coins', amount: 25 }], successNode: 'tan_bear_pelt_success', failureNode: 'tan_fail' }, actions: [{ type: 'take_item', itemId: 'bear_pelt', quantity: 1 }, { type: 'take_coins', amount: 25 }, { type: 'give_item', itemId: 'bear_leather', quantity: 1 }, { type: 'give_xp', skill: SkillName.Crafting, amount: 12 }] },
-                            { text: "Just looking, thanks." },
-                        ],
-                    },
-                    tan_cowhide_success: {
-                        npcName: 'Tanner Sven',
-                        npcIcon: '/assets/npcChatHeads/tanner_sven.png',
-                        text: "Here is your finished leather.",
-                        responses: []
-                    },
-                    tan_boar_hide_success: {
-                        npcName: 'Tanner Sven',
-                        npcIcon: '/assets/npcChatHeads/tanner_sven.png',
-                        text: "Here is your finished leather.",
-                        responses: []
-                    },
-                    tan_wolf_pelt_success: {
-                        npcName: 'Tanner Sven',
-                        npcIcon: '/assets/npcChatHeads/tanner_sven.png',
-                        text: "Here is your finished leather.",
-                        responses: []
-                    },
-                    tan_bear_pelt_success: {
-                        npcName: 'Tanner Sven',
-                        npcIcon: '/assets/npcChatHeads/tanner_sven.png',
-                        text: "Here is your finished leather.",
-                        responses: []
-                    },
-                    tan_fail: {
-                        npcName: 'Tanner Sven',
-                        npcIcon: '/assets/npcChatHeads/tanner_sven.png',
-                        text: "You don't seem to have what's needed for that. Come back when you do.",
-                        responses: []
-                    }
-                },
                 startNode: 'start',
             }
         ],
@@ -234,6 +192,7 @@ export const oakhavenPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Alaric the Woodworker',
                 icon: '/assets/npcChatHeads/artisan.png',
+                startNode: 'alaric_default',
             }
         ],
         regionId: 'oakhaven',
