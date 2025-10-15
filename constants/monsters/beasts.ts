@@ -24,6 +24,19 @@ export const beasts: Monster[] = [
         types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 20000, aggressive: false, attackStyle: 'stab',
     },
     {
+        id: 'tavern_rat', name: 'Giant Rat', level: 5, maxHp: 7, attack: 3,
+        stabDefence: 4, slashDefence: 2, crushDefence: 3, rangedDefence: 1, magicDefence: -10,
+        iconUrl: 'https://api.iconify.design/game-icons:rat.svg',
+        guaranteedDrops: [
+            { itemId: 'rat_tail', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'bones', minQuantity: 1, maxQuantity: 1 },
+        ],
+        mainDrops: [
+            { itemId: 'binding_rune', chance: "1/2", minQuantity: 1, maxQuantity: 2 },
+        ],
+        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 20000, aggressive: true, alwaysAggressive: true, attackStyle: 'stab',
+    },
+    {
         id: 'giant_spider', name: 'Giant Spider', level: 7, maxHp: 15, attack: 3,
         stabDefence: 2, slashDefence: 2, crushDefence: 2, rangedDefence: 4, magicDefence: 0,
         iconUrl: 'https://api.iconify.design/game-icons:spider-face.svg',

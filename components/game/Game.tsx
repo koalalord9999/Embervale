@@ -142,6 +142,28 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
     }, [quests.playerQuests, questLogic]);
     
     const repeatableQuests = useRepeatableQuests(initialState.repeatableQuestsState, addLog, inv, char, onQuestAcceptedCallback);
+    
+    const poi = useMemo(() => {
+        const basePoi = POIS[session.currentPoiId];
+        if (!basePoi) return null;
+    
+        if (repeatableQuests.activePlayerQuest && repeatableQuests.activePlayerQuest.generatedQuest.isInstance && repeatableQuests.activePlayerQuest.generatedQuest.instancePoiId === session.currentPoiId) {
+            const quest = repeatableQuests.activePlayerQuest.generatedQuest;
+            const newActivities: POIActivity[] = [...basePoi.activities];
+            
+            if (quest.type === 'kill' && quest.target.monsterId) {
+                const remainingToKill = quest.requiredQuantity - repeatableQuests.activePlayerQuest.progress;
+                
+                for (let i = 0; i < remainingToKill; i++) {
+                    newActivities.push({ type: 'combat', monsterId: quest.target.monsterId });
+                }
+            }
+            return { ...basePoi, activities: newActivities };
+        }
+    
+        return basePoi;
+    }, [session.currentPoiId, repeatableQuests.activePlayerQuest]);
+    
     const skilling = useSkilling(initialState.resourceNodeStates, { addLog, skills: char.skills, addXp: char.addXp, inventory: inv.inventory, modifyItem: inv.modifyItem, equipment: inv.equipment, setEquipment: inv.setEquipment, checkQuestProgressOnShear: questLogic.checkQuestProgressOnShear, hasItems: inv.hasItems });
     const shops = useShops(initialState.shopStates, inv.coins, inv.modifyItem, addLog, inv.inventory);
     const slayer = useSlayer(initialState.slayerTask, { addLog, addXp: char.addXp, combatLevel: char.combatLevel, modifyItem: inv.modifyItem });
@@ -297,7 +319,23 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
     }, [ui]);
     const isInCombat = ui.combatQueue.length > 0;
 
-    useAggression(session.currentPoiId, true, isBusy, isInCombat, char.combatLevel, startCombat, addLog, monsterRespawnTimers, devMode.configAggroIds, devMode.isPlayerInvisible, false, inv.equipment, inv.setEquipment, worldState, repeatableQuests.activePlayerQuest);
+    useAggression(
+        poi,
+        true, // isGameLoaded
+        isBusy,
+        isInCombat,
+        char.combatLevel,
+        startCombat,
+        addLog,
+        monsterRespawnTimers,
+        devMode.configAggroIds,
+        devMode.isPlayerInvisible,
+        false, // isPlayerImmune
+        inv.equipment,
+        inv.setEquipment,
+        worldState,
+        repeatableQuests.activePlayerQuest
+    );
     
     useEffect(() => { questLogic.checkGatherQuests(); }, [inv.inventory, questLogic]);
 
@@ -453,6 +491,24 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
             addLog(`You are immune to monster aggression in this area for 30 seconds.`);
         }
     }, [session.currentPoiId, worldState.deathMarker, addLog, setWorldState]);
+
+    useEffect(() => {
+        const quest = repeatableQuests.activePlayerQuest;
+        if (quest && quest.generatedQuest.id === 'kill_rats_meadowdale' && quest.progress >= quest.generatedQuest.requiredQuantity) {
+            if (session.currentPoiId === 'tavern_cellar') {
+                // Turn in the quest automatically
+                repeatableQuests.handleTurnInRepeatableQuest();
+
+                addLog("You've cleared the cellar! You are automatically moved back upstairs.");
+                
+                const cellarItems = allGroundItems['tavern_cellar'] || [];
+                cellarItems.forEach(item => onItemDropped(item.item, 'the_rusty_flagon'));
+                clearAllItemsAtPoi('tavern_cellar');
+
+                navigation.handleForcedNavigate('the_rusty_flagon');
+            }
+        }
+    }, [repeatableQuests.activePlayerQuest, session.currentPoiId, repeatableQuests, addLog, allGroundItems, onItemDropped, clearAllItemsAtPoi, navigation]);
     
     // Dev Handlers
     const handleHealPlayer = () => char.setCurrentHp(char.maxHp);
@@ -517,8 +573,7 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
         <>
             <div className="w-full md:w-4/5 flex flex-col gap-2 relative">
                 <div className="bg-black/70 border-2 border-gray-600 rounded-lg p-4 flex-grow min-h-0 relative overflow-y-auto md:overflow-visible">
-                    {/* FIX: Changed onEncounterWin to onEncounterWin: handleEncounterWin to fix shorthand property error. */}
-                    <MainViewController {...{itemActions, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, onWinCombat, onFleeFromCombat, onResponse, handleDialogueCheck, combatSpeedMultiplier: devMode.combatSpeedMultiplier, activeCombatStyleHighlight: null, isTouchSimulationEnabled: devMode.isTouchSimulationEnabled, isMapManagerEnabled: false, poiCoordinates: undefined, regionCoordinates: undefined, onUpdatePoiCoordinate: undefined, poiConnections: undefined, onUpdatePoiConnections: undefined, addLog, ui, initialState, showAllPois: devMode.showAllPois, groundItemsForCurrentPoi, onPickUpItem: handlePickUpItem, onTakeAllLoot: handleTakeAllLoot, onItemDropped, isAutoBankOn: devMode.isAutoBankOn, handleCombatXpGain: char.addXp, poiImmunityTimeLeft, killTrigger, bankPlaceholders: worldState.bankPlaceholders ?? false, handleToggleBankPlaceholders, bonfires: bonfires.filter(b => b.uniqueId.startsWith(session.currentPoiId)), onStokeBonfire: crafting.handleStokeBonfire, isStunned: char.isStunned, addBuff: char.addBuff, isDevMode: devMode.isDevMode, onToggleDevPanel: () => ui.setIsDevPanelOpen(true), onToggleTouchSimulation: devMode.onToggleTouchSimulation, onDepositEquipment: () => bankLogic.handleDepositEquipment(ui.activeBankTabId), deathMarker: worldState.deathMarker, activeRepeatableQuest: repeatableQuests.activePlayerQuest, onActivity: handleActivityClickWrapper, onEncounterWin: handleEncounterWin, onResetGame, onImportGame, onExportGame, isOneClickMode: ui.isOneClickMode }} />
+                    <MainViewController {...{itemActions, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, onWinCombat, onFleeFromCombat, onResponse, handleDialogueCheck, combatSpeedMultiplier: devMode.combatSpeedMultiplier, activeCombatStyleHighlight: null, isTouchSimulationEnabled: devMode.isTouchSimulationEnabled, isMapManagerEnabled: false, poiCoordinates: undefined, regionCoordinates: undefined, onUpdatePoiCoordinate: undefined, poiConnections: undefined, onUpdatePoiConnections: undefined, addLog, ui, initialState, showAllPois: devMode.showAllPois, groundItemsForCurrentPoi, onPickUpItem: handlePickUpItem, onTakeAllLoot: handleTakeAllLoot, onItemDropped, isAutoBankOn: devMode.isAutoBankOn, handleCombatXpGain: char.addXp, poiImmunityTimeLeft, killTrigger, bankPlaceholders: worldState.bankPlaceholders ?? false, handleToggleBankPlaceholders, bonfires: bonfires.filter(b => b.uniqueId.startsWith(session.currentPoiId)), onStokeBonfire: crafting.handleStokeBonfire, isStunned: char.isStunned, addBuff: char.addBuff, isDevMode: devMode.isDevMode, onToggleDevPanel: () => ui.setIsDevPanelOpen(true), onToggleTouchSimulation: devMode.onToggleTouchSimulation, onDepositEquipment: () => bankLogic.handleDepositEquipment(ui.activeBankTabId), deathMarker: worldState.deathMarker, activeRepeatableQuest: repeatableQuests.activePlayerQuest, onActivity: handleActivityClickWrapper, onEncounterWin: handleEncounterWin, onResetGame, onImportGame, onExportGame, isOneClickMode: ui.isOneClickMode, poi }} />
                     {levelUpInfo && <LevelUpAnimation skill={levelUpInfo.skill} level={levelUpInfo.level} />}
                     {groundItemsForCurrentPoi.length > 0 && (
                         <button

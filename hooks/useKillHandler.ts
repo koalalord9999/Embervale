@@ -49,6 +49,8 @@ export const useKillHandler = (deps: KillHandlerDependencies) => {
 
         addLog(`You have cleared the area!`);
 
+        const isInstanceQuestLocation = repeatableQuests.activePlayerQuest?.generatedQuest.isInstance && repeatableQuests.activePlayerQuest?.generatedQuest.instancePoiId === poiId;
+
         // Set respawn timers for all defeated monsters simultaneously
         const now = Date.now();
         const newTimers: Record<string, number> = {};
@@ -57,6 +59,11 @@ export const useKillHandler = (deps: KillHandlerDependencies) => {
             const instanceType = uniqueInstanceId.split(':')[2];
             const monsterData = MONSTERS[monsterId];
             
+            // Do not set a respawn timer for instanced repeatable quest monsters.
+            if (isInstanceQuestLocation) {
+                return;
+            }
+
             // Do not set a respawn timer for one-off quest monsters.
             if (instanceType !== 'quest' && monsterData && monsterData.respawnTime) {
                 const respawnTimestamp = isInstantRespawnOn ? now : now + monsterData.respawnTime;
@@ -65,7 +72,7 @@ export const useKillHandler = (deps: KillHandlerDependencies) => {
         });
         setMonsterRespawnTimers(prev => ({ ...prev, ...newTimers }));
 
-    }, [isInstantRespawnOn, setMonsterRespawnTimers, addLog]);
+    }, [isInstantRespawnOn, setMonsterRespawnTimers, addLog, repeatableQuests]);
 
     return { handleKill, handleEncounterWin };
 }

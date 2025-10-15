@@ -410,22 +410,21 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
 
     const getActivityButton = (activity: POIActivity, index: number) => {
         if ((activity.type === 'npc' || activity.type === 'skilling' || activity.type === 'runecrafting_altar' || activity.type === 'ladder') && activity.questCondition) {
-            const playerQuest = playerQuests.find(q => q.questId === activity.questCondition!.questId);
-            const stages = activity.questCondition!.stages;
-            const visibleAfter = activity.questCondition!.visibleAfterCompletion ?? false;
+            const questCond = activity.questCondition;
+            const isRepeatableQuestActive = activeRepeatableQuest?.questId === questCond.questId;
     
-            if (!playerQuest) {
-                return null; // Quest not started, hide activity
+            const mainQuest = playerQuests.find(q => q.questId === questCond.questId);
+            let isMainQuestVisible = false;
+            if (mainQuest) {
+                if (mainQuest.isComplete) {
+                    isMainQuestVisible = !!questCond.visibleAfterCompletion;
+                } else {
+                    isMainQuestVisible = questCond.stages.includes(mainQuest.currentStage);
+                }
             }
     
-            if (playerQuest.isComplete) {
-                if (!visibleAfter) {
-                    return null; // Hide if quest is complete and not set to be visible after
-                }
-            } else { // Quest is in progress
-                if (!stages.includes(playerQuest.currentStage)) {
-                    return null; // Hide if not in one of the specified stages
-                }
+            if (!isRepeatableQuestActive && !isMainQuestVisible) {
+                return null;
             }
         }
 

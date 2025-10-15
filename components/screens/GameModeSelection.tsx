@@ -17,8 +17,8 @@ const GameModeSelection: React.FC<GameModeSelectionProps> = ({ onSelect, onCance
     ];
 
     return (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[90] animate-fade-in">
-            <div className="bg-gray-800 border-2 border-gray-600 rounded-lg shadow-xl p-6 w-full max-w-4xl">
+        <div className="fixed inset-0 bg-black/60 z-[90] animate-fade-in overflow-y-auto md:flex md:items-center md:justify-center">
+            <div className="bg-gray-800 p-6 w-full max-w-4xl min-h-full md:min-h-0 md:h-auto md:border-2 md:border-gray-600 md:rounded-lg md:shadow-xl">
                 <h2 className="text-3xl font-bold text-yellow-400 mb-6 text-center">Choose Your Game Mode</h2>
                 <div className="grid md:grid-cols-3 gap-6">
                     {modes.map(mode => (

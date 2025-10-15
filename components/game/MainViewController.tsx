@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useUIState } from '../../hooks/useUIState';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useInventory } from '../../hooks/useInventory';
@@ -122,6 +122,27 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
         ui.closeAllModals(); // This will close the teleport modal
     }, [addLog, navigation, ui, isStunned]);
 
+    const poi = useMemo(() => {
+        const basePoi = POIS[session.currentPoiId];
+        if (!basePoi) return null;
+    
+        if (activeRepeatableQuest && activeRepeatableQuest.generatedQuest.isInstance && activeRepeatableQuest.generatedQuest.instancePoiId === session.currentPoiId) {
+            const quest = activeRepeatableQuest.generatedQuest;
+            const newActivities: POIActivity[] = [...basePoi.activities];
+            
+            if (quest.type === 'kill' && quest.target.monsterId) {
+                const remainingToKill = quest.requiredQuantity - activeRepeatableQuest.progress;
+                
+                for (let i = 0; i < remainingToKill; i++) {
+                    newActivities.push({ type: 'combat', monsterId: quest.target.monsterId });
+                }
+            }
+            return { ...basePoi, activities: newActivities };
+        }
+    
+        return basePoi;
+    }, [session.currentPoiId, activeRepeatableQuest]);
+
     const mainContent = (() => {
         if (ui.activeCraftingAction && ui.activeCraftingAction.recipeType !== 'firemaking-stoke') {
             return <CraftingProgressView
@@ -239,7 +260,6 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
             onOpenTeleportModal={() => ui.setActiveTeleportBoardId(ui.activeQuestBoardId!)}
          />
         
-        const poi = POIS[session.currentPoiId];
         if (!poi) {
             console.error(`Error: Could not find POI with id "${session.currentPoiId}". Defaulting to start location.`);
             addLog(`Error: Location "${session.currentPoiId}" not found. Returning to Meadowdale.`);

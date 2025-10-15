@@ -107,7 +107,7 @@ const SaveSlotScreen: React.FC<SaveSlotScreenProps> = ({ slots, onSelectSlot, on
     };
 
     return (
-        <div className="w-full h-full p-4 flex items-start justify-center relative pt-48 md:pt-56">
+        <div className="w-full h-full p-4 flex items-start justify-center relative pt-24 md:pt-48">
             <div className="relative z-10 w-11/12 max-w-screen-xl rounded-lg flex flex-col md:flex-row gap-6">
                 
                 {/* Left Panel - Slot Details */}
@@ -159,7 +159,7 @@ const SaveSlotScreen: React.FC<SaveSlotScreenProps> = ({ slots, onSelectSlot, on
                 </div>
 
                 {/* Right Panel - Slot List */}
-                <div className="w-full md:w-1/3 flex flex-col gap-3 overflow-y-auto px-4">
+                <div className="w-full md:w-1/3 flex flex-col gap-3 px-4">
                     <h3 className="text-2xl font-bold text-yellow-400 text-center mb-2">Save Slots</h3>
                     {slots.map(slot => {
                         const isSelected = slot.slotId === selectedSlotId;

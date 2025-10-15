@@ -111,18 +111,22 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
     };
 
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
-        const event = 'touches' in e ? e.touches[0] : e;
-        if (!slot) return;
+        let eventForMenu: React.MouseEvent | React.Touch;
+        if ('changedTouches' in e) {
+            eventForMenu = e.changedTouches[0];
+        } else if ('touches' in e) {
+            eventForMenu = e.touches[0];
+        } else {
+            eventForMenu = e as React.MouseEvent;
+        }
+
+        if (!eventForMenu || !slot) return;
         const item = ITEMS[slot.itemId];
         if (!item) return;
 
         const options: ContextMenuOption[] = [];
         
-        const performActionAndClose = (action: () => void) => {
-            action();
-            setTooltip(null);
-            setContextMenu(null);
-        };
+        const performActionAndClose = (action: () => void) => { action(); setTooltip(null); setContextMenu(null); };
         
         if (isBankOpen) {
             let totalQuantity = 0;
@@ -157,7 +161,7 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
         } else if (isShopOpen) {
             if (item.value === 0) {
                 options.push({ label: 'Examine', onClick: () => onExamine(item) });
-                setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
+                setContextMenu({ options, event: eventForMenu, isTouchInteraction: isTouchDevice });
                 return;
             }
             
@@ -207,7 +211,7 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
         }
 
         options.push({ label: 'Examine', onClick: () => onExamine(item) });
-        setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
+        setContextMenu({ options, event: eventForMenu, isTouchInteraction: isTouchDevice });
     };
 
     const handleSingleTap = (e: React.MouseEvent | React.TouchEvent) => {
@@ -295,14 +299,21 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
         setTooltip(null);
         onExamine(item);
     };
-    
-    // FIX: Pass handleDoubleTap function to onDoubleTap property
-    const doubleTapHandlers = useDoubleTap({ onSingleTap: handleSingleTap, onDoubleTap: handleDoubleTap });
-    const longPressHandlers = useLongPress({ onLongPress: handleLongPress, onClick: doubleTapHandlers.onClick });
-    
-    const combinedHandlers = isOneClickMode && isTouchDevice
-        ? { onContextMenu: handleLongPress, onClick: (e: any) => e.preventDefault(), onTouchEnd: (e: React.TouchEvent) => { e.preventDefault(); handleLongPress(e); } }
-        : { ...longPressHandlers, onTouchEnd: doubleTapHandlers.onTouchEnd };
+
+    const doubleTapHandlers = useDoubleTap({ 
+        onSingleTap: handleSingleTap, 
+        onDoubleTap: handleDoubleTap 
+    });
+
+    const longPressHandlers = useLongPress({
+        onLongPress: handleLongPress,
+        onClick: doubleTapHandlers.onClick,
+    });
+
+    const combinedHandlers = { 
+        ...longPressHandlers, 
+        onTouchEnd: doubleTapHandlers.onTouchEnd 
+    };
 
     const handleDragStart = (e: React.DragEvent, index: number) => {
         if (isBusy || itemToUse) { e.preventDefault(); return; }

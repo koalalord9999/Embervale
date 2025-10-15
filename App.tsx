@@ -177,7 +177,7 @@ const App: React.FC = () => {
         switch (appState) {
             case 'SLOT_SELECTION':
                 return (
-                    <div className="w-full h-full game-container bg-cover bg-top bg-no-repeat md:bg-[length:100%_100%]" style={gameContainerStyle}>
+                    <div className="w-full h-full game-container bg-cover bg-top bg-no-repeat md:bg-[length:100%_100%] overflow-y-auto md:overflow-hidden" style={gameContainerStyle}>
                         <SaveSlotScreen 
                             slots={slots as Slot[]}
                             onSelectSlot={handleSelectSlot}

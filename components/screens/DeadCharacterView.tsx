@@ -78,7 +78,7 @@ const DeadCharacterView: React.FC<DeadCharacterViewProps> = ({ slot, onDelete, s
     if (!metadata) return null;
 
     return (
-        <div className="animate-fade-in h-full w-full flex flex-col items-center text-center p-4 bg-black/50 border-2 border-red-700 rounded-lg overflow-y-auto">
+        <div className="animate-fade-in w-full max-w-2xl flex flex-col items-center text-center p-4 bg-black/50 border-2 border-red-700 rounded-lg overflow-y-auto max-h-[75vh]">
             <img src="https://api.iconify.design/game-icons:tombstone.svg" alt="Tombstone" className="w-16 h-16 filter invert opacity-50 mb-2" />
             <h2 className="text-3xl font-bold text-red-400">Here Lies</h2>
             <h3 className="text-4xl font-bold text-gray-200 mt-1">{metadata.username}</h3>
