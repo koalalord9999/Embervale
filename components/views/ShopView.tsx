@@ -46,11 +46,11 @@ const ShopSlot: React.FC<{
     slot: InventorySlot;
     price: number;
     stock?: number;
-    onBuyOne: () => void;
     onContextMenu: (e: React.MouseEvent | React.TouchEvent) => void;
     setTooltip: (tooltip: TooltipState | null) => void;
     isOneClickMode: boolean;
-}> = ({ slot, price, stock, onBuyOne, onContextMenu, setTooltip, isOneClickMode }) => {
+    addLog: (message: string) => void;
+}> = ({ slot, price, stock, onContextMenu, setTooltip, isOneClickMode, addLog }) => {
     const item = ITEMS[slot.itemId];
     if (!item) {
         return <div className="w-full aspect-square bg-gray-900 border border-gray-700 rounded-md" />;
@@ -61,7 +61,7 @@ const ShopSlot: React.FC<{
             onContextMenu(e);
             return;
         }
-        onBuyOne();
+        addLog(`[${getDisplayName(slot)}] Buy Price: ${price} coins.`);
     };
 
     const combinedHandlers = useLongPress({
@@ -171,10 +171,10 @@ const ShopView: React.FC<ShopViewProps> = ({ shopId, playerCoins, shopStates, on
                                     slot={{ itemId, quantity: 1, doses: item.initialDoses }}
                                     price={buyPrice}
                                     stock={itemState?.currentStock}
-                                    onBuyOne={() => performActionAndCloseTooltip(() => onBuy(shopId, itemId, 1))}
                                     onContextMenu={(e) => createBuyContextMenu(e, itemId)}
                                     setTooltip={setTooltip}
                                     isOneClickMode={isOneClickMode}
+                                    addLog={addLog}
                                 />
                             );
                         })}

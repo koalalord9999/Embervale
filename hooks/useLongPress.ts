@@ -7,6 +7,17 @@ interface LongPressOptions {
 }
 
 export const useLongPress = ({ onLongPress, onClick, delay = 400 }: LongPressOptions) => {
+    const onLongPressRef = useRef(onLongPress);
+    const onClickRef = useRef(onClick);
+
+    useEffect(() => {
+        onLongPressRef.current = onLongPress;
+    }, [onLongPress]);
+
+    useEffect(() => {
+        onClickRef.current = onClick;
+    }, [onClick]);
+
     const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isLongPressFired = useRef(false);
     const isDrag = useRef(false);
@@ -23,14 +34,14 @@ export const useLongPress = ({ onLongPress, onClick, delay = 400 }: LongPressOpt
     }, []);
 
     const handlePressStart = useCallback((event: React.MouseEvent | React.TouchEvent) => {
+        // Prevent right-click from starting the long-press timer
         if ('button' in event && event.button !== 0) return;
 
-        cleanup(); // Cleanup any previous state on new press
+        cleanup();
 
         const point = 'touches' in event ? event.touches[0] : event;
         pressStartPos.current = { x: point.clientX, y: point.clientY };
         
-        // React reuses event objects, so we need to capture the properties we need.
         const eventForTimeout = {
             ...('touches' in event ? { clientX: point.clientX, clientY: point.clientY } : event),
             target: event.target,
@@ -40,28 +51,33 @@ export const useLongPress = ({ onLongPress, onClick, delay = 400 }: LongPressOpt
         timeout.current = setTimeout(() => {
             if (!isDrag.current) {
                 isLongPressFired.current = true;
-                onLongPress(eventForTimeout as any);
+                onLongPressRef.current(eventForTimeout as any);
             }
         }, delay);
-    }, [onLongPress, delay, cleanup]);
+    }, [delay, cleanup]);
 
     const handlePressEnd = useCallback((event: React.MouseEvent | React.TouchEvent) => {
-        // Prevent emulated mouse events on touch devices, which is critical for preventing ghost clicks.
+        // Prevent emulated mouse events on touch devices (ghost clicks)
         if (event.type === 'touchend') {
             event.preventDefault();
+        }
+
+        // Prevent right-click mouseup from triggering single-tap
+        if ('button' in event && event.button !== 0) {
+            cleanup();
+            return;
         }
 
         if (timeout.current) {
             clearTimeout(timeout.current);
         }
         
-        // This is a single tap if long press hasn't fired and it wasn't a drag
         if (!isLongPressFired.current && !isDrag.current) {
-            onClick?.(event);
+            onClickRef.current?.(event);
         }
 
         cleanup();
-    }, [onClick, cleanup]);
+    }, [cleanup]);
     
     useEffect(() => {
         const handleMove = (e: MouseEvent | TouchEvent) => {
@@ -84,8 +100,9 @@ export const useLongPress = ({ onLongPress, onClick, delay = 400 }: LongPressOpt
         return () => {
             window.removeEventListener('mousemove', handleMove);
             window.removeEventListener('touchmove', handleMove);
+            cleanup(); // Ensure cleanup happens on unmount
         };
-    }, []);
+    }, [cleanup]);
 
     return {
         onMouseDown: handlePressStart,
@@ -94,7 +111,10 @@ export const useLongPress = ({ onLongPress, onClick, delay = 400 }: LongPressOpt
         onTouchEnd: handlePressEnd,
         onContextMenu: (e: React.MouseEvent) => {
             e.preventDefault();
-            onLongPress(e);
+            // Clear any pending long-press timer since context menu is an immediate action
+            cleanup();
+            // Fire the long press action immediately for right-click
+            onLongPressRef.current(e);
         },
     };
 };
