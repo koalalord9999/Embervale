@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 
 export interface ContextMenuOption {
@@ -17,12 +16,6 @@ interface ContextMenuProps {
 const ContextMenu: React.FC<ContextMenuProps> = ({ options, triggerEvent, onClose, isTouchInteraction }) => {
     const menuRef = useRef<HTMLDivElement>(null);
     const [style, setStyle] = useState<React.CSSProperties>({ opacity: 0 });
-    const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-    const optionsRef = useRef<(HTMLButtonElement | null)[]>([]);
-
-    useEffect(() => {
-        optionsRef.current = optionsRef.current.slice(0, options.length);
-    }, [options]);
 
     useEffect(() => {
         if (menuRef.current) {
@@ -53,40 +46,6 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ options, triggerEvent, onClos
             });
         }
     }, [triggerEvent]);
-    
-     useEffect(() => {
-        if (!isTouchInteraction) return;
-
-        const handleMouseMove = (e: MouseEvent) => {
-            let foundIndex = -1;
-            optionsRef.current.forEach((button, index) => {
-                if (button) {
-                    const rect = button.getBoundingClientRect();
-                    if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
-                        foundIndex = index;
-                    }
-                }
-            });
-            setHoveredIndex(foundIndex !== -1 ? foundIndex : null);
-        };
-        
-        const handleMouseUp = () => {
-            if (hoveredIndex !== null) {
-                const option = options[hoveredIndex];
-                if (option && !option.disabled) {
-                    option.onClick();
-                }
-            }
-            onClose();
-        };
-
-        window.addEventListener('mousemove', handleMouseMove);
-        window.addEventListener('mouseup', handleMouseUp);
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, [isTouchInteraction, onClose, options, hoveredIndex]);
 
     return (
         <>
@@ -100,15 +59,14 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ options, triggerEvent, onClos
                     {options.map((option, index) => (
                         <li key={index}>
                             <button
-                                ref={el => { optionsRef.current[index] = el; }}
                                 onClick={() => {
-                                    if (!isTouchInteraction) {
+                                    if (!option.disabled) {
                                         option.onClick();
                                         onClose();
                                     }
                                 }}
                                 disabled={option.disabled}
-                                className={`w-full text-left px-4 py-2 text-sm text-gray-200 transition-colors ${hoveredIndex === index ? 'bg-yellow-600' : 'hover:bg-yellow-700'} disabled:text-gray-500 disabled:cursor-not-allowed`}
+                                className={`w-full text-left px-4 py-2 text-sm text-gray-200 transition-colors hover:bg-yellow-700 disabled:text-gray-500 disabled:cursor-not-allowed`}
                             >
                                 {option.label}
                             </button>

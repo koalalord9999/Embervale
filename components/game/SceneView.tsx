@@ -132,7 +132,6 @@ const ActionableButton: React.FC<{
         handleActivityClick(activity);
     };
 
-    // FIX: line 190, 257 - Update event type and extract correct event object for context menu.
     const onLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         let options: ContextMenuOption[] = [];
 
@@ -177,8 +176,15 @@ const ActionableButton: React.FC<{
         }
         
         if (options.length > 0) {
-            const eventForContextMenu = 'touches' in e ? e.touches[0] : e;
-            setContextMenu({ options, event: eventForContextMenu, isTouchInteraction: 'touches' in e });
+            let eventForContextMenu: React.MouseEvent | React.Touch;
+            if ('touches' in e && e.touches.length > 0) {
+                eventForContextMenu = e.touches[0];
+            } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+                eventForContextMenu = e.changedTouches[0];
+            } else {
+                eventForContextMenu = e as React.MouseEvent;
+            }
+            setContextMenu({ options, event: eventForContextMenu, isTouchInteraction: 'touches' in e || 'changedTouches' in e });
         }
     }
 
@@ -229,6 +235,8 @@ const BonfireButton: React.FC<{
     }, [activity.expiresAt]);
     
     const onLongPress = (e: React.MouseEvent | React.TouchEvent) => {
+        const event = 'touches' in e ? e.touches[0] : e;
+        
         const usableLogs = FIREMAKING_RECIPES
             .filter(recipe => inventory.some(slot => slot?.itemId === recipe.logId) && firemakingLevel >= recipe.level)
             .sort((a, b) => b.level - a.level);
@@ -251,8 +259,7 @@ const BonfireButton: React.FC<{
             stokeOption,
         ];
         
-        const event = 'touches' in e ? e.touches[0] : e;
-        setContextMenu({ options, event, isTouchInteraction: 'touches' in e });
+        setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
     };
 
     const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
@@ -267,7 +274,6 @@ const BonfireButton: React.FC<{
     const longPressHandlers = useLongPress({
         onLongPress,
         onClick: handleClick,
-        isOneClickMode: isOneClickMode,
     });
 
     const formatTime = (ms: number) => {

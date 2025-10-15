@@ -1,7 +1,6 @@
 import React from 'react';
 import { Equipment, InventorySlot, Item } from '../../types';
 import { ITEMS, getIconClassName } from '../../constants';
-// Fix: Import ContextMenuOption from its source file instead of re-exporting.
 import { ContextMenuState, TooltipState, useUIState } from '../../hooks/useUIState';
 import { ContextMenuOption } from '../common/ContextMenu';
 import { useLongPress } from '../../hooks/useLongPress';
@@ -63,11 +62,18 @@ const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, it
 
     const handleUnequip = () => { if (item) { onUnequip(slotKey); setTooltip(null); } };
     
-    // FIX: line 99 - Update event type and logic to correctly handle context menu for touch and mouse.
     const handleContextMenu = (e: React.MouseEvent | React.TouchEvent) => {
         if (!item || !itemSlot) return;
         e.preventDefault();
-        const event = 'touches' in e ? e.touches[0] : e;
+        
+        let eventForMenu: React.MouseEvent | React.Touch;
+        if ('touches' in e && e.touches.length > 0) {
+            eventForMenu = e.touches[0];
+        } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+            eventForMenu = e.changedTouches[0];
+        } else {
+            eventForMenu = e as React.MouseEvent;
+        }
         
         const options: ContextMenuOption[] = [];
         
@@ -84,7 +90,7 @@ const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, it
         }
         
         options.push({ label: 'Examine', onClick: () => performAction(() => onExamine(item)) });
-        setContextMenu({ options, event, isTouchInteraction: 'touches' in e });
+        setContextMenu({ options, event: eventForMenu, isTouchInteraction: 'touches' in e || 'changedTouches' in e });
     };
 
     const handleSingleTap = (e: React.MouseEvent | React.TouchEvent) => {

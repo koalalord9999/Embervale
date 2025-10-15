@@ -45,10 +45,18 @@ const BankSlot: React.FC<BankSlotProps> = (props) => {
         setTooltip(null);
     };
 
-    // FIX: line 49 - Correctly handle event types for context menu.
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();
-        const event = 'touches' in e ? e.touches[0] : e;
+        
+        let eventForMenu: React.MouseEvent | React.Touch;
+        if ('touches' in e && e.touches.length > 0) {
+            eventForMenu = e.touches[0];
+        } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+            eventForMenu = e.changedTouches[0];
+        } else {
+            eventForMenu = e as React.MouseEvent;
+        }
+
         const item = slot ? ITEMS[slot.itemId] : null;
         if (!slot || !item) return;
 
@@ -74,7 +82,7 @@ const BankSlot: React.FC<BankSlotProps> = (props) => {
             options.push({ label: `Withdraw All`, onClick: () => performWithdrawAction('all'), disabled: isPlaceholder });
         }
         options.push({ label: 'Examine', onClick: () => { setTooltip(null); setContextMenu(null); alert(item.description); } });
-        setContextMenu({ options, event, isTouchInteraction: 'touches' in e });
+        setContextMenu({ options, event: eventForMenu, isTouchInteraction: 'touches' in e || 'changedTouches' in e });
     };
 
     const handleSingleTap = (e: React.MouseEvent | React.TouchEvent) => {

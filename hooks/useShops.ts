@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ShopStates, InventorySlot } from '../types';
 import { SHOPS, ITEMS } from '../constants';

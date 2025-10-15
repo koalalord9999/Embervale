@@ -48,10 +48,17 @@ const ShopSlot: React.FC<ShopSlotProps> = ({ slot, price, stock, shopId, playerC
         return <div className="w-full aspect-square bg-gray-900 border border-gray-700 rounded-md" />;
     }
 
-    // FIX: line 52 - Correctly handle event types for context menu.
     const handleContextMenu = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();
-        const event = 'touches' in e ? e.touches[0] : e;
+        
+        let eventForMenu: React.MouseEvent | React.Touch;
+        if ('touches' in e && e.touches.length > 0) {
+            eventForMenu = e.touches[0];
+        } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+            eventForMenu = e.changedTouches[0];
+        } else {
+            eventForMenu = e as React.MouseEvent;
+        }
 
         const itemId = slot.itemId;
         const shop = SHOPS[shopId];
@@ -91,7 +98,7 @@ const ShopSlot: React.FC<ShopSlotProps> = ({ slot, price, stock, shopId, playerC
                 disabled: maxBuyable < 1
             },
         ];
-        setContextMenu({ options, event, isTouchInteraction: 'touches' in e });
+        setContextMenu({ options, event: eventForMenu, isTouchInteraction: 'touches' in e || 'changedTouches' in e });
     };
 
 
