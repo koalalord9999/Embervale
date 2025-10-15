@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ShopStates, InventorySlot } from '../types';
 import { SHOPS, ITEMS } from '../constants';
 
@@ -70,8 +71,23 @@ export const useShops = (
         return () => clearInterval(interval);
     }, []);
 
+    // Refs to hold the latest state and props to avoid stale closures in handleBuy
+    const shopStatesRef = useRef(shopStates);
+    useEffect(() => { shopStatesRef.current = shopStates; }, [shopStates]);
+
+    const playerCoinsRef = useRef(playerCoins);
+    useEffect(() => { playerCoinsRef.current = playerCoins; }, [playerCoins]);
+    
+    const inventoryRef = useRef(inventory);
+    useEffect(() => { inventoryRef.current = inventory; }, [inventory]);
+
+
     const handleBuy = useCallback((shopId: string, itemId: string, quantity: number) => {
-        const shopState = shopStates[shopId];
+        const currentShopStates = shopStatesRef.current;
+        const currentInventory = inventoryRef.current;
+        const currentCoins = playerCoinsRef.current;
+
+        const shopState = currentShopStates[shopId];
         const itemState = shopState?.[itemId];
         const itemData = ITEMS[itemId];
         const shopData = SHOPS[shopId];
@@ -88,11 +104,11 @@ export const useShops = (
             return;
         }
     
-        const freeSlots = inventory.filter(s => s === null).length;
+        const freeSlots = currentInventory.filter(s => s === null).length;
         let maxCanHold = 0;
     
         if (itemData.stackable) {
-            const hasStack = inventory.some(slot => slot?.itemId === itemId);
+            const hasStack = currentInventory.some(slot => slot?.itemId === itemId);
             maxCanHold = (hasStack || freeSlots > 0) ? actualQuantityToBuy : 0;
         } else {
             maxCanHold = Math.min(actualQuantityToBuy, freeSlots);
@@ -111,8 +127,8 @@ export const useShops = (
         const buyPrice = Math.ceil(itemData.value * defaultShopItem.priceModifier);
         let totalCost = buyPrice * actualQuantityToBuy;
     
-        if (playerCoins < totalCost) {
-            const affordAmount = Math.floor(playerCoins / buyPrice);
+        if (currentCoins < totalCost) {
+            const affordAmount = Math.floor(currentCoins / buyPrice);
             if (affordAmount > 0) {
                 actualQuantityToBuy = affordAmount;
                 totalCost = buyPrice * actualQuantityToBuy;
@@ -133,7 +149,7 @@ export const useShops = (
         });
     
         addLog(`You bought ${actualQuantityToBuy}x ${itemData.name} for ${totalCost} coins.`);
-    }, [shopStates, playerCoins, modifyItem, addLog, inventory]);
+    }, [modifyItem, addLog, setShopStates]);
 
     return { shopStates, handleBuy };
 };

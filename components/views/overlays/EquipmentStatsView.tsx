@@ -1,5 +1,3 @@
-
-
 import React, { useMemo } from 'react';
 import { Equipment, InventorySlot, Item } from '../../../types';
 import { ITEMS, getIconClassName } from '../../../constants';
@@ -56,7 +54,6 @@ interface EquipmentSlotDisplayProps {
 
 const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, itemSlot, onUnequip, setTooltip, setContextMenu, addLog, onExamine, isTouchSimulationEnabled }) => {
     const item = itemSlot ? ITEMS[itemSlot.itemId] : null;
-    const isTouchDevice = useIsTouchDevice(isTouchSimulationEnabled);
 
     const handleMouseEnter = (e: React.MouseEvent) => {
         if (!item || !itemSlot) {
@@ -72,6 +69,7 @@ const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, it
 
     const handleUnequip = () => { if (item) { onUnequip(slotKey); setTooltip(null); } };
     
+    // FIX: line 97 - Update event type and logic to correctly handle context menu for touch and mouse.
     const handleContextMenu = (e: React.MouseEvent | React.TouchEvent) => {
         if (!item || !itemSlot) return;
         e.preventDefault();
@@ -91,7 +89,7 @@ const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, it
         }
         
         options.push({ label: 'Examine', onClick: () => performAction(() => onExamine(item)) });
-        setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
+        setContextMenu({ options, event, isTouchInteraction: 'touches' in e });
     };
 
     const longPressHandlers = useLongPress({ onLongPress: handleContextMenu, onClick: handleUnequip });

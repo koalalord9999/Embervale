@@ -48,7 +48,6 @@ interface EquipmentSlotDisplayProps {
 
 const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, itemSlot, onUnequip, setTooltip, setContextMenu, addLog, onExamine, isTouchSimulationEnabled, isOneClickMode }) => {
     const item = itemSlot ? ITEMS[itemSlot.itemId] : null;
-    const isTouchDevice = useIsTouchDevice(isTouchSimulationEnabled);
 
     const handleMouseEnter = (e: React.MouseEvent) => {
         if (!item || !itemSlot) {
@@ -64,6 +63,7 @@ const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, it
 
     const handleUnequip = () => { if (item) { onUnequip(slotKey); setTooltip(null); } };
     
+    // FIX: line 99 - Update event type and logic to correctly handle context menu for touch and mouse.
     const handleContextMenu = (e: React.MouseEvent | React.TouchEvent) => {
         if (!item || !itemSlot) return;
         e.preventDefault();
@@ -84,7 +84,7 @@ const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, it
         }
         
         options.push({ label: 'Examine', onClick: () => performAction(() => onExamine(item)) });
-        setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
+        setContextMenu({ options, event, isTouchInteraction: 'touches' in e });
     };
 
     const handleSingleTap = (e: React.MouseEvent | React.TouchEvent) => {

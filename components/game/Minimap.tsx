@@ -67,7 +67,7 @@ const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, ui, i
                     { label: 'Open Atlas', onClick: () => ui.setIsAtlasViewOpen(true) },
                 ],
                 event,
-                isTouchInteraction: isTouchDevice,
+                isTouchInteraction: 'touches' in e,
             });
         },
         onClick: () => ui.setIsExpandedMapViewOpen(true), // Default action

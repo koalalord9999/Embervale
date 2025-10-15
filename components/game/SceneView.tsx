@@ -128,16 +128,12 @@ const ActionableButton: React.FC<{
     const hasContextMenu = (activity.type === 'npc' || activity.type === 'furnace' || activity.type === 'anvil' || activity.type === 'windmill');
 
     const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
-        if (isOneClickMode && hasContextMenu) {
-            onLongPress(e);
-            return;
-        }
         ui.setTooltip(null);
         handleActivityClick(activity);
     };
 
+    // FIX: line 190, 257 - Update event type and extract correct event object for context menu.
     const onLongPress = (e: React.MouseEvent | React.TouchEvent) => {
-        const event = 'touches' in e ? e.touches[0] : e;
         let options: ContextMenuOption[] = [];
 
         if (activity.type === 'npc') {
@@ -181,13 +177,15 @@ const ActionableButton: React.FC<{
         }
         
         if (options.length > 0) {
-            setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
+            const eventForContextMenu = 'touches' in e ? e.touches[0] : e;
+            setContextMenu({ options, event: eventForContextMenu, isTouchInteraction: 'touches' in e });
         }
     }
 
     const customHandlers = hasContextMenu ? useLongPress({
         onLongPress,
-        onClick: handleClick
+        onClick: handleClick,
+        isOneClickMode: isOneClickMode,
     }) : { onClick: handleClick };
     
     const tutorialId = `activity-button-${index}`;
@@ -231,8 +229,6 @@ const BonfireButton: React.FC<{
     }, [activity.expiresAt]);
     
     const onLongPress = (e: React.MouseEvent | React.TouchEvent) => {
-        const event = 'touches' in e ? e.touches[0] : e;
-        
         const usableLogs = FIREMAKING_RECIPES
             .filter(recipe => inventory.some(slot => slot?.itemId === recipe.logId) && firemakingLevel >= recipe.level)
             .sort((a, b) => b.level - a.level);
@@ -255,7 +251,8 @@ const BonfireButton: React.FC<{
             stokeOption,
         ];
         
-        setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
+        const event = 'touches' in e ? e.touches[0] : e;
+        setContextMenu({ options, event, isTouchInteraction: 'touches' in e });
     };
 
     const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
@@ -270,6 +267,7 @@ const BonfireButton: React.FC<{
     const longPressHandlers = useLongPress({
         onLongPress,
         onClick: handleClick,
+        isOneClickMode: isOneClickMode,
     });
 
     const formatTime = (ms: number) => {
@@ -409,7 +407,7 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
     }, [poi, clearedSkillObstacles]);
 
     const getActivityButton = (activity: POIActivity, index: number) => {
-        if ((activity.type === 'npc' || activity.type === 'skilling' || activity.type === 'runecrafting_altar' || activity.type === 'ladder') && activity.questCondition) {
+        if ((activity.type === 'npc' || activity.type === 'skilling' || activity.type === 'runecrafting_altar' || activity.type === 'ladder' || activity.type === 'quest_board') && activity.questCondition) {
             const questCond = activity.questCondition;
             const isRepeatableQuestActive = activeRepeatableQuest?.questId === questCond.questId;
     

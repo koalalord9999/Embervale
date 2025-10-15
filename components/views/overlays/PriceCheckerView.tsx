@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { InventorySlot } from '../../../types';
 import { ITEMS, getIconClassName } from '../../../constants';
@@ -116,6 +115,7 @@ const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose,
         setTooltip(null);
     };
     
+    // FIX: line 223 - Update event type and logic to correctly handle context menu for touch and mouse.
     const createContextMenu = (e: React.MouseEvent | React.TouchEvent, invSlot: InventorySlot, index: number) => {
         const event = 'touches' in e ? e.touches[0] : e;
         const item = ITEMS[invSlot.itemId];
@@ -137,7 +137,7 @@ const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose,
             }), disabled: maxQty < 1 },
             { label: 'Price-check All', onClick: () => addToChecker(index, 'all'), disabled: maxQty < 1 },
         ];
-        setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
+        setContextMenu({ options, event, isTouchInteraction: 'touches' in e });
     };
 
     const totalValue = checkedItems.reduce((acc, slot) => {

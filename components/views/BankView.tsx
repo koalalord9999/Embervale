@@ -45,6 +45,7 @@ const BankSlot: React.FC<BankSlotProps> = (props) => {
         setTooltip(null);
     };
 
+    // FIX: line 49 - Correctly handle event types for context menu.
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();
         const event = 'touches' in e ? e.touches[0] : e;
@@ -73,14 +74,10 @@ const BankSlot: React.FC<BankSlotProps> = (props) => {
             options.push({ label: `Withdraw All`, onClick: () => performWithdrawAction('all'), disabled: isPlaceholder });
         }
         options.push({ label: 'Examine', onClick: () => { setTooltip(null); setContextMenu(null); alert(item.description); } });
-        setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
+        setContextMenu({ options, event, isTouchInteraction: 'touches' in e });
     };
 
     const handleSingleTap = (e: React.MouseEvent | React.TouchEvent) => {
-        if (isOneClickMode && slot) {
-            handleLongPress(e);
-            return;
-        }
         if (slot && !isPlaceholder) {
             if ('shiftKey' in e && e.shiftKey) {
                 performWithdrawAction('all');
@@ -90,7 +87,7 @@ const BankSlot: React.FC<BankSlotProps> = (props) => {
         }
     };
 
-    const combinedHandlers = { ...useLongPress({ onLongPress: handleLongPress, onClick: handleSingleTap }), ...dragHandlers };
+    const combinedHandlers = { ...useLongPress({ onLongPress: handleLongPress, onClick: handleSingleTap, isOneClickMode }), ...dragHandlers };
     const item = slot ? ITEMS[slot.itemId] : null;
 
     return (

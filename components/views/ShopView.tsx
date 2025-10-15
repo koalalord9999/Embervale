@@ -44,11 +44,11 @@ interface ShopSlotProps {
 
 const ShopSlot: React.FC<ShopSlotProps> = ({ slot, price, stock, shopId, playerCoins, shopStates, onBuy, setContextMenu, setMakeXPrompt, setTooltip, isOneClickMode, addLog }) => {
     const item = ITEMS[slot.itemId];
-    const isTouchDevice = useIsTouchDevice(false);
     if (!item) {
         return <div className="w-full aspect-square bg-gray-900 border border-gray-700 rounded-md" />;
     }
 
+    // FIX: line 52 - Correctly handle event types for context menu.
     const handleContextMenu = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();
         const event = 'touches' in e ? e.touches[0] : e;
@@ -96,16 +96,13 @@ const ShopSlot: React.FC<ShopSlotProps> = ({ slot, price, stock, shopId, playerC
 
 
     const handleSingleTap = (e: React.MouseEvent | React.TouchEvent) => {
-        if (isOneClickMode) {
-            handleContextMenu(e);
-            return;
-        }
         addLog(`[${getDisplayName(slot)}] Buy Price: ${price} coins.`);
     };
 
     const combinedHandlers = useLongPress({
         onLongPress: handleContextMenu,
-        onClick: handleSingleTap
+        onClick: handleSingleTap,
+        isOneClickMode: isOneClickMode,
     });
 
     const handleMouseEnter = (e: React.MouseEvent) => {

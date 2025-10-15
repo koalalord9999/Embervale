@@ -4,9 +4,10 @@ interface LongPressOptions {
     onLongPress: (event: React.MouseEvent | React.TouchEvent) => void;
     onClick?: (event: React.MouseEvent | React.TouchEvent) => void;
     delay?: number;
+    isOneClickMode?: boolean;
 }
 
-export const useLongPress = ({ onLongPress, onClick, delay = 400 }: LongPressOptions) => {
+export const useLongPress = ({ onLongPress, onClick, delay = 400, isOneClickMode = false }: LongPressOptions) => {
     const onLongPressRef = useRef(onLongPress);
     const onClickRef = useRef(onClick);
 
@@ -41,42 +42,19 @@ export const useLongPress = ({ onLongPress, onClick, delay = 400 }: LongPressOpt
         const point = 'touches' in event ? event.touches[0] : event;
         pressStartPos.current = { x: point.clientX, y: point.clientY };
         
-        // Stash the event data we need. We can't rely on the event object itself inside setTimeout.
-        const eventData = {
-            clientX: point.clientX,
-            clientY: point.clientY,
-            target: event.target,
-            currentTarget: event.currentTarget,
-            isTouchEvent: 'touches' in event
-        };
-
         timeout.current = setTimeout(() => {
             if (!isDrag.current) {
                 isLongPressFired.current = true;
-                
-                // Create a synthetic event-like object for the callback.
-                const syntheticEvent = {
-                    ...eventData,
-                    preventDefault: () => {}, // NO-OP to prevent crashes
-                };
-                
-                // Add a fake `touches` array if it was a touch event, for compatibility.
-                if (eventData.isTouchEvent) {
-                    (syntheticEvent as any).touches = [{ clientX: eventData.clientX, clientY: eventData.clientY }];
-                }
-                
-                onLongPressRef.current(syntheticEvent as any);
+                onLongPressRef.current(event);
             }
         }, delay);
     }, [delay, cleanup]);
 
     const handlePressEnd = useCallback((event: React.MouseEvent | React.TouchEvent) => {
-        // Prevent emulated mouse events on touch devices (ghost clicks)
         if (event.type === 'touchend') {
             event.preventDefault();
         }
 
-        // Prevent right-click mouseup from triggering single-tap
         if ('button' in event && event.button !== 0) {
             cleanup();
             return;
@@ -87,32 +65,34 @@ export const useLongPress = ({ onLongPress, onClick, delay = 400 }: LongPressOpt
         }
         
         if (!isLongPressFired.current && !isDrag.current) {
-            onClickRef.current?.(event);
+            if (isOneClickMode) {
+                // FIX: line 80: Pass the original event to onLongPress instead of a potentially incorrect 'point' object.
+                onLongPressRef.current(event);
+            } else {
+                onClickRef.current?.(event);
+            }
         }
 
         cleanup();
-    }, [cleanup]);
+    }, [cleanup, isOneClickMode]);
     
     useEffect(() => {
         const handleMove = (e: MouseEvent | TouchEvent) => {
             if (!pressStartPos.current) return;
             const movePoint = 'touches' in e ? e.touches[0] : e;
-            if (!movePoint) return; // Touch can end, leaving no points in touches array
+            if (!movePoint) return;
             const dx = Math.abs(movePoint.clientX - pressStartPos.current.x);
             const dy = Math.abs(movePoint.clientY - pressStartPos.current.y);
 
             if (dx > 10 || dy > 10) {
                 isDrag.current = true;
-                if (timeout.current) {
-                    clearTimeout(timeout.current);
-                }
+                if (timeout.current) clearTimeout(timeout.current);
             }
         };
 
         window.addEventListener('mousemove', handleMove);
         window.addEventListener('touchmove', handleMove);
 
-        // Add blur listener to cancel long press if window loses focus
         const handleBlur = () => cleanup();
         window.addEventListener('blur', handleBlur);
 
@@ -120,7 +100,7 @@ export const useLongPress = ({ onLongPress, onClick, delay = 400 }: LongPressOpt
             window.removeEventListener('mousemove', handleMove);
             window.removeEventListener('touchmove', handleMove);
             window.removeEventListener('blur', handleBlur);
-            cleanup(); // Ensure cleanup happens on unmount
+            cleanup();
         };
     }, [cleanup]);
 

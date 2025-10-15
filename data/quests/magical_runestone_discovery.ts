@@ -1,4 +1,3 @@
-
 import { Quest, SkillName } from '../../types';
 
 export const magicalRunestoneDiscovery: Quest = {
