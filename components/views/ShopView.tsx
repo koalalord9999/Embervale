@@ -3,8 +3,7 @@ import { InventorySlot, ShopStates, Item } from '../../types';
 import { SHOPS, ITEMS, getIconClassName } from '../../constants';
 import Button from '../common/Button';
 import { ContextMenuOption } from '../common/ContextMenu';
-import { MakeXPrompt, ContextMenuState } from '../../hooks/useUIState';
-import { TooltipState } from '../../hooks/useUIState';
+import { MakeXPrompt, ContextMenuState, TooltipState } from '../../hooks/useUIState';
 import { useLongPress } from '../../hooks/useLongPress';
 import { useIsTouchDevice } from '../../hooks/useIsTouchDevice';
 import { getDisplayName } from '../panels/InventorySlot';
@@ -28,44 +27,84 @@ const formatItemQuantity = (quantity: number): string => {
     return quantity.toLocaleString();
 };
 
-
-interface ShopViewProps {
+interface ShopSlotProps {
+    slot: InventorySlot;
+    price: number;
+    stock?: number;
     shopId: string;
     playerCoins: number;
     shopStates: ShopStates;
     onBuy: (shopId: string, itemId: string, quantity: number) => void;
-    addLog: (message: string) => void;
-    onExit: () => void;
     setContextMenu: (menu: ContextMenuState | null) => void;
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
     setTooltip: (tooltip: TooltipState | null) => void;
     isOneClickMode: boolean;
+    addLog: (message: string) => void;
 }
 
-const ShopSlot: React.FC<{
-    slot: InventorySlot;
-    price: number;
-    stock?: number;
-    onContextMenu: (e: React.MouseEvent | React.TouchEvent) => void;
-    setTooltip: (tooltip: TooltipState | null) => void;
-    isOneClickMode: boolean;
-    addLog: (message: string) => void;
-}> = ({ slot, price, stock, onContextMenu, setTooltip, isOneClickMode, addLog }) => {
+const ShopSlot: React.FC<ShopSlotProps> = ({ slot, price, stock, shopId, playerCoins, shopStates, onBuy, setContextMenu, setMakeXPrompt, setTooltip, isOneClickMode, addLog }) => {
     const item = ITEMS[slot.itemId];
+    const isTouchDevice = useIsTouchDevice(false);
     if (!item) {
         return <div className="w-full aspect-square bg-gray-900 border border-gray-700 rounded-md" />;
     }
 
+    const handleContextMenu = (e: React.MouseEvent | React.TouchEvent) => {
+        e.preventDefault();
+        const event = 'touches' in e ? e.touches[0] : e;
+
+        const itemId = slot.itemId;
+        const shop = SHOPS[shopId];
+        const itemState = shopStates[shopId]?.[itemId];
+        const defaultShopItem = shop?.inventory.find(i => i.itemId === itemId);
+
+        if (!itemState || !item || !shop || !defaultShopItem) return;
+
+        const effectivePrice = Math.ceil(item.value * defaultShopItem.priceModifier);
+        const maxBuyableByCoins = effectivePrice > 0 ? Math.floor(playerCoins / effectivePrice) : Infinity;
+        const maxBuyable = Math.min(maxBuyableByCoins, itemState.currentStock);
+
+        const performActionAndCloseTooltip = (action: () => void) => {
+            action();
+            setTooltip(null);
+            setContextMenu(null);
+        };
+        
+        const performBuyAction = (quantity: number) => {
+            performActionAndCloseTooltip(() => onBuy(shopId, itemId, quantity));
+        };
+
+        const options: ContextMenuOption[] = [
+            { label: `Buy 1 (${effectivePrice})`, onClick: () => performBuyAction(1), disabled: maxBuyable < 1 },
+            { label: `Buy 5 (${effectivePrice * 5})`, onClick: () => performBuyAction(5), disabled: maxBuyable < 5 },
+            { label: `Buy 10 (${effectivePrice * 10})`, onClick: () => performBuyAction(10), disabled: maxBuyable < 10 },
+            {
+                label: 'Buy X...',
+                onClick: () => {
+                    setContextMenu(null);
+                    setMakeXPrompt({
+                        title: `Buy ${item.name}`,
+                        max: maxBuyable,
+                        onConfirm: (quantity) => performBuyAction(quantity)
+                    });
+                },
+                disabled: maxBuyable < 1
+            },
+        ];
+        setContextMenu({ options, event, isTouchInteraction: 'touches' in e });
+    };
+
+
     const handleSingleTap = (e: React.MouseEvent | React.TouchEvent) => {
         if (isOneClickMode) {
-            onContextMenu(e);
+            handleContextMenu(e);
             return;
         }
         addLog(`[${getDisplayName(slot)}] Buy Price: ${price} coins.`);
     };
 
     const combinedHandlers = useLongPress({
-        onLongPress: onContextMenu,
+        onLongPress: handleContextMenu,
         onClick: handleSingleTap
     });
 
@@ -103,50 +142,23 @@ const ShopSlot: React.FC<{
     );
 };
 
+interface ShopViewProps {
+    shopId: string;
+    playerCoins: number;
+    shopStates: ShopStates;
+    onBuy: (shopId: string, itemId: string, quantity: number) => void;
+    addLog: (message: string) => void;
+    onExit: () => void;
+    setContextMenu: (menu: ContextMenuState | null) => void;
+    setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
+    setTooltip: (tooltip: TooltipState | null) => void;
+    isOneClickMode: boolean;
+}
+
 const ShopView: React.FC<ShopViewProps> = ({ shopId, playerCoins, shopStates, onBuy, addLog, onExit, setContextMenu, setMakeXPrompt, setTooltip, isOneClickMode }) => {
     const shop = SHOPS[shopId];
     const currentShopState = shopStates[shopId];
     
-    const performActionAndCloseTooltip = (action: () => void) => {
-        action();
-        setTooltip(null);
-    };
-
-    const createBuyContextMenu = (e: React.MouseEvent | React.TouchEvent, itemId: string) => {
-        e.preventDefault();
-        const event = 'touches' in e ? e.touches[0] : e;
-        
-        const itemState = currentShopState?.[itemId];
-        const itemData = ITEMS[itemId];
-        const defaultShopItem = shop?.inventory.find(i => i.itemId === itemId);
-
-        if (!itemState || !itemData || !defaultShopItem) return;
-
-        const price = Math.ceil(itemData.value * defaultShopItem.priceModifier);
-        const maxBuyableByCoins = price > 0 ? Math.floor(playerCoins / price) : Infinity;
-        const maxBuyable = Math.min(maxBuyableByCoins, itemState.currentStock);
-
-        const performBuyAction = (quantity: number) => {
-            performActionAndCloseTooltip(() => onBuy(shopId, itemId, quantity));
-        };
-
-        const options: ContextMenuOption[] = [
-            { label: `Buy 1 (${price})`, onClick: () => performBuyAction(1), disabled: maxBuyable < 1 },
-            { label: `Buy 5 (${price * 5})`, onClick: () => performBuyAction(5), disabled: maxBuyable < 5 },
-            { label: `Buy 10 (${price * 10})`, onClick: () => performBuyAction(10), disabled: maxBuyable < 10 },
-            { 
-                label: 'Buy X...', 
-                onClick: () => setMakeXPrompt({
-                    title: `Buy ${ITEMS[itemId].name}`,
-                    max: maxBuyable,
-                    onConfirm: (quantity) => performBuyAction(quantity)
-                }), 
-                disabled: maxBuyable < 1 
-            },
-        ];
-        setContextMenu({ options, event, isTouchInteraction: 'touches' in e });
-    };
-
     if (!shop || !currentShopState) return <div>Loading shop...</div>;
 
     return (
@@ -171,10 +183,15 @@ const ShopView: React.FC<ShopViewProps> = ({ shopId, playerCoins, shopStates, on
                                     slot={{ itemId, quantity: 1, doses: item.initialDoses }}
                                     price={buyPrice}
                                     stock={itemState?.currentStock}
-                                    onContextMenu={(e) => createBuyContextMenu(e, itemId)}
                                     setTooltip={setTooltip}
                                     isOneClickMode={isOneClickMode}
                                     addLog={addLog}
+                                    shopId={shopId}
+                                    playerCoins={playerCoins}
+                                    shopStates={shopStates}
+                                    onBuy={onBuy}
+                                    setContextMenu={setContextMenu}
+                                    setMakeXPrompt={setMakeXPrompt}
                                 />
                             );
                         })}

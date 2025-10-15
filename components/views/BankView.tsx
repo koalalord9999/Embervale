@@ -8,26 +8,6 @@ import { useLongPress } from '../../hooks/useLongPress';
 import { useIsTouchDevice } from '../../hooks/useIsTouchDevice';
 import { getDisplayName } from '../panels/InventorySlot';
 
-interface BankViewProps {
-    bank: BankTab[];
-    onClose: () => void;
-    onWithdraw: (bankIndex: number, quantity: number | 'all' | 'all-but-1', asNote: boolean, activeTabId: number) => void;
-    onDepositBackpack: () => void;
-    onDepositEquipment: () => void;
-    onMoveItem: (from: number, to: number, activeTabId: number) => void;
-    onAddTab: () => void;
-    onRemoveTab: (tabId: number) => void;
-    onMoveItemToTab: (fromItemIndex: number, fromTabId: number, toTabId: number) => void;
-    onRenameTab: (tabId: number, newName: string) => void;
-    setContextMenu: (menu: ContextMenuState | null) => void;
-    setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
-    setTooltip: (tooltip: TooltipState | null) => void;
-    bankPlaceholders: boolean;
-    handleToggleBankPlaceholders: () => void;
-    ui: ReturnType<typeof useUIState>;
-    isOneClickMode: boolean;
-}
-
 const formatQuantity = (quantity: number): string => {
     if (quantity >= 1000000000) return `${Math.floor(quantity / 1000000000)}B`;
     if (quantity >= 1000000) return `${Math.floor(quantity / 1000000)}M`;
@@ -41,7 +21,7 @@ const getQuantityColor = (quantity: number): string => {
     return 'text-yellow-300';
 };
 
-const BankSlot: React.FC<{
+interface BankSlotProps {
     slot: InventorySlot | null;
     index: number;
     asNote: boolean;
@@ -52,7 +32,9 @@ const BankSlot: React.FC<{
     setTooltip: (tooltip: TooltipState | null) => void;
     dragHandlers: any;
     isOneClickMode: boolean;
-}> = (props) => {
+}
+
+const BankSlot: React.FC<BankSlotProps> = (props) => {
     const { slot, index, asNote, activeTabId, onWithdraw, setContextMenu, setMakeXPrompt, setTooltip, dragHandlers, isOneClickMode } = props;
     const isTouchDevice = useIsTouchDevice(false);
     const isPlaceholder = slot?.quantity === 0;
@@ -77,11 +59,14 @@ const BankSlot: React.FC<{
             options.push({ label: `Withdraw 10`, onClick: () => performWithdrawAction(10), disabled: slot.quantity < 10 || isPlaceholder });
             options.push({
                 label: 'Withdraw X...',
-                onClick: () => setMakeXPrompt({
-                    title: `Withdraw ${item.name}`,
-                    max: slot.quantity,
-                    onConfirm: (quantity) => performWithdrawAction(quantity)
-                }),
+                onClick: () => {
+                    setContextMenu(null);
+                    setMakeXPrompt({
+                        title: `Withdraw ${item.name}`,
+                        max: slot.quantity,
+                        onConfirm: (quantity) => performWithdrawAction(quantity)
+                    });
+                },
                 disabled: slot.quantity < 1 || isPlaceholder
             });
             options.push({ label: `Withdraw All-but-1`, onClick: () => performWithdrawAction('all-but-1'), disabled: slot.quantity < 2 || isPlaceholder });
@@ -129,6 +114,27 @@ const BankSlot: React.FC<{
         </div>
     );
 };
+
+
+interface BankViewProps {
+    bank: BankTab[];
+    onClose: () => void;
+    onWithdraw: (bankIndex: number, quantity: number | 'all' | 'all-but-1', asNote: boolean, activeTabId: number) => void;
+    onDepositBackpack: () => void;
+    onDepositEquipment: () => void;
+    onMoveItem: (from: number, to: number, activeTabId: number) => void;
+    onAddTab: () => void;
+    onRemoveTab: (tabId: number) => void;
+    onMoveItemToTab: (fromItemIndex: number, fromTabId: number, toTabId: number) => void;
+    onRenameTab: (tabId: number, newName: string) => void;
+    setContextMenu: (menu: ContextMenuState | null) => void;
+    setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
+    setTooltip: (tooltip: TooltipState | null) => void;
+    bankPlaceholders: boolean;
+    handleToggleBankPlaceholders: () => void;
+    ui: ReturnType<typeof useUIState>;
+    isOneClickMode: boolean;
+}
 
 const BankView: React.FC<BankViewProps> = (props) => {
     const { bank, onClose, onWithdraw, onDepositBackpack, onDepositEquipment, onMoveItem, onAddTab, onRemoveTab, onMoveItemToTab, onRenameTab, setContextMenu, setMakeXPrompt, setTooltip, bankPlaceholders, handleToggleBankPlaceholders, ui, isOneClickMode } = props;
