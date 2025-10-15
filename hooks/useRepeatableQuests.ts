@@ -42,17 +42,6 @@ const generateNewQuestsForBoard = (boardId: string, playerSkills: (PlayerSkill &
     const shuffled = [...availableQuests].sort(() => 0.5 - Math.random());
     let selectedQuests = shuffled.slice(0, 4);
 
-    // For testing: ensure cellar infestation is always available in Meadowdale
-    if (boardId === 'the_rusty_flagon') {
-        const infestationQuest = REPEATABLE_QUEST_POOL.find(q => q.id === 'kill_rats_meadowdale');
-        if (infestationQuest && !selectedQuests.some(q => q.id === infestationQuest.id)) {
-            if (selectedQuests.length >= 4) {
-                selectedQuests.pop();
-            }
-            selectedQuests.unshift(infestationQuest);
-        }
-    }
-
     return selectedQuests.map(quest => {
         if (quest.type === 'gather') {
             if (!quest.target.itemId) {
