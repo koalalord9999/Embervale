@@ -1,4 +1,3 @@
-
 import React, { useCallback } from 'react';
 import { POIActivity, PlayerQuestState, DialogueNode, Quest, DialogueResponse, DialogueCheckRequirement, DialogueAction, InventorySlot } from '../types';
 import { QUESTS } from '../constants';
@@ -42,6 +41,8 @@ export const useSceneInteractions = (poiId: string, deps: SceneInteractionDepend
             return;
         }
         
+        const { name, icon, dialogue: npcDialogue, startNode: defaultStartNode, dialogueType } = activity;
+
         if (activity.name === 'Tanner Sven') {
             const totalCost = calculateTanningCost(inventory);
             let svenDialogue: DialogueState;
@@ -107,23 +108,15 @@ export const useSceneInteractions = (poiId: string, deps: SceneInteractionDepend
             return; // Exit early to bypass the normal dialogue flow
         }
     
-        const { name, icon, dialogue: npcDialogue, startNode: defaultStartNode, dialogueType } = activity;
-
         const startDialogue = (startNodeKey: string, primarySource: Record<string, DialogueNode>) => {
             const allNodes: Record<string, DialogueNode> = {};
 
-            // Aggregate all quest dialogues first
-            for (const quest of Object.values(QUESTS)) {
-                if (quest.dialogue) {
-                    Object.assign(allNodes, quest.dialogue);
-                }
-            }
-            // Then, merge the NPC's own dialogue from the POI file.
+            // Base: NPC's own dialogue from the POI definition
             if (npcDialogue) {
                 Object.assign(allNodes, npcDialogue);
             }
-            // Finally, ensure the primary source (the one that triggered the dialogue) overwrites any remaining conflicts.
-            // This is important to ensure the correct 'start' node is used if multiple exist.
+
+            // Override/Extend with the specific dialogue source (e.g., from a quest)
             Object.assign(allNodes, primarySource);
 
             if (dialogueType === 'random' && allNodes[startNodeKey]) {
@@ -222,7 +215,9 @@ export const useSceneInteractions = (poiId: string, deps: SceneInteractionDepend
         if (!effectiveStartNode && defaultStartNode) {
             // Check if the node exists in any quest dialogue first
             for (const quest of Object.values(QUESTS)) {
-                if (quest.dialogue && quest.dialogue[defaultStartNode]) {
+                // Check if the node exists and if the NPC name in that node matches the current NPC
+                const node = quest.dialogue?.[defaultStartNode];
+                if (node && node.npcName.trim() === name.trim()) {
                     effectiveStartNode = defaultStartNode;
                     dialogueSource = quest.dialogue;
                     break;

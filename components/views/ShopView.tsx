@@ -5,7 +5,6 @@ import Button from '../common/Button';
 import { ContextMenuOption } from '../common/ContextMenu';
 import { MakeXPrompt, ContextMenuState } from '../../hooks/useUIState';
 import { TooltipState } from '../../hooks/useUIState';
-import { useDoubleTap } from '../../hooks/useDoubleTap';
 import { useLongPress } from '../../hooks/useLongPress';
 import { useIsTouchDevice } from '../../hooks/useIsTouchDevice';
 import { getDisplayName } from '../panels/InventorySlot';
@@ -40,6 +39,7 @@ interface ShopViewProps {
     setContextMenu: (menu: ContextMenuState | null) => void;
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
     setTooltip: (tooltip: TooltipState | null) => void;
+    isOneClickMode: boolean;
 }
 
 const ShopSlot: React.FC<{
@@ -47,22 +47,27 @@ const ShopSlot: React.FC<{
     price: number;
     stock?: number;
     onBuyOne: () => void;
-    onDoubleTap: () => void;
     onContextMenu: (e: React.MouseEvent | React.TouchEvent) => void;
     setTooltip: (tooltip: TooltipState | null) => void;
-}> = ({ slot, price, stock, onBuyOne, onDoubleTap, onContextMenu, setTooltip }) => {
+    isOneClickMode: boolean;
+}> = ({ slot, price, stock, onBuyOne, onContextMenu, setTooltip, isOneClickMode }) => {
     const item = ITEMS[slot.itemId];
     if (!item) {
         return <div className="w-full aspect-square bg-gray-900 border border-gray-700 rounded-md" />;
     }
 
-    const doubleTapHandlers = useDoubleTap({ onSingleTap: onBuyOne, onDoubleTap });
-    const longPressHandlers = useLongPress({ onLongPress: onContextMenu, onClick: doubleTapHandlers.onClick });
-    
-    const combinedHandlers = {
-        ...longPressHandlers,
-        onTouchEnd: doubleTapHandlers.onTouchEnd
+    const handleSingleTap = (e: React.MouseEvent | React.TouchEvent) => {
+        if (isOneClickMode) {
+            onContextMenu(e);
+            return;
+        }
+        onBuyOne();
     };
+
+    const combinedHandlers = useLongPress({
+        onLongPress: onContextMenu,
+        onClick: handleSingleTap
+    });
 
     const handleMouseEnter = (e: React.MouseEvent) => {
         const priceInfo = (
@@ -98,7 +103,7 @@ const ShopSlot: React.FC<{
     );
 };
 
-const ShopView: React.FC<ShopViewProps> = ({ shopId, playerCoins, shopStates, onBuy, addLog, onExit, setContextMenu, setMakeXPrompt, setTooltip }) => {
+const ShopView: React.FC<ShopViewProps> = ({ shopId, playerCoins, shopStates, onBuy, addLog, onExit, setContextMenu, setMakeXPrompt, setTooltip, isOneClickMode }) => {
     const shop = SHOPS[shopId];
     const currentShopState = shopStates[shopId];
     
@@ -167,9 +172,9 @@ const ShopView: React.FC<ShopViewProps> = ({ shopId, playerCoins, shopStates, on
                                     price={buyPrice}
                                     stock={itemState?.currentStock}
                                     onBuyOne={() => performActionAndCloseTooltip(() => onBuy(shopId, itemId, 1))}
-                                    onDoubleTap={() => addLog(`[Examine: ${item.name}] ${item.description}`)}
                                     onContextMenu={(e) => createBuyContextMenu(e, itemId)}
                                     setTooltip={setTooltip}
+                                    isOneClickMode={isOneClickMode}
                                 />
                             );
                         })}

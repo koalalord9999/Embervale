@@ -205,7 +205,6 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
             onDepositEquipment={() => bankLogic.handleDepositEquipment(ui.activeBankTabId)}
             onMoveItem={bankLogic.moveBankItem}
             onAddTab={bankLogic.addTab}
-            // FIX: Corrected property name from onRemoveTab to removeTab to match the hook's return value.
             onRemoveTab={bankLogic.removeTab}
             onMoveItemToTab={bankLogic.moveItemToTab}
             onRenameTab={bankLogic.handleRenameTab}
@@ -226,7 +225,8 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
             onExit={() => ui.setActiveShopId(null)} 
             setContextMenu={ui.setContextMenu} 
             setMakeXPrompt={ui.setMakeXPrompt} 
-            setTooltip={ui.setTooltip} 
+            setTooltip={ui.setTooltip}
+            isOneClickMode={ui.isOneClickMode}
         />;
         
         if (ui.activeCraftingContext) return <CraftingView

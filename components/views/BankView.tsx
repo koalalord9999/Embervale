@@ -4,7 +4,6 @@ import { ITEMS, BANK_CAPACITY, getIconClassName, MAX_BANK_TABS } from '../../con
 import Button from '../common/Button';
 import { ContextMenuOption } from '../common/ContextMenu';
 import { MakeXPrompt, TooltipState, ContextMenuState, useUIState } from '../../hooks/useUIState';
-import { useDoubleTap } from '../../hooks/useDoubleTap';
 import { useLongPress } from '../../hooks/useLongPress';
 import { useIsTouchDevice } from '../../hooks/useIsTouchDevice';
 import { getDisplayName } from '../panels/InventorySlot';
@@ -88,6 +87,7 @@ const BankSlot: React.FC<{
             options.push({ label: `Withdraw All-but-1`, onClick: () => performWithdrawAction('all-but-1'), disabled: slot.quantity < 2 || isPlaceholder });
             options.push({ label: `Withdraw All`, onClick: () => performWithdrawAction('all'), disabled: isPlaceholder });
         }
+        options.push({ label: 'Examine', onClick: () => { setTooltip(null); setContextMenu(null); alert(item.description); } });
         setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
     };
 
@@ -105,17 +105,7 @@ const BankSlot: React.FC<{
         }
     };
 
-    const handleDoubleTap = () => {
-        if (slot) {
-            const item = ITEMS[slot.itemId];
-            if (item) setTooltip({ content: item.description, position: { x: window.innerWidth / 2, y: window.innerHeight / 2 } });
-        }
-    };
-
-    const doubleTapHandlers = useDoubleTap({ onSingleTap: handleSingleTap, onDoubleTap: handleDoubleTap });
-    const longPressHandlers = useLongPress({ onLongPress: handleLongPress, onClick: doubleTapHandlers.onClick });
-
-    const combinedHandlers = { ...longPressHandlers, ...dragHandlers, onTouchEnd: doubleTapHandlers.onTouchEnd };
+    const combinedHandlers = { ...useLongPress({ onLongPress: handleLongPress, onClick: handleSingleTap }), ...dragHandlers };
     const item = slot ? ITEMS[slot.itemId] : null;
 
     return (

@@ -5,7 +5,6 @@ import { ContextMenuOption } from '../common/ContextMenu';
 import { ConfirmationPrompt, ContextMenuState, MakeXPrompt } from '../../hooks/useUIState';
 import { useLongPress } from '../../hooks/useLongPress';
 import { useIsTouchDevice } from '../../hooks/useIsTouchDevice';
-import { useDoubleTap } from '../../hooks/useDoubleTap';
 
 const TUTORIAL_ITEM_IDS = ['bronze_axe', 'tinderbox', 'logs', 'bronze_sword', 'unusual_sandwich'];
 
@@ -112,10 +111,11 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
 
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         let eventForMenu: React.MouseEvent | React.Touch;
-        if ('changedTouches' in e) {
-            eventForMenu = e.changedTouches[0];
-        } else if ('touches' in e) {
+        // Correctly get coordinates from touch or mouse event
+        if ('touches' in e && e.touches.length > 0) {
             eventForMenu = e.touches[0];
+        } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+            eventForMenu = e.changedTouches[0];
         } else {
             eventForMenu = e as React.MouseEvent;
         }
@@ -291,29 +291,11 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
             setItemToUse({ item: slot, index: index });
         }
     };
-
-    const handleDoubleTap = () => {
-        if (!slot) return;
-        const item = ITEMS[slot.itemId];
-        if (!item) return;
-        setTooltip(null);
-        onExamine(item);
-    };
-
-    const doubleTapHandlers = useDoubleTap({ 
-        onSingleTap: handleSingleTap, 
-        onDoubleTap: handleDoubleTap 
-    });
-
-    const longPressHandlers = useLongPress({
+    
+    const combinedHandlers = useLongPress({
         onLongPress: handleLongPress,
-        onClick: doubleTapHandlers.onClick,
+        onClick: handleSingleTap,
     });
-
-    const combinedHandlers = { 
-        ...longPressHandlers, 
-        onTouchEnd: doubleTapHandlers.onTouchEnd 
-    };
 
     const handleDragStart = (e: React.DragEvent, index: number) => {
         if (isBusy || itemToUse) { e.preventDefault(); return; }

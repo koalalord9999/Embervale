@@ -1,6 +1,5 @@
 import React, { useCallback, useRef, useEffect } from 'react';
 
-// FIX: Add optional onClick handler and simplified the hook to return handlers directly.
 interface LongPressOptions {
     onLongPress: (event: React.MouseEvent | React.TouchEvent) => void;
     onClick?: (event: React.MouseEvent | React.TouchEvent) => void;
@@ -10,43 +9,60 @@ interface LongPressOptions {
 export const useLongPress = ({ onLongPress, onClick, delay = 400 }: LongPressOptions) => {
     const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isLongPressFired = useRef(false);
-    const pressStartPos = useRef<{ x: number; y: number } | null>(null);
     const isDrag = useRef(false);
+    const pressStartPos = useRef<{ x: number; y: number } | null>(null);
+
+    const cleanup = useCallback(() => {
+        if (timeout.current) {
+            clearTimeout(timeout.current);
+            timeout.current = null;
+        }
+        isLongPressFired.current = false;
+        isDrag.current = false;
+        pressStartPos.current = null;
+    }, []);
 
     const handlePressStart = useCallback((event: React.MouseEvent | React.TouchEvent) => {
         if ('button' in event && event.button !== 0) return;
 
-        isLongPressFired.current = false;
-        isDrag.current = false;
+        cleanup(); // Cleanup any previous state on new press
+
         const point = 'touches' in event ? event.touches[0] : event;
         pressStartPos.current = { x: point.clientX, y: point.clientY };
         
-        // Clone event for async access in timeout
-        const { type, timeStamp, target, currentTarget } = event;
-        const originalEvent = { type, timeStamp, target, currentTarget, clientX: point.clientX, clientY: point.clientY };
+        // React reuses event objects, so we need to capture the properties we need.
+        const eventForTimeout = {
+            ...('touches' in event ? { clientX: point.clientX, clientY: point.clientY } : event),
+            target: event.target,
+            currentTarget: event.currentTarget,
+        };
 
         timeout.current = setTimeout(() => {
-            if (pressStartPos.current && !isDrag.current) {
+            if (!isDrag.current) {
                 isLongPressFired.current = true;
-                onLongPress(originalEvent as any);
+                onLongPress(eventForTimeout as any);
             }
         }, delay);
-    }, [onLongPress, delay]);
+    }, [onLongPress, delay, cleanup]);
 
-    const handleClick = useCallback((event: React.MouseEvent | React.TouchEvent) => {
+    const handlePressEnd = useCallback((event: React.MouseEvent | React.TouchEvent) => {
+        // Prevent emulated mouse events on touch devices, which is critical for preventing ghost clicks.
+        if (event.type === 'touchend') {
+            event.preventDefault();
+        }
+
+        if (timeout.current) {
+            clearTimeout(timeout.current);
+        }
+        
+        // This is a single tap if long press hasn't fired and it wasn't a drag
         if (!isLongPressFired.current && !isDrag.current) {
             onClick?.(event);
         }
-        // Reset after click completes
-        isLongPressFired.current = false;
-        isDrag.current = false;
-    }, [onClick]);
 
-    const handleContextMenu = (event: React.MouseEvent) => {
-        event.preventDefault();
-        onLongPress(event);
-    };
-
+        cleanup();
+    }, [onClick, cleanup]);
+    
     useEffect(() => {
         const handleMove = (e: MouseEvent | TouchEvent) => {
             if (!pressStartPos.current) return;
@@ -54,37 +70,31 @@ export const useLongPress = ({ onLongPress, onClick, delay = 400 }: LongPressOpt
             const dx = Math.abs(movePoint.clientX - pressStartPos.current.x);
             const dy = Math.abs(movePoint.clientY - pressStartPos.current.y);
 
-            if (dx > 15 || dy > 15) {
+            if (dx > 10 || dy > 10) {
                 isDrag.current = true;
-                if (timeout.current) clearTimeout(timeout.current);
-                pressStartPos.current = null; // Cancel tracking to prevent re-triggering
+                if (timeout.current) {
+                    clearTimeout(timeout.current);
+                }
             }
         };
 
-        const handleUp = () => {
-            if (timeout.current) {
-                clearTimeout(timeout.current);
-            }
-            pressStartPos.current = null;
-        };
-
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('touchmove', handleMove);
-        window.addEventListener('mouseup', handleUp);
-        window.addEventListener('touchend', handleUp);
+        window.addEventListener('mousemove', handleMove, { passive: true });
+        window.addEventListener('touchmove', handleMove, { passive: true });
 
         return () => {
             window.removeEventListener('mousemove', handleMove);
             window.removeEventListener('touchmove', handleMove);
-            window.removeEventListener('mouseup', handleUp);
-            window.removeEventListener('touchend', handleUp);
         };
     }, []);
-    
+
     return {
         onMouseDown: handlePressStart,
         onTouchStart: handlePressStart,
-        onClick: onClick ? handleClick : undefined,
-        onContextMenu: handleContextMenu,
+        onMouseUp: handlePressEnd,
+        onTouchEnd: handlePressEnd,
+        onContextMenu: (e: React.MouseEvent) => {
+            e.preventDefault();
+            onLongPress(e);
+        },
     };
 };
