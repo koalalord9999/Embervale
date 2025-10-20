@@ -53,6 +53,8 @@ export const magusSpirePois: Record<string, POI> = {
         activities: [
             { type: 'combat', monsterId: 'arcane_familiar' },
             { type: 'combat', monsterId: 'spire_sentry' },
+// FIX: Removed redundant level, xp, and respawnTime properties.
+            { type: 'thieving_lockpick', id: 'ms_chest_1', targetName: 'Arcane Lectern', lootTableId: 'thieving_dungeon_chest_high' },
         ],
         regionId: 'magus_spire',
         x: 2048, y: 680,
@@ -124,6 +126,8 @@ export const magusSpirePois: Record<string, POI> = {
         activities: [
             { type: 'combat', monsterId: 'crystalline_spider' },
             { type: 'combat', monsterId: 'runic_guardian' },
+// FIX: Removed redundant level, xp, and respawnTime properties.
+            { type: 'thieving_lockpick', id: 'ms_chest_2', targetName: 'Construct Component Chest', lootTableId: 'thieving_dungeon_chest_high' },
         ],
         regionId: 'magus_spire',
         x: 1954, y: 680,
@@ -232,6 +236,8 @@ export const magusSpirePois: Record<string, POI> = {
         connections: ['ms_f4_guardian_hall'],
         activities: [
             { type: 'combat', monsterId: 'arcane_elemental' },
+// FIX: Removed redundant level, xp, and respawnTime properties.
+            { type: 'thieving_lockpick', id: 'ms_chest_3', targetName: "Alchemist's Satchel", lootTableId: 'thieving_dungeon_chest_elite' },
         ],
         regionId: 'magus_spire',
         x: 1900, y: 400,
@@ -273,6 +279,8 @@ export const magusSpirePois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Slumped Adventurer',
                 icon: 'https://api.iconify.design/game-icons:dead-head.svg',
+// FIX: Removed redundant level, xp, stunChance, and stunDuration properties.
+                pickpocket: { lootTableId: 'pickpocket_adventurer_table' },
                 dialogue: {
                     main: {
                         npcName: 'Slumped Adventurer',

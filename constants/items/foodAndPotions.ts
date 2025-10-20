@@ -41,25 +41,10 @@ export const foodAndPotions: Item[] = [
     { id: 'cake', name: 'Cake', description: 'A simple, plain cake.', stackable: false, value: 40, iconUrl: 'https://api.iconify.design/game-icons:cake-slice.svg', consumable: { healAmount: 12 }, material: 'cooked-fish' },
 
     // Burnt Food
-    { id: 'burnt_eggs', name: 'Burnt Eggs', description: 'Rubbery and sad.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:fried-eggs.svg', material: 'burnt' },
-    { id: 'burnt_shrimp', name: 'Burnt Shrimp', description: 'You seem to have overcooked this.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:shrimp.svg', material: 'burnt' },
-    { id: 'burnt_sardine', name: 'Burnt Sardine', description: 'You seem to have overcooked this.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:fried-fish.svg', material: 'burnt' },
-    { id: 'burnt_herring', name: 'Burnt Herring', description: 'You seem to have overcooked this.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:fried-fish.svg', material: 'burnt' },
-    { id: 'burnt_chicken', name: 'Burnt Chicken', description: 'Crispy, but not in a good way.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:chicken-leg.svg', material: 'burnt' },
-    { id: 'burnt_beef', name: 'Burnt Beef', description: "It's... crispy.", stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:steak.svg', material: 'burnt' },
-    { id: 'burnt_boar_meat', name: 'Burnt Boar Meat', description: 'This is probably not edible.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:steak.svg', material: 'burnt' },
-    { id: 'burnt_trout', name: 'Burnt Trout', description: 'You seem to have overcooked this.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:fried-fish.svg', material: 'burnt' },
-    { id: 'burnt_pike', name: 'Burnt Pike', description: 'You seem to have overcooked this.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:fried-fish.svg', material: 'burnt' },
-    { id: 'burnt_eel', name: 'Burnt Eel', description: 'A charred, rubbery mess.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:eel.svg', material: 'burnt' },
-    { id: 'burnt_tuna', name: 'Burnt Tuna', description: 'You seem to have overcooked this.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:fried-fish.svg', material: 'burnt' },
+    { id: 'burnt_food', name: 'Burnt Food', description: 'This is probably not edible.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:fire-bowl.svg', material: 'burnt' },
     { id: 'burnt_lobster', name: 'Burnt Lobster', description: 'A sad, burnt shell.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:gecko.svg', material: 'burnt' },
     { id: 'burnt_swordfish', name: 'Burnt Swordfish', description: 'You seem to have overcooked this.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:dolphin.svg', material: 'burnt' },
     { id: 'burnt_shark', name: 'Burnt Shark', description: 'You seem to have overcooked this.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:shark-jaws.svg', material: 'burnt' },
-    { id: 'burnt_crab_meat', name: 'Burnt Crab Meat', description: 'This crab meat is charred beyond recognition.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:crab-claw.svg', material: 'burnt' },
-    { id: 'rat_kebab_burnt', name: 'Burnt Rat Kebab', description: 'You cremated the rat tail.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:kebab-spit.svg', material: 'burnt' },
-    { id: 'serpent_omelet_burnt', name: 'Burnt Serpent Omelet', description: 'You have ruined a perfectly good, and very rare, egg.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:fried-eggs.svg', material: 'burnt' },
-    { id: 'burnt_bread', name: 'Burnt Bread', description: 'A blackened, inedible lump.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:bread.svg', material: 'burnt' },
-    { id: 'burnt_cake', name: 'Burnt Cake', description: 'A tragic, burnt cake.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:cake-slice.svg', material: 'burnt', emptyable: { emptyItemId: 'cake_tin' } },
     
     // Doughs & Batters
     { id: 'bread_dough', name: 'Bread Dough', description: 'A simple dough, ready to be baked into bread.', stackable: false, value: 4, iconUrl: 'https://api.iconify.design/game-icons:flour.svg' },

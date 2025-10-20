@@ -27,7 +27,7 @@ export const missingShipment: Quest = {
             npcIcon: '/assets/npcChatHeads/merchant_theron.png',
             text: "My caravan goods! You found them! I thought they were lost forever. The bandits on the King's Road have been a plague on my business. Thank you, adventurer. Please, take this for your trouble.",
             responses: [
-                { text: "Glad I could help.", actions: [{ type: 'give_xp', skill: SkillName.Slayer, amount: 1000 }, { type: 'give_coins', amount: 2000 }, { type: 'give_item', itemId: 'uncut_emerald', quantity: 1 }, { type: 'advance_quest', questId: 'missing_shipment' }] }
+                { text: "Glad I could help.", actions: [{ type: 'advance_quest', questId: 'missing_shipment' }] }
             ]
         },
         post_quest_missing_shipment: {

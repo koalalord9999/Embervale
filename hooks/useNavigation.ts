@@ -1,4 +1,3 @@
-
 import { useMemo, useCallback } from 'react';
 import { REGIONS } from '../constants';
 import { POIS } from '../data/pois';
@@ -17,10 +16,11 @@ interface NavigationDependencies {
     ui: ReturnType<typeof useUIState>;
     skilling: ReturnType<typeof useSkilling>;
     interactQuest: ReturnType<typeof useInteractQuest>;
+    isStunned: boolean;
 }
 
 export const useNavigation = (deps: NavigationDependencies) => {
-    const { session, lockedPois, clearedSkillObstacles, addLog, isBusy, isInCombat, ui, skilling, interactQuest } = deps;
+    const { session, lockedPois, clearedSkillObstacles, addLog, isBusy, isInCombat, ui, skilling, interactQuest, isStunned } = deps;
 
     const reachablePois = useMemo(() => {
         const queue: string[] = [];
@@ -70,6 +70,10 @@ export const useNavigation = (deps: NavigationDependencies) => {
     }, [ui, skilling, interactQuest, session]);
 
     const handleNavigate = useCallback((poiId: string) => {
+        if (isStunned) {
+            addLog("You are stunned and cannot move.");
+            return;
+        }
         if (isInCombat) {
             addLog("You cannot travel while in combat.");
             return;
@@ -90,9 +94,13 @@ export const useNavigation = (deps: NavigationDependencies) => {
                 addLog("You can't get there from here.");
             }
         }
-    }, [addLog, isInCombat, isBusy, reachablePois, navigateToPoi, session.currentPoiId]);
+    }, [addLog, isInCombat, isBusy, reachablePois, navigateToPoi, session.currentPoiId, isStunned]);
 
     const handleForcedNavigate = useCallback((poiId: string) => {
+        if (isStunned) {
+            addLog("You are stunned and cannot teleport.");
+            return;
+        }
         if (isInCombat) {
             addLog("Forcibly ending combat to teleport.");
             ui.setCombatQueue([]);
@@ -103,7 +111,7 @@ export const useNavigation = (deps: NavigationDependencies) => {
             ui.closeAllModals();
         }
         navigateToPoi(poiId);
-    }, [isInCombat, isBusy, addLog, navigateToPoi, ui]);
+    }, [isInCombat, isBusy, addLog, navigateToPoi, ui, isStunned]);
 
     return {
         reachablePois,

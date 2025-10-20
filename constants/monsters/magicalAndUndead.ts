@@ -1,4 +1,4 @@
-import { Monster, MonsterType, SkillName } from '../../types';
+import { Monster, MonsterType, SkillName, SpellElement } from '@/types';
 
 export const magicalAndUndead: Monster[] = [
     {
@@ -658,5 +658,32 @@ export const magicalAndUndead: Monster[] = [
     ],
     types: [MonsterType.Elemental, MonsterType.Armored], attackSpeed: 7, respawnTime: 600000, aggressive: true, alwaysAggressive: true, attackStyle: 'crush',
     specialAttacks: [{ name: 'Tremor', chance: 0.3, effect: 'stun', duration: 3000 }], //quest boss
+},
+{
+    id: 'mimic',
+    name: 'Mimic',
+    level: 78,
+    maxHp: 150,
+    attack: 65,
+    stabDefence: 100,
+    slashDefence: 100,
+    crushDefence: 50,
+    rangedDefence: 120,
+    magicDefence: 80,
+    iconUrl: 'https://api.iconify.design/game-icons:mimic-chest.svg',
+    mainDrops: [
+        { tableId: 'mimic_loot_table', chance: 1 },
+    ],
+    types: [MonsterType.Elemental, MonsterType.Armored],
+    attackSpeed: 4,
+    respawnTime: 999999999, // Essentially no respawn
+    aggressive: true,
+    alwaysAggressive: true,
+    attackStyle: 'crush',
+    alwaysDrops: true, // This ensures it always drops something from its table
+    specialAttacks: [
+        { name: 'Wooden Splinters', chance: 0.2, effect: 'damage_multiplier', value: 1.5 },
+        { name: 'Binding Latch', chance: 0.1, effect: 'stun', duration: 3000 },
+    ],
 },
 ];

@@ -66,7 +66,6 @@ export const useLongPress = ({ onLongPress, onClick, delay = 400, isOneClickMode
         
         if (!isLongPressFired.current && !isDrag.current) {
             if (isOneClickMode) {
-                // FIX: line 80: Pass the original event to onLongPress instead of a potentially incorrect 'point' object.
                 onLongPressRef.current(event);
             } else {
                 onClickRef.current?.(event);

@@ -6,6 +6,7 @@ export const misc: Item[] = [
     { id: 'beer_glass', name: 'Beer Glass', description: 'An empty beer glass.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:beer-stein.svg' },
     { id: 'ashes', name: 'Ashes', description: 'A pile of ashes.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:powder.svg' },
     { id: 'fishing_bait', name: 'Fishing Bait', description: 'A wriggling worm, perfect for catching fish.', stackable: true, value: 1, iconUrl: 'https://api.iconify.design/game-icons:worms.svg' },
+    { id: 'seeds', name: 'Seeds', description: "A random assortment of seeds, maybe I can turn them in somewhere? (But not yet)", stackable: true, value: 10, iconUrl: 'https://api.iconify.design/game-icons:seeds.svg' },
     
     // Quest & Key Items
     { id: 'arcane_resonator', name: 'Arcane Resonator', description: 'A device given by Archmage Theron to measure arcane energy at runic altars.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:orb-wand.svg' },
@@ -81,6 +82,13 @@ export const misc: Item[] = [
     { id: 'goblin_dungeon_map', name: 'Goblin Dungeon Map', description: 'A crudely drawn map of the goblin warrens.', stackable: false, value: 500, iconUrl: 'https://api.iconify.design/game-icons:treasure-map.svg', mappable: { regionId: 'goblin_dungeon', mapTitle: 'Goblin Dungeon' } },
     { id: 'sunken_labyrinth_map', name: 'Sunken Labyrinth Map', description: 'A waterlogged map of the ancient labyrinth.', stackable: false, value: 1500, iconUrl: 'https://api.iconify.design/game-icons:treasure-map.svg', mappable: { regionId: 'sunken_labyrinth', mapTitle: 'Sunken Labyrinth' } },
     { id: 'magus_spire_map', name: 'Magus Spire Map', description: 'A map drawn on shimmering crystal film, showing the layout of the spire.', stackable: false, value: 2500, iconUrl: 'https://api.iconify.design/game-icons:treasure-map.svg', mappable: { regionId: 'magus_spire', mapTitle: 'Magus Spire' } },
+    
+    // Thieving Items
+    { id: 'bobby_pin', name: 'Bobby Pin', description: 'A thin piece of metal, suitable for simple locks.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:safety-pin.svg', lockpick: { level: 1, breakChance: 0.5, power: 5 } },
+    { id: 'lockpick', name: 'Lockpick', description: 'A sturdy iron lockpick for more complex locks.', stackable: false, value: 50, iconUrl: 'https://api.iconify.design/game-icons:lockpicks.svg', lockpick: { level: 20, breakChance: 0.2, power: 10 } },
+    { id: 'diamond_lockpick', name: 'Diamond Lockpick', description: 'A masterfully crafted lockpick with a diamond tip. Very durable.', stackable: false, value: 5000, iconUrl: 'https://api.iconify.design/game-icons:lockpicks.svg', material: 'diamond', lockpick: { level: 50, breakChance: 0.05, power: 20 } },
+    { id: 'skeleton_key', name: 'Skeleton Key', description: 'An ancient, unbreakable key said to open any lock.', stackable: false, value: 100000, iconUrl: 'https://api.iconify.design/game-icons:key-skeleton.svg', lockpick: { level: 80, breakChance: 0, unbreakable: true, power: 40 } },
+
     // NEW QUEST ITEMS
     { id: 'blighted_soil', name: 'Blighted Soil', description: 'A sample of soil from near Fitzwilliam\'s petunias. It feels unnaturally cold.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:ground-sprout.svg' },
     { id: 'blight_ward_potion', name: 'Blight Ward Potion', description: 'A shimmering potion created by Anise to reveal magical blights.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:potion-ball.svg', material: 'potion-prayer' },

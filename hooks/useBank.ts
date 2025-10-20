@@ -441,6 +441,24 @@ export const useBank = (bankState: BankState, deps: BankDependencies) => {
         });
     }, [setBank]);
 
+    const clearPlaceholder = useCallback((tabId: number, itemIndex: number) => {
+        setBank(prevBank => {
+            const newBank = JSON.parse(JSON.stringify(prevBank)) as BankTab[];
+            const tab = newBank.find(t => t.id === tabId);
+            if (!tab) return prevBank;
+
+            const item = tab.items[itemIndex];
+            if (item && item.quantity === 0) {
+                const itemName = ITEMS[item.itemId]?.name || 'an item';
+                tab.items.splice(itemIndex, 1);
+                addLog(`Cleared placeholder for ${itemName}.`);
+                return newBank;
+            }
+            
+            return prevBank;
+        });
+    }, [setBank, addLog]);
+
     return {
         handleDeposit,
         handleWithdraw,
@@ -451,5 +469,6 @@ export const useBank = (bankState: BankState, deps: BankDependencies) => {
         removeTab,
         moveItemToTab,
         handleRenameTab,
+        clearPlaceholder,
     };
 };

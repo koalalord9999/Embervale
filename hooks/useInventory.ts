@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { useState, useCallback } from 'react';
 // FIX: Import BankTab to support the new bank data structure.
@@ -190,7 +191,7 @@ export const useInventory = (
 
     const hasItems = useCallback((requirements: { itemId: string, quantity: number, operator?: 'gte' | 'lt' | 'eq' }[]): boolean => {
       return requirements.every(req => {
-        const totalQuantity = inventory.reduce((acc, slot) => (slot && slot.itemId === req.itemId && !slot.noted) ? acc + slot.quantity : acc, 0);
+        const totalQuantity = inventory.reduce((acc, slot) => (slot && slot.itemId === req.itemId) ? acc + slot.quantity : acc, 0);
         
         // Handle old logic for absence check if quantity is negative
         if (req.quantity < 0) {

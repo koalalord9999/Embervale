@@ -1,4 +1,3 @@
-
 import { POI, SkillName, ToolType } from '../../types';
 
 export const theVerdantFieldsPois: Record<string, POI> = {
@@ -13,6 +12,8 @@ export const theVerdantFieldsPois: Record<string, POI> = {
                 type: 'npc', 
                 name: 'Rancher McGregor', 
                 icon: '/assets/npcChatHeads/rancher_mcgregor.png',
+                pickpocket: { lootTableId: 'pickpocket_farmer_table' },
+                attackableMonsterId: 'farmer',
             },
             { type: 'skilling', id: 'mcgregors_ranch_tree', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 1, xp: 25 }], resourceCount: { min: 1, max: 3 }, respawnTime: 15000, gatherTime: 2000 },
         ],
@@ -36,7 +37,8 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         description: "The barn is tidy and smells of fresh hay. In the corner, a sturdy spinning wheel sits ready for use.",
         connections: ['mcgregors_ranch'],
         activities: [
-            { type: 'spinning_wheel' }
+            { type: 'spinning_wheel' },
+            { type: 'thieving_lockpick', id: 'tvf_barn_chest_1', targetName: 'Old Hay-Filled Chest', lootTableId: 'thieving_house_chest_dusty' },
         ],
         regionId: 'the_verdant_fields',
         x: 800, y: 1140
@@ -280,7 +282,9 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         name: "Hunter's Campsite",
         description: 'An abandoned campsite. A cold fire pit and a tattered tent are all that remain.',
         connections: ['overgrown_ruins', 'stag_clearing'],
-        activities: [],
+        activities: [
+            { type: 'thieving_lockpick', id: 'tvf_hunter_chest_1', targetName: 'Abandoned Pack', lootTableId: 'thieving_dungeon_chest_low' },
+        ],
         regionId: 'the_verdant_fields',
         x: 300, y: 1200
     },

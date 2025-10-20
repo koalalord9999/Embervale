@@ -15,6 +15,12 @@ const defaultSettings = {
     showCombatEnemyHealth: false,
     showHitsplats: true,
     isOneClickMode: false,
+    devSettings: {
+        xpMultiplier: 1,
+        combatSpeedMultiplier: 1,
+        isPlayerInvisible: false,
+        isAutoBankOn: false,
+    }
 };
 
 const defaultState = {
@@ -43,7 +49,7 @@ const defaultState = {
         boardCompletions: {},
     },
     slayerTask: null as PlayerSlayerTask | null,
-    worldState: { windmillFlour: 0, deathMarker: null, bankPlaceholders: false, hpBoost: null } as WorldState,
+    worldState: { windmillFlour: 0, deathMarker: null, bankPlaceholders: false, hpBoost: null, recentlyKilled: [], depletedHouses: [], nextHouseResetTimestamp: 0 } as WorldState,
     autocastSpell: null as Spell | null,
     settings: defaultSettings,
     statModifiers: [] as ActiveStatModifier[],
@@ -65,6 +71,35 @@ const hydrateGameState = (loadedState: any): GameState => {
         return { ...defaultState };
     }
 
+    // --- MIGRATION LOGIC FOR BURNT FOOD ---
+    const defunctBurntItems = new Set([
+        'burnt_eggs', 'burnt_shrimp', 'burnt_sardine', 'burnt_herring',
+        'burnt_chicken', 'burnt_beef', 'burnt_boar_meat', 'burnt_trout',
+        'burnt_pike', 'burnt_eel', 'burnt_tuna', 'burnt_crab_meat',
+        'rat_kebab_burnt', 'serpent_omelet_burnt', 'burnt_bread', 'burnt_cake'
+    ]);
+
+    const migrateItems = (items: (InventorySlot | null)[]): (InventorySlot | null)[] => {
+        return items.map(slot => {
+            if (slot && defunctBurntItems.has(slot.itemId)) {
+                return { ...slot, itemId: 'burnt_food' };
+            }
+            return slot;
+        });
+    };
+
+    if (loadedState.inventory) {
+        loadedState.inventory = migrateItems(loadedState.inventory);
+    }
+    if (loadedState.bank && Array.isArray(loadedState.bank)) {
+        loadedState.bank.forEach((tab: BankTab) => {
+            if (tab.items) {
+                tab.items = migrateItems(tab.items);
+            }
+        });
+    }
+    // --- END MIGRATION LOGIC ---
+
     // Skill hydration: Ensure existing saves get new skills.
     if (loadedState.skills && Array.isArray(loadedState.skills)) {
         const loadedSkillNames = new Set(loadedState.skills.map((s: any) => s.name));
@@ -80,11 +115,12 @@ const hydrateGameState = (loadedState: any): GameState => {
 
     // Deep merge for nested objects
     hydrated.settings = { ...defaultState.settings, ...(loadedState.settings || {}) };
+    hydrated.settings.devSettings = { ...defaultState.settings.devSettings, ...(loadedState.settings?.devSettings || {}) };
     hydrated.worldState = { ...defaultState.worldState, ...(loadedState.worldState || {}) };
     hydrated.repeatableQuestsState = { ...defaultState.repeatableQuestsState, ...(loadedState.repeatableQuestsState || {}) };
     hydrated.equipment = typeof loadedState.equipment === 'object' && loadedState.equipment !== null ? { ...defaultState.equipment, ...loadedState.equipment } : defaultState.equipment;
 
-    // FIX: Detect and reset corrupted repeatable quest board data from old saves.
+    // Detect and reset corrupted repeatable quest board data from old saves.
     if (hydrated.repeatableQuestsState.boards) {
         const boards = hydrated.repeatableQuestsState.boards;
         const firstBoardKey = Object.keys(boards)[0];
@@ -209,6 +245,13 @@ export const useSaveSlotManager = (ui: ReturnType<typeof useUIState>) => {
     const importToSlot = useCallback((slotId: number, data: string): boolean => {
         const parsedData = parseAndValidateSave(data);
         if (parsedData) {
+            // Check if the user is trying to import a Normal or Hardcore character.
+            // This is to prevent cheating by exporting a Cheats character, editing the save, and re-importing.
+            if (parsedData.playerType === PlayerType.Normal || parsedData.playerType === PlayerType.Hardcore) {
+                alert("What's this? A wolf in sheep's clothing! Messing with save files to bypass Normal or Hardcore restrictions is strictly forbidden. Only 'Cheats' mode characters can be imported. Your import has been denied, you cheeky adventurer!");
+                return false; // Indicate failure
+            }
+
             const hydratedData = hydrateGameState(parsedData);
             ui.setConfirmationPrompt({
                 message: `Are you sure you want to import this save into Slot ${slotId + 1}? This will overwrite any existing data in this slot.`,

@@ -57,6 +57,8 @@ export const saltFlatsPois: Record<string, POI> = {
         activities: [
             { type: 'combat', monsterId: 'salt_leaper' },
             { type: 'combat', monsterId: 'salt_preserved_vulture' },
+            // FIX: Removed redundant level, xp, and respawnTime properties.
+            { type: 'thieving_lockpick', id: 'sf_chest_1', targetName: 'Weathered Pack', lootTableId: 'thieving_dungeon_chest_mid' },
         ],
         regionId: 'salt_flats',
         x: 273, y: 1757,
@@ -129,6 +131,8 @@ export const saltFlatsPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'brine_elemental' },
             { type: 'combat', monsterId: 'brine_elemental' },
             { type: 'combat', monsterId: 'salt_wraith' },
+            // FIX: Removed redundant level, xp, and respawnTime properties.
+            { type: 'thieving_lockpick', id: 'sf_chest_2', targetName: 'Salt-Encrusted Chest', lootTableId: 'thieving_dungeon_chest_mid' },
         ],
         regionId: 'salt_flats',
         x: 669, y: 1416,
@@ -178,6 +182,8 @@ export const saltFlatsPois: Record<string, POI> = {
                 type: 'npc', 
                 name: 'Old Salt', 
                 icon: '/assets/npcChatHeads/old_man_hemlock.png', 
+                // FIX: Corrected lootTableId to match level and removed redundant properties.
+                pickpocket: { lootTableId: 'pickpocket_craftsman_table' },
                 dialogue: {
                     start: {
                         npcName: 'Old Salt',

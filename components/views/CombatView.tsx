@@ -20,13 +20,13 @@ interface CombatViewProps {
     setCombatStance: (stance: CombatStance) => void;
     setPlayerHp: React.Dispatch<React.SetStateAction<number>>;
     onCombatEnd: () => void;
-    onFlee: () => void;
+    onFlee: (defeatedIds: string[]) => void;
     addXp: (skill: SkillName, amount: number) => void;
     addLoot: (itemId: string, quantity: number, quiet?: boolean, doses?: number, options?: { noted?: boolean, bypassAutoBank?: boolean }) => void;
     onDropLoot: (item: InventorySlot, overridePoiId?: string) => void; // For ground drops
     isAutoBankOn: boolean;
     addLog: (message: string) => void;
-    onPlayerDeath: () => void;
+    onPlayerDeath: (defeatedIds: string[]) => void;
     onKill: (uniqueInstanceId: string, attackStyle: 'melee' | 'ranged' | 'magic') => void;
     onEncounterWin: (defeatedMonsterIds: string[]) => void;
     onConsumeAmmo: () => void;
@@ -39,7 +39,7 @@ interface CombatViewProps {
     killTrigger: number;
     applyStatModifier: (skill: SkillName, value: number, duration: number, baseLevelOnConsumption: number) => void;
     isStunned: boolean;
-    // FIX: Corrected the type for addBuff from 'expiresAt' to 'durationRemaining' to match the implementation in useCharacter.
+    // FIX: Corrected the type for addBuff to use 'durationRemaining' to match the implementation in useCharacter.
     addBuff: (buff: Omit<ActiveBuff, 'id' | 'durationRemaining'>) => void;
     // FIX: Add missing props for UI settings
     showPlayerHealthNumbers: boolean;
@@ -143,6 +143,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
     const [currentElementalWeakness, setCurrentElementalWeakness] = useState<SpellElement | null>(null);
     const [nextAttackName, setNextAttackName] = useState<string>('');
     const [nextAttackColor, setNextAttackColor] = useState<string>('bg-yellow-600');
+    const [defeatedInThisEncounter, setDefeatedInThisEncounter] = useState<string[]>([]);
 
     const [nextPlayerAttackTime, setNextPlayerAttackTime] = useState(0);
     const [nextMonsterAttackTime, setNextMonsterAttackTime] = useState(0);
@@ -158,6 +159,10 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
     const prevKillTrigger = useRef(killTrigger);
 
     const gameTickMs = 600 / combatSpeedMultiplier;
+
+    useEffect(() => {
+        setDefeatedInThisEncounter([]);
+    }, [monsterQueue]);
 
     useEffect(() => {
         playerAttackInProgress.current = false;
@@ -415,6 +420,26 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
     const invRef = useRef(inv);
     useEffect(() => { invRef.current = inv; }, [inv]);
 
+    const handleMonsterDefeated = useCallback((attackStyle: 'melee' | 'ranged' | 'magic') => {
+        setIsCombatEnding(true);
+        setTimeout(() => {
+            onKill(currentInstanceId, attackStyle);
+            handleLootDistribution();
+    
+            const newDefeated = [...defeatedInThisEncounter, currentInstanceId];
+            setDefeatedInThisEncounter(newDefeated);
+    
+            if (currentMonsterIndex + 1 < monsterQueue.length) {
+                setCurrentMonsterIndex(prev => prev + 1);
+            } else {
+                setQueuedSpell(null);
+                setLastSpellCast(null);
+                onEncounterWin(monsterQueue);
+                onCombatEnd();
+            }
+        }, 1500);
+    }, [currentInstanceId, onKill, handleLootDistribution, defeatedInThisEncounter, currentMonsterIndex, monsterQueue, onEncounterWin, onCombatEnd]);
+
     const executeManualCast = useCallback((spell: Spell) => {
         if (isStunned) return;
         if (!monster) return;
@@ -479,25 +504,13 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
         addHitSplat(playerDamage > 0 ? playerDamage : 'miss', 'monster', false, true);
         
         if (newMonsterHp <= 0) {
-            setIsCombatEnding(true);
-            setTimeout(() => {
-                onKill(currentInstanceId, 'magic');
-                handleLootDistribution();
-                if (currentMonsterIndex + 1 < monsterQueue.length) {
-                    setCurrentMonsterIndex(prev => prev + 1);
-                } else {
-                    setQueuedSpell(null);
-                    setLastSpellCast(null);
-                    onEncounterWin(monsterQueue);
-                    onCombatEnd();
-                }
-            }, 1500);
+            handleMonsterDefeated('magic');
         } else {
             const castTimeTicks = spell.castTime ?? 4;
             setNextPlayerAttackTime(Date.now() + castTimeTicks * gameTickMs);
         }
 
-    }, [monster, equipment.weapon, invRef, addLog, playerSkills, playerStats, monsterHp, onKill, currentInstanceId, handleLootDistribution, currentMonsterIndex, monsterQueue.length, onCombatEnd, gameTickMs, addXp, isStunned, currentElementalWeakness, onEncounterWin]);
+    }, [monster, equipment.weapon, invRef, addLog, playerSkills, playerStats, monsterHp, addXp, isStunned, currentElementalWeakness, gameTickMs, handleMonsterDefeated]);
 
     const handleManualCast = useCallback((spell: Spell) => {
         if (isStunned) {
@@ -727,19 +740,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                 setMonsterHp(newMonsterHp);
         
                 if (newMonsterHp <= 0) {
-                    setIsCombatEnding(true);
-                    setTimeout(() => {
-                        onKill(currentInstanceId, attackStyle);
-                        handleLootDistribution();
-                        if (currentMonsterIndex + 1 < monsterQueue.length) {
-                            setCurrentMonsterIndex(prev => prev + 1);
-                        } else {
-                            setQueuedSpell(null);
-                            setLastSpellCast(null);
-                            onEncounterWin(monsterQueue);
-                            onCombatEnd();
-                        }
-                    }, 1500);
+                    handleMonsterDefeated(attackStyle);
                     combatFrameId = requestAnimationFrame(combatLoop);
                     return;
                 } else {
@@ -891,7 +892,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
             
                 if (newPlayerHp <= 0) {
                     setIsCombatEnding(true);
-                    setTimeout(() => onPlayerDeath(), 1500);
+                    setTimeout(() => onPlayerDeath(defeatedInThisEncounter), 1500);
                     combatFrameId = requestAnimationFrame(combatLoop);
                     return;
                 }
@@ -922,19 +923,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                         addLog(`${recoilSource} recoils, dealing ${recoilDamageToDeal} damage to the ${monster.name}!`);
             
                         if (monsterHpAfterRecoil <= 0) {
-                            setIsCombatEnding(true);
-                            setTimeout(() => {
-                                onKill(currentInstanceId, 'melee'); // Recoil is considered melee
-                                handleLootDistribution();
-                                if (currentMonsterIndex + 1 < monsterQueue.length) {
-                                    setCurrentMonsterIndex(prev => prev + 1);
-                                } else {
-                                    setQueuedSpell(null);
-                                    setLastSpellCast(null);
-                                    onEncounterWin(monsterQueue);
-                                    onCombatEnd();
-                                }
-                            }, 1500);
+                            handleMonsterDefeated('melee');
                             combatFrameId = requestAnimationFrame(combatLoop);
                             return;
                         }
@@ -949,36 +938,23 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
 
         combatFrameId = requestAnimationFrame(combatLoop);
         return () => cancelAnimationFrame(combatFrameId);
-    }, [isPreparing, isCombatEnding, monster, playerHp, monsterHp, equipment, combatStance, playerSkills, addXp, addLog, onCombatEnd, onKill, onEncounterWin, onConsumeAmmo, playerWeapon.speed, playerStats, monsterQueue, currentMonsterIndex, nextPlayerAttackTime, nextMonsterAttackTime, activeBuffs, monsterStatus, gameTickMs, addLoot, onDropLoot, isAutoBankOn, handleLootDistribution, autocastSpell, inv, ui, queuedSpell, executeManualCast, onPlayerDeath, applyStatModifier, isStunned, addBuff, currentElementalWeakness]);
+    }, [isPreparing, isCombatEnding, monster, playerHp, monsterHp, equipment, combatStance, playerSkills, addXp, addLog, onCombatEnd, onKill, onEncounterWin, onConsumeAmmo, playerWeapon.speed, playerStats, monsterQueue, currentMonsterIndex, nextPlayerAttackTime, nextMonsterAttackTime, activeBuffs, monsterStatus, gameTickMs, addLoot, onDropLoot, isAutoBankOn, handleLootDistribution, autocastSpell, inv, ui, queuedSpell, executeManualCast, onPlayerDeath, applyStatModifier, isStunned, addBuff, currentElementalWeakness, handleMonsterDefeated, defeatedInThisEncounter]);
 
     useEffect(() => {
         if (killTrigger > prevKillTrigger.current && monsterHp > 0 && monster) {
             addLog("DEV: Monster killed by dev command.");
-            setIsCombatEnding(true);
             setMonsterHp(0); 
-
-            setTimeout(() => {
-                onKill(currentInstanceId, 'melee');
-                handleLootDistribution();
-                if (currentMonsterIndex + 1 < monsterQueue.length) {
-                    setCurrentMonsterIndex(prev => prev + 1);
-                } else {
-                    setQueuedSpell(null);
-                    setLastSpellCast(null);
-                    onEncounterWin(monsterQueue);
-                    onCombatEnd();
-                }
-            }, 1500);
+            handleMonsterDefeated('melee');
         }
         prevKillTrigger.current = killTrigger;
-    }, [killTrigger, monsterHp, monster, addLog, onKill, currentInstanceId, handleLootDistribution, currentMonsterIndex, monsterQueue, onCombatEnd, onEncounterWin]);
+    }, [killTrigger, monsterHp, monster, addLog, handleMonsterDefeated]);
 
     const handleFlee = useCallback(() => {
         if (isStunned) { addLog("You are stunned and cannot flee."); return; }
         setQueuedSpell(null);
         setLastSpellCast(null);
-        onFlee();
-    }, [onFlee, isStunned]);
+        onFlee(defeatedInThisEncounter);
+    }, [onFlee, isStunned, defeatedInThisEncounter]);
 
     const monsterIconClass = useMemo(() => {
         if (monster?.id === 'arcane_wyvern' && currentElementalWeakness) {

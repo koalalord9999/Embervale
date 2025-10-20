@@ -6,6 +6,63 @@ import { ITEMS, INVENTORY_CAPACITY, getIconClassName, REGIONS, ALL_SKILLS, QUEST
 import { POIS } from '../../data/pois';
 import { TooltipState, useUIState } from '../../hooks/useUIState';
 
+interface GameManagerProps {
+    onResetQuest: (questId: string) => void;
+    showAllPois: boolean;
+    onToggleShowAllPois: () => void;
+    isMapManagerEnabled: boolean;
+    onToggleMapManager: (enable: boolean) => void;
+    onCommitMapChanges: () => void;
+    hasMapChanges: boolean;
+    isTouchSimulationEnabled: boolean;
+    onToggleTouchSimulation: () => void;
+}
+
+const GameManagerComponent: React.FC<GameManagerProps> = ({
+    onResetQuest, showAllPois, onToggleShowAllPois, isMapManagerEnabled,
+    onToggleMapManager, onCommitMapChanges, hasMapChanges, isTouchSimulationEnabled, onToggleTouchSimulation
+}) => {
+    const [questToReset, setQuestToReset] = useState<string>('');
+
+    return (
+        <div className="p-2 space-y-4">
+            {/* Reset Quest */}
+            <div>
+                <label className="block text-sm font-semibold mb-1">Reset Quest</label>
+                <div className="flex gap-2">
+                    <select value={questToReset} onChange={e => setQuestToReset(e.target.value)} className="w-full p-1 text-xs bg-gray-800 border border-gray-600 rounded">
+                        <option value="">-- Select Quest --</option>
+                        {Object.values(QUESTS).sort((a,b) => a.name.localeCompare(b.name)).map(q => <option key={q.id} value={q.id}>{q.name}</option>)}
+                    </select>
+                    <Button size="sm" onClick={() => { if (questToReset) onResetQuest(questToReset); }} disabled={!questToReset}>Reset</Button>
+                </div>
+            </div>
+
+            {/* Show All POIs */}
+            <div>
+                <label className="block text-sm font-semibold mb-1">Show All POIs on Map</label>
+                <button onClick={onToggleShowAllPois} className={`w-full py-1 text-xs rounded font-bold transition-colors ${showAllPois ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-700 hover:bg-gray-600'}`}>{showAllPois ? 'ON' : 'OFF'}</button>
+            </div>
+
+            {/* Map Manager */}
+            <div>
+                <label className="block text-sm font-semibold mb-1">Map Manager</label>
+                <div className="flex gap-2">
+                    <button onClick={() => onToggleMapManager(!isMapManagerEnabled)} className={`flex-1 py-1 text-xs rounded font-bold transition-colors ${isMapManagerEnabled ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-700 hover:bg-gray-600'}`}>{isMapManagerEnabled ? 'ON' : 'OFF'}</button>
+                    <Button size="sm" onClick={onCommitMapChanges} disabled={!isMapManagerEnabled || !hasMapChanges}>Commit</Button>
+                </div>
+            </div>
+
+            {/* Simulate Touch */}
+            <div>
+                <label className="block text-sm font-semibold mb-1">Simulate Touch</label>
+                <button onClick={onToggleTouchSimulation} className={`w-full py-1 text-xs rounded font-bold transition-colors ${isTouchSimulationEnabled ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-700 hover:bg-gray-600'}`}>{isTouchSimulationEnabled ? 'ON' : 'OFF'}</button>
+            </div>
+        </div>
+    );
+};
+
+
 interface CheatsComponentProps {
     combatSpeedMultiplier: number;
     setCombatSpeedMultiplier: (speed: number) => void;
@@ -20,38 +77,24 @@ interface CheatsComponentProps {
     setIsPlayerInvisible: (isInvisible: boolean) => void;
     isAutoBankOn: boolean;
     setIsAutoBankOn: (isOn: boolean) => void;
-    isTouchSimulationEnabled: boolean;
-    onToggleTouchSimulation: () => void;
-    isMapManagerEnabled: boolean;
-    onToggleMapManager: (enable: boolean) => void;
-    onCommitMapChanges: () => void;
-    hasMapChanges: boolean;
-    showAllPois: boolean;
-    onToggleShowAllPois: () => void;
     xpMultiplier: number;
     setXpMultiplier: (multiplier: number) => void;
-    isXpBoostEnabled: boolean;
-    setIsXpBoostEnabled: (isOn: boolean) => void;
     onHealPlayer: () => void;
     onKillMonster: () => void;
     onAddCoins: (amount: number) => void;
     onSetSkillLevel: (skill: SkillName, level: number) => void;
-    onResetQuest: (questId: string) => void;
 }
 
 const CheatsComponent: React.FC<CheatsComponentProps> = ({
     combatSpeedMultiplier, setCombatSpeedMultiplier, isInstantRespawnOn, setIsInstantRespawnOn,
     instantRespawnCounter, setInstantRespawnCounter, isInCombat, isCurrentMonsterAggro,
     onToggleAggro, isPlayerInvisible, setIsPlayerInvisible, isAutoBankOn, setIsAutoBankOn,
-    isTouchSimulationEnabled, onToggleTouchSimulation, isMapManagerEnabled, onToggleMapManager,
-    onCommitMapChanges, hasMapChanges, showAllPois, onToggleShowAllPois,
-    xpMultiplier, setXpMultiplier, isXpBoostEnabled, setIsXpBoostEnabled,
-    onHealPlayer, onKillMonster, onAddCoins, onSetSkillLevel, onResetQuest
+    xpMultiplier, setXpMultiplier,
+    onHealPlayer, onKillMonster, onAddCoins, onSetSkillLevel
 }) => {
     const [skillToSet, setSkillToSet] = useState<SkillName | ''>('');
     const [levelToSet, setLevelToSet] = useState(1);
     const [coinAmount, setCoinAmount] = useState(1000000);
-    const [questToReset, setQuestToReset] = useState<string>('');
 
     return (
         <div className="p-2 space-y-4">
@@ -82,20 +125,7 @@ const CheatsComponent: React.FC<CheatsComponentProps> = ({
                         {ALL_SKILLS.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
                     </select>
                     <input type="number" min="1" max="99" value={levelToSet} onChange={e => setLevelToSet(parseInt(e.target.value, 10) || 1)} className="w-20 p-1 text-xs bg-gray-800 border border-gray-600 rounded text-center"/>
-                    {/* FIX: Add a check to ensure skillToSet is not an empty string before calling onSetSkillLevel to satisfy TypeScript. */}
                     <Button size="sm" onClick={() => { if (skillToSet) { onSetSkillLevel(skillToSet, levelToSet); } }} disabled={!skillToSet}>Set</Button>
-                </div>
-            </div>
-
-            {/* Reset Quest */}
-            <div>
-                <label className="block text-sm font-semibold mb-1">Reset Quest</label>
-                <div className="flex gap-2">
-                    <select value={questToReset} onChange={e => setQuestToReset(e.target.value)} className="w-full p-1 text-xs bg-gray-800 border border-gray-600 rounded">
-                        <option value="">-- Select Quest --</option>
-                        {Object.values(QUESTS).sort((a,b) => a.name.localeCompare(b.name)).map(q => <option key={q.id} value={q.id}>{q.name}</option>)}
-                    </select>
-                    <Button size="sm" onClick={() => { if (questToReset) onResetQuest(questToReset); }} disabled={!questToReset}>Reset</Button>
                 </div>
             </div>
 
@@ -103,38 +133,19 @@ const CheatsComponent: React.FC<CheatsComponentProps> = ({
             <div>
                 <label className="block text-sm font-semibold mb-1">XP Multiplier</label>
                 <div className="flex gap-2 items-center">
-                    <button onClick={() => setIsXpBoostEnabled(!isXpBoostEnabled)} className={`w-16 py-1 text-xs rounded font-bold transition-colors ${isXpBoostEnabled ? 'bg-green-600 hover:bg-green-500' : 'bg-red-700 hover:bg-red-600'}`}>
-                        {isXpBoostEnabled ? 'ON' : 'OFF'}
-                    </button>
-                    <input
-                        type="number"
-                        min="1"
-                        max="100"
-                        disabled={!isXpBoostEnabled}
-                        value={xpMultiplier}
-                        onChange={e => {
-                            const val = parseInt(e.target.value, 10);
-                            if (!isNaN(val)) {
-                                setXpMultiplier(Math.max(1, Math.min(100, val)));
-                            } else if (e.target.value === '') {
-                                setXpMultiplier(1);
-                            }
-                        }}
-                        className="w-full p-1 text-xs bg-gray-800 border border-gray-600 rounded text-center disabled:opacity-50"
-                    />
-                </div>
-            </div>
-            {/* Show All POIs */}
-            <div>
-                <label className="block text-sm font-semibold mb-1">Show All POIs on Map</label>
-                <button onClick={onToggleShowAllPois} className={`w-full py-1 text-xs rounded font-bold transition-colors ${showAllPois ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-700 hover:bg-gray-600'}`}>{showAllPois ? 'ON' : 'OFF'}</button>
-            </div>
-            {/* Map Manager */}
-            <div>
-                <label className="block text-sm font-semibold mb-1">Map Manager</label>
-                <div className="flex gap-2">
-                    <button onClick={() => onToggleMapManager(!isMapManagerEnabled)} className={`flex-1 py-1 text-xs rounded font-bold transition-colors ${isMapManagerEnabled ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-700 hover:bg-gray-600'}`}>{isMapManagerEnabled ? 'ON' : 'OFF'}</button>
-                    <Button size="sm" onClick={onCommitMapChanges} disabled={!isMapManagerEnabled || !hasMapChanges}>Commit</Button>
+                    <div className="flex flex-wrap gap-1">
+                        {[1, 2, 5, 10, 25, 50, 100].map(val => (
+                            <Button
+                                key={val}
+                                size="sm"
+                                variant={xpMultiplier === val ? 'primary' : 'secondary'}
+                                onClick={() => setXpMultiplier(val)}
+                                className="px-1.5" // Tighter padding
+                            >
+                                {val}x
+                            </Button>
+                        ))}
+                    </div>
                 </div>
             </div>
             {/* Combat Speed */}
@@ -165,11 +176,6 @@ const CheatsComponent: React.FC<CheatsComponentProps> = ({
             <div>
                 <label className="block text-sm font-semibold mb-1">Auto-Bank</label>
                 <button onClick={() => setIsAutoBankOn(!isAutoBankOn)} className={`w-full py-1 text-xs rounded font-bold transition-colors ${isAutoBankOn ? 'bg-green-600 hover:bg-green-500' : 'bg-red-700 hover:bg-red-600'}`}>{isAutoBankOn ? 'ON' : 'OFF'}</button>
-            </div>
-            {/* Simulate Touch */}
-            <div>
-                <label className="block text-sm font-semibold mb-1">Simulate Touch</label>
-                <button onClick={onToggleTouchSimulation} className={`w-full py-1 text-xs rounded font-bold transition-colors ${isTouchSimulationEnabled ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-700 hover:bg-gray-600'}`}>{isTouchSimulationEnabled ? 'ON' : 'OFF'}</button>
             </div>
             {/* Perm-Aggro */}
             <div>
@@ -330,113 +336,21 @@ const TeleportComponent: React.FC<{
     );
 };
 
-const WoodcuttingCalculatorComponent: React.FC<{
-    level: number;
-    setLevel: (level: number) => void;
-    treeId: string | null;
-    setTreeId: (id: string | null) => void;
-}> = ({ level, setLevel, treeId, setTreeId }) => {
-    const [result, setResult] = useState<{ hardness: number, chances: { axe: Item, power: number, chance: number }[] } | null>(null);
-
-    const woodcuttingActivities = useMemo(() => {
-        return Object.values(POIS)
-            .flatMap(poi => poi.activities)
-            .filter(activity => activity.type === 'skilling' && activity.skill === SkillName.Woodcutting)
-            .map(activity => ({
-                id: (activity as any).id,
-                name: (activity as any).name || 'Chop Tree'
-            }))
-            .filter((value, index, self) => self.findIndex(t => t.id === value.id) === index)
-            .sort((a, b) => a.name.localeCompare(b.name));
-    }, []);
-
-    const allAxes = useMemo(() => {
-        return Object.values(ITEMS)
-            .filter(item => item.tool?.type === ToolType.Axe)
-            .sort((a, b) => (a.tool?.power ?? 0) - (b.tool?.power ?? 0));
-    }, []);
-
-    useEffect(() => {
-        if (!treeId) {
-            setResult(null);
-            return;
-        }
-
-        const activity = Object.values(POIS)
-            .flatMap(poi => poi.activities)
-            .find(act => act.type === 'skilling' && act.id === treeId) as Extract<any, { type: 'skilling' }>;
-
-        if (!activity) {
-            setResult(null);
-            return;
-        }
-
-        let hardness = activity.treeHardness;
-        if (hardness === undefined) {
-            const primaryLoot = activity.loot?.[0];
-            if (primaryLoot) {
-                hardness = LOG_HARDNESS[primaryLoot.itemId];
-            }
-        }
-
-        if (hardness === undefined || hardness <= 0) {
-            setResult(null);
-            return;
-        }
-
-        const chances = allAxes.map(axe => {
-            const power = axe.tool!.power;
-            const totalPower = level + power;
-            const chance = Math.min(100, (totalPower / hardness!) * 100);
-            return { axe, power, chance };
-        });
-
-        setResult({ hardness, chances });
-
-    }, [level, treeId, allAxes]);
-
-    return (
-        <div className="p-2 space-y-4">
-            <div>
-                <label className="block text-sm font-semibold mb-1">Woodcutting Level</label>
-                <input
-                    type="number"
-                    min="1" max="99"
-                    value={level}
-                    onChange={e => setLevel(Math.max(1, Math.min(99, parseInt(e.target.value) || 1)))}
-                    className="w-full p-1 text-xs bg-gray-800 border border-gray-600 rounded text-center"
-                />
-            </div>
-            <div>
-                <label className="block text-sm font-semibold mb-1">Tree Type</label>
-                <select value={treeId ?? ''} onChange={e => setTreeId(e.target.value || null)} className="w-full p-2 bg-gray-800 border border-gray-600 rounded">
-                    <option value="">-- Select Tree --</option>
-                    {woodcuttingActivities.map(act => (
-                        <option key={act.id} value={act.id}>{act.name} ({act.id})</option>
-                    ))}
-                </select>
-            </div>
-            {result && (
-                <div className="mt-4 pt-2 border-t border-gray-600">
-                    <h4 className="font-bold text-lg text-yellow-300 text-center mb-2">Results</h4>
-                    <p className="text-center text-sm mb-2">Tree Hardness: <span className="font-semibold">{result.hardness}</span></p>
-                    <div className="space-y-1 text-sm">
-                        {result.chances.map(({ axe, power, chance }) => (
-                            <div key={axe.id} className="flex justify-between bg-gray-900/50 p-1 rounded">
-                                <span>{axe.name} (Pwr: {power})</span>
-                                <span className="font-bold">{chance.toFixed(2)}%</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-};
-
-
 interface DevPanelProps {
     inv: ReturnType<typeof useInventory>;
+    devPanelState: {
+        activeTab: 'cheats' | 'items' | 'teleport' | 'game-manager' | 'monsters';
+        itemSearchTerm: string;
+        selectedItemId: string | null;
+        spawnQuantity: number;
+        teleportRegionId: string;
+        teleportPoiId: string;
+    };
+    updateDevPanelState: (updates: Partial<DevPanelProps['devPanelState']>) => void;
+    onClose: () => void;
+    ui: ReturnType<typeof useUIState>;
+    
+    // Cheats Props
     combatSpeedMultiplier: number;
     setCombatSpeedMultiplier: (speed: number) => void;
     isInstantRespawnOn: boolean;
@@ -450,49 +364,32 @@ interface DevPanelProps {
     setIsPlayerInvisible: (isInvisible: boolean) => void;
     isAutoBankOn: boolean;
     setIsAutoBankOn: (isOn: boolean) => void;
-    isTouchSimulationEnabled: boolean;
-    onToggleTouchSimulation: () => void;
-    setTooltip: (tooltip: TooltipState | null) => void;
-    isMapManagerEnabled: boolean;
-    onToggleMapManager: (enable: boolean) => void;
-    onCommitMapChanges: () => void;
-    hasMapChanges: boolean;
-    showAllPois: boolean;
-    onToggleShowAllPois: () => void;
-    onForcedNavigate: (poiId: string) => void;
     xpMultiplier: number;
     setXpMultiplier: (multiplier: number) => void;
-    isXpBoostEnabled: boolean;
-    setIsXpBoostEnabled: (isOn: boolean) => void;
-    devPanelState: {
-        activeTab: 'cheats' | 'items' | 'teleport' | 'woodcutting' | 'monsters';
-        itemSearchTerm: string;
-        selectedItemId: string | null;
-        spawnQuantity: number;
-        teleportRegionId: string;
-        teleportPoiId: string;
-        skillToSet: '' | SkillName;
-        levelToSet: number;
-        coinAmount: number;
-        wcTestLevel: number;
-        wcTestTreeId: string | null;
-    };
-    updateDevPanelState: (updates: Partial<DevPanelProps['devPanelState']>) => void;
-    onClose: () => void;
     onHealPlayer: () => void;
     onKillMonster: () => void;
     onAddCoins: (amount: number) => void;
     onSetSkillLevel: (skill: SkillName, level: number) => void;
+
+    // Game Manager Props
     onResetQuest: (questId: string) => void;
-    // FIX: Add ui prop to fix error on line 524
-    ui: ReturnType<typeof useUIState>;
+    showAllPois: boolean;
+    onToggleShowAllPois: () => void;
+    isMapManagerEnabled: boolean;
+    onToggleMapManager: (enable: boolean) => void;
+    onCommitMapChanges: () => void;
+    hasMapChanges: boolean;
+    isTouchSimulationEnabled: boolean;
+    onToggleTouchSimulation: () => void;
+    setTooltip: (tooltip: TooltipState | null) => void;
+    onForcedNavigate: (poiId: string) => void;
 }
 
 const DevPanel: React.FC<DevPanelProps> = (props) => {
     const { inv, setTooltip, devPanelState, updateDevPanelState, onClose, ui, ...otherProps } = props;
-    const { activeTab, itemSearchTerm, selectedItemId, spawnQuantity, teleportRegionId, teleportPoiId, wcTestLevel, wcTestTreeId } = devPanelState;
+    const { activeTab, itemSearchTerm, selectedItemId, spawnQuantity, teleportRegionId, teleportPoiId } = devPanelState;
 
-    const setActiveTab = (tab: 'cheats' | 'items' | 'teleport' | 'woodcutting' | 'monsters') => updateDevPanelState({ activeTab: tab });
+    const setActiveTab = (tab: 'cheats' | 'items' | 'teleport' | 'game-manager' | 'monsters') => updateDevPanelState({ activeTab: tab });
 
     const selectedItem = useMemo(() => selectedItemId ? ITEMS[selectedItemId] : null, [selectedItemId]);
 
@@ -505,8 +402,7 @@ const DevPanel: React.FC<DevPanelProps> = (props) => {
             <div className="flex border-b-2 border-gray-700 mb-2 flex-shrink-0">
                 <button onClick={() => setActiveTab('cheats')} className={`flex-1 py-1 text-sm font-semibold rounded-t-md transition-colors ${activeTab === 'cheats' ? 'bg-gray-700 text-yellow-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Cheats</button>
                 <button onClick={() => setActiveTab('items')} className={`flex-1 py-1 text-sm font-semibold rounded-t-md transition-colors ${activeTab === 'items' ? 'bg-gray-700 text-yellow-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Items</button>
-                <button onClick={() => setActiveTab('monsters')} className={`flex-1 py-1 text-sm font-semibold rounded-t-md transition-colors ${activeTab === 'monsters' ? 'bg-gray-700 text-yellow-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Monsters</button>
-                <button onClick={() => setActiveTab('woodcutting')} className={`flex-1 py-1 text-sm font-semibold rounded-t-md transition-colors ${activeTab === 'woodcutting' ? 'bg-gray-700 text-yellow-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Woodcutting</button>
+                <button onClick={() => setActiveTab('game-manager')} className={`flex-1 py-1 text-sm font-semibold rounded-t-md transition-colors ${activeTab === 'game-manager' ? 'bg-gray-700 text-yellow-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Game Manager</button>
                 <button onClick={() => setActiveTab('teleport')} className={`flex-1 py-1 text-sm font-semibold rounded-t-md transition-colors ${activeTab === 'teleport' ? 'bg-gray-700 text-yellow-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Teleport</button>
             </div>
             <div className="flex-grow min-h-0 overflow-y-auto">
@@ -521,17 +417,7 @@ const DevPanel: React.FC<DevPanelProps> = (props) => {
                     quantity={spawnQuantity}
                     setQuantity={(qty) => updateDevPanelState({ spawnQuantity: qty })}
                 />}
-                {activeTab === 'monsters' && (
-                    <div className="p-4 text-center">
-                        <Button onClick={() => { ui.setIsMonsterDBOpen(true); onClose(); }}>Open Monster Database</Button>
-                    </div>
-                )}
-                {activeTab === 'woodcutting' && <WoodcuttingCalculatorComponent
-                    level={wcTestLevel}
-                    setLevel={(level) => updateDevPanelState({ wcTestLevel: level })}
-                    treeId={wcTestTreeId}
-                    setTreeId={(id) => updateDevPanelState({ wcTestTreeId: id })}
-                />}
+                {activeTab === 'game-manager' && <GameManagerComponent {...otherProps} />}
                 {activeTab === 'teleport' && <TeleportComponent
                     onForcedNavigate={props.onForcedNavigate}
                     selectedRegionId={teleportRegionId}

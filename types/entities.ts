@@ -83,6 +83,7 @@ export interface Item {
   };
   buryable?: { prayerXp: number };
   tool?: { type: ToolType; power: number; requiredLevels?: { skill: SkillName; level: number }[] };
+  lockpick?: { level: number; breakChance: number; unbreakable?: boolean; power: number; };
   cleanable?: { cleanItemId: string; xp: number };
   emptyable?: { emptyItemId: string };
   divining?: { poiId: string; };
@@ -150,23 +151,8 @@ export interface Monster {
   alwaysDrops?: boolean;
   customMaxHit?: number;
   elementalWeakness?: SpellElement;
+  pickpocket?: { lootTableId: string; };
   elementalWeaknessCycle?: SpellElement[];
-}
-
-export interface WorldState {
-    windmillFlour: number;
-    deathMarker?: {
-        poiId: string;
-        timeRemaining: number; // in ms
-        immunityGranted?: boolean;
-    } | null;
-    poiImmunity?: Record<string, number>; // key: poiId, value: expiry timestamp
-    bankPlaceholders?: boolean;
-    hpBoost?: {
-        amount: number;
-        expiresAt: number;
-    } | null;
-    pendingQuestCombatReward?: InventorySlot | null;
 }
 
 export interface ActiveStatModifier {

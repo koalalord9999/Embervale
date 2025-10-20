@@ -1,7 +1,7 @@
 // A new type to define the context for the unified crafting modal.
 // This tells the CraftingView what UI and recipes to display.
 export type CraftingContext =
-  | { type: 'anvil' }
+  | { type: 'anvil', defaultBarType?: string; }
   | { type: 'furnace' }
   | { type: 'cooking_range' }
   | { type: 'spinning_wheel' }

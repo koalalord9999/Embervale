@@ -1,4 +1,3 @@
-
 import { POI, SkillName } from '../../types';
 
 export const sunkenLabyrinthPois: Record<string, POI> = {
@@ -31,6 +30,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         activities: [
             { type: 'combat', monsterId: 'ancient_sentinel' },
             { type: 'combat', monsterId: 'skeletal_archer' },
+            { type: 'thieving_lockpick', id: 'sl_armory_chest_1', targetName: 'Ancient Armory Chest', lootTableId: 'thieving_dungeon_chest_high' },
         ],
         regionId: 'sunken_labyrinth',
         x: -147, y: 2284,
@@ -108,7 +108,9 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         name: 'The Scriptorium',
         description: 'A chamber with stone podiums, likely for scribes. A large, intact tablet in the center tells a fragment of a story about a forgotten sea god.',
         connections: ['laby_archive_hall'],
-        activities: [],
+        activities: [
+            { type: 'thieving_lockpick', id: 'sl_scriptorium_chest_1', targetName: "Scribe's Footlocker", lootTableId: 'thieving_dungeon_chest_high' },
+        ],
         regionId: 'sunken_labyrinth',
         x: 591, y: 2287,
     },
@@ -310,7 +312,9 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         name: 'Treasure Vault',
         description: 'This side chamber appears to have been a vault, though it has been mostly picked clean. An old chest remains.',
         connections: ['laby_colonnade_of_the_ancients'],
-        activities: [],
+        activities: [
+            { type: 'thieving_lockpick', id: 'sl_vault_chest_1', targetName: 'Looted Treasure Chest', lootTableId: 'thieving_dungeon_chest_high' },
+        ],
         regionId: 'sunken_labyrinth',
         x: -198, y: 2655,
     },
@@ -440,7 +444,10 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         name: 'Secret Vault', 
         description: 'A hidden vault! It seems undisturbed. A single, ornate chest sits in the middle of the room.', 
         connections: ['laby_hidden_passage'], 
-        activities: [], 
+        activities: [
+// FIX: Removed redundant level, xp, and respawnTime properties.
+            { type: 'thieving_lockpick', id: 'sl_secret_vault_chest_1', targetName: 'Pristine Treasure Chest', lootTableId: 'thieving_dungeon_chest_elite' },
+        ], 
         regionId: 'sunken_labyrinth', 
         x: 541, y: 2232 
     },

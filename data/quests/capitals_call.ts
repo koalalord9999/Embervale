@@ -131,7 +131,7 @@ export const capitalsCall: Quest = {
             responses: []
         },
         investigate_debris_start: {
-            npcName: 'Investigation',
+            npcName: 'Investigate Debris',
             npcIcon: 'https://api.iconify.design/game-icons:magnifying-glass.svg',
             text: "The bridge supports look like they were cut with an axe, and there are scorch marks here. It was sabotage! You find a torn piece of cloth with a strange coiled serpent insignia nearby.",
             responses: [

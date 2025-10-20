@@ -6,7 +6,8 @@ import { CraftingViewProps } from '../CraftingView';
 import { useLongPress } from '../../../../hooks/useLongPress';
 import { useIsTouchDevice } from '../../../../hooks/useIsTouchDevice';
 
-type BarType = 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar';
+// FIX: Add 'silver_bar' to the BarType to allow smithing with silver.
+type BarType = 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar' | 'gold_bar' | 'silver_bar';
 
 const AnvilSlot: React.FC<{
     recipe: typeof SMITHING_RECIPES[0];
@@ -102,7 +103,7 @@ const AnvilSlot: React.FC<{
     );
 };
 
-const AnvilInterface: React.FC<CraftingViewProps> = ({ inventory, skills, playerQuests, onSmithItem, setContextMenu, setMakeXPrompt, setTooltip }) => {
+const AnvilInterface: React.FC<CraftingViewProps> = ({ inventory, skills, playerQuests, onSmithItem, setContextMenu, setMakeXPrompt, setTooltip, context }) => {
     const smithingLevel = skills.find(s => s.name === SkillName.Smithing)?.currentLevel ?? 1;
     const [selectedBar, setSelectedBar] = useState<BarType | null>(null);
     const isTouchDevice = useIsTouchDevice(false);
@@ -116,27 +117,41 @@ const AnvilInterface: React.FC<CraftingViewProps> = ({ inventory, skills, player
         }, 0);
     };
 
-    const barCounts = {
+    const barCounts: Record<BarType, number> = {
         bronze_bar: getItemCount('bronze_bar'),
         iron_bar: getItemCount('iron_bar'),
         steel_bar: getItemCount('steel_bar'),
         mithril_bar: getItemCount('mithril_bar'),
         adamantite_bar: getItemCount('adamantite_bar'),
         runic_bar: getItemCount('runic_bar'),
+        gold_bar: getItemCount('gold_bar'),
+        // FIX: Add silver_bar to the counts object.
+        silver_bar: getItemCount('silver_bar'),
     };
 
     useEffect(() => {
-        const availableBars: BarType[] = ['runic_bar', 'adamantite_bar', 'mithril_bar', 'steel_bar', 'iron_bar', 'bronze_bar'];
-        const firstAvailable = availableBars.find(bar => barCounts[bar as BarType] > 0);
+        // If a default bar is provided by context and the player has it, select it.
+        if (context.type === 'anvil' && context.defaultBarType) {
+            const barCount = getItemCount(context.defaultBarType);
+            if (barCount > 0) {
+                setSelectedBar(context.defaultBarType as BarType);
+                return; // Exit early
+            }
+        }
+    
+        // Otherwise, fall back to the highest tier available bar.
+        // FIX: Add silver_bar to the available bars list.
+        const availableBars: BarType[] = ['runic_bar', 'adamantite_bar', 'mithril_bar', 'gold_bar', 'silver_bar', 'steel_bar', 'iron_bar', 'bronze_bar'];
+        const firstAvailable = availableBars.find(bar => barCounts[bar] > 0);
         setSelectedBar(firstAvailable || null);
-    }, [inventory]);
+    }, [context, inventory]); // Using inventory to trigger re-evaluation when bar counts change
     
     const visibleRecipes = SMITHING_RECIPES;
 
     return (
         <div className="flex flex-col flex-grow min-h-0">
             <div className="flex gap-2 mb-4 flex-wrap flex-shrink-0">
-                {Object.entries(barCounts).map(([barType, count]) => (
+                {Object.entries(barCounts).filter(([_, count]) => count > 0).map(([barType, count]) => (
                     <Button 
                         key={barType}
                         onClick={() => setSelectedBar(barType as BarType)} 

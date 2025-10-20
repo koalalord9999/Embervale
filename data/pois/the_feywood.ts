@@ -43,6 +43,8 @@ export const theFeywoodPois: Record<string, POI> = {
         activities: [
             { type: 'combat', monsterId: 'fey_sprite' },
             { type: 'combat', monsterId: 'fey_sprite' },
+// FIX: Removed redundant level, xp, and respawnTime properties.
+            { type: 'thieving_lockpick', id: 'fw_chest_1', targetName: 'Fey-touched Chest', lootTableId: 'thieving_dungeon_chest_mid' },
         ],
         regionId: 'feywood',
         x: 1160, y: 520
@@ -134,7 +136,9 @@ export const theFeywoodPois: Record<string, POI> = {
         description: 'The very heart of the forest. The air is so thick with magic it feels tangible. A single, colossal tree pulses with soft light.',
         connections: ['ancient_feywood', 'verdant_altar'],
         activities: [
-            { type: 'skilling', name: 'Colossal Feywood Tree', id: 'heart_feywood_tree', skill: SkillName.Woodcutting, requiredLevel: 70, loot: [{ itemId: 'feywood_logs', chance: 1, xp: 120 }], resourceCount: { min: 80, max: 300 }, respawnTime: 125000, gatherTime: 4000 }
+            { type: 'skilling', name: 'Colossal Feywood Tree', id: 'heart_feywood_tree', skill: SkillName.Woodcutting, requiredLevel: 70, loot: [{ itemId: 'feywood_logs', chance: 1, xp: 120 }], resourceCount: { min: 80, max: 300 }, respawnTime: 125000, gatherTime: 4000 },
+// FIX: Removed redundant level, xp, and respawnTime properties.
+            { type: 'thieving_lockpick', id: 'fw_chest_2', targetName: 'Heartwood Chest', lootTableId: 'thieving_dungeon_chest_high' },
         ],
         regionId: 'feywood',
         x: 1480, y: 440

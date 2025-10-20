@@ -201,14 +201,7 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     <PlaceholderIcon />
                     <PlaceholderIcon />
                     <PlaceholderIcon />
-                    <PanelIcon 
-                        setTooltip={ui.setTooltip} 
-                        icon="closed-doors" 
-                        label="Logout"
-                        ariaLabel="Logout"
-                        isActive={false} 
-                        onClick={onReturnToMenu}
-                    />
+                    <PanelIcon setTooltip={ui.setTooltip} icon="closed-doors" label="Logout" ariaLabel="Logout" isActive={false} onClick={onReturnToMenu} />
                     <PlaceholderIcon />
                     <PlaceholderIcon />
                     <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-settings" icon="gears" label="Settings" ariaLabel="Settings" isActive={ui.isSettingsViewOpen} onClick={() => ui.setIsSettingsViewOpen(true)} />

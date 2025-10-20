@@ -31,6 +31,8 @@ export const minePois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Prospector Gudrun',
                 icon: '/assets/npcChatHeads/prospector_gudrun.png',
+                pickpocket: { lootTableId: 'pickpocket_dwarf_table' },
+                attackableMonsterId: 'dwarf',
                 dialogue: {
                     start: {
                         npcName: 'Prospector Gudrun',
@@ -41,7 +43,8 @@ export const minePois: Record<string, POI> = {
                 },
                 startNode: 'start',
                 dialogueType: 'random',
-            }
+            },
+            { type: 'thieving_lockpick', id: 'md_chest_1', targetName: 'Abandoned Chest', lootTableId: 'thieving_dungeon_chest_low' },
         ],
         regionId: 'wilderness',
         x: 1400, y: 1000
@@ -51,7 +54,10 @@ export const minePois: Record<string, POI> = {
         name: 'Crystal Cavern',
         description: 'A breathtaking dead-end cavern where immense crystals cast a faint, ethereal light. The air hums with a faint power.',
         connections: ['mine_depths', 'stone_altar'],
-        activities: [],
+        activities: [
+            { type: 'thieving_lockpick', id: 'cc_chest_1', targetName: 'Crystalline Chest', lootTableId: 'thieving_dungeon_chest_mid' },
+            { type: 'skilling', id: 'crystal_cavern_silver_1', name: 'Mine Silver Rock', skill: SkillName.Mining, requiredLevel: 20, loot: [{ itemId: 'silver_ore', chance: 1, xp: 40 }], resourceCount: { min: 1, max: 3 }, respawnTime: 18000, gatherTime: 4000 },
+        ],
         regionId: 'wilderness',
         x: 1500, y: 1060
     },

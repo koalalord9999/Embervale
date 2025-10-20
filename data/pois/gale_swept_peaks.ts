@@ -1,4 +1,3 @@
-
 import { POI, SkillName } from '../../types';
 
 export const galeSweptPeaksPois: Record<string, POI> = {
@@ -10,6 +9,8 @@ export const galeSweptPeaksPois: Record<string, POI> = {
         activities: [
             { type: 'skilling', id: 'ancient_pass_iron_1', name: 'Mine Iron Rock', skill: SkillName.Mining, requiredLevel: 15, loot: [{ itemId: 'iron_ore', chance: 1, xp: 35 }], resourceCount: { min: 2, max: 4 }, respawnTime: 8000, gatherTime: 3000 },
             { type: 'skilling', id: 'ancient_pass_coal_1', name: 'Mine Coal Rock', skill: SkillName.Mining, requiredLevel: 30, loot: [{ itemId: 'coal', chance: 1, xp: 50 }], resourceCount: { min: 1, max: 2 }, respawnTime: 12000, gatherTime: 3500 },
+            { type: 'skilling', id: 'ancient_pass_silver_1', name: 'Mine Silver Rock', skill: SkillName.Mining, requiredLevel: 20, loot: [{ itemId: 'silver_ore', chance: 1, xp: 40 }], resourceCount: { min: 1, max: 2 }, respawnTime: 18000, gatherTime: 4000 },
+            { type: 'skilling', id: 'ancient_pass_silver_2', name: 'Mine Silver Rock', skill: SkillName.Mining, requiredLevel: 20, loot: [{ itemId: 'silver_ore', chance: 1, xp: 40 }], resourceCount: { min: 1, max: 2 }, respawnTime: 18000, gatherTime: 4000 },
             { type: 'skilling', id: 'ancient_pass_mithril_1', name: 'Mine Mithril Rock', skill: SkillName.Mining, requiredLevel: 50, loot: [{ itemId: 'mithril_ore', chance: 1, xp: 80 }], resourceCount: { min: 1, max: 2 }, respawnTime: 20000, gatherTime: 4000 },
         ],
         regionId: 'gale_swept_peaks',
@@ -35,7 +36,8 @@ export const galeSweptPeaksPois: Record<string, POI> = {
                     }
                 },
                 startNode: 'start'
-            }
+            },
+            { type: 'thieving_lockpick', id: 'gsp_outpost_chest_1', targetName: 'Stone Chest', lootTableId: 'thieving_dungeon_chest_mid' },
         ],
         regionId: 'gale_swept_peaks',
         x: 960, y: 540
@@ -93,6 +95,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
         connections: ['goat_trail'],
         activities: [
             { type: 'npc', name: 'Borin Stonehand', icon: '/assets/npcChatHeads/prospector_gudrun.png', 
+                pickpocket: { lootTableId: 'pickpocket_dwarf_table' },
                 dialogue: {
                     start: {
                         npcName: 'Borin Stonehand',
@@ -102,7 +105,9 @@ export const galeSweptPeaksPois: Record<string, POI> = {
                     }
                 },
                 startNode: 'start'
-             }
+             },
+             { type: 'skilling', id: 'borins_cave_gold_1', name: 'Mine Gold Rock', skill: SkillName.Mining, requiredLevel: 40, loot: [{ itemId: 'gold_ore', chance: 1, xp: 65 }], resourceCount: { min: 1, max: 1 }, respawnTime: 60000, gatherTime: 4500 },
+             { type: 'skilling', id: 'borins_cave_gold_2', name: 'Mine Gold Rock', skill: SkillName.Mining, requiredLevel: 40, loot: [{ itemId: 'gold_ore', chance: 1, xp: 65 }], resourceCount: { min: 1, max: 1 }, respawnTime: 60000, gatherTime: 4500 },
         ],
         regionId: 'gale_swept_peaks',
         x: 920, y: 400

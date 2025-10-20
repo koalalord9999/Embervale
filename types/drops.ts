@@ -1,9 +1,8 @@
 export interface BaseDrop {
     itemId?: string;
     tableId?: string;
-    minQuantity: number;
-    maxQuantity: number;
-    // Fix: Add optional 'noted' property to support noted item drops.
+    minQuantity?: number;
+    maxQuantity?: number;
     noted?: boolean;
 }
 export interface GuaranteedDrop extends BaseDrop {}

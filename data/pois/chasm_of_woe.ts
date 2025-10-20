@@ -19,7 +19,7 @@ export const chasmOfWoePois: Record<string, POI> = {
         connections: ['chasm_of_woe_entrance', 'chasm_rope_bridge'],
         activities: [
             { type: 'combat', monsterId: 'chasm_crawler' },
-            { type: 'skilling', id: 'chasm_ledge_gold_1', name: 'Mine Gold Rock', skill: SkillName.Mining, requiredLevel: 40, loot: [{ itemId: 'gold_ore', chance: 1, xp: 65 }], resourceCount: { min: 1, max: 2 }, respawnTime: 60000, gatherTime: 4500 },
+// FIX: Removed redundant level, xp, and respawnTime properties.
             { type: 'thieving_lockpick', id: 'cwoe_chest_1', targetName: "Miner's Satchel", lootTableId: 'thieving_dungeon_chest_mid' },
         ],
         regionId: 'chasm_of_woe',
@@ -57,6 +57,7 @@ export const chasmOfWoePois: Record<string, POI> = {
             { type: 'combat', monsterId: 'rock_golem' },
             { type: 'skilling', id: 'chasm_adamantite_1', name: 'Mine Adamantite', skill: SkillName.Mining, requiredLevel: 65, loot: [{ itemId: 'adamantite_ore', chance: 1, xp: 120 }], resourceCount: { min: 2, max: 4 }, respawnTime: 60000, gatherTime: 5000 },
             { type: 'skilling', id: 'chasm_titanium_1', name: 'Mine Titanium', skill: SkillName.Mining, requiredLevel: 75, loot: [{ itemId: 'titanium_ore', chance: 1, xp: 200 }], resourceCount: { min: 1, max: 2 }, respawnTime: 300000, gatherTime: 6000 },
+// FIX: Removed redundant level, xp, and respawnTime properties.
             { type: 'thieving_lockpick', id: 'cwoe_chest_2', targetName: 'Geode Chest', lootTableId: 'thieving_dungeon_chest_high' },
         ],
         regionId: 'chasm_of_woe',
@@ -69,6 +70,7 @@ export const chasmOfWoePois: Record<string, POI> = {
         connections: ['chasm_central_cavern'],
         activities: [
             { type: 'npc', name: 'Approach the Golem', icon: 'https://api.iconify.design/game-icons:rock-golem.svg' },
+// FIX: Removed redundant level, xp, and respawnTime properties.
             { type: 'thieving_lockpick', id: 'cwoe_chest_3', targetName: 'Ancient Dwarven Chest', lootTableId: 'thieving_dungeon_chest_elite' },
         ],
         regionId: 'chasm_of_woe',

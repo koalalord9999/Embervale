@@ -33,7 +33,9 @@ export const southernRoadPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'giant_spider' },
             { type: 'combat', monsterId: 'giant_spider' },
             { type: 'combat', monsterId: 'giant_spider' },
-            { type: 'combat', monsterId: 'giant_spider' }
+            { type: 'combat', monsterId: 'giant_spider' },
+// FIX: Removed redundant level, xp, and respawnTime properties.
+            { type: 'thieving_lockpick', id: 'af_drawer_1', targetName: 'Dusty Drawer', lootTableId: 'thieving_house_drawer_dusty' },
         ],
         regionId: 'wilderness',
         x: 900, y: 1400
@@ -77,6 +79,8 @@ export const southernRoadPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Old Man Hemlock',
                 icon: '/assets/npcChatHeads/old_man_hemlock.png',
+// FIX: Removed redundant level, xp, stunChance, and stunDuration properties.
+                pickpocket: { lootTableId: 'pickpocket_farmer_table' },
                 dialogue: {
                     start: {
                         npcName: 'Old Man Hemlock',

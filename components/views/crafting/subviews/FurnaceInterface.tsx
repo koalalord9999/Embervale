@@ -1,25 +1,15 @@
-
 import React from 'react';
 import { SkillName } from '../../../../types';
-import { ITEMS, getIconClassName } from '../../../../constants';
+import { ITEMS, getIconClassName, SMELTING_RECIPES } from '../../../../constants';
 import { CraftingViewProps } from '../CraftingView';
 import { useLongPress } from '../../../../hooks/useLongPress';
 import { useIsTouchDevice } from '../../../../hooks/useIsTouchDevice';
 
-type BarType = 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'silver_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar';
-
-const smeltingRecipes = [
-    { barType: 'bronze_bar', level: 1, xp: 7, ingredients: [{ itemId: 'copper_ore', quantity: 1 }, { itemId: 'tin_ore', quantity: 1 }] },
-    { barType: 'iron_bar', level: 15, xp: 12.5, ingredients: [{ itemId: 'iron_ore', quantity: 1 }] },
-    { barType: 'silver_bar', level: 20, xp: 13.7, ingredients: [{ itemId: 'silver_ore', quantity: 1 }] },
-    { barType: 'steel_bar', level: 30, xp: 17.5, ingredients: [{ itemId: 'iron_ore', quantity: 1 }, { itemId: 'coal', quantity: 2 }] },
-    { barType: 'mithril_bar', level: 50, xp: 30, ingredients: [{ itemId: 'mithril_ore', quantity: 1 }, { itemId: 'coal', quantity: 4 }] },
-    { barType: 'adamantite_bar', level: 65, xp: 37.5, ingredients: [{ itemId: 'adamantite_ore', quantity: 1 }, { itemId: 'coal', quantity: 6 }] },
-    { barType: 'runic_bar', level: 80, xp: 50, ingredients: [{ itemId: 'titanium_ore', quantity: 1 }, { itemId: 'coal', quantity: 8 }] },
-] as const;
+// FIX: Add 'gold_bar' to the BarType union to allow smelting gold bars.
+type BarType = 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'silver_bar' | 'gold_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar';
 
 const FurnaceSlot: React.FC<{
-    recipe: (typeof smeltingRecipes)[number];
+    recipe: (typeof SMELTING_RECIPES)[number];
     smithingLevel: number;
     getItemCount: (itemId: string) => number;
     onSmithBar: (barType: BarType, quantity: number) => void;
@@ -62,7 +52,7 @@ const FurnaceSlot: React.FC<{
     
     const handleMouseEnter = (e: React.MouseEvent) => {
         const ingredients = recipe.ingredients.map(ing => ({ item: ITEMS[ing.itemId], quantity: ing.quantity }));
-        const craftTime = 1.2;
+        const craftTime = recipe.barType === 'iron_bar' ? 1.8 : 1.2;
     
         const tooltipContent = (
             <div className="text-sm text-left w-48">
@@ -83,6 +73,7 @@ const FurnaceSlot: React.FC<{
                     <span className="text-gray-400">Craft Time:</span>
                     <span className="font-semibold text-right">{craftTime.toFixed(1)}s</span>
                 </div>
+                 {recipe.barType === 'iron_bar' && <p className="text-xs text-gray-400 mt-2">50% chance of success.</p>}
             </div>
         );
     
@@ -128,7 +119,7 @@ const FurnaceInterface: React.FC<CraftingViewProps> = ({ inventory, skills, onSm
     return (
         <div className="flex-grow overflow-y-auto pr-2">
             <div className="crafting-grid">
-                {smeltingRecipes.map((recipe) => (
+                {SMELTING_RECIPES.map((recipe) => (
                     <FurnaceSlot
                         key={recipe.barType}
                         recipe={recipe}

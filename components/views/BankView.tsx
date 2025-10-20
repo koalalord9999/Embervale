@@ -32,10 +32,11 @@ interface BankSlotProps {
     setTooltip: (tooltip: TooltipState | null) => void;
     dragHandlers: any;
     isOneClickMode: boolean;
+    onClearPlaceholder: (tabId: number, itemIndex: number) => void;
 }
 
 const BankSlot: React.FC<BankSlotProps> = (props) => {
-    const { slot, index, asNote, activeTabId, onWithdraw, setContextMenu, setMakeXPrompt, setTooltip, dragHandlers, isOneClickMode } = props;
+    const { slot, index, asNote, activeTabId, onWithdraw, setContextMenu, setMakeXPrompt, setTooltip, dragHandlers, isOneClickMode, onClearPlaceholder } = props;
     const isTouchDevice = useIsTouchDevice(false);
     const isPlaceholder = slot?.quantity === 0;
 
@@ -59,13 +60,31 @@ const BankSlot: React.FC<BankSlotProps> = (props) => {
 
         const item = slot ? ITEMS[slot.itemId] : null;
         if (!slot || !item) return;
+        
+        const performActionAndClose = (action: () => void) => {
+            action();
+            setTooltip(null);
+            setContextMenu(null);
+        };
+
+        if (isPlaceholder) {
+            setContextMenu({
+                options: [
+                    { label: 'Clear placeholder', onClick: () => performActionAndClose(() => onClearPlaceholder(activeTabId, index)) },
+                    { label: 'Examine', onClick: () => { setTooltip(null); setContextMenu(null); alert(item.description); } }
+                ],
+                event: eventForMenu,
+                isTouchInteraction: 'touches' in e || 'changedTouches' in e,
+            });
+            return;
+        }
 
         const options: ContextMenuOption[] = [
-            { label: `Withdraw 1`, onClick: () => performWithdrawAction(1), disabled: slot.quantity < 1 || isPlaceholder },
+            { label: `Withdraw 1`, onClick: () => performActionAndClose(() => performWithdrawAction(1)), disabled: slot.quantity < 1 || isPlaceholder },
         ];
         if (slot.quantity > 1) {
-            options.push({ label: `Withdraw 5`, onClick: () => performWithdrawAction(5), disabled: slot.quantity < 5 || isPlaceholder });
-            options.push({ label: `Withdraw 10`, onClick: () => performWithdrawAction(10), disabled: slot.quantity < 10 || isPlaceholder });
+            options.push({ label: `Withdraw 5`, onClick: () => performActionAndClose(() => performWithdrawAction(5)), disabled: slot.quantity < 5 || isPlaceholder });
+            options.push({ label: `Withdraw 10`, onClick: () => performActionAndClose(() => performWithdrawAction(10)), disabled: slot.quantity < 10 || isPlaceholder });
             options.push({
                 label: 'Withdraw X...',
                 onClick: () => {
@@ -78,11 +97,11 @@ const BankSlot: React.FC<BankSlotProps> = (props) => {
                 },
                 disabled: slot.quantity < 1 || isPlaceholder
             });
-            options.push({ label: `Withdraw All-but-1`, onClick: () => performWithdrawAction('all-but-1'), disabled: slot.quantity < 2 || isPlaceholder });
-            options.push({ label: `Withdraw All`, onClick: () => performWithdrawAction('all'), disabled: isPlaceholder });
+            options.push({ label: `Withdraw All-but-1`, onClick: () => performActionAndClose(() => performWithdrawAction('all-but-1')), disabled: slot.quantity < 2 || isPlaceholder });
+            options.push({ label: `Withdraw All`, onClick: () => performActionAndClose(() => performWithdrawAction('all')), disabled: isPlaceholder });
         }
         options.push({ label: 'Examine', onClick: () => { setTooltip(null); setContextMenu(null); alert(item.description); } });
-        setContextMenu({ options, event: eventForMenu, isTouchInteraction: 'touches' in e || 'changedTouches' in e });
+        setContextMenu({ options, event: eventForMenu, isTouchInteraction: isTouchDevice });
     };
 
     const handleSingleTap = (e: React.MouseEvent | React.TouchEvent) => {
@@ -139,10 +158,11 @@ interface BankViewProps {
     handleToggleBankPlaceholders: () => void;
     ui: ReturnType<typeof useUIState>;
     isOneClickMode: boolean;
+    onClearPlaceholder: (tabId: number, itemIndex: number) => void;
 }
 
 const BankView: React.FC<BankViewProps> = (props) => {
-    const { bank, onClose, onWithdraw, onDepositBackpack, onDepositEquipment, onMoveItem, onAddTab, onRemoveTab, onMoveItemToTab, onRenameTab, setContextMenu, setMakeXPrompt, setTooltip, bankPlaceholders, handleToggleBankPlaceholders, ui, isOneClickMode } = props;
+    const { bank, onClose, onWithdraw, onDepositBackpack, onDepositEquipment, onMoveItem, onAddTab, onRemoveTab, onMoveItemToTab, onRenameTab, setContextMenu, setMakeXPrompt, setTooltip, bankPlaceholders, handleToggleBankPlaceholders, ui, isOneClickMode, onClearPlaceholder } = props;
     
     const { activeBankTabId, setActiveBankTabId } = ui;
     const [draggingIndex, setDraggingIndex] = useState<{ tabId: number; index: number } | null>(null);
@@ -288,7 +308,7 @@ const BankView: React.FC<BankViewProps> = (props) => {
                             className: `w-full aspect-square bg-gray-900 border-2 border-gray-700 rounded-md flex items-center justify-center p-1 relative transition-all duration-150 ${slot ? 'cursor-grab' : ''} ${slotClasses}`
                         };
 
-                        return <BankSlot key={index} slot={slot} index={index} asNote={withdrawAsNote} activeTabId={activeBankTabId} onWithdraw={onWithdraw} setContextMenu={setContextMenu} setMakeXPrompt={setMakeXPrompt} setTooltip={setTooltip} dragHandlers={dragHandlers} isOneClickMode={isOneClickMode} />;
+                        return <BankSlot key={index} slot={slot} index={index} asNote={withdrawAsNote} activeTabId={activeBankTabId} onWithdraw={onWithdraw} setContextMenu={setContextMenu} setMakeXPrompt={setMakeXPrompt} setTooltip={setTooltip} dragHandlers={dragHandlers} isOneClickMode={isOneClickMode} onClearPlaceholder={onClearPlaceholder} />;
                     })}
                 </div>
             </div>

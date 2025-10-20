@@ -1,5 +1,3 @@
-
-
 import { POI } from '../../types';
 
 export const banditHideoutPois: Record<string, POI> = {
@@ -23,6 +21,8 @@ export const banditHideoutPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'bandit_bruiser' },
             { type: 'combat', monsterId: 'bandit_bruiser' },
             { type: 'combat', monsterId: 'bandit_marksman' },
+// FIX: Removed redundant level, xp, and respawnTime properties.
+            { type: 'thieving_lockpick', id: 'bh_main_chest_1', targetName: 'Bandit\'s Chest', lootTableId: 'thieving_dungeon_chest_mid' },
         ],
         regionId: 'wilderness',
         x: 727, y: 1743
@@ -33,7 +33,9 @@ export const banditHideoutPois: Record<string, POI> = {
         description: 'A smaller, torch-lit chamber at the back of the cave. Piles of stolen goods are stacked against the walls, guarded by the bandit leader.',
         connections: ['bandit_hideout_cave_1'],
         activities: [
-            { type: 'combat', monsterId: 'bandit_leader' }
+            { type: 'combat', monsterId: 'bandit_leader' },
+// FIX: Removed redundant level, xp, and respawnTime properties.
+            { type: 'thieving_lockpick', id: 'bh_leader_chest_1', targetName: 'Leader\'s Chest', lootTableId: 'thieving_dungeon_chest_high' },
         ],
         regionId: 'wilderness',
         x: 762, y: 1728

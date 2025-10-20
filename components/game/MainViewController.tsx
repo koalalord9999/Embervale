@@ -15,8 +15,8 @@ import { useSkilling } from '../../hooks/useSkilling';
 import { useInteractQuest } from '../../hooks/useInteractQuest';
 import { useGameSession } from '../../hooks/useGameSession';
 import { useItemActions } from '../../hooks/useItemActions';
-// FIX: Import ActiveBuff to use its specific type instead of 'any'.
-import { SkillName, InventorySlot, CombatStance, POIActivity, GroundItem, Spell, BonfireActivity, DialogueCheckRequirement, DialogueAction, BankTab, WorldState, PlayerRepeatableQuest, ActiveBuff, DialogueResponse } from '../../types';
+// FIX: Import the 'POI' type to resolve a 'Cannot find name' error for the 'poi' prop.
+import { SkillName, InventorySlot, CombatStance, POIActivity, GroundItem, Spell, BonfireActivity, DialogueCheckRequirement, DialogueAction, BankTab, WorldState, PlayerRepeatableQuest, ActiveBuff, DialogueResponse, Monster, MonsterType, SpellElement, PlayerType, POI } from '../../types';
 import { POIS } from '../../data/pois';
 import CraftingProgressView from '../views/crafting/CraftingProgressView';
 import CombatView from '../views/CombatView';
@@ -28,7 +28,16 @@ import SceneView from './SceneView';
 import TeleportView from '../views/TeleportView';
 import LootView from '../views/LootView';
 import EquipmentStatsView from '../views/overlays/EquipmentStatsView';
-import SettingsView from '../panels/SettingsPanel';
+import SettingsPanel from '../panels/SettingsPanel';
+import { ThievingContainerState } from '../../types/world';
+import { PILFERING_DURATION, FIREMAKING_RECIPES, QUESTS, MONSTERS } from '../../constants';
+import PilferingTimer from './PilferingTimer';
+
+
+type LockpickActivity = Extract<POIActivity, { type: 'thieving_lockpick' }>;
+type PickpocketData = NonNullable<Extract<POIActivity, { type: 'npc' }>['pickpocket']>;
+type StallActivity = Extract<POIActivity, { type: 'thieving_stall' }>;
+
 
 interface MainViewControllerProps {
     ui: ReturnType<typeof useUIState>;
@@ -53,9 +62,9 @@ interface MainViewControllerProps {
     handlePlayerDeath: () => void;
     handleKill: (uniqueInstanceId: string, attackStyle?: 'melee' | 'ranged' | 'magic') => void;
     onWinCombat: () => void;
-    onFleeFromCombat: () => void;
-    handleDialogueCheck: (requirements: DialogueCheckRequirement[]) => boolean;
+    onFleeFromCombat: (defeatedIds: string[]) => void;
     onResponse: (response: DialogueResponse) => void;
+    handleDialogueCheck: (requirements: DialogueCheckRequirement[]) => boolean;
     combatSpeedMultiplier: number;
     activeCombatStyleHighlight?: CombatStance | null;
     isTouchSimulationEnabled: boolean;
@@ -87,16 +96,23 @@ interface MainViewControllerProps {
     bonfires: BonfireActivity[];
     onStokeBonfire: (logId: string, bonfireId: string) => void;
     isStunned: boolean;
-    // FIX: Corrected the type for addBuff to use the specific ActiveBuff type for type safety.
     addBuff: (buff: Omit<ActiveBuff, 'id' | 'durationRemaining'>) => void;
     itemActions: ReturnType<typeof useItemActions>;
     isDevMode: boolean;
     onToggleDevPanel: () => void;
     onToggleTouchSimulation: () => void;
     onDepositEquipment: () => void;
-    deathMarker?: WorldState['deathMarker'];
+    deathMarker: WorldState['deathMarker'];
     activeRepeatableQuest: PlayerRepeatableQuest | null;
     onEncounterWin: (defeatedMonsterIds: string[]) => void;
+    thievingContainerStates: Record<string, ThievingContainerState>;
+    onPickpocket: (target: { name: string; pickpocket: PickpocketData }, targetInstanceId: string) => void;
+    onLockpick: (activity: LockpickActivity) => void;
+    onPilfer: (activity: Extract<POIActivity, { type: 'thieving_pilfer' }>) => void;
+    onStealFromStall: (activity: StallActivity) => void;
+    worldState: WorldState;
+    onStartCombat: (uniqueInstanceId: string) => void;
+    poi: POI | null;
 }
 
 const MainViewController: React.FC<MainViewControllerProps> = (props) => {
@@ -112,7 +128,15 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
         deathMarker,
         activeRepeatableQuest,
         onActivity,
-        onEncounterWin
+        onEncounterWin,
+        thievingContainerStates,
+        onPickpocket,
+        onLockpick,
+        onPilfer,
+        onStealFromStall,
+        worldState,
+        onStartCombat,
+        poi,
     } = props;
 
     const handleTeleport = useCallback((toBoardId: string) => {
@@ -121,27 +145,6 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
         navigation.handleForcedNavigate(toBoardId);
         ui.closeAllModals(); // This will close the teleport modal
     }, [addLog, navigation, ui, isStunned]);
-
-    const poi = useMemo(() => {
-        const basePoi = POIS[session.currentPoiId];
-        if (!basePoi) return null;
-    
-        if (activeRepeatableQuest && activeRepeatableQuest.generatedQuest.isInstance && activeRepeatableQuest.generatedQuest.instancePoiId === session.currentPoiId) {
-            const quest = activeRepeatableQuest.generatedQuest;
-            const newActivities: POIActivity[] = [...basePoi.activities];
-            
-            if (quest.type === 'kill' && quest.target.monsterId) {
-                const remainingToKill = quest.requiredQuantity - activeRepeatableQuest.progress;
-                
-                for (let i = 0; i < remainingToKill; i++) {
-                    newActivities.push({ type: 'combat', monsterId: quest.target.monsterId });
-                }
-            }
-            return { ...basePoi, activities: newActivities };
-        }
-    
-        return basePoi;
-    }, [session.currentPoiId, activeRepeatableQuest]);
 
     const mainContent = (() => {
         if (ui.activeCraftingAction && ui.activeCraftingAction.recipeType !== 'firemaking-stoke') {
@@ -208,6 +211,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
             onRemoveTab={bankLogic.removeTab}
             onMoveItemToTab={bankLogic.moveItemToTab}
             onRenameTab={bankLogic.handleRenameTab}
+            onClearPlaceholder={bankLogic.clearPlaceholder}
             setContextMenu={ui.setContextMenu}
             setMakeXPrompt={ui.setMakeXPrompt}
             setTooltip={ui.setTooltip}
@@ -268,16 +272,27 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
         }
 
         return (
-            <SceneView poi={poi} unlockedPois={navigation.reachablePois} onNavigate={navigation.handleNavigate} inventory={inv.inventory}
+            <SceneView
+                poi={poi}
+                unlockedPois={navigation.reachablePois}
+                onNavigate={navigation.handleNavigate}
                 onActivity={onActivity}
-                worldActions={worldActions}
-                onStartCombat={(uniqueInstanceId) => { ui.setCombatQueue([uniqueInstanceId]); ui.setIsMandatoryCombat(false); }}
-                playerQuests={quests.playerQuests} setContextMenu={ui.setContextMenu} setMakeXPrompt={ui.setMakeXPrompt} addLog={addLog}
-                startQuest={quests.startQuest} hasItems={inv.hasItems} 
-                resourceNodeStates={skilling.resourceNodeStates} activeSkillingNodeId={skilling.activeSkillingNodeId} onToggleSkilling={skilling.handleToggleSkilling} initializeNodeState={skilling.initializeNodeState}
+                onStartCombat={onStartCombat}
+                playerQuests={quests.playerQuests}
+                inventory={inv.inventory}
+                setContextMenu={ui.setContextMenu}
+                setMakeXPrompt={ui.setMakeXPrompt}
+                setTooltip={ui.setTooltip}
+                addLog={addLog}
+                startQuest={quests.startQuest}
+                hasItems={inv.hasItems}
+                resourceNodeStates={skilling.resourceNodeStates}
+                activeSkillingNodeId={skilling.activeSkillingNodeId}
+                onToggleSkilling={skilling.handleToggleSkilling}
+                initializeNodeState={skilling.initializeNodeState}
                 skillingTick={skilling.skillingTick}
                 getSuccessChance={skilling.getSuccessChance}
-                activeRepeatableQuest={activeRepeatableQuest} 
+                activeRepeatableQuest={activeRepeatableQuest}
                 activeCleanup={interactQuest.activeCleanup}
                 onStartInteractQuest={interactQuest.handleStartInteractQuest}
                 onCancelInteractQuest={interactQuest.handleCancelInteractQuest}
@@ -285,7 +300,6 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 onClearObstacle={worldActions.handleClearObstacle}
                 skills={char.skills as any[]}
                 monsterRespawnTimers={monsterRespawnTimers}
-                setTooltip={ui.setTooltip}
                 setActiveDialogue={ui.setActiveDialogue}
                 handleDialogueCheck={handleDialogueCheck}
                 onResponse={onResponse}
@@ -293,17 +307,31 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 onDepositEquipment={onDepositEquipment}
                 ui={ui}
                 isTouchSimulationEnabled={isTouchSimulationEnabled}
-                bonfires={bonfires.filter(b => b.uniqueId.startsWith(session.currentPoiId))}
-                onStokeBonfire={crafting.handleStokeBonfire}
+                worldActions={worldActions}
+                bonfires={bonfires}
+                onStokeBonfire={onStokeBonfire}
                 isOneClickMode={ui.isOneClickMode}
+                onPickpocket={onPickpocket}
+                onLockpick={onLockpick}
+                onPilfer={onPilfer}
+                thievingContainerStates={thievingContainerStates}
+                onStealFromStall={onStealFromStall}
+                worldState={worldState}
+                groundItemsForCurrentPoi={groundItemsForCurrentPoi}
             />
         );
     })();
     
     return (
         <>
+            {worldState.activePilferingSession && (
+                <PilferingTimer
+                    startTime={worldState.activePilferingSession.startTime}
+                    duration={PILFERING_DURATION}
+                />
+            )}
             {poiImmunityTimeLeft > 0 && (
-                <div className="absolute top-2 left-2 bg-blue-900/80 text-blue-200 border border-blue-500 rounded-lg px-3 py-1 text-sm font-semibold animate-pulse z-20">
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-1/3 max-w-sm bg-blue-900/80 text-blue-200 border border-blue-500 rounded-lg px-3 py-1 text-sm font-semibold animate-pulse z-20">
                     Aggression Immunity: {poiImmunityTimeLeft}s
                 </div>
             )}

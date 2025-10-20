@@ -115,10 +115,24 @@ const SaveSlotScreen: React.FC<SaveSlotScreenProps> = ({ slots, onSelectSlot, on
                     {isSelectedDead ? (
                         <DeadCharacterView slot={selectedSlot!} onDelete={() => setConfirmDelete(selectedSlotId)} setTooltip={setTooltip} />
                     ) : isSelectedEmpty ? (
-                        <div className="space-y-4">
+                        <div className="flex flex-col items-center gap-4">
                             <h2 className="text-4xl font-bold text-gray-400">Empty Slot</h2>
                             <Button onClick={() => onCreateNew(selectedSlotId)} size="md" variant="primary">Create New Character</Button>
                             <Button onClick={() => onImport(selectedSlotId)} size="md" variant="secondary">Import Save</Button>
+                            <a
+                                href="https://discord.gg/vFUhYWWafx"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-bold rounded-md shadow-md transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 bg-gray-600 hover:bg-gray-500 border-2 border-gray-700 hover:border-gray-600 text-gray-200 focus:ring-gray-400 px-4 py-2 text-base inline-flex items-center justify-center gap-2"
+                                aria-label="Join our Discord community"
+                            >
+                                <span>Discord</span>
+                                <img
+                                    src="https://www.svgrepo.com/show/353655/discord-icon.svg"
+                                    alt="Discord Icon"
+                                    className="w-5 h-5 filter invert opacity-75"
+                                />
+                            </a>
                         </div>
                     ) : selectedSlot && selectedSlot.metadata ? (
                         <div className="animate-fade-in space-y-2 w-full max-w-lg">
@@ -142,16 +156,32 @@ const SaveSlotScreen: React.FC<SaveSlotScreenProps> = ({ slots, onSelectSlot, on
                                 )}
                             </div>
                             
-                            <div className="pt-2 flex flex-col items-center gap-2">
+                            <div className="pt-2 flex flex-col items-center gap-2 w-full">
                                 <Button onClick={() => onSelectSlot(selectedSlotId)} size="md" variant="primary">Play</Button>
-                                <div className="flex gap-4 justify-center">
-                                    {selectedSlot.metadata.playerType === PlayerType.Cheats && (
-                                        <Button onClick={() => onExport(selectedSlotId)} size="sm" variant="secondary">Export</Button>
-                                    )}
-                                    {selectedSlot.metadata.playerType === PlayerType.Cheats && (
-                                        <Button onClick={() => onImport(selectedSlotId)} size="sm" variant="secondary">Import</Button>
-                                    )}
-                                    <Button onClick={() => setConfirmDelete(selectedSlotId)} size="sm" variant="secondary">Delete</Button>
+                                <div className="flex justify-between items-center w-full max-w-xs">
+                                    <div className="flex gap-2">
+                                        {selectedSlot.metadata.playerType === PlayerType.Cheats && (
+                                            <Button onClick={() => onExport(selectedSlotId)} size="sm" variant="secondary">Export</Button>
+                                        )}
+                                        {selectedSlot.metadata.playerType === PlayerType.Cheats && (
+                                            <Button onClick={() => onImport(selectedSlotId)} size="sm" variant="secondary">Import</Button>
+                                        )}
+                                        <Button onClick={() => setConfirmDelete(selectedSlotId)} size="sm" variant="secondary">Delete</Button>
+                                    </div>
+                                    <a
+                                        href="https://discord.gg/vFUhYWWafx"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="z-20"
+                                        aria-label="Join our Discord community"
+                                        title="Join our Discord community"
+                                    >
+                                        <img
+                                            src="https://www.svgrepo.com/show/353655/discord-icon.svg"
+                                            alt="Discord Icon"
+                                            className="w-8 h-8 filter grayscale hover:grayscale-0 transition-all duration-200"
+                                        />
+                                    </a>
                                 </div>
                             </div>
                         </div>

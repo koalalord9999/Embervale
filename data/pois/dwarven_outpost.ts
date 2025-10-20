@@ -17,11 +17,14 @@ export const dwarvenOutpostPois: Record<string, POI> = {
         description: 'A small but well-kept forge. A bearded dwarf with soot on his face tends to the flames, offering a selection of fine pickaxes.',
         connections: ['dwarven_outpost_entrance', 'outpost_mine'],
         activities: [
+            { type: 'thieving_stall', id: 'dwarven_forge_dwarven_stall', name: 'Steal from Dwarven Stall', lootTableId: 'thieving_stall_dwarven' },
             { type: 'shop', shopId: 'dwarven_pickaxes' },
             {
                 type: 'npc',
                 name: 'Durin',
                 icon: '/assets/npcChatHeads/prospector_gudrun.png',
+                pickpocket: { lootTableId: 'pickpocket_dwarf_table' },
+                attackableMonsterId: 'dwarf',
                 startNode: 'durin_default',
              }
         ],
@@ -42,6 +45,8 @@ export const dwarvenOutpostPois: Record<string, POI> = {
             { type: 'skilling', id: 'outpost_large_coal_1', name: 'Mine Large Coal Vein', skill: SkillName.Mining, requiredLevel: 45, loot: [{ itemId: 'coal', chance: 1, xp: 50 }], resourceCount: { min: 4, max: 10 }, respawnTime: 25000, gatherTime: 3500 },
             { type: 'skilling', id: 'outpost_large_coal_2', name: 'Mine Large Coal Vein', skill: SkillName.Mining, requiredLevel: 45, loot: [{ itemId: 'coal', chance: 1, xp: 50 }], resourceCount: { min: 4, max: 10 }, respawnTime: 25000, gatherTime: 3500 },
             { type: 'skilling', id: 'outpost_large_coal_3', name: 'Mine Large Coal Vein', skill: SkillName.Mining, requiredLevel: 45, loot: [{ itemId: 'coal', chance: 1, xp: 50 }], resourceCount: { min: 4, max: 10 }, respawnTime: 25000, gatherTime: 3500 },
+            { type: 'skilling', id: 'outpost_silver_1', name: 'Mine Silver Rock', skill: SkillName.Mining, requiredLevel: 20, loot: [{ itemId: 'silver_ore', chance: 1, xp: 40 }], resourceCount: { min: 2, max: 4 }, respawnTime: 18000, gatherTime: 4000 },
+            { type: 'thieving_lockpick', id: 'do_mine_chest_1', targetName: 'Dwarven Footlocker', lootTableId: 'thieving_dungeon_chest_mid' },
         ],
         regionId: 'dwarven_outpost',
         x: 250, y: 150,

@@ -24,6 +24,8 @@ export const oakhavenPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Guard Captain Elara',
                 icon: '/assets/npcChatHeads/guard_captain_elara.png',
+                pickpocket: { lootTableId: 'pickpocket_guard_table' },
+                attackableMonsterId: 'guard',
                 startNode: 'elara_default',
             },
         ],
@@ -41,12 +43,13 @@ export const oakhavenPois: Record<string, POI> = {
         activities: [
             { type: 'wishing_well' },
             { type: 'water_source', name: 'Collect Water' },
-            { type: 'npc', name: 'Man', icon: 'https://api.iconify.design/game-icons:person.svg', dialogue: { start: { npcName: 'Man', npcIcon: 'https://api.iconify.design/game-icons:person.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man' },
-            { type: 'npc', name: 'Woman', icon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', dialogue: { start: { npcName: 'Woman', npcIcon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'woman' },
+            { type: 'npc', name: 'Man', icon: 'https://api.iconify.design/game-icons:person.svg', dialogue: { start: { npcName: 'Man', npcIcon: 'https://api.iconify.design/game-icons:person.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man', pickpocket: { lootTableId: 'pickpocket_oakhaven_citizen' } },
+            { type: 'npc', name: 'Woman', icon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', dialogue: { start: { npcName: 'Woman', npcIcon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'woman', pickpocket: { lootTableId: 'pickpocket_oakhaven_citizen' } },
             {
                 type: 'npc',
                 name: 'Craftsman',
                 icon: '/assets/npcChatHeads/artisan.png',
+                pickpocket: { lootTableId: 'pickpocket_craftsman_table' },
                 dialogue: {
                     start: {
                         npcName: 'Craftsman',
@@ -70,7 +73,10 @@ export const oakhavenPois: Record<string, POI> = {
         name: 'Oakhaven Market',
         description: 'A bustling market street lined with various stalls. The general store is just off the main thoroughfare.',
         connections: ['oakhaven_square', 'oakhaven_general_store'],
-        activities: [],
+        activities: [
+            { type: 'thieving_stall', id: 'oakhaven_market_bakery_stall', name: 'Steal from Bakery Stall', lootTableId: 'thieving_stall_bakery' },
+            { type: 'thieving_stall', id: 'oakhaven_market_fur_stall', name: 'Steal from Fur Stall', lootTableId: 'thieving_stall_fur' },
+        ],
         regionId: 'oakhaven',
         x: 310, y: 160,
         type: 'internal',
@@ -105,9 +111,12 @@ export const oakhavenPois: Record<string, POI> = {
     oakhaven_tavern_street: {
         id: 'oakhaven_tavern_street',
         name: 'Tavern Street',
-        description: 'A quieter side street leading to the local tavern.',
+        description: 'A quieter residential side street leading to the local tavern.',
         connections: ['oakhaven_square', 'the_carved_mug'],
-        activities: [],
+        activities: [
+            { type: 'thieving_pilfer', id: 'oakhaven_house_1', name: 'Locked House' },
+            { type: 'thieving_pilfer', id: 'oakhaven_house_2', name: 'Locked House' },
+        ],
         regionId: 'oakhaven',
         x: 250, y: 220,
         type: 'internal',

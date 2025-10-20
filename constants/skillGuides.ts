@@ -1,4 +1,3 @@
-
 import { SkillName, SkillGuideEntry } from '../types';
 
 export const SKILL_GUIDES: Record<SkillName, SkillGuideEntry[]> = {
@@ -257,9 +256,7 @@ export const SKILL_GUIDES: Record<SkillName, SkillGuideEntry[]> = {
         { level: 1, description: 'Visit Kaelen, the Slayer Master, in Silverhaven to receive tasks.' },
         { level: 50, description: 'Unlock access to the Slayer Blimp in Silverhaven.' },
     ],
-    [SkillName.Thieving]: [
-        { level: 1, description: 'This skill is in progress of being made.' },
-    ],
+    [SkillName.Thieving]: [],
     [SkillName.Agility]: [
         { level: 1, description: 'This skill is in progress of being made.' },
     ],

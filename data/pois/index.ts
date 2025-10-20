@@ -1,4 +1,5 @@
 
+
 import { POI } from '../../types';
 import { meadowdalePois } from './meadowdale';
 import { minePois } from './mines';
@@ -22,6 +23,7 @@ import { saltFlatsPois } from './salt_flats';
 import { crystallineIslesPois } from './crystalline_isles';
 import { magusSpirePois } from './dungeon_magus_spire';
 import { chasmOfWoePois } from './dungeon_chasm_of_woe';
+import { pilferingPois } from './pilfering';
 
 export const POIS: Record<string, POI> = {
     ...tutorialZonePois,
@@ -46,4 +48,5 @@ export const POIS: Record<string, POI> = {
     ...crystallineIslesPois,
     ...magusSpirePois,
     ...chasmOfWoePois,
+    ...pilferingPois,
 };

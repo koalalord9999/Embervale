@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useUIState } from './useUIState';
 import { REGIONS, MONSTERS } from '../constants';
 import { POIS } from '../data/pois';
-import { POI, Region, Monster } from '../types';
+import { POI, Region, Monster, MonsterType, SkillName, SpellElement, PlayerType } from '../types';
 
 // Import all POI file objects for the map manager
 import { banditHideoutPois } from '../data/pois/bandit_hideout';
@@ -25,6 +25,9 @@ import { theSerpentsCoilPois } from '../data/pois/the_serpents_coil';
 import { theVerdantFieldsPois } from '../data/pois/the_verdant_fields';
 import { tutorialZonePois } from '../data/pois/tutorial_zone';
 import { wildernessPois } from '../data/pois/wilderness';
+import { magusSpirePois } from '../data/pois/dungeon_magus_spire';
+import { chasmOfWoePois } from '../data/pois/dungeon_chasm_of_woe';
+
 
 import { beasts } from '../constants/monsters/beasts';
 import { humanoids } from '../constants/monsters/humanoids';
@@ -37,37 +40,45 @@ interface DevModeDependencies {
     isInCombat: boolean;
     ui: ReturnType<typeof useUIState>;
     addLog: (message: string) => void;
+    // Persisted dev settings state
+    xpMultiplier: number;
+    setXpMultiplier: (multiplier: number) => void;
+    combatSpeedMultiplier: number;
+    setCombatSpeedMultiplier: (speed: number) => void;
+    isPlayerInvisible: boolean;
+    setIsPlayerInvisible: (isInvisible: boolean) => void;
+    isAutoBankOn: boolean;
+    setIsAutoBankOn: (isOn: boolean) => void;
 }
 
 export const useDevMode = (deps: DevModeDependencies) => {
-    const { initialState, devModeOverride = false, isInCombat, ui, addLog } = deps;
+    const { 
+        initialState, devModeOverride = false, isInCombat, ui, addLog,
+        xpMultiplier, setXpMultiplier,
+        combatSpeedMultiplier, setCombatSpeedMultiplier, isPlayerInvisible, setIsPlayerInvisible,
+        isAutoBankOn, setIsAutoBankOn
+    } = deps;
 
     const isDevMode = (initialState.username === 'DevKoala') || devModeOverride;
 
-    const [combatSpeedMultiplier, setCombatSpeedMultiplier] = useState(1);
+    // Session-based dev settings
     const [isInstantRespawnOn, setIsInstantRespawnOn] = useState(false);
     const [instantRespawnCounter, setInstantRespawnCounter] = useState<number | null>(null);
     const [configAggroIds, setConfigAggroIds] = useState<string[]>([]);
-    const [isPlayerInvisible, setIsPlayerInvisible] = useState(false);
-    const [isAutoBankOn, setIsAutoBankOn] = useState(false);
     const [isTouchSimulationEnabled, setIsTouchSimulationEnabled] = useState(false);
     const [isMapManagerEnabled, setIsMapManagerEnabled] = useState(false);
     const [showAllPois, setShowAllPois] = useState(false);
-    const [xpMultiplier, setXpMultiplier] = useState(10);
-    const [isXpBoostEnabled, setIsXpBoostEnabled] = useState(false);
     
     const [devPanelState, setDevPanelState] = useState({
-        activeTab: 'cheats' as 'cheats' | 'items' | 'teleport' | 'woodcutting' | 'monsters',
+        activeTab: 'cheats' as 'cheats' | 'items' | 'teleport' | 'game-manager' | 'monsters',
         itemSearchTerm: '',
         selectedItemId: null as string | null,
         spawnQuantity: 1,
-        teleportRegionId: '',
-        teleportPoiId: '',
+        teleportRegionId: 'silverhaven',
+        teleportPoiId: 'silverhaven_square',
         skillToSet: '' as any | '',
         levelToSet: 1,
         coinAmount: 1000000,
-        wcTestLevel: 1,
-        wcTestTreeId: null as string | null,
     });
 
     const [poiCoordinates, setPoiCoordinates] = useState(() => 
@@ -154,6 +165,7 @@ export const useDevMode = (deps: DevModeDependencies) => {
             'data/pois/sunken_lands.ts': sunkenLandsPois, 'data/pois/the_feywood.ts': theFeywoodPois,
             'data/pois/the_serpents_coil.ts': theSerpentsCoilPois, 'data/pois/the_verdant_fields.ts': theVerdantFieldsPois,
             'data/pois/tutorial_zone.ts': tutorialZonePois, 'data/pois/wilderness.ts': wildernessPois,
+            'data/pois/dungeon_magus_spire.ts': magusSpirePois, 'data/pois/dungeon_chasm_of_woe.ts': chasmOfWoePois,
         };
         const allMonsterFileObjects = {
             'constants/monsters/beasts.ts': beasts, 'constants/monsters/humanoids.ts': humanoids,
@@ -170,64 +182,84 @@ export const useDevMode = (deps: DevModeDependencies) => {
             monsterArray.forEach(monster => { monsterFileMap[monster.id] = filePath; });
         }
     
-        const changesByFile: Record<string, { id: string, type: 'poi' | 'region' | 'monster', data: any }[]> = {};
+        const newCodeBlocks: { filePath: string; content: string }[] = [];
         
-        modifiedPois.forEach(poiId => {
-            const filePath = poiFileMap[poiId];
-            if (!filePath) { console.warn(`Could not find file path for POI ID: ${poiId}`); return; }
-            if (!changesByFile[filePath]) changesByFile[filePath] = [];
-            changesByFile[filePath].push({ id: poiId, type: 'poi', data: { ...latestPoiCoordsRef.current[poiId], connections: latestPoiConnectionsRef.current[poiId] } });
-        });
-        modifiedRegions.forEach(regionId => {
-            const filePath = 'data/regions.ts';
-            if (!changesByFile[filePath]) changesByFile[filePath] = [];
-            changesByFile[filePath].push({ id: regionId, type: 'region', data: latestRegionCoordsRef.current[regionId] });
-        });
         modifiedMonsters.forEach(monsterId => {
-            const filePath = monsterFileMap[monsterId];
-            if (!filePath) { console.warn(`Could not find file path for Monster ID: ${monsterId}`); return; }
-            if (!changesByFile[filePath]) changesByFile[filePath] = [];
-            changesByFile[filePath].push({ id: monsterId, type: 'monster', data: latestMonsterDataRef.current[monsterId] });
-        });
-    
-        // This part needs to be run in a backend environment to actually write files.
-        // For now, we will generate the text content to be copied.
-        addLog("Generating code for map changes... This feature requires a backend to write files.");
-        
-        ui.setExportData({
-            data: "File writing is a backend operation. This developer tool is for display and data structure prototyping.",
-            title: "Commit Changes",
-            copyButtonText: "Acknowledge",
-            onCopy: () => {
-                setModifiedPois(new Set());
-                setModifiedRegions(new Set());
-                setModifiedMonsters(new Set());
-                addLog("Changes have been cleared.");
+            const monster = latestMonsterDataRef.current[monsterId];
+            const isNew = !MONSTERS[monsterId];
+            
+            // Clean up the object before stringifying - remove undefined/null/empty values to keep it clean
+            const cleanMonster = JSON.parse(JSON.stringify(monster, (key, value) => {
+                if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
+                    return undefined;
+                }
+                return value;
+            }));
+
+            const code = `${JSON.stringify(cleanMonster, null, 4)},`;
+
+            if (isNew) {
+                let suggestedPath = 'constants/monsters/beasts.ts';
+                const type = monster.types[0];
+                if (type === MonsterType.Humanoid) suggestedPath = 'constants/monsters/humanoids.ts';
+                else if (type === MonsterType.Dragon) suggestedPath = 'constants/monsters/dragons.ts';
+                else if (type === MonsterType.Undead || type === MonsterType.Elemental) suggestedPath = 'constants/monsters/magicalAndUndead.ts';
+                
+                newCodeBlocks.push({
+                    filePath: `NEW MONSTER - Add to ${suggestedPath}`,
+                    content: `// Add this object to the array in ${suggestedPath}\n${code}`,
+                });
+            } else { // This is a modified monster
+                const filePath = monsterFileMap[monsterId] || 'UNKNOWN FILE';
+                newCodeBlocks.push({
+                    filePath: `MODIFIED - ${filePath}`,
+                    content: `// Replace the existing '${monsterId}' object in ${filePath} with this one\n${code}`,
+                });
             }
         });
+    
+        if (newCodeBlocks.length > 0) {
+            ui.setExportData({
+                data: newCodeBlocks,
+                title: "Commit Monster Changes",
+                copyButtonText: "Copy to Clipboard",
+                onCopy: () => {
+                    setModifiedMonsters(new Set());
+                    addLog("Changes have been cleared from this session.");
+                }
+            });
+        } else {
+            addLog("No monster changes to commit.");
+        }
+
     }, [modifiedPois, modifiedRegions, modifiedMonsters, addLog, ui]);
 
     return {
         isDevMode,
+        // Persisted state
+        xpMultiplier, setXpMultiplier,
         combatSpeedMultiplier, setCombatSpeedMultiplier,
+        isPlayerInvisible, setIsPlayerInvisible,
+        isAutoBankOn, setIsAutoBankOn,
+        // Session state
         isInstantRespawnOn, setIsInstantRespawnOn,
         instantRespawnCounter, setInstantRespawnCounter,
         configAggroIds,
-        isPlayerInvisible, setIsPlayerInvisible,
-        isAutoBankOn, setIsAutoBankOn,
         isTouchSimulationEnabled, onToggleTouchSimulation,
         isMapManagerEnabled, onToggleMapManager,
         showAllPois, setShowAllPois,
-        xpMultiplier, setXpMultiplier,
-        isXpBoostEnabled, setIsXpBoostEnabled,
+        // Dev Panel UI state
         devPanelState, updateDevPanelState,
+        // Map Manager state
         poiCoordinates, regionCoordinates, poiConnections,
         modifiedPois, modifiedRegions,
         handleUpdatePoiCoordinate,
         handleUpdatePoiConnections,
         handleCommitMapChanges,
+        // Other logic
         onToggleAggro,
         isCurrentMonsterAggro: isInCombat && ui.combatQueue.length > 0 && configAggroIds.includes(ui.combatQueue[0]),
+        // Monster DB state
         monsterData, setMonsterData, modifiedMonsters, setModifiedMonsters,
     };
 };

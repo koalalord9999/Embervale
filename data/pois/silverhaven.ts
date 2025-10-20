@@ -21,6 +21,7 @@ export const silverhavenPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Town Crier',
                 icon: '/assets/npcChatHeads/town_crier.png',
+                pickpocket: { lootTableId: 'pickpocket_crier_table' },
                 dialogue: {
                     start: {
                         npcName: 'Town Crier',
@@ -33,12 +34,13 @@ export const silverhavenPois: Record<string, POI> = {
                 dialogueType: 'random',
             },
             { type: 'water_source', name: 'Collect Water' },
-            { type: 'npc', name: 'Man', icon: 'https://api.iconify.design/game-icons:person.svg', dialogue: { start: { npcName: 'Man', npcIcon: 'https://api.iconify.design/game-icons:person.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man' },
-            { type: 'npc', name: 'Woman', icon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', dialogue: { start: { npcName: 'Woman', npcIcon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'woman' },
+            { type: 'npc', name: 'Man', icon: 'https://api.iconify.design/game-icons:person.svg', dialogue: { start: { npcName: 'Man', npcIcon: 'https://api.iconify.design/game-icons:person.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man', pickpocket: { lootTableId: 'pickpocket_silverhaven_citizen' } },
+            { type: 'npc', name: 'Woman', icon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', dialogue: { start: { npcName: 'Woman', npcIcon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'woman', pickpocket: { lootTableId: 'pickpocket_silverhaven_citizen' } },
             {
                 type: 'npc',
                 name: 'Citizen',
                 icon: 'https://api.iconify.design/game-icons:person.svg',
+                pickpocket: { lootTableId: 'pickpocket_silverhaven_citizen' },
                 dialogue: {
                      start: {
                         npcName: 'Citizen',
@@ -61,19 +63,43 @@ export const silverhavenPois: Record<string, POI> = {
         description: 'A wide avenue lined with opulent shops and the imposing structure of the Grand Bank of Embrune.',
         connections: ['silverhaven_square', 'silverhaven_bank'],
         activities: [
+            { type: 'thieving_stall', id: 'silverhaven_trade_district_gem_stall', name: 'Steal from Gem Stall', lootTableId: 'thieving_stall_gem' },
             { type: 'shop', shopId: 'silverhaven_general' },
-            { type: 'npc', name: 'Man', icon: 'https://api.iconify.design/game-icons:person.svg', dialogue: { start: { npcName: 'Man', npcIcon: 'https://api.iconify.design/game-icons:person.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man' },
-            { type: 'npc', name: 'Woman', icon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', dialogue: { start: { npcName: 'Woman', npcIcon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'woman' },
+            { type: 'npc', name: 'Man', icon: 'https://api.iconify.design/game-icons:person.svg', dialogue: { start: { npcName: 'Man', npcIcon: 'https://api.iconify.design/game-icons:person.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man', pickpocket: { lootTableId: 'pickpocket_silverhaven_citizen' } },
+            { type: 'npc', name: 'Woman', icon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', dialogue: { start: { npcName: 'Woman', npcIcon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'woman', pickpocket: { lootTableId: 'pickpocket_silverhaven_citizen' } },
             {
                 type: 'npc',
                 name: 'Merchant Theron',
                 icon: '/assets/npcChatHeads/merchant_theron.png',
-                dialogueType: 'random',
+                pickpocket: { lootTableId: 'pickpocket_merchant_table' },
+                startNode: 'theron_default',
+                dialogue: {
+                    theron_default: {
+                        npcName: 'Merchant Theron',
+                        npcIcon: '/assets/npcChatHeads/merchant_theron.png',
+                        text: "Welcome to the Silverhaven market! A fine day for trade, wouldn't you say? It would be even better if my latest shipment hadn't been stolen...",
+                        responses: [],
+                        conditionalResponses: [
+                            {
+                                text: "I believe I have something that belongs to you.",
+                                check: {
+                                    requirements: [
+                                        { type: 'quest', questId: 'missing_shipment', status: 'in_progress', stage: 0 },
+                                        { type: 'items', items: [{ itemId: 'stolen_caravan_goods', quantity: 1 }] }
+                                    ],
+                                    successNode: 'in_progress_missing_shipment_0',
+                                    failureNode: 'theron_default' 
+                                }
+                            }
+                        ]
+                    }
+                }
             },
             {
                 type: 'npc',
                 name: 'Historian Pallas',
                 icon: '/assets/npcChatHeads/historian_pallas.png',
+                pickpocket: { lootTableId: 'pickpocket_adventurer_table' },
                 dialogue: {
                     start: {
                         npcName: 'Historian Pallas',
@@ -89,6 +115,8 @@ export const silverhavenPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Guard',
                 icon: '/assets/npcChatHeads/guard_captain_elara.png',
+                pickpocket: { lootTableId: 'pickpocket_guard_table' },
+                attackableMonsterId: 'guard',
                 dialogue: {
                     start: {
                         npcName: 'Guard',
@@ -141,7 +169,8 @@ export const silverhavenPois: Record<string, POI> = {
                     }
                 },
                 startNode: 'start'
-            }
+            },
+            { type: 'thieving_lockpick', id: 'sh_bank_chest_1', targetName: 'Vault Box', lootTableId: 'thieving_dungeon_chest_elite' },
         ],
         regionId: 'silverhaven',
         x: 310, y: 280,
@@ -153,6 +182,7 @@ export const silverhavenPois: Record<string, POI> = {
         description: 'The sounds of hammers and saws fill the air here. Master craftsmen offer their services and wares here.',
         connections: ['silverhaven_square', 'silverhaven_smithy', 'silverhaven_arcane_wares'],
         activities: [
+             { type: 'thieving_stall', id: 'silverhaven_artisans_quarter_weapon_stall', name: 'Steal from Weapon Stall', lootTableId: 'thieving_stall_weapon' },
              { type: 'shop', shopId: 'silverhaven_crafting' },
              { type: 'anvil' },
              { type: 'spinning_wheel'},
@@ -160,6 +190,8 @@ export const silverhavenPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Artisan',
                 icon: '/assets/npcChatHeads/artisan.png',
+                pickpocket: { lootTableId: 'pickpocket_yeoman_table' },
+                attackableMonsterId: 'yeoman',
                 dialogue: {
                     start: {
                         npcName: 'Artisan',
@@ -181,6 +213,8 @@ export const silverhavenPois: Record<string, POI> = {
         description: 'A shop filled with the scent of old parchment and strange herbs. The air crackles with magical energy.',
         connections: ['silverhaven_artisans_quarter'],
         activities: [
+            { type: 'thieving_stall', id: 'silverhaven_arcane_wares_herb_stall', name: 'Steal from Herb Stall', lootTableId: 'thieving_stall_herb' },
+            { type: 'thieving_stall', id: 'silverhaven_arcane_wares_potion_stall', name: 'Steal from Potion Stall', lootTableId: 'thieving_stall_potion' },
             { type: 'shop', shopId: 'silverhaven_magic_shop' },
             { type: 'bookbinding_workbench' },
             {
@@ -188,7 +222,8 @@ export const silverhavenPois: Record<string, POI> = {
                 name: 'Archmage Theron',
                 icon: 'https://api.iconify.design/game-icons:wizard-face.svg',
                 startNode: 'theron_default'
-            }
+            },
+            { type: 'thieving_lockpick', id: 'sh_arcane_chest_1', targetName: 'Runic Cabinet', lootTableId: 'thieving_dungeon_chest_high' },
         ],
         regionId: 'silverhaven',
         x: 190, y: 320,
@@ -206,6 +241,7 @@ export const silverhavenPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Master Smith Gideon',
                 icon: '/assets/npcChatHeads/master_smith_gideon.png',
+                pickpocket: { lootTableId: 'pickpocket_adventurer_table' },
                 dialogue: {
                     start: {
                         npcName: 'Master Smith Gideon',
@@ -215,7 +251,8 @@ export const silverhavenPois: Record<string, POI> = {
                     }
                 },
                 startNode: 'start'
-            }
+            },
+            { type: 'thieving_lockpick', id: 'sh_smithy_chest_1', targetName: "Smith's Chest", lootTableId: 'thieving_dungeon_chest_high' },
         ],
         regionId: 'silverhaven',
         x: 130, y: 280,
@@ -227,6 +264,7 @@ export const silverhavenPois: Record<string, POI> = {
         description: 'The smell of salt and fish hangs in the air. Ships from distant lands are moored at the long wooden piers.',
         connections: ['silverhaven_square', 'silverhaven_fish_market'],
         activities: [
+            { type: 'thieving_stall', id: 'silverhaven_docks_fish_stall', name: 'Steal from Fish Stall', lootTableId: 'thieving_stall_fish' },
             {
                 type: 'npc',
                 name: 'Ferryman Silas',
@@ -285,12 +323,27 @@ export const silverhavenPois: Record<string, POI> = {
         description: 'A quieter area with well-kept houses. Citizens go about their daily lives.',
         connections: ['silverhaven_square', 'the_gilded_goblet'],
         activities: [
-             { type: 'npc', name: 'Man', icon: 'https://api.iconify.design/game-icons:person.svg', dialogue: { start: { npcName: 'Man', npcIcon: 'https://api.iconify.design/game-icons:person.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man' },
+             { type: 'npc', name: 'Man', icon: 'https://api.iconify.design/game-icons:person.svg', dialogue: { start: { npcName: 'Man', npcIcon: 'https://api.iconify.design/game-icons:person.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man', pickpocket: { lootTableId: 'pickpocket_silverhaven_citizen' } },
              {
                 type: 'npc',
                 name: 'Elara',
-                icon: 'https://api.iconify.design/game-icons:woman-elf-face.svg',
-            }
+                icon: '/assets/npcChatHeads/elara.png',
+                pickpocket: { lootTableId: 'pickpocket_knight_table' },
+                attackableMonsterId: 'knight',
+                dialogue: {
+                    start: {
+                        npcName: 'Elara',
+                        npcIcon: '/assets/npcChatHeads/elara.png',
+                        text: "It's a lovely day in the capital, isn't it?",
+                        responses: []
+                    }
+                },
+                startNode: 'start',
+            },
+            { type: 'thieving_pilfer', id: 'silverhaven_house_1', name: 'Locked Manor' },
+            { type: 'thieving_pilfer', id: 'silverhaven_house_2', name: 'Locked Townhouse' },
+            { type: 'thieving_pilfer', id: 'silverhaven_house_3', name: 'Locked Villa' },
+            { type: 'thieving_pilfer', id: 'silverhaven_house_4', name: 'Locked Estate' },
         ],
         regionId: 'silverhaven',
         x: 250, y: 280,
@@ -361,6 +414,8 @@ export const silverhavenPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Retired Royal Guard',
                 icon: '/assets/npcChatHeads/bronn_the_retired_adventurer.png',
+                pickpocket: { lootTableId: 'pickpocket_knight_table' },
+                attackableMonsterId: 'knight',
                 dialogue: {
                     start: {
                         npcName: 'Retired Royal Guard',
@@ -371,7 +426,7 @@ export const silverhavenPois: Record<string, POI> = {
                 },
                 startNode: 'start'
             },
-            { type: 'npc', name: 'Merchant', icon: '/assets/npcChatHeads/merchant_theron.png', dialogue: { start: { npcName: 'Merchant', npcIcon: '/assets/npcChatHeads/merchant_theron.png', text: CIVILLIAN_DIALOGUE.silverhaven.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random' },
+            { type: 'npc', name: 'Merchant', icon: '/assets/npcChatHeads/merchant_theron.png', dialogue: { start: { npcName: 'Merchant', npcIcon: '/assets/npcChatHeads/merchant_theron.png', text: CIVILLIAN_DIALOGUE.silverhaven.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', pickpocket: { lootTableId: 'pickpocket_merchant_table' } },
         ],
         regionId: 'silverhaven',
         x: 250, y: 240,
@@ -381,7 +436,7 @@ export const silverhavenPois: Record<string, POI> = {
         id: 'silverhaven_castle_approach',
         name: 'Castle Approach',
         description: 'A grand, tree-lined avenue leading north towards the Royal Castle. A tall, slender tower stands to the east.',
-        connections: ['silverhaven_square', 'silverhaven_slayers_spire'],
+        connections: ['silverhaven_square', 'silverhaven_slayers_spire', 'silverhaven_castle_grounds'],
         activities: [],
         regionId: 'silverhaven',
         x: 150, y: 340,
@@ -398,6 +453,26 @@ export const silverhavenPois: Record<string, POI> = {
         ],
         regionId: 'silverhaven',
         x: 150, y: 280,
+        type: 'internal',
+    },
+    silverhaven_castle_grounds: {
+        id: 'silverhaven_castle_grounds',
+        name: 'Silverhaven Castle Grounds',
+        description: 'The immaculate grounds of the Royal Castle. Powerful adventurers patrol the area.',
+        connections: ['silverhaven_castle_approach'],
+        activities: [
+            {
+                type: 'npc',
+                name: 'Adventurer',
+                icon: 'https://api.iconify.design/game-icons:adventurer.svg',
+                pickpocket: { lootTableId: 'pickpocket_adventurer_table' },
+                attackableMonsterId: 'adventurer',
+                dialogue: { start: { npcName: 'Adventurer', npcIcon: 'https://api.iconify.design/game-icons:adventurer.svg', text: "Best be on your way. Only authorized personnel beyond this point.", responses: [] } },
+                startNode: 'start',
+            }
+        ],
+        regionId: 'silverhaven',
+        x: 150, y: 240,
         type: 'internal',
     },
 };

@@ -85,30 +85,39 @@ export const SMITHING_RECIPES = [
   { itemId: 'runic_battleaxe', level: 90, barsRequired: 3, xp: 225, barType: 'runic_bar' },
   { itemId: 'runic_kiteshield', level: 92, barsRequired: 3, xp: 225, barType: 'runic_bar' },
   { itemId: 'runic_platebody', level: 94, barsRequired: 5, xp: 375, barType: 'runic_bar' },
-  // Other
-  { itemId: 'silver_tiara', level: 25, barsRequired: 1, xp: 52.5, barType: 'silver_bar' },
 ];
 
+export const SMELTING_RECIPES = [
+    { barType: 'bronze_bar', level: 1, xp: 7, ingredients: [{ itemId: 'copper_ore', quantity: 1 }, { itemId: 'tin_ore', quantity: 1 }] },
+    { barType: 'iron_bar', level: 15, xp: 12.5, ingredients: [{ itemId: 'iron_ore', quantity: 1 }] },
+    { barType: 'silver_bar', level: 20, xp: 13.7, ingredients: [{ itemId: 'silver_ore', quantity: 1 }] },
+    { barType: 'steel_bar', level: 30, xp: 17.5, ingredients: [{ itemId: 'iron_ore', quantity: 1 }, { itemId: 'coal', quantity: 2 }] },
+    { barType: 'gold_bar', level: 40, xp: 22.5, ingredients: [{ itemId: 'gold_ore', quantity: 1 }] },
+    { barType: 'mithril_bar', level: 50, xp: 30, ingredients: [{ itemId: 'mithril_ore', quantity: 1 }, { itemId: 'coal', quantity: 4 }] },
+    { barType: 'adamantite_bar', level: 65, xp: 37.5, ingredients: [{ itemId: 'adamantite_ore', quantity: 1 }, { itemId: 'coal', quantity: 6 }] },
+    { barType: 'runic_bar', level: 80, xp: 50, ingredients: [{ itemId: 'titanium_ore', quantity: 1 }, { itemId: 'coal', quantity: 8 }] },
+] as const;
+
 export const COOKING_RECIPES: CookingRecipe[] = [
-    { itemId: 'bread', level: 1, xp: 30, ingredients: [{ itemId: 'bread_dough', quantity: 1 }], burntItemId: 'burnt_bread',},
-    { itemId: 'scrambled_eggs', level: 1, xp: 30, ingredients: [{ itemId: 'eggs', quantity: 1 }], burntItemId: 'burnt_eggs',},
-    { itemId: 'cooked_shrimp', level: 1, xp: 30, ingredients: [{ itemId: 'raw_shrimp', quantity: 1 }], burntItemId: 'burnt_shrimp',},
-    { itemId: 'rat_kebab_cooked', level: 1, xp: 30, ingredients: [{ itemId: 'rat_kebab_uncooked', quantity: 1 }], burntItemId: 'rat_kebab_burnt',},
-    { itemId: 'cooked_sardine', level: 5, xp: 40, ingredients: [{ itemId: 'raw_sardine', quantity: 1 }], burntItemId: 'burnt_sardine',},
-    { itemId: 'cooked_crab_meat', level: 8, xp: 55, ingredients: [{ itemId: 'giant_crab_meat', quantity: 1 }], burntItemId: 'burnt_crab_meat',},
-    { itemId: 'cooked_herring', level: 10, xp: 50, ingredients: [{ itemId: 'raw_herring', quantity: 1 }], burntItemId: 'burnt_herring',},
-    { itemId: 'cooked_chicken', level: 3, xp: 40, ingredients: [{ itemId: 'raw_chicken', quantity: 1 }], burntItemId: 'burnt_chicken',},
-    { itemId: 'cooked_beef', level: 5, xp: 45, ingredients: [{ itemId: 'raw_beef', quantity: 1 }], burntItemId: 'burnt_beef',},
-    { itemId: 'cooked_boar_meat', level: 10, xp: 60, ingredients: [{ itemId: 'raw_boar_meat', quantity: 1 }], burntItemId: 'burnt_boar_meat',},
-    { itemId: 'cooked_trout', level: 20, xp: 70, ingredients: [{ itemId: 'raw_trout', quantity: 1 }], burntItemId: 'burnt_trout',},
-    { itemId: 'cooked_pike', level: 30, xp: 80, ingredients: [{ itemId: 'raw_pike', quantity: 1 }], burntItemId: 'burnt_pike',},
-    { itemId: 'cake', level: 35, xp: 120, ingredients: [{ itemId: 'cake_batter', quantity: 1 }], burntItemId: 'burnt_cake',},
-    { itemId: 'cooked_eel', level: 38, xp: 95, ingredients: [{ itemId: 'raw_eel', quantity: 1 }], burntItemId: 'burnt_eel',},
-    { itemId: 'cooked_tuna', level: 40, xp: 100, ingredients: [{ itemId: 'raw_tuna', quantity: 1 }], burntItemId: 'burnt_tuna',},
+    { itemId: 'bread', level: 1, xp: 30, ingredients: [{ itemId: 'bread_dough', quantity: 1 }], burntItemId: 'burnt_food',},
+    { itemId: 'scrambled_eggs', level: 1, xp: 30, ingredients: [{ itemId: 'eggs', quantity: 1 }], burntItemId: 'burnt_food',},
+    { itemId: 'cooked_shrimp', level: 1, xp: 30, ingredients: [{ itemId: 'raw_shrimp', quantity: 1 }], burntItemId: 'burnt_food',},
+    { itemId: 'rat_kebab_cooked', level: 1, xp: 30, ingredients: [{ itemId: 'rat_kebab_uncooked', quantity: 1 }], burntItemId: 'burnt_food',},
+    { itemId: 'cooked_sardine', level: 5, xp: 40, ingredients: [{ itemId: 'raw_sardine', quantity: 1 }], burntItemId: 'burnt_food',},
+    { itemId: 'cooked_crab_meat', level: 8, xp: 55, ingredients: [{ itemId: 'giant_crab_meat', quantity: 1 }], burntItemId: 'burnt_food',},
+    { itemId: 'cooked_herring', level: 10, xp: 50, ingredients: [{ itemId: 'raw_herring', quantity: 1 }], burntItemId: 'burnt_food',},
+    { itemId: 'cooked_chicken', level: 3, xp: 40, ingredients: [{ itemId: 'raw_chicken', quantity: 1 }], burntItemId: 'burnt_food',},
+    { itemId: 'cooked_beef', level: 5, xp: 45, ingredients: [{ itemId: 'raw_beef', quantity: 1 }], burntItemId: 'burnt_food',},
+    { itemId: 'cooked_boar_meat', level: 10, xp: 60, ingredients: [{ itemId: 'raw_boar_meat', quantity: 1 }], burntItemId: 'burnt_food',},
+    { itemId: 'cooked_trout', level: 20, xp: 70, ingredients: [{ itemId: 'raw_trout', quantity: 1 }], burntItemId: 'burnt_food',},
+    { itemId: 'cooked_pike', level: 30, xp: 80, ingredients: [{ itemId: 'raw_pike', quantity: 1 }], burntItemId: 'burnt_food',},
+    { itemId: 'cake', level: 35, xp: 120, ingredients: [{ itemId: 'cake_batter', quantity: 1 }], burntItemId: 'burnt_food',},
+    { itemId: 'cooked_eel', level: 38, xp: 95, ingredients: [{ itemId: 'raw_eel', quantity: 1 }], burntItemId: 'burnt_food',},
+    { itemId: 'cooked_tuna', level: 40, xp: 100, ingredients: [{ itemId: 'raw_tuna', quantity: 1 }], burntItemId: 'burnt_food',},
     { itemId: 'cooked_lobster', level: 50, xp: 120, ingredients: [{ itemId: 'raw_lobster', quantity: 1 }], burntItemId: 'burnt_lobster',},
     { itemId: 'cooked_swordfish', level: 62, xp: 140, ingredients: [{ itemId: 'raw_swordfish', quantity: 1 }], burntItemId: 'burnt_swordfish',},
     { itemId: 'cooked_shark', level: 76, xp: 210, ingredients: [{ itemId: 'raw_shark', quantity: 1 }], burntItemId: 'burnt_shark',},
-    { itemId: 'serpent_omelet_cooked', level: 50, xp: 200, ingredients: [{ itemId: 'serpents_egg', quantity: 1 }, { itemId: 'eggs', quantity: 1 }], burntItemId: 'serpent_omelet_burnt',}
+    { itemId: 'serpent_omelet_cooked', level: 50, xp: 200, ingredients: [{ itemId: 'serpents_egg', quantity: 1 }, { itemId: 'eggs', quantity: 1 }], burntItemId: 'burnt_food',}
 ];
 
 export const SPINNING_RECIPES: CraftingRecipe[] = [
@@ -180,6 +189,7 @@ export const JEWELRY_CRAFTING_RECIPES: JewelryRecipe[] = [
     { itemId: 'silver_ring', level: 5, xp: 35, barType: 'silver_bar', barsRequired: 1, mouldId: 'ring_mould' },
     { itemId: 'silver_necklace', level: 8, xp: 42, barType: 'silver_bar', barsRequired: 1, mouldId: 'necklace_mould' },
     { itemId: 'silver_amulet_u', level: 12, xp: 60, barType: 'silver_bar', barsRequired: 1, mouldId: 'amulet_mould' },
+    { itemId: 'silver_tiara', level: 14, xp: 52, barType: 'silver_bar', barsRequired: 1, mouldId: 'tiara_mould' },
     // Gold Jewelry (Plain)
     { itemId: 'gold_ring', level: 20, xp: 50, barType: 'gold_bar', barsRequired: 1, mouldId: 'ring_mould' },
     { itemId: 'gold_necklace', level: 24, xp: 60, barType: 'gold_bar', barsRequired: 1, mouldId: 'necklace_mould' },

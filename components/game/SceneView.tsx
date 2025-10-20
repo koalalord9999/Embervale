@@ -1,6 +1,7 @@
-import React, { useMemo, useEffect, useState } from 'react';
-import { POI, POIActivity, PlayerQuestState, SkillName, InventorySlot, ResourceNodeState, PlayerRepeatableQuest, SkillRequirement, PlayerSkill, DialogueNode, GroundItem, DialogueResponse, Quest, BonfireActivity, DialogueAction, DialogueCheckRequirement } from '../../types';
-import { MONSTERS, QUESTS, SHOPS, ITEMS, REGIONS, FIREMAKING_RECIPES, SKILL_ICONS } from '../../constants';
+
+import React, { useMemo, useEffect, useState, useCallback } from 'react';
+import { POI, POIActivity, PlayerQuestState, SkillName, InventorySlot, ResourceNodeState, PlayerRepeatableQuest, SkillRequirement, PlayerSkill, DialogueNode, GroundItem, DialogueResponse, Quest, BonfireActivity, DialogueAction, DialogueCheckRequirement, ThievingContainerState, Monster, WorldState } from '../../types';
+import { MONSTERS, QUESTS, SHOPS, ITEMS, REGIONS, FIREMAKING_RECIPES, SKILL_ICONS, THIEVING_CONTAINER_TARGETS, THIEVING_STALL_TARGETS } from '../../constants';
 import { POIS } from '../../data/pois';
 import Button from '../common/Button';
 import { ContextMenuOption } from '../common/ContextMenu';
@@ -12,6 +13,9 @@ import { useLongPress } from '../../hooks/useLongPress';
 import { useWorldActions } from '../../hooks/useWorldActions';
 
 type SkillingActivity = Extract<POIActivity, { type: 'skilling' }>;
+type LockpickActivity = Extract<POIActivity, { type: 'thieving_lockpick' }>;
+type StallActivity = Extract<POIActivity, { type: 'thieving_stall' }>;
+type PickpocketData = NonNullable<Extract<POIActivity, { type: 'npc' }>['pickpocket']>;
 type GridItem = POI | { type: 'obstacle'; fromPoiId: string; toPoiId: string; requirement: SkillRequirement };
 
 
@@ -54,7 +58,79 @@ interface SceneViewProps {
     bonfires: BonfireActivity[];
     onStokeBonfire: (logId: string, bonfireId: string) => void;
     isOneClickMode: boolean;
+    onPickpocket: (target: { name: string; pickpocket: PickpocketData }, targetInstanceId: string) => void;
+    onLockpick: (activity: LockpickActivity) => void;
+    onPilfer: (activity: Extract<POIActivity, { type: 'thieving_pilfer' }>) => void;
+    thievingContainerStates: Record<string, ThievingContainerState>;
+    onStealFromStall: (activity: StallActivity) => void;
+    worldState: WorldState;
+    groundItemsForCurrentPoi: GroundItem[];
 }
+
+const PilferButton: React.FC<{
+    activity: Extract<POIActivity, { type: 'thieving_pilfer' }>;
+    sceneProps: SceneViewProps;
+}> = ({ activity, sceneProps }) => {
+    const { onPilfer, setTooltip, skills, worldState, setContextMenu, isOneClickMode, isTouchSimulationEnabled } = sceneProps;
+    const isTouchDevice = useIsTouchDevice(isTouchSimulationEnabled);
+    const isDepleted = worldState.depletedHouses?.includes(activity.id);
+
+    // Call hook unconditionally at the top of the component
+    const customHandlers = useLongPress({
+        onLongPress: (e: React.MouseEvent | React.TouchEvent) => {
+            const event = 'touches' in e ? e.touches[0] : e;
+            const options: ContextMenuOption[] = [
+                { label: 'Pick Lock', onClick: () => {
+                    onPilfer(activity);
+                    setTooltip(null);
+                }, disabled: isDepleted }
+            ];
+            setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
+        },
+        onClick: () => {
+            if (isDepleted) return;
+            onPilfer(activity);
+            setTooltip(null);
+        },
+        isOneClickMode: isOneClickMode,
+    });
+
+    // Perform conditional checks *after* all hooks have been called
+    const houseInfo = worldState.generatedHouses?.[activity.id];
+    if (!houseInfo) return null;
+
+    const containerData = THIEVING_CONTAINER_TARGETS[houseInfo.tierId];
+    if (!containerData) return null;
+
+    const handleMouseEnter = (e: React.MouseEvent) => {
+        if (isDepleted) {
+            setTooltip({ content: <p>This house has been recently pilfered. Check back later.</p>, position: { x: e.clientX, y: e.clientY } });
+            return;
+        }
+        const thievingSkill = skills.find(s => s.name === SkillName.Thieving)?.currentLevel ?? 1;
+        const requiredLevel = containerData.level;
+        const hasLevel = thievingSkill >= requiredLevel;
+        const levelColor = hasLevel ? 'text-green-400' : 'text-red-400';
+        const tooltipContent = (
+            <div>
+                <p className="font-bold text-yellow-300">{activity.name}</p>
+                <p className={`text-sm ${levelColor}`}>Requires Thieving: {requiredLevel}</p>
+            </div>
+        );
+        setTooltip({ content: tooltipContent, position: { x: e.clientX, y: e.clientY } });
+    };
+
+    return (
+        <Button
+            {...customHandlers}
+            disabled={isDepleted}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={() => setTooltip(null)}
+        >
+            {isDepleted ? 'Recently Pilfered' : activity.name}
+        </Button>
+    );
+};
 
 const CleanupProgress: React.FC<{
     startTime: number;
@@ -102,7 +178,8 @@ const ActionableButton: React.FC<{
     isOneClickMode: boolean;
     poi: POI;
     onStartCombat: (uniqueInstanceId: string) => void;
-}> = ({ activity, index, handleActivityClick, setContextMenu, ui, onDepositBackpack, onDepositEquipment, isTouchDevice, worldActions, isOneClickMode, poi, onStartCombat }) => {
+    onPickpocket: (target: { name: string; pickpocket: PickpocketData }, targetInstanceId: string) => void;
+}> = ({ activity, index, handleActivityClick, setContextMenu, ui, onDepositBackpack, onDepositEquipment, isTouchDevice, worldActions, isOneClickMode, poi, onStartCombat, onPickpocket }) => {
     
     let text = 'Interact';
     switch (activity.type) {
@@ -125,20 +202,25 @@ const ActionableButton: React.FC<{
         case 'ladder': text = activity.name; break;
     }
 
-    const hasContextMenu = (activity.type === 'npc' || activity.type === 'furnace' || activity.type === 'anvil' || activity.type === 'windmill');
-
-    const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
-        ui.setTooltip(null);
-        handleActivityClick(activity);
-    };
-
-    const onLongPress = (e: React.MouseEvent | React.TouchEvent) => {
+    const onLongPress = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+        const event = 'touches' in e ? e.touches[0] : e;
         let options: ContextMenuOption[] = [];
 
         if (activity.type === 'npc') {
             const isBanker = activity.actions && activity.actions.some(a => a.action === 'open_bank');
             if (!isBanker) {
                 options.push({ label: 'Talk to', onClick: () => { handleActivityClick(activity); setContextMenu(null); } });
+            }
+
+            if (activity.pickpocket) {
+                options.push({
+                    label: 'Pickpocket',
+                    onClick: () => {
+                        const uniqueInstanceId = `${poi.id}:${activity.name}:${index}`;
+                        onPickpocket({ name: activity.name, pickpocket: activity.pickpocket }, uniqueInstanceId);
+                        setContextMenu(null);
+                    }
+                });
             }
 
             if (activity.attackableMonsterId) {
@@ -176,23 +258,26 @@ const ActionableButton: React.FC<{
         }
         
         if (options.length > 0) {
-            let eventForContextMenu: React.MouseEvent | React.Touch;
-            if ('touches' in e && e.touches.length > 0) {
-                eventForContextMenu = e.touches[0];
-            } else if ('changedTouches' in e && e.changedTouches.length > 0) {
-                eventForContextMenu = e.changedTouches[0];
-            } else {
-                eventForContextMenu = e as React.MouseEvent;
-            }
-            setContextMenu({ options, event: eventForContextMenu, isTouchInteraction: 'touches' in e || 'changedTouches' in e });
+            setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
         }
-    }
+    }, [activity, poi.id, index, handleActivityClick, setContextMenu, ui, onDepositBackpack, onDepositEquipment, isTouchDevice, worldActions, onStartCombat, onPickpocket]);
+    
+    const handleClick = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+        ui.setTooltip(null);
+        handleActivityClick(activity);
+    }, [ui, handleActivityClick, activity]);
 
-    const customHandlers = hasContextMenu ? useLongPress({
+    const hasContextMenu = (activity.type === 'npc' || activity.type === 'furnace' || activity.type === 'anvil' || activity.type === 'windmill');
+
+    // Call the hook unconditionally
+    const longPressHandlers = useLongPress({
         onLongPress,
         onClick: handleClick,
-        isOneClickMode: isOneClickMode,
-    }) : { onClick: handleClick };
+        isOneClickMode,
+    });
+    
+    // Conditionally apply the handlers
+    const customHandlers = hasContextMenu ? longPressHandlers : { onClick: handleClick };
     
     const tutorialId = `activity-button-${index}`;
 
@@ -302,7 +387,7 @@ const BonfireButton: React.FC<{
 
 
 const SceneView: React.FC<SceneViewProps> = (props) => {
-    const { poi, unlockedPois, onNavigate, onActivity, onStartCombat, playerQuests, inventory, setContextMenu, setMakeXPrompt, setTooltip, addLog, startQuest, hasItems, resourceNodeStates, activeSkillingNodeId, onToggleSkilling, initializeNodeState, skillingTick, getSuccessChance, activeRepeatableQuest, activeCleanup, onStartInteractQuest, onCancelInteractQuest, clearedSkillObstacles, onClearObstacle, skills, monsterRespawnTimers, setActiveDialogue, handleDialogueCheck, onResponse, onDepositBackpack, onDepositEquipment, ui, isTouchSimulationEnabled, worldActions, bonfires, onStokeBonfire, isOneClickMode } = props;
+    const { poi, unlockedPois, onNavigate, onActivity, onStartCombat, playerQuests, inventory, setContextMenu, setMakeXPrompt, setTooltip, addLog, startQuest, hasItems, resourceNodeStates, activeSkillingNodeId, onToggleSkilling, initializeNodeState, skillingTick, getSuccessChance, activeRepeatableQuest, activeCleanup, onStartInteractQuest, onCancelInteractQuest, clearedSkillObstacles, onClearObstacle, skills, monsterRespawnTimers, setActiveDialogue, handleDialogueCheck, onResponse, onDepositBackpack, onDepositEquipment, ui, isTouchSimulationEnabled, worldActions, bonfires, onStokeBonfire, isOneClickMode, onPickpocket, onLockpick, onPilfer, thievingContainerStates, onStealFromStall, worldState, groundItemsForCurrentPoi } = props;
     const { depletedNodesAnimating } = useSkillingAnimations(resourceNodeStates, poi.activities);
     const [countdown, setCountdown] = useState<Record<string, number>>({});
     const [shakingNodeId, setShakingNodeId] = useState<string | null>(null);
@@ -430,6 +515,108 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
             if (!isRepeatableQuestActive && !isMainQuestVisible) {
                 return null;
             }
+        }
+        
+        if (activity.type === 'thieving_pilfer') {
+            return <PilferButton key={activity.id} activity={activity} sceneProps={props} />;
+        }
+
+        if (activity.type === 'thieving_lockpick') {
+            const containerData = THIEVING_CONTAINER_TARGETS[activity.lootTableId];
+            if (!containerData) return null;
+
+            let isDepleted = false;
+            let respawnTimeSec = 0;
+
+            if (activity.id.startsWith('pilfer_')) {
+                isDepleted = worldState.activePilferingSession?.lootedContainerIds?.includes(activity.id) ?? false;
+            } else {
+                const containerState = thievingContainerStates[activity.id];
+                isDepleted = containerState?.depleted ?? false;
+                respawnTimeSec = containerState ? Math.ceil(containerState.respawnTimer / 1000) : 0;
+            }
+
+            const isDisabled = isDepleted;
+            
+            let buttonText = `Lockpick ${activity.targetName}`;
+            if (isDisabled) {
+                buttonText = activity.id.startsWith('pilfer_') ? 'Looted' : `Looted (${respawnTimeSec}s)`;
+            }
+    
+            const handleMouseEnter = (e: React.MouseEvent) => {
+                if (isDepleted) {
+                     setTooltip({ content: <p>This has already been looted.</p>, position: { x: e.clientX, y: e.clientY } });
+                     return;
+                }
+                const thievingSkill = skills.find(s => s.name === SkillName.Thieving)?.currentLevel ?? 1;
+                const requiredLevel = containerData.level;
+                const hasLevel = thievingSkill >= requiredLevel;
+                const levelColor = hasLevel ? 'text-green-400' : 'text-red-400';
+                const tooltipContent = (
+                    <div>
+                        <p className="font-bold text-yellow-300">{`Lockpick ${activity.targetName}`}</p>
+                        <p className={`text-sm ${levelColor}`}>Requires Thieving: {requiredLevel}</p>
+                    </div>
+                );
+                setTooltip({ content: tooltipContent, position: { x: e.clientX, y: e.clientY } });
+            };
+    
+            return (
+                <Button
+                    key={activity.id}
+                    onClick={() => { onLockpick(activity); setTooltip(null); }}
+                    disabled={isDisabled}
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={() => setTooltip(null)}
+                >
+                    {buttonText}
+                </Button>
+            );
+        }
+
+        if (activity.type === 'thieving_stall') {
+            const stallData = THIEVING_STALL_TARGETS[activity.lootTableId];
+            if (!stallData) return null;
+
+            const containerState = thievingContainerStates[activity.id];
+            const isDepleted = containerState?.depleted ?? false;
+            const respawnTimeSec = containerState ? Math.ceil(containerState.respawnTimer / 1000) : 0;
+            const isDisabled = isDepleted;
+            
+            let buttonText = activity.name;
+            if (isDisabled) {
+                buttonText = `Empty (${respawnTimeSec}s)`;
+            }
+
+            const handleMouseEnter = (e: React.MouseEvent) => {
+                if (isDepleted) {
+                     setTooltip({ content: <p>This stall is empty.</p>, position: { x: e.clientX, y: e.clientY } });
+                     return;
+                }
+                const thievingSkill = skills.find(s => s.name === SkillName.Thieving)?.currentLevel ?? 1;
+                const requiredLevel = stallData.level;
+                const hasLevel = thievingSkill >= requiredLevel;
+                const levelColor = hasLevel ? 'text-green-400' : 'text-red-400';
+                const tooltipContent = (
+                    <div>
+                        <p className="font-bold text-yellow-300">{activity.name}</p>
+                        <p className={`text-sm ${levelColor}`}>Requires Thieving: {requiredLevel}</p>
+                    </div>
+                );
+                setTooltip({ content: tooltipContent, position: { x: e.clientX, y: e.clientY } });
+            };
+
+            return (
+                <Button
+                    key={activity.id}
+                    onClick={() => { onStealFromStall(activity as StallActivity); setTooltip(null); }}
+                    disabled={isDisabled}
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={() => setTooltip(null)}
+                >
+                    {buttonText}
+                </Button>
+            );
         }
 
         if (activity.type === 'skilling') {
@@ -571,26 +758,27 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
 
             const uniqueInstanceId = `${poi.id}:${activity.monsterId}:${index}`;
             const remainingTime = countdown[uniqueInstanceId];
+            const isRecentlyKilled = worldState.recentlyKilled?.includes(uniqueInstanceId);
+            let buttonText = `Fight ${monster.name}`;
 
-            if (remainingTime > 0) {
-                return (
-                    <Button key={uniqueInstanceId} disabled variant="combat">
-                        {monster.name} ({remainingTime}s)
-                    </Button>
-                );
+            if (isRecentlyKilled) {
+                buttonText = 'Defeated...';
+            } else if (remainingTime > 0) {
+                buttonText = `${monster.name} (${remainingTime}s)`;
             }
             
-            const text = `Fight ${monster.name}`;
             const textColorClass = monster.aggressive ? 'text-red-400' : 'text-yellow-400';
+            
             return (
                 <Button 
                     key={uniqueInstanceId} 
                     onClick={() => onStartCombat(uniqueInstanceId)}
                     variant="combat"
                     className={textColorClass}
+                    disabled={remainingTime > 0 || !!isRecentlyKilled}
                     data-tutorial-id={`activity-button-${index}`}
                 >
-                    {text}
+                    {buttonText}
                 </Button>
             );
         }
@@ -620,6 +808,7 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
                 isOneClickMode={isOneClickMode}
                 poi={poi}
                 onStartCombat={onStartCombat}
+                onPickpocket={props.onPickpocket}
             />
         );
     }

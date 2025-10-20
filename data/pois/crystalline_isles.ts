@@ -47,6 +47,8 @@ export const crystallineIslesPois: Record<string, POI> = {
         connections: ['crystalline_path_2', 'crystalline_path_4'],
         activities: [
              { type: 'combat', monsterId: 'shard_golem' },
+// FIX: Removed redundant level, xp, and respawnTime properties.
+             { type: 'thieving_lockpick', id: 'ci_chest_1', targetName: 'Glimmering Chest', lootTableId: 'thieving_dungeon_chest_high' },
         ],
         regionId: 'crystalline_isles',
         x: 1569, y: 802
@@ -103,6 +105,8 @@ export const crystallineIslesPois: Record<string, POI> = {
         connections: ['crystalline_path_7', 'crystalline_path_9'],
         activities: [
              { type: 'skilling', id: 'ci_coal_2', name: 'Mine Coal', skill: SkillName.Mining, requiredLevel: 30, loot: [{ itemId: 'coal', chance: 1, xp: 50 }], resourceCount: { min: 2, max: 5 }, respawnTime: 12000, gatherTime: 3500 },
+// FIX: Removed redundant level, xp, and respawnTime properties.
+             { type: 'thieving_lockpick', id: 'ci_chest_2', targetName: 'Floating Chest', lootTableId: 'thieving_dungeon_chest_high' },
         ],
         regionId: 'crystalline_isles',
         x: 2139, y: 753

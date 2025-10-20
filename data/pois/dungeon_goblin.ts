@@ -31,6 +31,8 @@ export const goblinDungeonPois: Record<string, POI> = {
         activities: [
             { type: 'combat', monsterId: 'goblin_scout' },
             { type: 'combat', monsterId: 'goblin' },
+// FIX: Removed redundant level, xp, and respawnTime properties.
+            { type: 'thieving_lockpick', id: 'gb_barracks_chest_1', targetName: 'Grimy Chest', lootTableId: 'thieving_dungeon_chest_low' },
         ],
         regionId: 'goblin_dungeon',
         x: 1640, y: 880
@@ -93,7 +95,9 @@ export const goblinDungeonPois: Record<string, POI> = {
         connections: ['warrens_crossroads'],
         activities: [
             { type: 'combat', monsterId: 'goblin_brute' },
-            { type: 'combat', monsterId: 'goblin_brute' }
+            { type: 'combat', monsterId: 'goblin_brute' },
+// FIX: Removed redundant level, xp, and respawnTime properties.
+            { type: 'thieving_lockpick', id: 'gb_brute_chest_1', targetName: 'Bone Chest', lootTableId: 'thieving_dungeon_chest_low' },
         ],
         regionId: 'goblin_dungeon',
         x: 1678, y: 1084
@@ -108,6 +112,8 @@ export const goblinDungeonPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'goblin_thrower' },
             { type: 'skilling', id: 'warrens_mithril_1', name: 'Mine Mithril Rock', skill: SkillName.Mining, requiredLevel: 50, loot: [{ itemId: 'mithril_ore', chance: 1, xp: 80 }], resourceCount: { min: 1, max: 2 }, respawnTime: 20000, gatherTime: 4000 },
             { type: 'skilling', id: 'warrens_mithril_2', name: 'Mine Mithril Rock', skill: SkillName.Mining, requiredLevel: 50, loot: [{ itemId: 'mithril_ore', chance: 1, xp: 80 }], resourceCount: { min: 1, max: 2 }, respawnTime: 20000, gatherTime: 4000 },
+// FIX: Removed redundant level, xp, and respawnTime properties.
+            { type: 'thieving_lockpick', id: 'gb_storage_chest_1', targetName: 'Plunder Chest', lootTableId: 'thieving_dungeon_chest_mid' },
         ],
         regionId: 'goblin_dungeon',
         x: 1760, y: 1120
@@ -158,6 +164,8 @@ export const goblinDungeonPois: Record<string, POI> = {
         connections: ['warrens_throne_approach', 'flux_altar'],
         activities: [
             { type: 'combat', monsterId: 'grumlok_goblin_king' },
+// FIX: Removed redundant level, xp, and respawnTime properties.
+            { type: 'thieving_lockpick', id: 'gb_throne_chest_1', targetName: 'King\'s Chest', lootTableId: 'thieving_dungeon_chest_mid' },
         ],
         regionId: 'goblin_dungeon',
         x: 1880, y: 1000

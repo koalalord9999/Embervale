@@ -6,6 +6,11 @@ export const lostHeirloom: Quest = {
     description: "You found a beautiful old necklace. Perhaps someone in the capital city of Silverhaven is missing it.",
     isHidden: true,
     startHint: "This is a hidden quest. It is started by finding a special necklace and showing it to the right person.",
+    triggerItem: {
+        itemId: 'lost_heirloom',
+        npcName: 'Elara',
+        startNode: 'item_trigger_lost_heirloom'
+    },
     playerStagePerspectives: [
         "I found an old necklace. I should try to find its owner in the capital city of Silverhaven."
     ],
@@ -18,6 +23,7 @@ export const lostHeirloom: Quest = {
     ],
     rewards: {
         xp: [{ skill: SkillName.Slayer, amount: 350 }],
+        items: [{ itemId: 'emerald_necklace', quantity: 1}],
         coins: 1500,
     },
     dialogue: {
@@ -26,7 +32,7 @@ export const lostHeirloom: Quest = {
             npcIcon: '/assets/npcChatHeads/elara.png',
             text: "Is that... could it be? My heirloom necklace! I thought it was lost forever! Oh, thank you, thank you, kind stranger! I don't have much, but please, take this as a reward for your honesty.",
             responses: [
-                { text: "You're welcome. I'm glad I could return it.", actions: [{ type: 'start_quest', questId: 'lost_heirloom' }] },
+                { text: "You're welcome. I'm glad I could return it.", actions: [{ type: 'start_quest', questId: 'lost_heirloom' }], next: 'in_progress_lost_heirloom_0' },
             ]
         },
         in_progress_lost_heirloom_0: {
@@ -34,7 +40,7 @@ export const lostHeirloom: Quest = {
             npcIcon: '/assets/npcChatHeads/elara.png',
             text: "You've made an old woman very happy today. Thank you again.",
             responses: [
-                { text: "It was my pleasure.", actions: [{ type: 'give_xp', skill: SkillName.Slayer, amount: 350 }, { type: 'give_coins', amount: 1500 }, { type: 'advance_quest', questId: 'lost_heirloom' }] },
+                { text: "It was my pleasure.", actions: [{ type: 'advance_quest', questId: 'lost_heirloom' }] },
             ]
         },
         post_quest_lost_heirloom: {

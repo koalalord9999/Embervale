@@ -41,8 +41,6 @@ export const petuniaProblems: Quest = {
     description: "Old Man Fitzwilliam's prize-winning petunias are mysteriously dying, and he's not happy about it. He suspects something unnatural is at play.",
     isHidden: true,
     startHint: "Speak to a distraught Old Man Fitzwilliam in Meadowdale Square.",
-    // Dialogue to be added later
-    // startDialogueNode: 'quest_intro_petunia_problems',
     playerStagePerspectives: [
         "Fitzwilliam's petunias are blighted. I should get a soil sample and speak with Herbalist Anise in Oakhaven for her expertise.",
         "Anise needs a sample of Blighted Soil and some Grimy Gloom Moss to create a cure. Gloom Moss grows on Cave Slimes in the Mine Depths.",
@@ -83,4 +81,14 @@ export const petuniaProblems: Quest = {
         coins: 1000,
         items: [{ itemId: 'ring_of_preservation', quantity: 1 }]
     },
+    dialogue: {
+        petunia_use_potion: {
+            npcName: 'Use Blight Ward Potion',
+            npcIcon: 'https://api.iconify.design/game-icons:sprout.svg',
+            text: "You pour the shimmering potion onto the blighted soil. The ground hisses and a foul-smelling creature tears its way out of the earth!",
+            responses: [
+                { text: "(Face the creature!)", actions: [{ type: 'take_item', itemId: 'blight_ward_potion', quantity: 1 }, { type: 'advance_quest', questId: 'petunia_problems' }, { type: 'start_mandatory_combat', monsterId: 'blight_imp' }] }
+            ]
+        }
+    }
 };

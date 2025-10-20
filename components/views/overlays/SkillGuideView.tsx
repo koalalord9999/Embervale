@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { PlayerSkill, SkillName } from '../../../types';
-import { SKILL_GUIDES, SKILL_ICONS, ITEMS, ALL_SKILLS, getIconClassName, HERBS, HERBLORE_RECIPES } from '../../../constants';
+import { SKILL_GUIDES, SKILL_ICONS, ITEMS, ALL_SKILLS, getIconClassName, HERBS, HERBLORE_RECIPES, THIEVING_POCKET_TARGETS, THIEVING_CONTAINER_TARGETS, HOUSE_TIERS, THIEVING_STALL_TARGETS } from '../../../constants';
 import Button from '../../common/Button';
 
 interface SkillGuideViewProps {
@@ -92,6 +92,79 @@ const HerbloreGuide: React.FC<{ playerLevel: number }> = ({ playerLevel }) => {
     );
 };
 
+const ThievingGuide: React.FC<{ playerLevel: number }> = ({ playerLevel }) => {
+    const [activeTab, setActiveTab] = useState<'pickpocket' | 'lockpicking' | 'stalls'>('pickpocket');
+
+    const pickpocketTargets = useMemo(() => Object.values(THIEVING_POCKET_TARGETS).sort((a, b) => a.level - b.level), []);
+    const stallTargets = useMemo(() => Object.values(THIEVING_STALL_TARGETS).sort((a, b) => a.level - b.level), []);
+
+    const lockpickingTargets = useMemo(() => {
+        const houseTiers = HOUSE_TIERS.map(tier => ({
+            name: `${tier.tierId.replace('thieving_house_drawer_', '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} Homes`,
+            level: tier.level,
+            type: 'House'
+        }));
+
+        const dungeonChests = [
+            { name: 'Low-Tier Dungeon Chests', level: THIEVING_CONTAINER_TARGETS.thieving_dungeon_chest_low.level, type: 'Dungeon' },
+            { name: 'Mid-Tier Dungeon Chests', level: THIEVING_CONTAINER_TARGETS.thieving_dungeon_chest_mid.level, type: 'Dungeon' },
+            { name: 'High-Tier Dungeon Chests', level: THIEVING_CONTAINER_TARGETS.thieving_dungeon_chest_high.level, type: 'Dungeon' },
+            { name: 'Elite Dungeon Chests', level: THIEVING_CONTAINER_TARGETS.thieving_dungeon_chest_elite.level, type: 'Dungeon' },
+        ];
+        
+        return [...houseTiers, ...dungeonChests].sort((a, b) => a.level - b.level);
+    }, []);
+
+    const GuideEntry: React.FC<{ name: string; level: number }> = ({ name, level }) => {
+        const hasLevel = playerLevel >= level;
+        return (
+            <div className={`flex items-center justify-between p-3 rounded-md ${hasLevel ? 'bg-green-900/30' : 'bg-gray-900/50'}`}>
+                <p className={`font-bold ${hasLevel ? 'text-white' : 'text-gray-400'}`}>{name}</p>
+                <p className={`text-sm font-semibold ${hasLevel ? 'text-green-400' : 'text-red-400'}`}>Lvl {level}</p>
+            </div>
+        );
+    };
+
+    return (
+        <div className="flex flex-col sm:flex-row h-full">
+            <div className="w-full sm:w-1/3 border-r-2 border-gray-700 p-2 space-y-2">
+                <h3 className="text-lg font-bold text-center mb-2 text-yellow-300">Categories</h3>
+                <button
+                    onClick={() => setActiveTab('pickpocket')}
+                    className={`w-full p-3 rounded-md text-left transition-colors font-semibold ${activeTab === 'pickpocket' ? 'bg-yellow-800/80' : 'hover:bg-gray-700/50'}`}
+                >
+                    Pickpocketing
+                </button>
+                <button
+                    onClick={() => setActiveTab('lockpicking')}
+                    className={`w-full p-3 rounded-md text-left transition-colors font-semibold ${activeTab === 'lockpicking' ? 'bg-yellow-800/80' : 'hover:bg-gray-700/50'}`}
+                >
+                    Lockpicking
+                </button>
+                <button
+                    onClick={() => setActiveTab('stalls')}
+                    className={`w-full p-3 rounded-md text-left transition-colors font-semibold ${activeTab === 'stalls' ? 'bg-yellow-800/80' : 'hover:bg-gray-700/50'}`}
+                >
+                    Stalls
+                </button>
+            </div>
+            <div className="w-full sm:w-2/3 overflow-y-auto p-4">
+                <div className="space-y-2">
+                    {activeTab === 'pickpocket' && pickpocketTargets.map(target => (
+                        <GuideEntry key={target.name} name={target.name} level={target.level} />
+                    ))}
+                    {activeTab === 'lockpicking' && lockpickingTargets.map(target => (
+                        <GuideEntry key={target.name} name={target.name} level={target.level} />
+                    ))}
+                    {activeTab === 'stalls' && stallTargets.map(target => (
+                        <GuideEntry key={target.name} name={target.name} level={target.level} />
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 
 const SkillGuideView: React.FC<SkillGuideViewProps> = ({ activeSkill, setActiveSkill, onClose, playerSkills }) => {
     const playerLevel = playerSkills.find(s => s.name === activeSkill)?.level ?? 1;
@@ -125,6 +198,17 @@ const SkillGuideView: React.FC<SkillGuideViewProps> = ({ activeSkill, setActiveS
         )
     }
 
+    const renderContent = () => {
+        switch (activeSkill) {
+            case SkillName.Herblore:
+                return <HerbloreGuide playerLevel={playerLevel} />;
+            case SkillName.Thieving:
+                return <ThievingGuide playerLevel={playerLevel} />;
+            default:
+                return renderDefaultGuide();
+        }
+    };
+
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={onClose}>
             <div 
@@ -152,11 +236,8 @@ const SkillGuideView: React.FC<SkillGuideViewProps> = ({ activeSkill, setActiveS
                         </div>
                     </div>
                     
-                    <div className="w-full md:w-3/4 flex-grow overflow-y-auto p-4">
-                        {activeSkill === SkillName.Herblore 
-                            ? <HerbloreGuide playerLevel={playerLevel} /> 
-                            : renderDefaultGuide()
-                        }
+                    <div className="w-full md:w-3/4 flex-grow overflow-y-auto">
+                       {renderContent()}
                     </div>
                 </div>
             </div>

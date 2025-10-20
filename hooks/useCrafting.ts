@@ -22,12 +22,14 @@ interface UseCraftingProps {
     setWorldState: React.Dispatch<React.SetStateAction<WorldState>>;
     onCreateBonfire: (logId: string) => void;
     onRefreshBonfire: (bonfireId: string, logId: string) => void;
+    isInCombat: boolean;
 }
 
 export const useCrafting = (props: UseCraftingProps) => {
-    const { skills, hasItems, addLog, setActiveCraftingAction, inventory, modifyItem, addXp, checkQuestProgressOnSpin, checkQuestProgressOnSmith, activeCraftingAction, advanceTutorial, closeCraftingView, setWindmillFlour, equipment, setEquipment, worldState, setWorldState, onCreateBonfire, onRefreshBonfire } = props;
+    const { skills, hasItems, addLog, setActiveCraftingAction, inventory, modifyItem, addXp, checkQuestProgressOnSpin, checkQuestProgressOnSmith, activeCraftingAction, advanceTutorial, closeCraftingView, setWindmillFlour, equipment, setEquipment, worldState, setWorldState, onCreateBonfire, onRefreshBonfire, isInCombat } = props;
 
     const handleSpinning = useCallback((recipeId: string, quantity: number = 1) => {
+        if (isInCombat) { addLog("You cannot do that while in combat."); return; }
         const recipe = SPINNING_RECIPES.find(r => r.itemId === recipeId);
         if (!recipe) { addLog("You don't know how to spin that."); return; }
         const craftingLevel = skills.find(s => s.name === SkillName.Crafting)?.currentLevel ?? 1;
@@ -43,9 +45,10 @@ export const useCrafting = (props: UseCraftingProps) => {
             startTime: Date.now(),
             duration: 1200,
         });
-    }, [skills, hasItems, addLog, setActiveCraftingAction]);
+    }, [skills, hasItems, addLog, setActiveCraftingAction, isInCombat]);
 
     const handleStokeBonfire = useCallback((logId: string, bonfireId: string) => {
+        if (isInCombat) { addLog("You cannot do that while in combat."); return; }
         const recipe = FIREMAKING_RECIPES.find(r => r.logId === logId);
         if (!recipe) { addLog("You can't burn that."); return; }
         const firemakingLevel = skills.find(s => s.name === SkillName.Firemaking)?.currentLevel ?? 1;
@@ -61,13 +64,14 @@ export const useCrafting = (props: UseCraftingProps) => {
             completedQuantity: 0,
             successfulQuantity: 0,
             startTime: Date.now(),
-            duration: 1250, // 25% slower
+            duration: 4200, // 7 ticks
             payload: { bonfireId }
         });
 
-    }, [skills, inventory, addLog, setActiveCraftingAction]);
+    }, [skills, inventory, addLog, setActiveCraftingAction, isInCombat]);
 
     const handleCrafting = useCallback((recipeId: string, quantity: number = 1) => {
+        if (isInCombat) { addLog("You cannot do that while in combat."); return; }
         const leatherRecipe = CRAFTING_RECIPES.find(r => r.itemId === recipeId);
         const jewelryRecipe = JEWELRY_CRAFTING_RECIPES.find(r => r.itemId === recipeId);
         const doughRecipe = DOUGH_RECIPES.find(r => r.itemId === recipeId);
@@ -132,9 +136,10 @@ export const useCrafting = (props: UseCraftingProps) => {
         } else {
             addLog("You don't know how to craft that.");
         }
-    }, [skills, hasItems, addLog, setActiveCraftingAction]);
+    }, [skills, hasItems, addLog, setActiveCraftingAction, isInCombat]);
 
     const handleGemCutting = useCallback((cutId: string, quantity: number = 1) => {
+        if (isInCombat) { addLog("You cannot do that while in combat."); return; }
         const recipe = GEM_CUTTING_RECIPES.find(r => r.cutId === cutId);
         if (!recipe) { addLog("You don't know how to cut that gem."); return; }
         const craftingLevel = skills.find(s => s.name === SkillName.Crafting)?.currentLevel ?? 1;
@@ -152,9 +157,10 @@ export const useCrafting = (props: UseCraftingProps) => {
             duration: 1200,
             payload: { uncutId: recipe.uncutId }
         });
-    }, [skills, inventory, hasItems, addLog, setActiveCraftingAction]);
+    }, [skills, inventory, hasItems, addLog, setActiveCraftingAction, isInCombat]);
 
     const handleCooking = useCallback((recipeId: string, quantity: number = 1) => {
+        if (isInCombat) { addLog("You cannot do that while in combat."); return; }
         const recipe = COOKING_RECIPES.find(r => r.itemId === recipeId);
         if (!recipe) { addLog("You don't know how to cook that."); return; }
         const cookingLevel = skills.find(s => s.name === SkillName.Cooking)?.currentLevel ?? 1;
@@ -171,9 +177,11 @@ export const useCrafting = (props: UseCraftingProps) => {
             duration: 1200,
         });
 
-    }, [skills, hasItems, addLog, setActiveCraftingAction]);
+    }, [skills, hasItems, addLog, setActiveCraftingAction, isInCombat]);
 
-    const handleSmelting = useCallback((barType: 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'silver_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar', quantity: number = 1) => {
+    // FIX: Add 'gold_bar' to the union type for barType to allow smelting gold bars.
+    const handleSmelting = useCallback((barType: 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'silver_bar' | 'gold_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar', quantity: number = 1) => {
+        if (isInCombat) { addLog("You cannot do that while in combat."); return; }
         const smithingLevel = skills.find(s => s.name === SkillName.Smithing)?.currentLevel ?? 1;
         let requirements: { itemId: string; quantity: number; }[] = [];
         let levelReq = 1;
@@ -183,6 +191,7 @@ export const useCrafting = (props: UseCraftingProps) => {
             case 'iron_bar': requirements = [{itemId: 'iron_ore', quantity: 1}]; levelReq = 15; break;
             case 'silver_bar': requirements = [{itemId: 'silver_ore', quantity: 1}]; levelReq = 20; break;
             case 'steel_bar': requirements = [{itemId: 'iron_ore', quantity: 1}, {itemId: 'coal', quantity: 2}]; levelReq = 30; break;
+            case 'gold_bar': requirements = [{itemId: 'gold_ore', quantity: 1}]; levelReq = 40; break;
             case 'mithril_bar': requirements = [{itemId: 'mithril_ore', quantity: 1}, {itemId: 'coal', quantity: 4}]; levelReq = 50; break;
             case 'adamantite_bar': requirements = [{itemId: 'adamantite_ore', quantity: 1}, {itemId: 'coal', quantity: 6}]; levelReq = 65; break;
             case 'runic_bar': requirements = [{itemId: 'titanium_ore', quantity: 1}, {itemId: 'coal', quantity: 8}]; levelReq = 80; break;
@@ -202,9 +211,10 @@ export const useCrafting = (props: UseCraftingProps) => {
             duration: 1200,
             payload: { barType }
         });
-    }, [skills, hasItems, addLog, setActiveCraftingAction]);
+    }, [skills, hasItems, addLog, setActiveCraftingAction, isInCombat]);
     
     const handleSmithItem = useCallback((itemId: string, quantity: number = 1) => {
+        if (isInCombat) { addLog("You cannot do that while in combat."); return; }
         const recipe = SMITHING_RECIPES.find(r => r.itemId === itemId);
         if (!recipe) { addLog("You don't know how to smith that item."); return; }
         if (!inventory.some(i => i && i.itemId === 'hammer')) {
@@ -225,9 +235,10 @@ export const useCrafting = (props: UseCraftingProps) => {
             startTime: Date.now(),
             duration: 1800,
         });
-    }, [skills, hasItems, addLog, setActiveCraftingAction, inventory]);
+    }, [skills, hasItems, addLog, setActiveCraftingAction, inventory, isInCombat]);
 
     const handleFletching = useCallback((action: { type: 'carve'; payload: any }, quantity: number) => {
+        if (isInCombat) { addLog("You cannot do that while in combat."); return; }
         const fletchingLevel = skills.find(s => s.name === SkillName.Fletching)?.currentLevel ?? 1;
         
         if (action.type === 'carve') {
@@ -251,9 +262,10 @@ export const useCrafting = (props: UseCraftingProps) => {
                 payload: { logId }
             });
         }
-    }, [skills, hasItems, addLog, setActiveCraftingAction]);
+    }, [skills, hasItems, addLog, setActiveCraftingAction, isInCombat]);
     
     const handleInstantRunecrafting = useCallback((runeId: string) => {
+        if (isInCombat) { addLog("You cannot do that while in combat."); return; }
         const recipe = RUNECRAFTING_RECIPES.find(r => r.runeId === runeId);
         if (!recipe) {
             addLog("You don't know how to craft that rune.");
@@ -312,7 +324,7 @@ export const useCrafting = (props: UseCraftingProps) => {
     
         addLog(`You bind the essence into ${totalRunesMade} ${ITEMS[recipe.runeId].name}s.`);
     
-    }, [skills, equipment, inventory, addLog, modifyItem, addXp, setEquipment]);
+    }, [skills, equipment, inventory, addLog, modifyItem, addXp, setEquipment, isInCombat]);
 
     const completeCraftingItem = useCallback((action: ActiveCraftingAction): { success: boolean; wasItemMade: boolean; logMessage?: string } => {
         let recipe: any;
@@ -366,10 +378,24 @@ export const useCrafting = (props: UseCraftingProps) => {
                 if (!hasItems([{ itemId: logId, quantity: 1 }])) {
                     return { success: false, wasItemMade: false, logMessage: "You ran out of logs." };
                 }
-                modifyItem(logId, -1, true);
-                addXp(SkillName.Firemaking, recipe.xp);
-                onCreateBonfire(logId);
-                return { success: true, wasItemMade: true };
+
+                const firemakingSkill = skills.find(s => s.name === SkillName.Firemaking);
+                if (!firemakingSkill) return { success: false, wasItemMade: false, logMessage: "Could not find Firemaking skill." };
+
+                const playerLevel = firemakingSkill.currentLevel;
+                const recipeLevel = recipe.level;
+                
+                let successChance = 50 + (playerLevel - recipeLevel) * 1.5;
+                successChance = Math.max(5, Math.min(99, successChance));
+
+                if (Math.random() * 100 < successChance) {
+                    modifyItem(logId, -1, true);
+                    addXp(SkillName.Firemaking, recipe.xp);
+                    onCreateBonfire(logId);
+                    return { success: true, wasItemMade: true };
+                } else {
+                    return { success: true, wasItemMade: false, logMessage: "You fail to light the logs." };
+                }
             }
              case 'firemaking-stoke': {
                 const logId = action.recipeId;
@@ -401,6 +427,7 @@ export const useCrafting = (props: UseCraftingProps) => {
                     case 'bronze_bar': ingredients = [{itemId: 'copper_ore', quantity: 1}, {itemId: 'tin_ore', quantity: 1}]; xp = { skill: SkillName.Smithing, amount: 7}; levelReq.level = 1; break;
                     case 'silver_bar': ingredients = [{itemId: 'silver_ore', quantity: 1}]; xp = { skill: SkillName.Smithing, amount: 15}; levelReq.level = 20; break;
                     case 'steel_bar': ingredients = [{itemId: 'iron_ore', quantity: 1}, {itemId: 'coal', quantity: 2}]; xp = { skill: SkillName.Smithing, amount: 20}; levelReq.level = 30; break;
+                    case 'gold_bar': ingredients = [{itemId: 'gold_ore', quantity: 1}]; xp = { skill: SkillName.Smithing, amount: 22.5}; levelReq.level = 40; break;
                     case 'mithril_bar': ingredients = [{itemId: 'mithril_ore', quantity: 1}, {itemId: 'coal', quantity: 4}]; xp = { skill: SkillName.Smithing, amount: 40 }; levelReq.level = 50; break;
                     case 'adamantite_bar': ingredients = [{itemId: 'adamantite_ore', quantity: 1}, {itemId: 'coal', quantity: 6}]; xp = { skill: SkillName.Smithing, amount: 55 }; levelReq.level = 65; break;
                     case 'runic_bar': ingredients = [{itemId: 'titanium_ore', quantity: 1}, {itemId: 'coal', quantity: 8}]; xp = { skill: SkillName.Smithing, amount: 70 }; levelReq.level = 80; break;
@@ -729,9 +756,20 @@ export const useCrafting = (props: UseCraftingProps) => {
             }
     
             const nextAction: ActiveCraftingAction = { ...activeCraftingAction };
-            nextAction.completedQuantity++;
+            
             if (wasItemMade) {
+                nextAction.completedQuantity++;
                 nextAction.successfulQuantity = (nextAction.successfulQuantity ?? 0) + 1;
+            } else {
+                if (activeCraftingAction.recipeType === 'firemaking-light') {
+                    // This was a failure to light, so we just try again
+                    nextAction.startTime = Date.now();
+                    setActiveCraftingAction(nextAction);
+                    return; // Return to re-trigger the effect with the new startTime
+                } else {
+                    // Other actions that "fail" but still consume items (like burning food or failing to smelt iron) still count as a completed attempt.
+                    nextAction.completedQuantity++;
+                }
             }
     
             if (nextAction.completedQuantity >= nextAction.totalQuantity) {

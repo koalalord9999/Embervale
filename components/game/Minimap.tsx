@@ -13,7 +13,6 @@ interface MinimapProps {
     onNavigate: (poiId: string) => void;
     unlockedPois: string[];
     addLog: (message: string) => void;
-    // FIX: Add missing props
     isDevMode: boolean;
     onToggleDevPanel: () => void;
     showMinimapHealth: boolean;
@@ -72,6 +71,19 @@ const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, ui, i
         },
         onClick: () => ui.setIsExpandedMapViewOpen(true), // Default action
     });
+
+    const handleDevToggle = () => {
+        onToggleDevPanel();
+        // Use a small timeout to ensure the panel is rendered before we try to scroll on mobile.
+        setTimeout(() => {
+            if (window.innerWidth < 768) { // md breakpoint from Tailwind
+                const gameContainer = document.querySelector('.game-container');
+                if (gameContainer) {
+                    gameContainer.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            }
+        }, 50); 
+    };
 
     if (!currentPoi) return null;
 
@@ -141,7 +153,7 @@ const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, ui, i
                 
                 {isDevMode && (
                     <button 
-                        onClick={onToggleDevPanel}
+                        onClick={handleDevToggle}
                         className="absolute z-10 w-8 h-8 bg-gray-800 hover:bg-gray-700 border-2 border-gray-500 rounded-full flex items-center justify-center top-px right-px"
                         aria-label="Open Dev Panel"
                     >

@@ -46,8 +46,18 @@ export const useKillHandler = (deps: KillHandlerDependencies) => {
         const poiId = defeatedInstanceIds[0].split(':')[0];
         const poi = POIS[poiId];
         if (!poi) return;
-
-        addLog(`You have cleared the area!`);
+        
+        // Temporarily flag these monsters as "dying" to prevent instant re-attack
+        setWorldState(ws => ({ ...ws, recentlyKilled: [...(ws.recentlyKilled || []), ...defeatedInstanceIds] }));
+        
+        // After a delay, clear the "dying" flag.
+        // This gives React enough time to render the respawn timer.
+        setTimeout(() => {
+            setWorldState(ws => ({
+                ...ws,
+                recentlyKilled: (ws.recentlyKilled || []).filter(id => !defeatedInstanceIds.includes(id))
+            }));
+        }, 2200);
 
         const isInstanceQuestLocation = repeatableQuests.activePlayerQuest?.generatedQuest.isInstance && repeatableQuests.activePlayerQuest?.generatedQuest.instancePoiId === poiId;
 
@@ -72,7 +82,7 @@ export const useKillHandler = (deps: KillHandlerDependencies) => {
         });
         setMonsterRespawnTimers(prev => ({ ...prev, ...newTimers }));
 
-    }, [isInstantRespawnOn, setMonsterRespawnTimers, addLog, repeatableQuests]);
+    }, [isInstantRespawnOn, setMonsterRespawnTimers, addLog, repeatableQuests, setWorldState]);
 
     return { handleKill, handleEncounterWin };
 }

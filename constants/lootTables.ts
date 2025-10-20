@@ -1,11 +1,13 @@
-
-
 import { InventorySlot, WeightedDrop } from '../types';
+import { THIEVING_POCKET_TARGETS } from './loot/thievingPocket';
+import { THIEVING_CONTAINER_TARGETS } from './loot/thievingTables';
+import { THIEVING_STALL_TARGETS, THIEVING_STALL_LOOT_TABLES } from './loot/thievingStalls';
+import { HERBLORE_RECIPES } from './herblore';
 
 interface LootTableItem {
     itemId?: string;
     tableId?: string;
-    chance: number; // A weight, not a percentage
+    chance: number | string; // A weight, not a percentage
     minQuantity?: number;
     maxQuantity?: number;
     noted?: boolean;
@@ -87,6 +89,36 @@ const LOOT_TABLES: Record<string, LootTable> = {
         { itemId: 'robe_of_power_top', chance: 32 },
         { itemId: 'robe_of_power_bottoms', chance: 32 },
     ],
+    mimic_loot_table: [
+        { itemId: 'coins', chance: 1, minQuantity: 5000, maxQuantity: 15000 },
+        { itemId: 'adamantite_bar', chance: 1, minQuantity: 10, maxQuantity: 20, noted: true },
+        { itemId: 'runic_bar', chance: 1, minQuantity: 5, maxQuantity: 10, noted: true },
+        { itemId: 'uncut_diamond', chance: 1, minQuantity: 1, maxQuantity: 3 },
+        { itemId: 'yew_logs', chance: 1, minQuantity: 100, maxQuantity: 200, noted: true },
+        { itemId: 'anima_rune', chance: 1, minQuantity: 25, maxQuantity: 50 },
+        { itemId: 'nexus_rune', chance: 1, minQuantity: 25, maxQuantity: 50 },
+        { itemId: 'diamond_lockpick', chance: 0.2, minQuantity: 1, maxQuantity: 3 }, // 1 in 5 chance
+        { itemId: 'skeleton_key', chance: 0.01, minQuantity: 1, maxQuantity: 1 }, // 1 in 100 chance
+    ],
+    ...THIEVING_STALL_LOOT_TABLES,
+};
+
+const parseChance = (chance: number | string): number => {
+    if (typeof chance === 'number') {
+        return chance;
+    }
+    if (typeof chance === 'string') {
+        const parts = chance.split('/');
+        if (parts.length === 2) {
+            const numerator = parseFloat(parts[0]);
+            const denominator = parseFloat(parts[1]);
+            if (!isNaN(numerator) && !isNaN(denominator) && denominator !== 0) {
+                return numerator / denominator;
+            }
+        }
+    }
+    console.warn('Invalid chance format:', chance);
+    return 0; // fallback
 };
 
 /**
@@ -102,12 +134,12 @@ export const rollOnLootTable = (tableId: string): LootRollResult | string | null
         return null;
     }
 
-    const totalWeight = table.reduce((sum, item) => sum + item.chance, 0);
+    const totalWeight = table.reduce((sum, item) => sum + parseChance(item.chance), 0);
     const roll = Math.random() * (tableId === 'super_rare_table' ? 10000 : totalWeight);
     let cumulativeWeight = 0;
 
     for (const item of table) {
-        cumulativeWeight += item.chance;
+        cumulativeWeight += parseChance(item.chance);
         if (roll < cumulativeWeight) {
             if (item.tableId) {
                 return rollOnLootTable(item.tableId);
@@ -133,3 +165,14 @@ export const rollOnLootTable = (tableId: string): LootRollResult | string | null
 
     return null;
 };
+
+// Add thieving tables to the main loot table object
+for (const [tableId, targetData] of Object.entries(THIEVING_POCKET_TARGETS)) {
+    LOOT_TABLES[tableId] = targetData.loot;
+}
+for (const [tableId, targetData] of Object.entries(THIEVING_CONTAINER_TARGETS)) {
+    LOOT_TABLES[tableId] = targetData.loot;
+}
+for (const [tableId, targetData] of Object.entries(THIEVING_STALL_TARGETS)) {
+    LOOT_TABLES[tableId] = targetData.loot;
+}

@@ -12,7 +12,6 @@ export * from './fletching';
 export * from './herblore';
 export * from './lootTables';
 export * from './spells';
-// FIX: Add export for POIs
 export * from '../data/pois';
 export * from '../data/regions';
 export * from './map_features';
@@ -21,3 +20,8 @@ export * from './firemaking';
 export * from './woodcutting';
 export * from './repeatableQuests';
 export * from './mining';
+export * from './loot/thievingPocket';
+export * from './loot/thievingTables';
+export * from './loot/thievingStalls';
+export * from './pilfering';
+export * from '../data/pois/pilfering';

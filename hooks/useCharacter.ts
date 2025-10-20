@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { PlayerSkill, SkillName, CombatStance, Spell, WorldState } from '../types';
 import { XP_TABLE } from '../constants';
@@ -259,6 +260,10 @@ export const useCharacter = (
     const clearStatModifiers = useCallback(() => {
         setStatModifiers([]);
     }, []);
+    
+    const clearBuffs = useCallback(() => {
+        setActiveBuffs([]);
+    }, []);
 
     const skillsWithCurrentLevels = useMemo(() => {
         return skills.map(skill => {
@@ -303,6 +308,7 @@ export const useCharacter = (
         statModifiers,
         addBuff,
         clearStatModifiers,
+        clearBuffs,
         autocastSpell,
         setAutocastSpell,
         setSkillLevel,

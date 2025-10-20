@@ -310,4 +310,108 @@ export const humanoids: Monster[] = [
         ],
         types: [MonsterType.Humanoid, MonsterType.Armored], attackSpeed: 5, respawnTime: 90000, aggressive: true, alwaysAggressive: true, attackStyle: 'slash',
     },
+    {
+        id: 'warrior', name: 'Warrior', level: 18, maxHp: 22, attack: 8,
+        stabDefence: 12, slashDefence: 10, crushDefence: 15, rangedDefence: 12, magicDefence: -1,
+        iconUrl: 'https://api.iconify.design/game-icons:swordman.svg',
+        guaranteedDrops: [
+            { itemId: 'bones', minQuantity: 1, maxQuantity: 1 },
+        ],
+        mainDrops: [
+            { itemId: 'bronze_full_helm', chance: '1/64', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'iron_dagger', chance: '1/128', minQuantity: 1, maxQuantity: 1 },
+            { tableId: 'herb_table', chance: '23/128', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'bronze_arrow', chance: '1/42', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'stone_rune', chance: '1/64', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'ember_rune', chance: '1/64', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'flux_rune', chance: '1/128', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'binding_rune', chance: '1/64', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'fishing_bait', chance: '1/25', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'stone_talisman', chance: '1/64', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'copper_ore', chance: '1/64', minQuantity: 1, maxQuantity: 1 },
+        ],
+        types: [MonsterType.Humanoid], attackSpeed: 4, respawnTime: 20000, aggressive: false, attackStyle: 'slash', customMaxHit: 3,
+    },
+    {
+        id: 'farmer', name: 'Farmer', level: 7, maxHp: 15, attack: 4,
+        stabDefence: 2, slashDefence: 3, crushDefence: 2, rangedDefence: 1, magicDefence: 0,
+        iconUrl: 'https://api.iconify.design/game-icons:farmer.svg',
+        guaranteedDrops: [{ itemId: 'bones', minQuantity: 1, maxQuantity: 1 }],
+        mainDrops: [
+            { itemId: 'coins', chance: "1/2", minQuantity: 1, maxQuantity: 10 },
+            { tableId: 'herb_table', chance: "1/20", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'seeds', chance: "1/10", minQuantity: 1, maxQuantity: 5 },
+        ],
+        types: [MonsterType.Humanoid], attackSpeed: 4, respawnTime: 60000, aggressive: false, attackStyle: 'crush', alwaysDrops: true
+    },
+    {
+        id: 'guard', name: 'Guard', level: 25, maxHp: 40, attack: 20,
+        stabDefence: 30, slashDefence: 28, crushDefence: 25, rangedDefence: 28, magicDefence: 5,
+        iconUrl: 'https://api.iconify.design/game-icons:guard.svg',
+        guaranteedDrops: [{ itemId: 'bones', minQuantity: 1, maxQuantity: 1 }],
+        mainDrops: [
+            { itemId: 'coins', chance: "1/1", minQuantity: 20, maxQuantity: 50 },
+            { itemId: 'bread', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'iron_arrow', chance: "1/8", minQuantity: 5, maxQuantity: 15 },
+            { itemId: 'iron_sword', chance: "1/128", minQuantity: 1, maxQuantity: 1 },
+        ],
+        types: [MonsterType.Humanoid, MonsterType.Armored], attackSpeed: 4, respawnTime: 60000, aggressive: false, attackStyle: 'slash', alwaysDrops: true
+    },
+    {
+        id: 'dwarf', name: 'Dwarf', level: 28, maxHp: 45, attack: 22,
+        stabDefence: 32, slashDefence: 30, crushDefence: 35, rangedDefence: 25, magicDefence: 10,
+        iconUrl: 'https://api.iconify.design/game-icons:dwarf-face.svg',
+        guaranteedDrops: [{ itemId: 'bones', minQuantity: 1, maxQuantity: 1 }],
+        mainDrops: [
+            { itemId: 'coins', chance: "1/1", minQuantity: 25, maxQuantity: 60 },
+            { itemId: 'beer', chance: "1/5", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'coal', chance: "1/10", minQuantity: 1, maxQuantity: 2, noted: true },
+            { itemId: 'iron_pickaxe', chance: "1/200", minQuantity: 1, maxQuantity: 1 },
+        ],
+        types: [MonsterType.Humanoid, MonsterType.Armored], attackSpeed: 5, respawnTime: 60000, aggressive: false, attackStyle: 'crush', alwaysDrops: true
+    },
+    {
+        id: 'yeoman', name: 'Yeoman', level: 30, maxHp: 45, attack: 25,
+        stabDefence: 25, slashDefence: 25, crushDefence: 25, rangedDefence: 30, magicDefence: 10,
+        iconUrl: 'https://api.iconify.design/game-icons:yeoman-archer.svg',
+        guaranteedDrops: [{ itemId: 'bones', minQuantity: 1, maxQuantity: 1 }],
+        mainDrops: [
+            { itemId: 'coins', chance: "1/1", minQuantity: 30, maxQuantity: 70 },
+            { itemId: 'steel_arrow', chance: "1/5", minQuantity: 5, maxQuantity: 10 },
+            { itemId: 'oak_shortbow', chance: "1/100", minQuantity: 1, maxQuantity: 1 },
+        ],
+        types: [MonsterType.Humanoid], attackSpeed: 4, respawnTime: 60000, aggressive: false, attackStyle: 'slash', alwaysDrops: true
+    },
+    {
+        id: 'knight', name: 'Knight', level: 60, maxHp: 80, attack: 55,
+        stabDefence: 80, slashDefence: 75, crushDefence: 70, rangedDefence: 75, magicDefence: 20,
+        iconUrl: 'https://api.iconify.design/game-icons:knight-helmet.svg',
+        guaranteedDrops: [{ itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 }],
+        mainDrops: [
+            { itemId: 'coins', chance: "1/1", minQuantity: 100, maxQuantity: 250 },
+            { itemId: 'steel_platelegs', chance: "1/128", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'mithril_sword', chance: "1/256", minQuantity: 1, maxQuantity: 1 },
+        ],
+        types: [MonsterType.Humanoid, MonsterType.Armored], attackSpeed: 4, respawnTime: 90000, aggressive: false, attackStyle: 'slash', alwaysDrops: true
+    },
+    {
+        id: 'elf', name: 'Elf', level: 75, maxHp: 70, attack: 1, ranged: 70,
+        stabDefence: 40, slashDefence: 40, crushDefence: 40, rangedDefence: 60, magicDefence: 65,
+        iconUrl: 'https://api.iconify.design/game-icons:elf-ear.svg',
+        guaranteedDrops: [{ itemId: 'bones', minQuantity: 1, maxQuantity: 1 }],
+        mainDrops: [
+            { itemId: 'coins', chance: "1/1", minQuantity: 80, maxQuantity: 200 },
+            { itemId: 'adamantite_arrow', chance: "1/4", minQuantity: 5, maxQuantity: 15 },
+            { itemId: 'yew_logs', chance: "1/10", minQuantity: 1, maxQuantity: 3, noted: true },
+            { itemId: 'yew_shortbow', chance: "1/256", minQuantity: 1, maxQuantity: 1 },
+        ],
+        types: [MonsterType.Humanoid], attackSpeed: 3, respawnTime: 90000, aggressive: false, attackStyle: 'ranged', alwaysDrops: true
+    },
+    {
+        id: 'adventurer', name: 'Adventurer', level: 86, maxHp: 100, attack: 80, customMaxHit: 14,
+        stabDefence: 90, slashDefence: 90, crushDefence: 85, rangedDefence: 90, magicDefence: 40,
+        iconUrl: 'https://api.iconify.design/game-icons:adventurer.svg',
+        guaranteedDrops: [{ itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 }],
+        types: [MonsterType.Humanoid, MonsterType.Armored], attackSpeed: 4, respawnTime: 120000, aggressive: false, attackStyle: 'slash'
+    },
 ];

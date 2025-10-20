@@ -271,21 +271,21 @@ export const theArcaneAwakening: Quest = {
         
         // Altar Dialogues
         use_resonator_gust: {
-            npcName: 'Arcane Resonator', npcIcon: 'https://api.iconify.design/game-icons:orb-wand.svg',
+            npcName: 'Use Resonator', npcIcon: 'https://api.iconify.design/game-icons:orb-wand.svg',
             text: "You hold the Arcane Resonator up to the Gust Altar. It begins to vibrate violently, and a shimmering creature of pure energy coalesces before you!",
             responses: [
                 { text: "(Face the creature)", check: { requirements: [ { type: 'items', items: [{ itemId: 'arcane_resonator', quantity: 1 }] }, { type: 'items', items: [{ itemId: 'gust_reading', quantity: 0, operator: 'eq' }] } ], successNode: 'trigger_combat', failureNode: 'already_have_reading' }, actions: [{ type: 'set_quest_combat_reward', itemId: 'gust_reading', quantity: 1 }, { type: 'start_mandatory_combat', monsterId: 'mana_wisp' }] }
             ]
         },
         use_resonator_stone: {
-            npcName: 'Arcane Resonator', npcIcon: 'https://api.iconify.design/game-icons:orb-wand.svg',
+            npcName: 'Use Resonator', npcIcon: 'https://api.iconify.design/game-icons:orb-wand.svg',
             text: "You hold the Arcane Resonator up to the Stone Altar. It begins to vibrate violently, and a shimmering creature of pure energy coalesces before you!",
             responses: [
                 { text: "(Face the creature)", check: { requirements: [ { type: 'items', items: [{ itemId: 'arcane_resonator', quantity: 1 }] }, { type: 'items', items: [{ itemId: 'stone_reading', quantity: 0, operator: 'eq' }] } ], successNode: 'trigger_combat', failureNode: 'already_have_reading' }, actions: [{ type: 'set_quest_combat_reward', itemId: 'stone_reading', quantity: 1 }, { type: 'start_mandatory_combat', monsterId: 'mana_wisp' }] }
             ]
         },
         use_resonator_aqua: {
-            npcName: 'Arcane Resonator', npcIcon: 'https://api.iconify.design/game-icons:orb-wand.svg',
+            npcName: 'Use Resonator', npcIcon: 'https://api.iconify.design/game-icons:orb-wand.svg',
             text: "You hold the Arcane Resonator up to the Aqua Altar. It begins to vibrate violently, and a shimmering creature of pure energy coalesces before you!",
             responses: [
                 { text: "(Face the creature)", check: { requirements: [ { type: 'items', items: [{ itemId: 'arcane_resonator', quantity: 1 }] }, { type: 'items', items: [{ itemId: 'aqua_reading', quantity: 0, operator: 'eq' }] } ], successNode: 'trigger_combat', failureNode: 'already_have_reading' }, actions: [{ type: 'set_quest_combat_reward', itemId: 'aqua_reading', quantity: 1 }, { type: 'start_mandatory_combat', monsterId: 'mana_wisp' }] }
