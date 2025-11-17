@@ -6,7 +6,6 @@ import { ITEMS, FLETCHING_RECIPES, HERBLORE_RECIPES, HERBS, INVENTORY_CAPACITY, 
 import { POIS } from '../../data/pois';
 // FIX: Import ContextMenuOption from its source file instead of re-exporting from useUIState.
 import { MakeXPrompt, useUIState, ConfirmationPrompt } from '../../hooks/useUIState';
-import { ContextMenuOption } from '../common/ContextMenu';
 import { useNavigation } from './useNavigation';
 
 type BarType = 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'silver_bar' | 'gold_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar';

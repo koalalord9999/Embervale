@@ -445,20 +445,6 @@ export const beasts: Monster[] = [
         types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 35000, aggressive: true, attackStyle: 'slash',
     },
     {
-        id: 'sand_scrabbler', name: 'Sand Scrabbler', level: 33, maxHp: 45, attack: 24, strength: 26, defence: 30,
-        stabDefence: 25, slashDefence: 25, crushDefence: 30, rangedDefence: 20, magicDefence: 10,
-        iconUrl: 'https://api.iconify.design/game-icons:sand-snake.svg',
-        guaranteedDrops: [
-            { itemId: 'bones', minQuantity: 1, maxQuantity: 1 },
-        ],
-        mainDrops: [
-            { itemId: 'rock_salt', chance: "1/4", minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'stone_rune', chance: "1/8", minQuantity: 10, maxQuantity: 20 },
-            { itemId: 'coins', chance: "1/2", minQuantity: 15, maxQuantity: 40 },
-        ],
-        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 32000, aggressive: true, attackStyle: 'stab',
-    },
-    {
         id: 'swamp_horror', name: 'Swamp Horror', level: 28, maxHp: 60, attack: 22, strength: 25, defence: 25,
         stabDefence: 20, slashDefence: 20, crushDefence: 25, rangedDefence: 15, magicDefence: 10,
         iconUrl: 'https://api.iconify.design/game-icons:lizardman.svg',

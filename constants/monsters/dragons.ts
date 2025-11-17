@@ -132,21 +132,4 @@ export const dragons: Monster[] = [
         ],
         types: [MonsterType.Dragon], attackSpeed: 5, respawnTime: 120000, aggressive: true, attackStyle: 'slash',
     },
-    {
-        id: 'corrupted_grove_dragon', name: 'Corrupted Grove Dragon', level: 110, maxHp: 180, attack: 105, strength: 110, defence: 120,
-        stabDefence: 60, slashDefence: 140, crushDefence: 100, rangedDefence: 110, magicDefence: 90,
-        iconUrl: 'https://api.iconify.design/game-icons:dragon-head.svg',
-        types: [MonsterType.Dragon], attackSpeed: 5, respawnTime: 300000, aggressive: true, attackStyle: 'slash', customMaxHit: 25,
-        guaranteedDrops: [{ itemId: 'dragon_bones', minQuantity: 2, maxQuantity: 3 }, { itemId: 'grove_hide', minQuantity: 3, maxQuantity: 3 }],
-        mainDrops: [
-            { itemId: 'runic_scimitar', chance: '1/128' },
-            { itemId: 'adamantite_platebody', chance: '1/64' },
-            { tableId: 'gem_table', chance: '1/16', noted: true },
-            { itemId: 'yew_logs', chance: '1/4', minQuantity: 50, maxQuantity: 100, noted: true },
-            { itemId: 'anima_rune', chance: '1/8', minQuantity: 15, maxQuantity: 30 },
-            { itemId: 'cooked_shark', chance: '1/5', minQuantity: 2, maxQuantity: 4, noted: true },
-        ],
-        specialAttacks: [{ name: 'Grove Breath', chance: 0.25, effect: 'damage_multiplier', value: 1.5 }],
-        maxTaskCount: [10, 25],
-    },
 ];
