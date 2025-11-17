@@ -92,7 +92,7 @@ const SaveSlotScreen: React.FC<SaveSlotScreenProps> = ({ slots, onSelectSlot, on
 
     const selectedSlot = useMemo(() => slots.find(s => s.slotId === selectedSlotId), [slots, selectedSlotId]);
     const isSelectedEmpty = !selectedSlot?.data;
-    const isSelectedDead = selectedSlot?.data?.isDead;
+    const isSelectedDeadHardcore = selectedSlot?.data?.isDead && selectedSlot?.metadata?.playerType === PlayerType.Hardcore;
 
     const handleDelete = () => {
         if (confirmDelete === null || confirmDeleteText !== selectedSlot?.metadata?.username) {
@@ -112,7 +112,7 @@ const SaveSlotScreen: React.FC<SaveSlotScreenProps> = ({ slots, onSelectSlot, on
                 
                 {/* Left Panel - Slot Details */}
                 <div className="w-full md:w-2/3 flex flex-col justify-center items-center text-center p-6">
-                    {isSelectedDead ? (
+                    {isSelectedDeadHardcore ? (
                         <DeadCharacterView slot={selectedSlot!} onDelete={() => setConfirmDelete(selectedSlotId)} setTooltip={setTooltip} />
                     ) : isSelectedEmpty ? (
                         <div className="flex flex-col items-center gap-4">
@@ -194,7 +194,7 @@ const SaveSlotScreen: React.FC<SaveSlotScreenProps> = ({ slots, onSelectSlot, on
                     {slots.map(slot => {
                         const isSelected = slot.slotId === selectedSlotId;
                         const isEmpty = !slot.data;
-                        const isDead = slot.data?.isDead;
+                        const isDeadHardcore = slot.data?.isDead && slot.metadata?.playerType === PlayerType.Hardcore;
                         const metadata = slot.metadata;
 
                         return (
@@ -204,11 +204,11 @@ const SaveSlotScreen: React.FC<SaveSlotScreenProps> = ({ slots, onSelectSlot, on
                                 className={`w-full p-3 rounded-lg border-2 text-left transition-all duration-200 ${
                                     isSelected ? 'bg-yellow-800/50 border-yellow-500 scale-105' : 
                                     isEmpty ? 'bg-black/30 border-dashed border-gray-600 hover:bg-gray-700/50' : 
-                                    isDead ? 'bg-red-900/50 border-red-700 hover:bg-red-800/50' :
+                                    isDeadHardcore ? 'bg-red-900/50 border-red-700 hover:bg-red-800/50' :
                                     'bg-gray-800/50 border-gray-600 hover:bg-gray-700/50'
                                 }`}
                             >
-                                <p className={`font-bold ${isEmpty ? 'text-gray-500' : isDead ? 'text-red-300' : 'text-yellow-300'}`}>
+                                <p className={`font-bold ${isEmpty ? 'text-gray-500' : isDeadHardcore ? 'text-red-300' : 'text-yellow-300'}`}>
                                     Slot {slot.slotId + 1}: {metadata?.username || 'Empty Slot'}
                                 </p>
                                 {!isEmpty && metadata && (

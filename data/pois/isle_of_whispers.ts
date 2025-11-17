@@ -1,3 +1,5 @@
+
+
 import { POI, SkillName, ToolType } from '../../types';
 
 export const isleOfWhispersPois: Record<string, POI> = {
@@ -253,19 +255,21 @@ export const isleOfWhispersPois: Record<string, POI> = {
         connections: ['whispering_jungle_edge', 'smugglers_den_entrance'],
         activities: [
             { type: 'combat', monsterId: 'jungle_stalker' },
-            { type: 'combat', monsterId: 'jungle_stalker' },
+            { type: 'combat', monsterId: 'jungle_stalker' }
         ],
         regionId: 'isle_of_whispers',
-        x: 550, y: 2300,
+        x: 512,
+        y: 2323
     },
     smugglers_den_entrance: {
         id: 'smugglers_den_entrance',
-        name: 'Smuggler\'s Den',
+        name: "Smuggler's Den",
         description: 'A cleverly hidden cave entrance, concealed behind a curtain of vines.',
         connections: ['jungle_heart'],
         activities: [],
         regionId: 'isle_of_whispers',
-        x: 500, y: 2250,
+        x: 474,
+        y: 2294
     },
     ancient_monoliths: {
         id: 'ancient_monoliths',
@@ -274,7 +278,8 @@ export const isleOfWhispersPois: Record<string, POI> = {
         connections: ['whispering_jungle_edge', 'forgotten_temple_path'],
         activities: [],
         regionId: 'isle_of_whispers',
-        x: 600, y: 2300,
+        x: 551,
+        y: 2285
     },
     forgotten_temple_path: {
         id: 'forgotten_temple_path',
@@ -282,21 +287,23 @@ export const isleOfWhispersPois: Record<string, POI> = {
         description: 'An overgrown stone path, clearly of ancient construction, leads deeper into the jungle highlands.',
         connections: ['ancient_monoliths', 'forgotten_temple_courtyard'],
         activities: [
-            { type: 'combat', monsterId: 'jungle_stalker' },
+            { type: 'combat', monsterId: 'jungle_stalker' }
         ],
         regionId: 'isle_of_whispers',
-        x: 650, y: 2250,
+        x: 456,
+        y: 2248
     },
     forgotten_temple_courtyard: {
         id: 'forgotten_temple_courtyard',
         name: 'Temple Courtyard',
-        description: 'The ruins of a grand temple courtyard. A huge, sealed archway is carved into the mountainside ahead. An ornate, ancient chest sits on a pedestal in the center.',
+        description: "The ruins of a grand temple courtyard. A huge, sealed archway is carved into the mountainside ahead. An ornate, ancient chest sits on a pedestal in the center.",
         connections: ['forgotten_temple_path', 'laby_entrance'],
         activities: [
             { type: 'ancient_chest', name: 'Open Ancient Chest' }
         ],
         regionId: 'isle_of_whispers',
-        x: 700, y: 2200,
+        x: 341,
+        y: 2238
     },
     // --- East Volcanic ---
     ashfall_path: {
@@ -370,8 +377,21 @@ export const isleOfWhispersPois: Record<string, POI> = {
         description: 'The deep, treacherous waters off the coast of the island. Large shapes move beneath the waves.',
         connections: ['port_wreckage_docks'],
         activities: [
-            { type: 'skilling', id: 'isle_harpoon_tuna', name: 'Harpoon Tuna', skill: SkillName.Fishing, requiredLevel: 40, loot: [{ itemId: 'raw_tuna', chance: 1, xp: 80 }], resourceCount: { min: 5, max: 10 }, respawnTime: 25000, gatherTime: 4000, requiredTool: ToolType.Harpoon },
-            { type: 'skilling', id: 'isle_harpoon_swordfish', name: 'Harpoon Swordfish', skill: SkillName.Fishing, requiredLevel: 62, loot: [{ itemId: 'raw_swordfish', chance: 1, xp: 100 }], resourceCount: { min: 3, max: 8 }, respawnTime: 45000, gatherTime: 5000, requiredTool: ToolType.Harpoon },
+            { 
+                type: 'skilling', 
+                id: 'isle_harpoon_fish', 
+                name: 'Harpoon Fish', 
+                skill: SkillName.Fishing, 
+                requiredLevel: 40, 
+                loot: [
+                    { itemId: 'raw_tuna', chance: 1, xp: 80 },
+                    { itemId: 'raw_swordfish', chance: 0.4, xp: 100, requiredLevel: 62 }
+                ], 
+                resourceCount: { min: 50, max: 100 }, 
+                respawnTime: 35000, 
+                gatherTime: 4500, 
+                requiredTool: ToolType.Harpoon 
+            },
             { type: 'skilling', id: 'isle_harpoon_shark', name: 'Harpoon Shark', skill: SkillName.Fishing, requiredLevel: 76, loot: [{ itemId: 'raw_shark', chance: 1, xp: 110 }], resourceCount: { min: 1, max: 5 }, respawnTime: 90000, gatherTime: 6000, requiredTool: ToolType.Harpoon },
             { type: 'skilling', id: 'isle_ocean_trap_lobster', name: 'Set Ocean Trap', skill: SkillName.Fishing, requiredLevel: 50, loot: [{ itemId: 'raw_lobster', chance: 1, xp: 90 }], resourceCount: { min: 4, max: 9 }, respawnTime: 35000, gatherTime: 4500, requiredTool: ToolType.OceanBoxTrap },
         ],

@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 import { CIVILLIAN_DIALOGUE } from '../../constants/dialogue';
 
@@ -8,8 +9,10 @@ export const silverhavenPois: Record<string, POI> = {
         description: 'The magnificent main gates of the capital city, Silverhaven. The walls are high and well-guarded.',
         connections: ['silverhaven_outskirts', 'silverhaven_square'],
         activities: [],
-        regionId: 'wilderness',
-        x: 676, y: 1827,
+        regionId: 'silverhaven',
+        type: 'internal',
+        x: 250, y: 500,
+        eX: 644, eY: 1813,
     },
     silverhaven_square: {
         id: 'silverhaven_square',
@@ -52,6 +55,23 @@ export const silverhavenPois: Record<string, POI> = {
                 startNode: 'start',
                 dialogueType: 'random'
             },
+            {
+                type: 'npc',
+                name: 'Altar',
+                icon: 'https://api.iconify.design/game-icons:altar.svg',
+                dialogue: {
+                    start: {
+                        npcName: 'Altar',
+                        npcIcon: 'https://api.iconify.design/game-icons:altar.svg',
+                        text: 'You feel a divine presence. Your prayer may be answered here.',
+                        responses: [
+                            { text: 'Pray', actions: [{ type: 'restore_prayer' }] },
+                            { text: 'Leave' }
+                        ]
+                    }
+                },
+                startNode: 'start'
+            }
         ],
         regionId: 'silverhaven',
         x: 250, y: 340,
@@ -73,27 +93,7 @@ export const silverhavenPois: Record<string, POI> = {
                 icon: '/assets/npcChatHeads/merchant_theron.png',
                 pickpocket: { lootTableId: 'pickpocket_merchant_table' },
                 startNode: 'theron_default',
-                dialogue: {
-                    theron_default: {
-                        npcName: 'Merchant Theron',
-                        npcIcon: '/assets/npcChatHeads/merchant_theron.png',
-                        text: "Welcome to the Silverhaven market! A fine day for trade, wouldn't you say? It would be even better if my latest shipment hadn't been stolen...",
-                        responses: [],
-                        conditionalResponses: [
-                            {
-                                text: "I believe I have something that belongs to you.",
-                                check: {
-                                    requirements: [
-                                        { type: 'quest', questId: 'missing_shipment', status: 'in_progress', stage: 0 },
-                                        { type: 'items', items: [{ itemId: 'stolen_caravan_goods', quantity: 1 }] }
-                                    ],
-                                    successNode: 'in_progress_missing_shipment_0',
-                                    failureNode: 'theron_default' 
-                                }
-                            }
-                        ]
-                    }
-                }
+                questTopics: ['missing_shipment'],
             },
             {
                 type: 'npc',
@@ -221,7 +221,39 @@ export const silverhavenPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Archmage Theron',
                 icon: 'https://api.iconify.design/game-icons:wizard-face.svg',
-                startNode: 'theron_default'
+                startNode: 'theron_default',
+                questTopics: ['the_arcane_awakening'],
+                conditionalGreetings: [
+                    {
+                        text: "Hmm... the patterns are frayed... the resonance is... unstable... *Theron looks up, startled.* Oh! Apologies, I was lost in thought. A fine day for trade, is it not? Though... I sense you have an affinity for the arcane yourself.",
+                        check: {
+                            requirements: [
+                                { type: 'quest', questId: 'the_arcane_awakening', status: 'not_started' },
+                                { type: 'skill', skill: SkillName.Magic, level: 40 },
+                                { type: 'quest', questId: 'capitals_call', status: 'completed' }
+                            ]
+                        }
+                    },
+                    // Ordered from highest stage to lowest for priority
+                    { text: "You've returned! I can feel it... the Weave is calm. Tell me, did you succeed?", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 9 }] } },
+                    { text: "The Cascade is reaching its peak! You must be at the spire's apex. Do not fail!", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 8 }] } },
+                    { text: "How goes the investigation on the Isles? The Magus Spire holds the key to this disturbance.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 7 }] } },
+                    { text: "You have the dampener? The Skyship Captain at the docks is waiting for it. Every moment counts!", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 6 }] } },
+                    { text: "Have you returned to Durin with the components for the dampener? He awaits them at the Dwarven Outpost.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 5 }] } },
+                    { text: "The components for the dampener won't gather themselves. Your task is out in the world, not here in my shop.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 4 }] } },
+                    { text: "You should be on your way to the Dwarven Outpost to speak with the smith, Durin. He is our only hope for reaching the isles.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 3 }] } },
+                    { text: "Why are you back here? I told you to speak with the Skyship Captain at the Silverhaven Docks.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 2 }] } },
+                    { text: "Have you taken the readings from the three altars yet? Time is of the essence.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 0 }] } },
+                    { text: "Thank you again for your help, hero. The Arcane Weave is stable.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'completed' }] } }
+                ],
+                dialogue: {
+                    theron_default: {
+                        npcName: 'Archmage Theron',
+                        npcIcon: 'https://api.iconify.design/game-icons:wizard-face.svg',
+                        text: "Hmm... The weave of magic is a delicate thing. One must always be vigilant.",
+                        responses: [],
+                    }
+                }
             },
             { type: 'thieving_lockpick', id: 'sh_arcane_chest_1', targetName: 'Runic Cabinet', lootTableId: 'thieving_dungeon_chest_high' },
         ],
@@ -299,6 +331,23 @@ export const silverhavenPois: Record<string, POI> = {
                 name: 'Skyship Captain',
                 icon: '/assets/npcChatHeads/ferryman_silas.png', // Reusing icon for now
                 startNode: 'captain_default',
+                questTopics: ['the_arcane_awakening'],
+                conditionalGreetings: [
+                    // The Arcane Awakening (Ordered by stage descending)
+                    { text: "Back from the Isles? The magical storms are still raging. Need passage back?", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 8 }] } },
+                    { text: "Back from the Isles? The magical storms are still raging. Need passage back?", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 7 }] } },
+                    { text: "Back from the mountains? I hope you have good news. The turbulence is getting worse.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 6 }] } },
+                    { text: "State your business. The skies are rough today, so make it quick.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 2 }] } },
+                    { text: "The hero of the hour! The skies have been calm and clear ever since your venture. If you ever need a ride back to the isles, it's on the house.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'completed' }] } },
+                ],
+                dialogue: {
+                    captain_default: {
+                        npcName: 'Skyship Captain',
+                        npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
+                        text: "The skies call, but they're a fickle mistress. Where are you looking to go?",
+                        responses: [],
+                    }
+                }
             }
         ],
         regionId: 'silverhaven',
@@ -330,15 +379,8 @@ export const silverhavenPois: Record<string, POI> = {
                 icon: '/assets/npcChatHeads/elara.png',
                 pickpocket: { lootTableId: 'pickpocket_knight_table' },
                 attackableMonsterId: 'knight',
-                dialogue: {
-                    start: {
-                        npcName: 'Elara',
-                        npcIcon: '/assets/npcChatHeads/elara.png',
-                        text: "It's a lovely day in the capital, isn't it?",
-                        responses: []
-                    }
-                },
-                startNode: 'start',
+                startNode: 'elara_default_heirloom',
+                questTopics: ['lost_heirloom'],
             },
             { type: 'thieving_pilfer', id: 'silverhaven_house_1', name: 'Locked Manor' },
             { type: 'thieving_pilfer', id: 'silverhaven_house_2', name: 'Locked Townhouse' },
@@ -449,7 +491,7 @@ export const silverhavenPois: Record<string, POI> = {
         connections: ['silverhaven_castle_approach'],
         activities: [
             { type: 'slayer_master', name: 'Kaelen', icon: '/assets/npcChatHeads/kaelen.png' },
-            { type: 'blimp_travel', requiredSlayerLevel: 50 }
+            { type: 'blimp_travel', requiredSlayerLevel: 50, name: 'Slayer\'s Blimp (NYA)' }
         ],
         regionId: 'silverhaven',
         x: 150, y: 280,

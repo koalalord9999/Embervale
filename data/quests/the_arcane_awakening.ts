@@ -1,3 +1,4 @@
+
 import { Quest, SkillName } from '../../types';
 
 export const theArcaneAwakening: Quest = {
@@ -32,60 +33,55 @@ export const theArcaneAwakening: Quest = {
     ],
     rewards: {
         xp: [{ skill: SkillName.Magic, amount: 10000 }],
-        coins: 5000,
-        items: [{ itemId: 'tome_of_the_master', quantity: 1 }]
+        coins: 5125,
+        items: [{ itemId: 'tome_of_power', quantity: 1 }]
     },
+    dialogueEntryPoints: [
+        // Archmage Theron
+        { npcName: 'Archmage Theron', response: { text: "You mentioned the 'weave' seems unstable?", check: { requirements: [ { type: 'quest', questId: 'the_arcane_awakening', status: 'not_started' }, { type: 'skill', skill: SkillName.Magic, level: 40 }, { type: 'quest', questId: 'capitals_call', status: 'completed' } ], successNode: 'taa_quest_intro', failureNode: '' } } },
+        { npcName: 'Archmage Theron', response: { text: "I'm still working on getting the altar readings.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 0 }], successNode: '', failureNode: '' } } },
+        { npcName: 'Archmage Theron', response: { text: "I have them right here. What do they say?", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 1 }], successNode: 'taa_stage_1_complete', failureNode: '' } } },
+        { npcName: 'Archmage Theron', response: { text: "The source of the Resonance Cascade has been eliminated.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 9 }], successNode: 'taa_stage_9_complete', failureNode: '' } } },
+        // Skyship Captain
+        { npcName: 'Skyship Captain', response: { text: "Archmage Theron sent me. I need passage to the Crystalline Isles.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 2 }], successNode: 'taa_captain_stage_2', failureNode: '' } } },
+        { npcName: 'Skyship Captain', response: { text: "I have the Resonance Dampener from Durin.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 6 }], successNode: 'taa_captain_stage_6', failureNode: '' } } },
+        { npcName: 'Skyship Captain', response: { text: "I need to return to the Crystalline Isles.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 7 }], successNode: 'taa_captain_free_travel_to_isles', failureNode: '' } } },
+        { npcName: 'Skyship Captain', response: { text: "I need to return to the Crystalline Isles.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 8 }], successNode: 'taa_captain_free_travel_to_isles', failureNode: '' } } },
+        { npcName: 'Skyship Captain', response: { text: "I need to return to the Crystalline Isles.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 9 }], successNode: 'taa_captain_free_travel_to_isles', failureNode: '' } } },
+        // Durin
+        { npcName: 'Durin', response: { text: "The Skyship Captain sent me. He said you could build a 'Resonance Dampener'.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 3 }], successNode: 'quest_intro_resonance_dampener', failureNode: '' } } },
+        { npcName: 'Durin', response: { text: "What do you need for the Resonance Dampener again?", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 4 }], successNode: 'taa_durin_stage_4_no_items', failureNode: '' } } },
+        { npcName: 'Durin', response: { text: "I have everything you asked for.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 5 }], successNode: 'taa_durin_stage_5_check', failureNode: '' } } }
+    ],
     dialogue: {
-        theron_default: {
-            npcName: 'Archmage Theron',
-            npcIcon: 'https://api.iconify.design/game-icons:wizard-face.svg',
-            text: "Hmm... no, that can't be right. The ley lines are... fluctuating. Oh! Apologies, adventurer. I was lost in thought. The weave of magic is a delicate thing. One must always be vigilant.",
-            responses: [],
-            conditionalResponses: [
-                {
-                    text: "Archmage, I've felt a strange disturbance in the magical weave recently. Is everything alright?",
-                    check: {
-                        requirements: [
-                            { type: 'quest', questId: 'the_arcane_awakening', status: 'not_started' },
-                            { type: 'skill', skill: SkillName.Magic, level: 40 },
-                            { type: 'quest', questId: 'capitals_call', status: 'completed' }
-                        ],
-                        successNode: 'taa_quest_intro',
-                        failureNode: ''
-                    }
-                },
-                { text: "I have a question about the Resonance Cascade.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 0 }], successNode: 'in_progress_the_arcane_awakening_0', failureNode: '' } },
-                { text: "I have the readings you requested.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 1 }], successNode: 'taa_stage_1_complete', failureNode: '' } },
-                { text: "I have defeated the Arcane Wyvern.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 9 }], successNode: 'taa_stage_9_complete', failureNode: '' } },
-                { text: "It's good to see the Arcane Weave is stable.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'completed' }], successNode: 'post_quest_the_arcane_awakening', failureNode: '' } }
-            ]
-        },
         taa_quest_intro: {
             npcName: 'Archmage Theron',
             npcIcon: 'https://api.iconify.design/game-icons:wizard-face.svg',
-            text: "You sense it too? Grave concern is an understatement. I've detected a growing instability in the world's 'Arcane Weave'—a magical feedback loop I call the Resonance Cascade. Higher-level spells tap directly into this Weave, and if uncontrolled, it could tear reality apart.",
+            text: "You sense it too? Grave concern is an understatement. I've detected a growing instability in the world's 'Arcane Weave'—a magical feedback loop I call the Resonance Cascade. If left unchecked, it could have catastrophic consequences.",
             responses: [
-                { text: "What needs to be done?", next: 'taa_intro_2' }
+                { text: "I'm ready to help. What is the task?", next: 'taa_task_intro' }
             ]
         },
-        taa_intro_2: {
+        taa_task_intro: {
             npcName: 'Archmage Theron',
             npcIcon: 'https://api.iconify.design/game-icons:wizard-face.svg',
-            text: "I must find the source of this disturbance. I've constructed this Arcane Resonator. I need you to take it to the three major runic altars—Gust, Stone, and Aqua—and take a reading from each. This will allow me to triangulate the source.",
+            text: "To find the source, I must triangulate its position. I've constructed this Arcane Resonator. I need you to take it to the three major runic altars—the Altar of Gusts, the Altar of the Deep, and the Altar of the Spring—and take a reading from each.",
             responses: [
-                { text: "I will handle this. The fate of the world may depend on it.", actions: [{ type: 'start_quest', questId: 'the_arcane_awakening' }, { type: 'give_item', itemId: 'arcane_resonator', quantity: 1 }] }
+                { text: "I will handle this. The fate of the world may depend on it.", next: 'taa_task_accept' }
             ]
         },
-        in_progress_the_arcane_awakening_0: {
+        taa_task_accept: {
             npcName: 'Archmage Theron',
             npcIcon: 'https://api.iconify.design/game-icons:wizard-face.svg',
-            text: "Have you taken the readings from the three altars yet? Time is of the essence.",
-            responses: []
+            text: "It may indeed. Be wary; awakening the altars may draw out their guardians. Go now. I will await your return.",
+            responses: [
+                { text: "(Take the Arcane Resonator)", actions: [{ type: 'start_quest', questId: 'the_arcane_awakening' }, { type: 'give_item', itemId: 'arcane_resonator', quantity: 1 }] }
+            ]
         },
         taa_stage_1_complete: {
             npcName: 'Archmage Theron',
             npcIcon: 'https://api.iconify.design/game-icons:wizard-face.svg',
-            text: "You have them! Let me see... By the arcane! This is worse than I feared. The readings... they don't point to anywhere on the ground. They point... up. High into the sky. To a place of legend: The Crystalline Isles.",
+            text: "Let me see... By the arcane! This is worse than I feared. The readings... they don't point to anywhere on the ground. They point... up. High into the sky. To a place of legend: The Crystalline Isles.",
             responses: [
                 { text: "What are the Crystalline Isles?", next: 'taa_stage_1_2' }
             ]
@@ -95,21 +91,21 @@ export const theArcaneAwakening: Quest = {
             npcIcon: 'https://api.iconify.design/game-icons:wizard-face.svg',
             text: "Floating islands of pure magic, normally shielded from our world. The Resonance Cascade must have weakened their defenses, making them accessible but dangerously unstable. The source is there. You must go. Find the Skyship Captain at the docks. He is your only way up.",
             responses: [
-                { text: "I'll speak with him at once.", actions: [{ type: 'advance_quest', questId: 'the_arcane_awakening' }, { type: 'take_item', itemId: 'gust_reading', quantity: 1 }, { type: 'take_item', itemId: 'stone_reading', quantity: 1 }, { type: 'take_item', itemId: 'aqua_reading', quantity: 1 }] }
+                { text: "I'll speak with him at once.", actions: [{ type: 'advance_quest', questId: 'the_arcane_awakening' }, { type: 'take_item', itemId: 'gust_reading', quantity: 1 }, { type: 'take_item', itemId: 'stone_reading', quantity: 1 }, { type: 'take_item', itemId: 'aqua_reading', quantity: 1 }, { type: 'take_item', itemId: 'arcane_resonator', quantity: 1}] }
             ]
         },
         taa_stage_9_complete: {
             npcName: 'Archmage Theron',
             npcIcon: 'https://api.iconify.design/game-icons:wizard-face.svg',
-            text: "You've returned! And the Weave... it's stable! Calm! You defeated the Arcane Wyvern? Astounding! You have not just stopped the cascade but stabilized the entire world's magic. You are truly a master of the arcane.",
+            text: "Astounding! You have not just stopped the cascade but stabilized the entire world's magic. Tell me, what was the source?",
             responses: [
-                { text: "It was a difficult battle, but I prevailed.", next: 'taa_reward' }
+                { text: "It was an elemental wyvern at the top of a magical spire.", next: 'taa_reward' }
             ]
         },
         taa_reward: {
             npcName: 'Archmage Theron',
             npcIcon: 'https://api.iconify.design/game-icons:wizard-face.svg',
-            text: "For this grand service, I will teach you the highest tier of magic. You have proven yourself worthy. Take this as well, a small token of my immense gratitude. You have saved us all.",
+            text: "A wyvern... remarkable. For this grand service, you have proven yourself worthy of advanced knowledge. I will teach you the secrets of Storm magic. Take this as well, a small token of my immense gratitude. You have saved us all.",
             responses: [
                 { text: "Thank you, Archmage.", actions: [{ type: 'advance_quest', questId: 'the_arcane_awakening' }] }
             ]
@@ -121,21 +117,8 @@ export const theArcaneAwakening: Quest = {
             responses: []
         },
 
-        captain_default: {
-            npcName: 'Skyship Captain',
-            npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
-            text: "The skies call, but they're a fickle mistress. Where are you looking to go?",
-            responses: [],
-            conditionalResponses: [
-                { text: "Archmage Theron sent me. I need passage to the Crystalline Isles.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 2 }], successNode: 'taa_captain_stage_2', failureNode: '' } },
-                { text: "I have the Resonance Dampener.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 6 }], successNode: 'taa_captain_stage_6', failureNode: '' } },
-                { text: "I need to return to the Crystalline Isles.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 7 }], successNode: 'taa_captain_free_travel_to_isles', failureNode: '' } },
-                { text: "I need to return to the Crystalline Isles.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 8 }], successNode: 'taa_captain_free_travel_to_isles', failureNode: '' } },
-                { text: "I need to return to the Crystalline Isles.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 9 }], successNode: 'taa_captain_free_travel_to_isles', failureNode: '' } }
-            ]
-        },
         captain_isles_default: {
-            npcName: 'Skyship Captain',
+            npcName: 'Skyship Captain (isle)',
             npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
             text: "Breathtaking, isn't it? When you're ready to return to solid ground, just say the word.",
             responses: [
@@ -151,15 +134,15 @@ export const theArcaneAwakening: Quest = {
         taa_captain_stage_2: {
             npcName: 'Skyship Captain',
             npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
-            text: "To the Crystalline Isles? Are you mad? The magical turbulence up there would tear my ship apart! The arcane energies are too severe.",
+            text: "To the Isles? Are you mad? Look at the sky! The magical turbulence would tear my ship apart. My ship's Resonance Dampener is completely fried—it's nothing but a hunk of junk now.",
             responses: [
-                { text: "Is there anything that can be done?", next: 'taa_captain_2_b' }
+                { text: "So there's no way to get there?", next: 'taa_captain_2_b' }
             ]
         },
         taa_captain_2_b: {
             npcName: 'Skyship Captain',
             npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
-            text: "I'd need a special component, a 'Resonance Dampener', to navigate that storm. I'm a captain, not an engineer. But I've heard tales of a master craftsman known for working with exotic materials—Durin, at the Dwarven Outpost. If anyone can build such a thing, it's him.",
+            text: "Not with the gear I have. That dampener is ancient tech, beyond repair. But... there's a master dwarf I've heard tales of, Durin, out at the Dwarven Outpost. If anyone could build a *new* one from scratch, it's him. Tell him I sent you.",
             responses: [
                 { text: "Thank you, Captain. I'll find this Durin.", actions: [{ type: 'advance_quest', questId: 'the_arcane_awakening' }] }
             ]
@@ -167,9 +150,10 @@ export const theArcaneAwakening: Quest = {
         taa_captain_stage_6: {
             npcName: 'Skyship Captain',
             npcIcon: '/assets/npcChatHeads/ferryman_silas.png',
-            text: "By my beard... is that a Resonance Dampener? I never thought I'd see one! The dwarf actually built it! With this... yes, with this, we can make the voyage. Prepare yourself, adventurer. The skies await!",
+            text: "By the skies, you actually got one! That old dwarf really came through! I honestly didn't think it was possible. With this... yes, with this, we can make the voyage. Prepare yourself, adventurer. The skies await!",
             responses: [
-                { text: "(Board the Skyship)", actions: [{ type: 'take_item', itemId: 'resonance_dampener', quantity: 1 }, { type: 'advance_quest', questId: 'the_arcane_awakening' }, { type: 'teleport', poiId: 'crystalline_isles_landing' }] }
+                { text: "(Board the Skyship)", actions: [{ type: 'take_item', itemId: 'resonance_dampener', quantity: 1 }, { type: 'advance_quest', questId: 'the_arcane_awakening' }, { type: 'teleport', poiId: 'crystalline_isles_landing' }] },
+                { text: "I'm not ready to leave yet", next: 'taa_air_not_ready'}
             ]
         },
         taa_captain_free_travel_to_isles: {
@@ -180,23 +164,18 @@ export const theArcaneAwakening: Quest = {
                 { text: "(Board the Skyship)", actions: [{ type: 'teleport', poiId: 'crystalline_isles_landing' }] }
             ]
         },
-
-        durin_default: {
-            npcName: 'Durin',
-            npcIcon: '/assets/npcChatHeads/prospector_gudrun.png',
-            text: "Busy at the forge, what do you need?",
-            responses: [],
-            conditionalResponses: [
-                { text: "I was told you could build a 'Resonance Dampener'.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 3 }], successNode: 'quest_intro_resonance_dampener', failureNode: '' } },
-                { text: "About the Resonance Dampener materials...", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 4 }], successNode: 'taa_durin_stage_4_no_items', failureNode: '' } },
-                { text: "About the Resonance Dampener materials...", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 5 }], successNode: 'taa_durin_stage_5_check', failureNode: '' } },
-            ]
+        taa_air_not_ready: {
+            npcName: 'Skyship Captain',
+            npcIcon: '',
+            text: "Not a problem lad, just come back when you're ready.",
+            responses: []
         },
+
         quest_intro_resonance_dampener: {
             npcName: 'Durin',
             npcIcon: '/assets/npcChatHeads/prospector_gudrun.png',
-            text: "A Resonance whatsit? Hah! That sky-sailor sent you, didn't he? Aye, I can build such a thing. Dwarven engineering can solve any problem. But it won't be cheap, and it won't be easy. I'll need some... particular components.",
-            responses: [{ text: "What do you need?", actions: [{ type: 'advance_quest', questId: 'the_arcane_awakening' }] }]
+            text: "A Resonance... what? Hah! That sky-sailor sent you, didn't he? Haven't heard that term in ages! Aye, I can build one. Dwarven engineering can solve any problem. But it won't be cheap, and it won't be easy. I'll need some... particular components.",
+            responses: [{ text: "What do you need?", actions: [{ type: 'advance_quest', questId: 'the_arcane_awakening' }], next: 'taa_durin_stage_4_no_items' }]
         },
         taa_durin_stage_4_no_items: {
             npcName: 'Durin',
@@ -236,19 +215,16 @@ export const theArcaneAwakening: Quest = {
         taa_durin_stage_5_check: {
             npcName: 'Durin',
             npcIcon: '/assets/npcChatHeads/prospector_gudrun.png',
-            text: "Aye, the dampener. A tricky piece of work. Have you managed to gather all the components I asked for?",
+            text: "You have them! By my father's beard, you actually have them!",
             responses: [
-                { text: "Not yet, can you remind me what you need?", next: 'taa_durin_stage_4_no_items' }
-            ],
-            conditionalResponses: [
                 {
-                    text: "Yes, I have everything right here.",
+                    text: "Alright here, go ahead and check the quality on these materials.",
                     check: {
                         requirements: [
                             { type: 'items', items: [{ itemId: 'golem_core', quantity: 5 }, { itemId: 'runic_bar', quantity: 10 }, { itemId: 'eldritch_pearl', quantity: 1 }] }
                         ],
                         successNode: 'taa_durin_stage_5_has_items',
-                        failureNode: '' // This shouldn't be reachable if the option is visible
+                        failureNode: ''
                     }
                 }
             ]
@@ -256,12 +232,12 @@ export const theArcaneAwakening: Quest = {
         taa_durin_stage_5_has_items: {
             npcName: 'Durin',
             npcIcon: '/assets/npcChatHeads/prospector_gudrun.png',
-            text: "You have them! By my father's beard, you actually have them! Alright, a deal's a deal. Stand back... this requires a delicate touch. *clang* *whirr* *clank* ...There! One Resonance Dampener, as ordered. Now get that thing to your captain before it attracts any more attention.",
+            text: "Alright, a deal's a deal. Stand back... this requires a delicate touch. *clang* *whirr* *clank* ...There! One Resonance Dampener, as ordered. Now get that thing to your captain before it attracts any more attention.",
             responses: [{ text: "Thank you, master dwarf.", actions: [{ type: 'take_item', itemId: 'golem_core', quantity: 5 }, { type: 'take_item', itemId: 'runic_bar', quantity: 10 }, { type: 'take_item', itemId: 'eldritch_pearl', quantity: 1 }, { type: 'give_item', itemId: 'resonance_dampener', quantity: 1 }, { type: 'advance_quest', questId: 'the_arcane_awakening' }] }]
         },
 
         enter_spire_start: {
-            npcName: 'Magus Spire',
+            npcName: 'Enter the Spire',
             npcIcon: 'https://api.iconify.design/game-icons:rune-gate.svg',
             text: "The shimmering doorway hums with immense power. Stepping through it will take you into the heart of the arcane disturbance.",
             responses: [

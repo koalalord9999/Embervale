@@ -1,3 +1,4 @@
+
 import { Quest, SkillName } from '../../types';
 
 export const ancientBlade: Quest = {
@@ -35,6 +36,10 @@ export const ancientBlade: Quest = {
         xp: [{ skill: SkillName.Smithing, amount: 250 }],
         items: [{ itemId: 'steel_scimitar', quantity: 1 }],
     },
+    dialogueEntryPoints: [
+        { npcName: 'Valerius the Master Smith', response: { text: "About this old sword...", check: { requirements: [{ type: 'quest', questId: 'ancient_blade', status: 'in_progress', stage: 0 }], successNode: 'item_trigger_ancient_blade', failureNode: '' } } },
+        { npcName: 'Valerius the Master Smith', response: { text: "I have the ore for the old sword.", check: { requirements: [{ type: 'quest', questId: 'ancient_blade', status: 'in_progress', stage: 1 }], successNode: 'in_progress_ancient_blade_1', failureNode: '' } } }
+    ],
     dialogue: {
         item_trigger_ancient_blade: {
             npcName: 'Valerius the Master Smith',

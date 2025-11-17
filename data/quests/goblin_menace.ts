@@ -1,3 +1,4 @@
+
 import { Quest, SkillName } from '../../types';
 
 export const goblinMenace: Quest = {
@@ -25,6 +26,11 @@ export const goblinMenace: Quest = {
         xp: [{ skill: SkillName.Attack, amount: 100 }],
         coins: 200
     },
+    dialogueEntryPoints: [
+        { npcName: 'Old Man Fitzwilliam', response: { text: "You seem troubled.", check: { requirements: [{ type: 'quest', questId: 'goblin_menace', status: 'not_started' }], successNode: 'quest_intro_goblin_menace', failureNode: '' } } },
+        { npcName: 'Old Man Fitzwilliam', response: { text: "About those goblins...", check: { requirements: [{ type: 'quest', questId: 'goblin_menace', status: 'in_progress', stage: 0 }], successNode: 'in_progress_goblin_menace_0', failureNode: '' } } },
+        { npcName: 'Old Man Fitzwilliam', response: { text: "I've dealt with your goblin problem.", check: { requirements: [{ type: 'quest', questId: 'goblin_menace', status: 'in_progress', stage: 1 }], successNode: 'in_progress_goblin_menace_1', failureNode: '' } } }
+    ],
     dialogue: {
         quest_intro_goblin_menace: {
             npcName: 'Old Man Fitzwilliam',

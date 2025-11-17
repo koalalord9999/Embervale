@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useEffect } from 'react';
+
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { InventorySlot, GroundItem, WorldState } from '../types';
 import { ITEMS } from '../constants';
 import { useGameSession } from './useGameSession';
@@ -37,9 +38,11 @@ export const useGroundItems = (initialGroundItems: Record<string, GroundItem[]>,
 
             if (itemData.stackable || item.noted) {
                 const existingStackIndex = newItemsForPoi.findIndex(gi => 
-                    gi.item.itemId === item.itemId && 
+                    gi.item.itemId === item.itemId &&
                     !!gi.item.noted === !!item.noted &&
-                    !!gi.isDeathPile === isDeathPile // Stack like with like
+                    gi.item.nameOverride === item.nameOverride &&
+                    JSON.stringify(gi.item.statsOverride) === JSON.stringify(item.statsOverride) &&
+                    !!gi.isDeathPile === isDeathPile
                 );
                 if (existingStackIndex > -1) {
                     newItemsForPoi[existingStackIndex].item.quantity += item.quantity;
@@ -93,7 +96,19 @@ export const useGroundItems = (initialGroundItems: Record<string, GroundItem[]>,
             return;
         }
 
-        inv.modifyItem(itemToPick.item.itemId, itemToPick.item.quantity, false, itemToPick.item.doses, { bypassAutoBank: true, noted: itemToPick.item.noted });
+        inv.modifyItem(
+            itemToPick.item.itemId, 
+            itemToPick.item.quantity, 
+            false, 
+            { 
+                doses: itemToPick.item.doses,
+                charges: itemToPick.item.charges,
+                noted: itemToPick.item.noted,
+                nameOverride: itemToPick.item.nameOverride,
+                statsOverride: itemToPick.item.statsOverride,
+                bypassAutoBank: true 
+            }
+        );
         
         setGroundItems(prev => {
             const newItems = { ...prev };
@@ -174,7 +189,7 @@ export const useGroundItems = (initialGroundItems: Record<string, GroundItem[]>,
         if (itemsToPickUp.length > 0) {
             const consolidatedPickups: Record<string, InventorySlot> = {};
             itemsToPickUp.forEach(item => {
-                const key = `${item.itemId}:${!!item.noted}:${item.doses ?? 'na'}`;
+                const key = `${item.itemId}:${!!item.noted}:${item.doses ?? 'na'}:${item.nameOverride}:${JSON.stringify(item.statsOverride)}`;
                 if (consolidatedPickups[key]) {
                     consolidatedPickups[key].quantity += item.quantity;
                 } else {
@@ -183,7 +198,15 @@ export const useGroundItems = (initialGroundItems: Record<string, GroundItem[]>,
             });
 
             Object.values(consolidatedPickups).forEach(item => {
-                inv.modifyItem(item.itemId, item.quantity, false, item.doses, { bypassAutoBank: true, noted: item.noted });
+                // FIX: Update call signature to match new type.
+                inv.modifyItem(item.itemId, item.quantity, false, { 
+                    doses: item.doses,
+                    charges: item.charges,
+                    noted: item.noted,
+                    nameOverride: item.nameOverride,
+                    statsOverride: item.statsOverride,
+                    bypassAutoBank: true,
+                });
             });
             
             setGroundItems(prev => {

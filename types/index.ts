@@ -21,6 +21,7 @@ export * from './drops';
 export * from './spells';
 export * from './player';
 export * from './save';
+export * from './prayer';
 export type { Spell } from './spells';
 export type { BankTab as BankTab_from_entities } from './entities';
 export type { ActiveStatModifier as ActiveStatModifier_from_entities, ActiveBuff as ActiveBuff_from_entities } from './entities';

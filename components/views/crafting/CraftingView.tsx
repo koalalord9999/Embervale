@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { InventorySlot, PlayerSkill, PlayerQuestState, CraftingContext } from '../../../types';
 import { MakeXPrompt, ContextMenuState, TooltipState } from '../../../hooks/useUIState';
@@ -25,7 +26,8 @@ export interface CraftingViewProps {
     playerQuests: PlayerQuestState[];
     onCook: (recipeId: string, quantity: number) => void;
     onCraftItem: (itemId: string, quantity: number) => void;
-    onFletch: (action: { type: 'carve'; payload: any }, quantity: number) => void;
+    onMakeDough: (recipeId: string, quantity: number) => void;
+    onFletch: (action: { type: 'carve' | 'stock'; payload: any }, quantity: number) => void;
     onCut: (cutId: string, quantity: number) => void;
     onSmithBar: (barType: BarType, quantity: number) => void;
     onSmithItem: (itemId: string, quantity: number) => void;
@@ -34,10 +36,11 @@ export interface CraftingViewProps {
     setContextMenu: (menu: ContextMenuState | null) => void;
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
     setTooltip: (tooltip: TooltipState | null) => void;
+    onJewelryCraft?: (itemId: string, quantity: number) => void;
 }
 
 const CraftingView: React.FC<CraftingViewProps> = (props) => {
-    const { context, onExit } = props;
+    const { context, onExit, onJewelryCraft } = props;
 
     const getTitle = () => {
         switch (context.type) {
@@ -63,7 +66,7 @@ const CraftingView: React.FC<CraftingViewProps> = (props) => {
             case 'spinning_wheel': return <SpinningInterface {...props} />;
             case 'leatherworking': return <LeatherworkingInterface {...props} />;
             case 'gem_cutting': return <GemCuttingInterface {...props} />;
-            case 'jewelry': return <JewelryInterface {...props} />;
+            case 'jewelry': return <JewelryInterface {...props} onCraftItem={onJewelryCraft!} />;
             case 'dough_making': return <DoughMakingInterface {...props} />;
             case 'bookbinding': return <BookbindingInterface {...props} />;
             case 'fletching': {

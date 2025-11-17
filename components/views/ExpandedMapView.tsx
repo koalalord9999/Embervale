@@ -1,7 +1,9 @@
+
 import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { POI, Region, WorldState } from '../../types';
-import { REGIONS, MAP_DIMENSIONS, CITY_MAP_DIMENSIONS } from '../../constants';
+import { REGIONS, MAP_FEATURES } from '../../constants';
 import { POIS } from '../../data/pois';
+import { MAP_DIMENSIONS, CITY_MAP_DIMENSIONS } from '../../constants';
 import { TooltipState } from '../../hooks/useUIState';
 import Button from '../common/Button';
 
@@ -47,6 +49,7 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
 
     const isWorldView = activeMapRegionId === 'world';
     const mapDimensions = isWorldView ? MAP_DIMENSIONS : CITY_MAP_DIMENSIONS;
+    const allPois = useMemo(() => POIS, []);
 
     useEffect(() => {
         if (!connectionState.fromPoiId || !isMapManagerEnabled) {
@@ -55,7 +58,7 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
         }
     
         const handleMouseMove = (e: MouseEvent) => {
-            const fromPoi = POIS[connectionState.fromPoiId!] || Object.values(POIS).find(p => p.id === REGIONS[connectionState.fromPoiId!]?.entryPoiId);
+            const fromPoi = allPois[connectionState.fromPoiId!] || Object.values(allPois).find(p => p.id === REGIONS[connectionState.fromPoiId!]?.entryPoiId);
             const fromPoiName = fromPoi?.name || connectionState.fromPoiId;
 
             const toPoiName = hoveredInfo?.name ?? '...';
@@ -72,10 +75,10 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
             window.removeEventListener('mousemove', handleMouseMove);
             setTooltip(null);
         };
-    }, [connectionState, hoveredInfo, setTooltip, isMapManagerEnabled]);
+    }, [connectionState, hoveredInfo, setTooltip, isMapManagerEnabled, allPois]);
     
     const centerOnCurrentLocation = useCallback(() => {
-        const poi = POIS[currentPoiId];
+        const poi = allPois[currentPoiId];
         const container = mapContainerRef.current;
         if (!poi || !container) return;
     
@@ -83,8 +86,8 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
         
         if (isWorldView) {
             const region = REGIONS[poi.regionId];
-            const isCity = region?.type === 'city' || region?.type === 'dungeon';
-            const effectivePoi = isMapManagerEnabled ? (isCity ? regionCoordinates?.[region.id] : poiCoordinates?.[poi.id]) : { x: isCity ? region.x : poi.x, y: isCity ? region.y : poi.y };
+            const isCity = region?.type === 'city' || region?.type === 'dungeon' || region?.type === 'underground';
+            const effectivePoi = isMapManagerEnabled ? (isCity ? regionCoordinates?.[region.id] : poiCoordinates?.[poi.id]) : { x: isCity ? region.x : (poi.eX ?? poi.x), y: isCity ? region.y : (poi.eY ?? poi.y) };
             if (!effectivePoi) return;
             targetX = effectivePoi.x;
             targetY = effectivePoi.y;
@@ -96,7 +99,7 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                 targetX = effectivePoi.x;
                 targetY = effectivePoi.y;
             } else {
-                const cityEntryPoi = POIS[REGIONS[activeMapRegionId]?.entryPoiId];
+                const cityEntryPoi = allPois[REGIONS[activeMapRegionId]?.entryPoiId];
                 targetX = cityEntryPoi?.cityMapX ?? CITY_MAP_DIMENSIONS.width / 2;
                 targetY = cityEntryPoi?.cityMapY ?? CITY_MAP_DIMENSIONS.height / 2;
             }
@@ -108,10 +111,10 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
             x: -targetX * zoomLevel + container.offsetWidth / 2,
             y: -targetY * zoomLevel + container.offsetHeight / 2,
         });
-    }, [currentPoiId, isWorldView, activeMapRegionId, poiCoordinates, regionCoordinates, isMapManagerEnabled]);
+    }, [allPois, currentPoiId, isWorldView, activeMapRegionId, poiCoordinates, regionCoordinates, isMapManagerEnabled]);
 
     const panToCurrentLocation = useCallback(() => {
-        const poi = POIS[currentPoiId];
+        const poi = allPois[currentPoiId];
         const container = mapContainerRef.current;
         if (!poi || !container) return;
     
@@ -119,8 +122,8 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
         
         if (isWorldView) {
             const region = REGIONS[poi.regionId];
-            const isCity = region?.type === 'city' || region?.type === 'dungeon';
-            const effectivePoi = isMapManagerEnabled ? (isCity ? regionCoordinates?.[region.id] : poiCoordinates?.[poi.id]) : { x: isCity ? region.x : poi.x, y: isCity ? region.y : poi.y };
+            const isCity = region?.type === 'city' || region?.type === 'dungeon' || region?.type === 'underground';
+            const effectivePoi = isMapManagerEnabled ? (isCity ? regionCoordinates?.[region.id] : poiCoordinates?.[poi.id]) : { x: isCity ? region.x : (poi.eX ?? poi.x), y: isCity ? region.y : (poi.eY ?? poi.y) };
             if (!effectivePoi) return;
             targetX = effectivePoi.x;
             targetY = effectivePoi.y;
@@ -131,7 +134,7 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                 targetX = effectivePoi.x;
                 targetY = effectivePoi.y;
             } else {
-                const cityEntryPoi = POIS[REGIONS[activeMapRegionId]?.entryPoiId];
+                const cityEntryPoi = allPois[REGIONS[activeMapRegionId]?.entryPoiId];
                 targetX = cityEntryPoi?.cityMapX ?? CITY_MAP_DIMENSIONS.width / 2;
                 targetY = cityEntryPoi?.cityMapY ?? CITY_MAP_DIMENSIONS.height / 2;
             }
@@ -142,7 +145,7 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
             x: -targetX * v.zoom + container.offsetWidth / 2,
             y: -targetY * v.zoom + container.offsetHeight / 2,
         }));
-    }, [currentPoiId, isWorldView, activeMapRegionId, poiCoordinates, regionCoordinates, isMapManagerEnabled]);
+    }, [allPois, currentPoiId, isWorldView, activeMapRegionId, poiCoordinates, regionCoordinates, isMapManagerEnabled]);
     
     useEffect(() => {
         const hasMapChanged = prevMapRegionId.current !== activeMapRegionId;
@@ -219,11 +222,11 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
             e.preventDefault(); e.stopPropagation();
             const fromId = connectionState.fromPoiId;
             const toId = poiId;
-            const fromConns = [...(poiConnections[fromId] || POIS[fromId].connections)];
-            const toConns = [...(poiConnections[toId] || POIS[toId].connections)];
+            const fromConns = [...(poiConnections[fromId] || allPois[fromId].connections)];
+            const toConns = [...(poiConnections[toId] || allPois[toId].connections)];
             if (!fromConns.includes(toId)) { fromConns.push(toId); onUpdatePoiConnections(fromId, fromConns); }
             if (connectionState.type === 'two-way' && !toConns.includes(fromId)) { toConns.push(fromId); onUpdatePoiConnections(toId, toConns); }
-            addLog(`Created ${connectionState.type} connection: ${POIS[fromId]?.name || fromId} -> ${POIS[toId]?.name || toId}`);
+            addLog(`Created ${connectionState.type} connection: ${allPois[fromId]?.name || fromId} -> ${allPois[toId]?.name || toId}`);
             setConnectionState({ fromPoiId: null, type: null });
             return;
         }
@@ -267,31 +270,35 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
     const zoomOut = () => setView(v => ({ ...v, zoom: Math.max(0.25, v.zoom / 1.5) }));
     
     const { poisToDisplay, regionsToDisplay, dungeonsToDisplay, phantomExits, mapTitle } = useMemo(() => {
-        const allPois = Object.values(POIS);
-
         if (isWorldView) {
             return {
-                poisToDisplay: showAllPois ? allPois : allPois.filter(p => {
+                poisToDisplay: Object.values(allPois).filter(p => {
+                    if (p.type === 'internal') {
+                        return p.eX !== undefined && p.eY !== undefined;
+                    }
                     const region = REGIONS[p.regionId];
-                    return region?.type !== 'city' && region?.type !== 'dungeon';
+                    if (region && (region.type === 'dungeon' || region.type === 'underground')) {
+                        return p.id === region.entryPoiId;
+                    }
+                    return true;
                 }),
                 regionsToDisplay: Object.values(REGIONS).filter(r => r.type === 'city'),
-                dungeonsToDisplay: Object.values(REGIONS).filter(r => r.type === 'dungeon'),
+                dungeonsToDisplay: Object.values(REGIONS).filter(r => r.type === 'dungeon' || r.type === 'underground'),
                 phantomExits: [],
                 mapTitle: 'World Map'
             };
         }
-        const cityPois = allPois.filter(p => p.regionId === activeMapRegionId);
+        const cityPois = Object.values(allPois).filter(p => p.regionId === activeMapRegionId);
         const exits: { navigationId: string; gateName: string; displayName: string; x: number; y: number }[] = [];
         const addedGateIds = new Set<string>();
         cityPois.forEach(internalPoi => {
             (internalPoi.connections ?? []).forEach(connId => {
-                const externalPoi = POIS[connId];
+                const externalPoi = allPois[connId];
                 if (externalPoi && externalPoi.regionId !== activeMapRegionId && !addedGateIds.has(externalPoi.id)) {
-                    const worldMapDestinationId = (externalPoi.connections ?? []).find(destId => destId !== internalPoi.id && POIS[destId] && !POIS[destId].id.includes('_gate'));
+                    const worldMapDestinationId = (externalPoi.connections ?? []).find(destId => destId !== internalPoi.id && allPois[destId] && !allPois[destId].id.includes('_gate'));
                     if (worldMapDestinationId) {
                         addedGateIds.add(externalPoi.id);
-                        const destinationPoi = POIS[worldMapDestinationId];
+                        const destinationPoi = allPois[worldMapDestinationId];
                         if (externalPoi.cityMapX !== undefined && externalPoi.cityMapY !== undefined) {
                             exits.push({ navigationId: externalPoi.id, gateName: externalPoi.name, displayName: destinationPoi.name, x: externalPoi.cityMapX, y: externalPoi.cityMapY });
                         }
@@ -300,7 +307,7 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
             });
         });
         return { poisToDisplay: cityPois, regionsToDisplay: [], dungeonsToDisplay: [], phantomExits: exits, mapTitle: `${REGIONS[activeMapRegionId]?.name || 'Region'} Map` };
-    }, [isWorldView, activeMapRegionId, showAllPois]);
+    }, [isWorldView, activeMapRegionId, allPois]);
 
     const handleMouseEnter = (e: React.MouseEvent, item: POI | Region | { name: string, description?: string }) => {
         if (isMapManagerEnabled && draggedItemId) return;
@@ -316,16 +323,41 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
         setTooltip({ content: tooltipContent, position: { x: e.clientX, y: e.clientY } });
     };
     
+    const currentPlayerPoi = allPois[currentPoiId];
+    
+    const getPoiWorldCoords = useCallback((poi: POI): { x: number; y: number } | null => {
+        if (isMapManagerEnabled) {
+            return poiCoordinates?.[poi.id] ?? poi;
+        }
+
+        if (poi.type === 'internal') {
+            if (poi.eX !== undefined && poi.eY !== undefined) {
+                return { x: poi.eX, y: poi.eY };
+            }
+            return null; // Don't show internal POIs on world map unless they have eX/eY
+        }
+        
+        const region = REGIONS[poi.regionId];
+        if (region && (region.type === 'dungeon' || region.type === 'underground')) {
+            if (poi.id === region.entryPoiId) {
+                return { x: poi.x, y: poi.y }; // Show the entrance
+            }
+            return null; // Hide other dungeon POIs
+        }
+        
+        return { x: poi.x, y: poi.y }; // Show all other non-internal POIs
+    }, [isMapManagerEnabled, poiCoordinates, regionCoordinates, allPois]);
+
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
             <div 
                 className="bg-gray-800 border-4 border-gray-600 rounded-lg shadow-xl w-full max-w-6xl h-full max-h-[90vh] flex flex-col"
                 onClick={e => e.stopPropagation()}
             >
-                <div className="flex justify-between items-center p-4 bg-gray-900/50 border-b-2 border-gray-600">
+                <div className="flex justify-between items-center p-4 bg-gray-900/50 border-b-2 border-gray-700">
                     <h1 className="text-3xl font-bold text-yellow-400">{mapTitle}</h1>
                     <div>
-                        {!isWorldView && <Button onClick={() => setActiveMapRegionId('world')} size="sm" className="mr-4">Back to World</Button>}
+                        {!isWorldView && <Button onClick={() => setActiveMapRegionId('world')} size="sm" className="mr-4">World Map</Button>}
                         <Button onClick={onClose} size="sm">Close</Button>
                     </div>
                 </div>
@@ -349,45 +381,69 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                         willChange: 'transform',
                     }}>
                         <svg className="absolute top-0 left-0 pointer-events-none" width={mapDimensions.width} height={mapDimensions.height} style={{ overflow: 'visible' }}>
-                            {poisToDisplay.map(startPoi => {
-                                if (!startPoi) return null;
-                                const startPoiData = isMapManagerEnabled ? { ...startPoi, ...poiCoordinates?.[startPoi.id] } : startPoi;
-                                const startConns = isMapManagerEnabled ? poiConnections?.[startPoi.id] ?? startPoiData.connections : startPoiData.connections;
-                                if (!startConns) return null;
-
-                                return startConns.map(connId => {
-                                    const endPoi = POIS[connId];
+                            {isWorldView && MAP_FEATURES.map(feature => (
+                                <path
+                                    key={feature.id}
+                                    d={feature.path}
+                                    stroke={feature.strokeColor}
+                                    strokeWidth={feature.strokeWidth / view.zoom}
+                                    fill="none"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            ))}
+                            {Object.values(allPois).map(startPoi => {
+                                const connections = isMapManagerEnabled && poiConnections ? poiConnections[startPoi.id] : startPoi.connections;
+                                return connections?.map(connId => {
+                                    const endPoi = allPois[connId];
                                     if (!endPoi || startPoi.id > endPoi.id) return null;
-                                    const endPoiData = isMapManagerEnabled ? { ...endPoi, ...poiCoordinates?.[endPoi.id] } : endPoi;
-                                    const endRegion = REGIONS[endPoiData.regionId];
-                                    const isEndPoiInCurrentView = poisToDisplay.some(p => p.id === endPoiData.id);
-                                    const isEndPoiACityIcon = isWorldView && (endRegion?.type === 'city' || endRegion?.type === 'dungeon');
-                                    if (!isEndPoiInCurrentView && !isEndPoiACityIcon) return null;
+                        
+                                    let startCoords, endCoords;
+                        
+                                    if (isWorldView) {
+                                        startCoords = getPoiWorldCoords(startPoi);
+                                        endCoords = getPoiWorldCoords(endPoi);
+                                    } else { // City/Dungeon View
+                                        if (startPoi.regionId === activeMapRegionId) {
+                                            startCoords = isMapManagerEnabled ? poiCoordinates?.[startPoi.id] : startPoi;
+                                        } else {
+                                            startCoords = null;
+                                        }
+                        
+                                        if (endPoi.regionId === activeMapRegionId) {
+                                            endCoords = isMapManagerEnabled ? poiCoordinates?.[endPoi.id] : endPoi;
+                                        } else {
+                                            const phantom = phantomExits.find(p => p.navigationId === endPoi.id);
+                                            endCoords = phantom ? { x: phantom.x, y: phantom.y } : null;
+                                        }
+                                    }
+                        
+                                    if (!startCoords || !endCoords || (startCoords.x === endCoords.x && startCoords.y === endCoords.y)) {
+                                        return null;
+                                    }
+                        
                                     const isUnlocked = showAllPois || (unlockedPois.includes(startPoi.id) && unlockedPois.includes(endPoi.id));
-                                    const endCoords = isEndPoiACityIcon ? (isMapManagerEnabled ? regionCoordinates?.[endRegion.id] : endRegion) : endPoiData;
-                                    if (!endCoords) return null;
-                                    return <line key={`${startPoi.id}-${endPoi.id}`} x1={startPoiData.x} y1={startPoiData.y} x2={endCoords.x} y2={endCoords.y} stroke={isUnlocked ? 'rgba(200, 200, 200, 0.4)' : 'rgba(100, 100, 100, 0.4)'} strokeWidth={2 / view.zoom} strokeDasharray={isUnlocked ? 'none' : `${6 / view.zoom} ${4 / view.zoom}`} />;
+                                    
+                                    return (
+                                        <line 
+                                            key={`${startPoi.id}-${endPoi.id}`}
+                                            x1={startCoords.x} y1={startCoords.y}
+                                            x2={endCoords.x} y2={endCoords.y}
+                                            stroke={isUnlocked ? 'rgba(200, 200, 200, 0.4)' : 'rgba(100, 100, 100, 0.4)'} 
+                                            strokeWidth={2 / view.zoom}
+                                            strokeDasharray={isUnlocked ? 'none' : `${6 / view.zoom} ${4 / view.zoom}`}
+                                        />
+                                    );
                                 });
                             })}
-                             {!isWorldView && poisToDisplay.map(startPoi => (
-                                (isMapManagerEnabled ? poiConnections?.[startPoi.id] ?? startPoi.connections : startPoi.connections)?.map(connId => {
-                                    const phantomExit = phantomExits.find(exit => exit.navigationId === connId);
-                                    if (phantomExit) {
-                                        const isUnlocked = unlockedPois.includes(startPoi.id) && unlockedPois.includes(connId);
-                                        const startCoords = isMapManagerEnabled ? poiCoordinates?.[startPoi.id] : startPoi;
-                                        if (!startCoords) return null;
-                                        return <line key={`${startPoi.id}-${connId}-exit`} x1={startCoords.x} y1={startCoords.y} x2={phantomExit.x} y2={phantomExit.y} stroke={isUnlocked ? 'rgba(200, 200, 200, 0.4)' : 'rgba(100, 100, 100, 0.4)'} strokeWidth={2 / view.zoom} strokeDasharray={isUnlocked ? 'none' : `${6 / view.zoom} ${4 / view.zoom}`} />;
-                                    } return null;
-                                })
-                            ))}
                         </svg>
 
                         {regionsToDisplay.map(region => {
-                            const isCurrent = POIS[currentPoiId]?.regionId === region.id;
+                            const isCurrent = allPois[currentPoiId]?.regionId === region.id;
                             const isUnlocked = showAllPois || unlockedPois.includes(region.entryPoiId);
                             const coords = isMapManagerEnabled ? regionCoordinates?.[region.id] : region;
                             if (!coords) return null;
-                            const canClick = isWorldView && isUnlocked;
+                            const canClick = isUnlocked && !isMapManagerEnabled;
                             const cursorClass = isMapManagerEnabled ? 'cursor-move' : (canClick ? 'cursor-pointer' : 'cursor-default');
 
                             return (
@@ -395,7 +451,7 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                                     key={region.id}
                                     data-draggable={isMapManagerEnabled}
                                     className={`absolute transform -translate-x-1/2 -translate-y-1/2 group ${cursorClass}`}
-                                    style={{ top: `${coords.y}px`, left: `${coords.x}px` }}
+                                    style={{ top: `${coords.y}px`, left: `${coords.x}px`, zIndex: 10 }}
                                     onMouseDown={(e) => {
                                         nodeDragStart.current = { x: e.clientX, y: e.clientY };
                                         if (isMapManagerEnabled) handleNodeMouseDown(e, region.id, true);
@@ -412,27 +468,27 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                                     onMouseEnter={(e) => handleMouseEnter(e, region)}
                                     onMouseLeave={() => setTooltip(null)}
                                 >
-                                    <img src="https://api.iconify.design/game-icons:capitol.svg" alt={region.name} className={`filter invert transition-opacity ${isUnlocked ? 'opacity-80 group-hover:opacity-100' : 'opacity-30'}`} style={{width: `${40 / view.zoom}px`, height: `${40 / view.zoom}px`}} />
+                                    <img src="https://api.iconify.design/game-icons:capitol.svg" alt={region.name} className={`filter invert transition-opacity ${isUnlocked ? 'opacity-100' : 'opacity-30'}`} style={{width: `${40 / view.zoom}px`, height: `${40 / view.zoom}px`}} />
                                     {isCurrent && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full rounded-full border-2 border-yellow-400 animate-pulse" style={{width: `${50/view.zoom}px`, height: `${50/view.zoom}px`}}></div>}
                                 </div>
                             )
                         })}
                         
                         {dungeonsToDisplay.map(dungeon => {
-                            const entryPoi = POIS[dungeon.entryPoiId];
+                            const entryPoi = allPois[dungeon.entryPoiId];
                             if (!entryPoi) return null;
                             const isUnlocked = showAllPois || unlockedPois.includes(entryPoi.id);
                             const coords = isMapManagerEnabled ? poiCoordinates?.[entryPoi.id] : entryPoi;
                             if (!coords) return null;
-                            const canClick = isMapManagerEnabled;
-                            const cursorClass = canClick ? 'cursor-pointer' : 'cursor-default';
+                            const canClick = isUnlocked && !isMapManagerEnabled;
+                            const cursorClass = isMapManagerEnabled ? 'cursor-move' : (canClick ? 'cursor-pointer' : 'cursor-default');
                             
                             return (
                                  <div
                                     key={dungeon.id}
                                     data-draggable={isMapManagerEnabled}
-                                    className={`absolute transform -translate-x-1/2 -translate-y-1/2 group ${isMapManagerEnabled ? 'cursor-move' : cursorClass}`}
-                                    style={{ top: `${coords.y}px`, left: `${coords.x}px` }}
+                                    className={`absolute transform -translate-x-1/2 -translate-y-1/2 group ${cursorClass}`}
+                                    style={{ top: `${coords.y}px`, left: `${coords.x}px`, zIndex: 10 }}
                                     onMouseDown={(e) => {
                                         nodeDragStart.current = { x: e.clientX, y: e.clientY };
                                         if (isMapManagerEnabled) handleNodeMouseDown(e, entryPoi.id, false);
@@ -449,7 +505,7 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                                     onMouseEnter={(e) => handleMouseEnter(e, { ...entryPoi, name: dungeon.name })}
                                     onMouseLeave={() => setTooltip(null)}
                                 >
-                                    <img src="https://api.iconify.design/game-icons:cave-entrance.svg" alt={dungeon.name} className={`filter invert transition-opacity ${isUnlocked ? 'opacity-80 group-hover:opacity-100' : 'opacity-30'}`} style={{width: `${40 / view.zoom}px`, height: `${40 / view.zoom}px`}} />
+                                    <img src="https://api.iconify.design/game-icons:cave-entrance.svg" alt={dungeon.name} className={`filter invert transition-opacity ${isUnlocked ? 'opacity-100' : 'opacity-30'}`} style={{width: `${40 / view.zoom}px`, height: `${40 / view.zoom}px`}} />
                                 </div>
                             )
                         })}
@@ -458,11 +514,15 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                             const isCurrent = poi.id === currentPoiId;
                             const isUnlocked = showAllPois || unlockedPois.includes(poi.id);
                             const dotColorClass = isCurrent ? "bg-yellow-400" : (isUnlocked ? "bg-green-400" : "bg-gray-600");
-                            const coords = isMapManagerEnabled ? poiCoordinates?.[poi.id] : poi;
+                            const coords = isMapManagerEnabled ? poiCoordinates?.[poi.id] : {
+                                x: (isWorldView && poi.eX !== undefined) ? poi.eX : poi.x,
+                                y: (isWorldView && poi.eY !== undefined) ? poi.eY : poi.y
+                            };
                             if (!coords) return null;
+                            const canClick = isUnlocked && !isMapManagerEnabled;
                             return (
                                 <div key={poi.id} className="absolute transform -translate-x-1/2 -translate-y-1/2" style={{ top: `${coords.y}px`, left: `${coords.x}px` }} >
-                                    <div data-draggable={isMapManagerEnabled} className={`relative rounded-full hover:scale-150 ${isMapManagerEnabled ? 'cursor-move' : ''} ${isUnlocked && !isMapManagerEnabled ? 'cursor-pointer' : ''} transition-transform duration-200`} style={{ width: `${12 / view.zoom}px`, height: `${12 / view.zoom}px` }} onMouseDown={(e) => handleNodeMouseDown(e, poi.id, false)} onClick={() => {if (!isMapManagerEnabled && isUnlocked) { onNavigate(poi.id); setTooltip(null); }}} onMouseEnter={(e) => handleMouseEnter(e, poi)} onMouseLeave={() => setTooltip(null)} >
+                                    <div data-draggable={isMapManagerEnabled} className={`relative rounded-full hover:scale-150 ${isMapManagerEnabled ? 'cursor-move' : ''} ${canClick ? 'cursor-pointer' : ''} transition-transform duration-200`} style={{ width: `${12 / view.zoom}px`, height: `${12 / view.zoom}px` }} onMouseDown={(e) => handleNodeMouseDown(e, poi.id, false)} onClick={() => {if (canClick) { onNavigate(poi.id); setTooltip(null); }}} onMouseEnter={(e) => handleMouseEnter(e, poi)} onMouseLeave={() => setTooltip(null)} >
                                         <div className={`w-full h-full rounded-full ${dotColorClass}`}></div>
                                         {isCurrent && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full rounded-full border-2 border-yellow-400 animate-pulse" style={{width: `${20/view.zoom}px`, height: `${20/view.zoom}px`}}></div>}
                                     </div>
@@ -475,30 +535,40 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                                 <img src="https://api.iconify.design/game-icons:exit-door.svg" alt={`To ${exit.displayName}`} className="filter invert opacity-80 group-hover:opacity-100 transition-opacity" style={{width: `${32 / view.zoom}px`, height: `${32 / view.zoom}px`}} />
                             </div>
                         ))}
-                        {deathMarker && POIS[deathMarker.poiId] && (
+                        {currentPlayerPoi && (
+                             <div
+                                key="current-player-location"
+                                className="absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                                style={{
+                                    top: `${(isWorldView ? (isMapManagerEnabled && poiCoordinates ? poiCoordinates[currentPlayerPoi.id]?.y : currentPlayerPoi.eY ?? currentPlayerPoi.y) : (isMapManagerEnabled && poiCoordinates ? poiCoordinates[currentPlayerPoi.id]?.y : currentPlayerPoi.y)) ?? 0}px`,
+                                    left: `${(isWorldView ? (isMapManagerEnabled && poiCoordinates ? poiCoordinates[currentPlayerPoi.id]?.x : currentPlayerPoi.eX ?? currentPlayerPoi.x) : (isMapManagerEnabled && poiCoordinates ? poiCoordinates[currentPlayerPoi.id]?.x : currentPlayerPoi.x)) ?? 0}px`,
+                                    zIndex: 20
+                                }}
+                            >
+                                <div className="relative rounded-full" style={{ width: `${12 / view.zoom}px`, height: `${12 / view.zoom}px` }}>
+                                    <div className="w-full h-full rounded-full bg-yellow-400"></div>
+                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full rounded-full border-2 border-yellow-400 animate-pulse" style={{width: `${20/view.zoom}px`, height: `${20/view.zoom}px`}}></div>
+                                </div>
+                            </div>
+                        )}
+                        
+                        {deathMarker && allPois[deathMarker.poiId] && (
                             <div
                                 key="death-marker"
                                 className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none"
                                 style={{
-                                    top: `${(isWorldView ? (isMapManagerEnabled && poiCoordinates ? poiCoordinates[deathMarker.poiId]?.y : POIS[deathMarker.poiId].y) : POIS[deathMarker.poiId].cityMapY) ?? 0}px`,
-                                    left: `${(isWorldView ? (isMapManagerEnabled && poiCoordinates ? poiCoordinates[deathMarker.poiId]?.x : POIS[deathMarker.poiId].x) : POIS[deathMarker.poiId].cityMapX) ?? 0}px`
+                                    top: `${(isWorldView ? (isMapManagerEnabled && poiCoordinates ? poiCoordinates[deathMarker.poiId]?.y : allPois[deathMarker.poiId].eY ?? allPois[deathMarker.poiId].y) : (isMapManagerEnabled && poiCoordinates ? poiCoordinates[deathMarker.poiId]?.y : allPois[deathMarker.poiId].y)) ?? 0}px`,
+                                    left: `${(isWorldView ? (isMapManagerEnabled && poiCoordinates ? poiCoordinates[deathMarker.poiId]?.x : allPois[deathMarker.poiId].eX ?? allPois[deathMarker.poiId].x) : (isMapManagerEnabled && poiCoordinates ? poiCoordinates[deathMarker.poiId]?.x : allPois[deathMarker.poiId].x)) ?? 0}px`,
+                                    zIndex: 20
                                 }}
                             >
-                                <img src="https://api.iconify.design/game-icons:tombstone.svg" alt="Death Location"
-                                    className="filter invert opacity-90"
-                                    style={{ width: `${32 / view.zoom}px`, height: `${32 / view.zoom}px` }} />
-                                <span 
-                                    className="text-xs font-bold text-white bg-black/50 px-1 rounded whitespace-nowrap"
-                                    style={{ transform: `scale(${1 / view.zoom}) translateY(-${4 / view.zoom}px)` }}
-                                >
+                                <img src="https://api.iconify.design/game-icons:tombstone.svg" alt="Death Location" className="filter invert opacity-90" style={{ width: `${32 / view.zoom}px`, height: `${32 / view.zoom}px` }} />
+                                <span className="text-xs font-bold text-white bg-black/50 px-1 rounded whitespace-nowrap" style={{ transform: `scale(${1 / view.zoom}) translateY(-${4 / view.zoom}px)` }} >
                                     {formatTime(deathMarker.timeRemaining)}
                                 </span>
                             </div>
                         )}
                     </div>
-                    
-                    {isMapManagerEnabled && <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20"><Button onClick={onCommitMapChanges} variant="primary">Commit Changes</Button></div>}
-
                     <div className="absolute bottom-2 right-2 flex flex-col gap-1 z-10">
                         <Button onClick={zoomIn} size="sm" className="w-8 h-8 text-lg">+</Button>
                         <Button onClick={zoomOut} size="sm" className="w-8 h-8 text-lg">-</Button>

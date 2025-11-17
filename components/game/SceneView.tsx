@@ -1,6 +1,6 @@
 
 import React, { useMemo, useEffect, useState, useCallback } from 'react';
-import { POI, POIActivity, PlayerQuestState, SkillName, InventorySlot, ResourceNodeState, PlayerRepeatableQuest, SkillRequirement, PlayerSkill, DialogueNode, GroundItem, DialogueResponse, Quest, BonfireActivity, DialogueAction, DialogueCheckRequirement, ThievingContainerState, Monster, WorldState } from '../../types';
+import { POI, POIActivity, PlayerQuestState, SkillName, InventorySlot, ResourceNodeState, PlayerRepeatableQuest, SkillRequirement, PlayerSkill, DialogueNode, GroundItem, DialogueResponse, Quest, BonfireActivity, DialogueAction, DialogueCheckRequirement, ThievingContainerState, Monster, WorldState, WeaponType, Equipment } from '../../types';
 import { MONSTERS, QUESTS, SHOPS, ITEMS, REGIONS, FIREMAKING_RECIPES, SKILL_ICONS, THIEVING_CONTAINER_TARGETS, THIEVING_STALL_TARGETS } from '../../constants';
 import { POIS } from '../../data/pois';
 import Button from '../common/Button';
@@ -65,6 +65,8 @@ interface SceneViewProps {
     onStealFromStall: (activity: StallActivity) => void;
     worldState: WorldState;
     groundItemsForCurrentPoi: GroundItem[];
+    handleCutCactus: () => void;
+    equipment: Equipment;
 }
 
 const PilferButton: React.FC<{
@@ -78,14 +80,21 @@ const PilferButton: React.FC<{
     // Call hook unconditionally at the top of the component
     const customHandlers = useLongPress({
         onLongPress: (e: React.MouseEvent | React.TouchEvent) => {
-            const event = 'touches' in e ? e.touches[0] : e;
+            let eventForMenu: React.MouseEvent | React.Touch;
+            if ('touches' in e && e.touches.length > 0) {
+                eventForMenu = e.touches[0];
+            } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+                eventForMenu = e.changedTouches[0];
+            } else {
+                eventForMenu = e as React.MouseEvent;
+            }
             const options: ContextMenuOption[] = [
                 { label: 'Pick Lock', onClick: () => {
                     onPilfer(activity);
                     setTooltip(null);
                 }, disabled: isDepleted }
             ];
-            setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
+            setContextMenu({ options, triggerEvent: eventForMenu, isTouchInteraction: isTouchDevice, title: activity.name });
         },
         onClick: () => {
             if (isDepleted) return;
@@ -200,10 +209,28 @@ const ActionableButton: React.FC<{
         case 'windmill': text = 'Collect Flour'; break;
         case 'ancient_chest': text = activity.name; break;
         case 'ladder': text = activity.name; break;
+        case 'cut_cactus': text = activity.name; break;
     }
 
-    const onLongPress = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-        const event = 'touches' in e ? e.touches[0] : e;
+    const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
+        if (isOneClickMode) {
+            onLongPress(e);
+            return;
+        }
+        ui.setTooltip(null);
+        handleActivityClick(activity);
+    };
+
+    const onLongPress = (e: React.MouseEvent | React.TouchEvent) => {
+        let eventForMenu: React.MouseEvent | React.Touch;
+        if ('touches' in e && e.touches.length > 0) {
+            eventForMenu = e.touches[0];
+        } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+            eventForMenu = e.changedTouches[0];
+        } else {
+            eventForMenu = e as React.MouseEvent;
+        }
+
         let options: ContextMenuOption[] = [];
 
         if (activity.type === 'npc') {
@@ -258,26 +285,16 @@ const ActionableButton: React.FC<{
         }
         
         if (options.length > 0) {
-            setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
+            setContextMenu({ options, triggerEvent: eventForMenu, isTouchInteraction: isTouchDevice, title: text });
         }
-    }, [activity, poi.id, index, handleActivityClick, setContextMenu, ui, onDepositBackpack, onDepositEquipment, isTouchDevice, worldActions, onStartCombat, onPickpocket]);
+    }
     
-    const handleClick = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-        ui.setTooltip(null);
-        handleActivityClick(activity);
-    }, [ui, handleActivityClick, activity]);
-
     const hasContextMenu = (activity.type === 'npc' || activity.type === 'furnace' || activity.type === 'anvil' || activity.type === 'windmill');
 
-    // Call the hook unconditionally
-    const longPressHandlers = useLongPress({
+    const customHandlers = hasContextMenu ? useLongPress({
         onLongPress,
-        onClick: handleClick,
-        isOneClickMode,
-    });
-    
-    // Conditionally apply the handlers
-    const customHandlers = hasContextMenu ? longPressHandlers : { onClick: handleClick };
+        onClick: handleClick
+    }) : { onClick: handleClick };
     
     const tutorialId = `activity-button-${index}`;
 
@@ -320,7 +337,14 @@ const BonfireButton: React.FC<{
     }, [activity.expiresAt]);
     
     const onLongPress = (e: React.MouseEvent | React.TouchEvent) => {
-        const event = 'touches' in e ? e.touches[0] : e;
+        let eventForMenu: React.MouseEvent | React.Touch;
+        if ('touches' in e && e.touches.length > 0) {
+            eventForMenu = e.touches[0];
+        } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+            eventForMenu = e.changedTouches[0];
+        } else {
+            eventForMenu = e as React.MouseEvent;
+        }
         
         const usableLogs = FIREMAKING_RECIPES
             .filter(recipe => inventory.some(slot => slot?.itemId === recipe.logId) && firemakingLevel >= recipe.level)
@@ -344,7 +368,7 @@ const BonfireButton: React.FC<{
             stokeOption,
         ];
         
-        setContextMenu({ options, event, isTouchInteraction: isTouchDevice });
+        setContextMenu({ options, triggerEvent: eventForMenu, isTouchInteraction: isTouchDevice, title: "Bonfire" });
     };
 
     const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
@@ -387,7 +411,7 @@ const BonfireButton: React.FC<{
 
 
 const SceneView: React.FC<SceneViewProps> = (props) => {
-    const { poi, unlockedPois, onNavigate, onActivity, onStartCombat, playerQuests, inventory, setContextMenu, setMakeXPrompt, setTooltip, addLog, startQuest, hasItems, resourceNodeStates, activeSkillingNodeId, onToggleSkilling, initializeNodeState, skillingTick, getSuccessChance, activeRepeatableQuest, activeCleanup, onStartInteractQuest, onCancelInteractQuest, clearedSkillObstacles, onClearObstacle, skills, monsterRespawnTimers, setActiveDialogue, handleDialogueCheck, onResponse, onDepositBackpack, onDepositEquipment, ui, isTouchSimulationEnabled, worldActions, bonfires, onStokeBonfire, isOneClickMode, onPickpocket, onLockpick, onPilfer, thievingContainerStates, onStealFromStall, worldState, groundItemsForCurrentPoi } = props;
+    const { poi, unlockedPois, onNavigate, onActivity, onStartCombat, playerQuests, inventory, setContextMenu, setMakeXPrompt, setTooltip, addLog, startQuest, hasItems, resourceNodeStates, activeSkillingNodeId, onToggleSkilling, initializeNodeState, skillingTick, getSuccessChance, activeRepeatableQuest, activeCleanup, onStartInteractQuest, onCancelInteractQuest, clearedSkillObstacles, onClearObstacle, skills, monsterRespawnTimers, setActiveDialogue, handleDialogueCheck, onResponse, onDepositBackpack, onDepositEquipment, ui, isTouchSimulationEnabled, worldActions, bonfires, onStokeBonfire, isOneClickMode, onPickpocket, onLockpick, onPilfer, thievingContainerStates, onStealFromStall, worldState, groundItemsForCurrentPoi, handleCutCactus, equipment } = props;
     const { depletedNodesAnimating } = useSkillingAnimations(resourceNodeStates, poi.activities);
     const [countdown, setCountdown] = useState<Record<string, number>>({});
     const [shakingNodeId, setShakingNodeId] = useState<string | null>(null);
@@ -452,31 +476,39 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
     
         if (!poi.connections) return grid;
     
-        const currentX = poi.internalX ?? poi.x;
-        const currentY = poi.internalY ?? poi.y;
-
         poi.connections.forEach(connId => {
             const destinationPoi = POIS[connId];
             if (!destinationPoi) return;
 
-            // Handle gate entry: if current POI is external and destination is internal, put in center.
-            if (poi.type !== 'internal' && destinationPoi.type === 'internal') {
-                grid[4].push(destinationPoi);
-                return;
+            let startX = poi.internalX ?? poi.x;
+            let startY = poi.internalY ?? poi.y;
+            let endX, endY;
+
+            // Handle city exits
+            if (poi.type === 'internal' && destinationPoi.type !== 'internal') {
+                // If the current internal POI has external coords, use them for calculating direction to the outside world.
+                startX = poi.eX ?? startX;
+                startY = poi.eY ?? startY;
+                // The destination is an external POI, so its x/y are world coords.
+                endX = destinationPoi.x;
+                endY = destinationPoi.y;
+            } 
+            // Handle city entries
+            else if (poi.type !== 'internal' && destinationPoi.type === 'internal') {
+                // The current POI is external, its x/y are world coords.
+                startX = poi.x;
+                startY = poi.y;
+                // The destination is an internal POI, use its external coords if available for direction calculation.
+                endX = destinationPoi.eX ?? destinationPoi.x;
+                endY = destinationPoi.eY ?? destinationPoi.y;
+            } else {
+                // Internal to Internal OR External to External
+                endX = destinationPoi.internalX ?? destinationPoi.x;
+                endY = destinationPoi.internalY ?? destinationPoi.y;
             }
     
-            let destX, destY;
-            // Handle city exit: if current POI is internal and destination is external gate, use gate's cityMap coords.
-            if (poi.type === 'internal' && destinationPoi.type !== 'internal') {
-                destX = destinationPoi.cityMapX ?? destinationPoi.x;
-                destY = destinationPoi.cityMapY ?? destinationPoi.y;
-            } else {
-                destX = destinationPoi.internalX ?? destinationPoi.x;
-                destY = destinationPoi.internalY ?? destinationPoi.y;
-            }
-
-            const dx = (destX ?? currentX) - currentX;
-            const dy = (destY ?? currentY) - currentY;
+            const dx = endX - startX;
+            const dy = endY - startY;
             const angle = Math.atan2(dy, dx) * (180 / Math.PI);
             const gridIndex = getDirectionalGridIndex(angle);
     
@@ -515,6 +547,38 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
             if (!isRepeatableQuestActive && !isMainQuestVisible) {
                 return null;
             }
+        }
+        
+        if (activity.type === 'cut_cactus') {
+            const slashWeapons = [WeaponType.Sword, WeaponType.Scimitar, WeaponType.Dagger, WeaponType.Axe, WeaponType.Battleaxe];
+            const equippedWeapon = equipment.weapon ? ITEMS[equipment.weapon.itemId] : null;
+            const hasTool = (equippedWeapon && equippedWeapon.equipment?.weaponType && slashWeapons.includes(equippedWeapon.equipment.weaponType)) || hasItems([{ itemId: 'knife', quantity: 1 }]);
+        
+            const handleMouseEnter = (e: React.MouseEvent) => {
+                if (!hasTool) {
+                    setTooltip({
+                        content: <p>You need a knife or a slash weapon to cut this.</p>,
+                        position: { x: e.clientX, y: e.clientY }
+                    });
+                } else {
+                    setTooltip({
+                        content: <p>Cut open the cactus to fill a waterskin.</p>,
+                         position: { x: e.clientX, y: e.clientY }
+                    })
+                }
+            };
+        
+            return (
+                <Button
+                    key={activity.id}
+                    onClick={() => { handleCutCactus(); setTooltip(null); }}
+                    disabled={!hasTool}
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={() => setTooltip(null)}
+                >
+                    {activity.name}
+                </Button>
+            );
         }
         
         if (activity.type === 'thieving_pilfer') {
@@ -865,6 +929,9 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
         const connectedPoi = item as POI;
         const isLocked = !unlockedPois.includes(connectedPoi.id);
 
+        const destinationRegion = REGIONS[connectedPoi.regionId];
+        const buttonVariant = destinationRegion?.type === 'city' ? 'internal' : 'primary';
+
         const isEnteringDungeon = REGIONS[poi.regionId]?.type !== 'dungeon' && REGIONS[connectedPoi.regionId]?.type === 'dungeon';
         const buttonExtraClass = isEnteringDungeon ? 'dungeon-entrance-highlight' : '';
 
@@ -891,7 +958,7 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
                 key={connectedPoi.id} 
                 onClick={() => { onNavigate(connectedPoi.id); setTooltip(null); }} 
                 disabled={isLocked} 
-                variant={connectedPoi.type === 'internal' ? 'internal' : 'primary'} 
+                variant={buttonVariant} 
                 data-tutorial-id={`navigation-button-${connectedPoi.id}`} 
                 className={`w-full h-full ${buttonExtraClass}`}
                 {...buttonProps}
@@ -900,7 +967,7 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
             </Button>
         );
     };
-
+ // STOP ADDING THE LOOT BUTTON BELOW THIS POINT
     return (
         <div className="flex flex-col h-full text-gray-200 min-h-0">
             <h1 onClick={() => setIsDescriptionVisible(v => !v)} className="text-2xl md:text-3xl font-bold text-yellow-400 mb-2 cursor-pointer select-none">{poi.name}</h1>
@@ -923,7 +990,7 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
                                         skills={skills}
                                         onStokeBonfire={onStokeBonfire}
                                         setContextMenu={setContextMenu}
-                                        isTouchDevice={isTouchDevice}
+                                        isTouchDevice={isTouchSimulationEnabled}
                                         onActivity={onActivity}
                                         setTooltip={setTooltip}
                                         isOneClickMode={isOneClickMode}

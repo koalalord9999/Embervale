@@ -1,6 +1,8 @@
 import React from 'react';
-import { POIS } from '../../data/pois';
-import { useUIState } from '../../hooks/useUIState';
+import { POIS, REGIONS } from '../../constants';
+// FIX: Import 'ContextMenuOption' from its source file to resolve export issue.
+import { ContextMenuState, useUIState } from '../../hooks/useUIState';
+import { ContextMenuOption } from '../common/ContextMenu';
 import { useLongPress } from '../../hooks/useLongPress';
 import { useIsTouchDevice } from '../../hooks/useIsTouchDevice';
 
@@ -8,6 +10,8 @@ interface MinimapProps {
     currentPoiId: string;
     currentHp: number;
     maxHp: number;
+    currentPrayer: number;
+    maxPrayer: number;
     ui: ReturnType<typeof useUIState>;
     isTouchSimulationEnabled: boolean;
     onNavigate: (poiId: string) => void;
@@ -16,19 +20,63 @@ interface MinimapProps {
     isDevMode: boolean;
     onToggleDevPanel: () => void;
     showMinimapHealth: boolean;
+    isPoisoned: boolean;
+    onCurePoison: () => void;
 }
 
-const HpOrb: React.FC<{ currentHp: number, maxHp: number, showHealthNumbers: boolean }> = ({ currentHp, maxHp, showHealthNumbers }) => {
+const HpOrb: React.FC<{
+    currentHp: number;
+    maxHp: number;
+    showHealthNumbers: boolean;
+    isPoisoned: boolean;
+    onCurePoison: () => void;
+    setContextMenu: (menu: ContextMenuState | null) => void;
+    isTouchDevice: boolean;
+}> = ({ currentHp, maxHp, showHealthNumbers, isPoisoned, onCurePoison, setContextMenu, isTouchDevice }) => {
     const percentage = maxHp > 0 ? (currentHp / maxHp) * 100 : 0;
+    
+    const liquidClass = isPoisoned ? 'bg-green-700' : 'bg-red-600';
+    const heartIconClass = isPoisoned ? 'poisoned-heart-icon' : 'filter invert opacity-25';
+
+    const handleSingleTap = () => {
+        if (isPoisoned) {
+            onCurePoison();
+        }
+    };
+
+    const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
+        if (!isPoisoned) return;
+        e.preventDefault();
+        
+        let eventForMenu: React.MouseEvent | React.Touch;
+        if ('touches' in e && e.touches.length > 0) {
+            eventForMenu = e.touches[0];
+        } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+            eventForMenu = e.changedTouches[0];
+        } else {
+            eventForMenu = e as React.MouseEvent;
+        }
+
+        const options: ContextMenuOption[] = [
+            { label: 'Cure Poison', onClick: () => { onCurePoison(); setContextMenu(null); } }
+        ];
+        setContextMenu({ options, triggerEvent: eventForMenu, isTouchInteraction: isTouchDevice, title: "Health" });
+    };
+    
+    const longPressHandlers = useLongPress({
+        onLongPress: handleLongPress,
+        onClick: handleSingleTap,
+    });
   
     return (
       <div 
+        {...longPressHandlers}
         data-tutorial-id="hp-orb"
         className="relative w-11 h-11 rounded-full border-2 border-gray-500 bg-gray-800 overflow-hidden shadow-lg"
       >
         {/* Liquid fill */}
         <div 
-          className="absolute bottom-0 left-0 w-full bg-red-600 transition-all duration-300 ease-in-out" 
+          className={`absolute bottom-0 left-0 w-full ${liquidClass} transition-all duration-300 ease-in-out`} 
           style={{ height: `${percentage}%` }}
         />
         {/* Heart Icon */}
@@ -36,7 +84,7 @@ const HpOrb: React.FC<{ currentHp: number, maxHp: number, showHealthNumbers: boo
             <img 
                 src="https://api.iconify.design/game-icons:hearts.svg" 
                 alt="" 
-                className="w-8 h-8 filter invert opacity-25" 
+                className={`w-8 h-8 transition-all ${heartIconClass}`} 
             />
         </div>
         {/* Shine effect */}
@@ -53,37 +101,66 @@ const HpOrb: React.FC<{ currentHp: number, maxHp: number, showHealthNumbers: boo
     );
 };
 
-const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, ui, isTouchSimulationEnabled, onNavigate, unlockedPois, addLog, isDevMode, onToggleDevPanel, showMinimapHealth }) => {
+const PrayerOrb: React.FC<{ currentPrayer: number, maxPrayer: number }> = ({ currentPrayer, maxPrayer }) => {
+    const percentage = maxPrayer > 0 ? (currentPrayer / maxPrayer) * 100 : 0;
+  
+    return (
+      <div className="relative w-11 h-11 rounded-full border-2 border-gray-500 bg-gray-800 overflow-hidden shadow-lg">
+        <div className="absolute bottom-0 left-0 w-full bg-blue-500 transition-all duration-300 ease-in-out" style={{ height: `${percentage}%` }} />
+        <div className="absolute inset-0 flex items-center justify-center">
+            <img src="https://api.iconify.design/game-icons:polar-star.svg" alt="" className="w-8 h-8 filter invert opacity-25" />
+        </div>
+        <div className="absolute top-1 left-1 w-8 h-8 rounded-full bg-white/20 blur-sm" />
+        <div className="absolute inset-0 flex items-center justify-center z-10">
+            <span className="font-bold text-lg text-white" style={{ textShadow: '1px 1px 2px black' }}>
+                {Math.floor(currentPrayer)}
+            </span>
+        </div>
+      </div>
+    );
+};
+
+
+const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, currentPrayer, maxPrayer, ui, isTouchSimulationEnabled, onNavigate, unlockedPois, addLog, isDevMode, onToggleDevPanel, showMinimapHealth, isPoisoned, onCurePoison }) => {
     const currentPoi = POIS[currentPoiId];
     const isTouchDevice = useIsTouchDevice(isTouchSimulationEnabled);
 
+    const currentRegion = currentPoi ? REGIONS[currentPoi.regionId] : null;
+
+    const handleMapOpen = () => {
+        if (currentRegion && (currentRegion.type === 'city' || currentRegion.type === 'underground')) {
+            ui.setActiveMapRegionId(currentRegion.id);
+        } else {
+            ui.setActiveMapRegionId('world');
+        }
+        ui.setIsExpandedMapViewOpen(true);
+    };
+
     const mapOrbLongPress = useLongPress({
-        onLongPress: (e) => {
-            const event = 'touches' in e ? e.touches[0] : e;
+        onLongPress: (e: React.MouseEvent | React.TouchEvent) => {
+            let eventForMenu: React.MouseEvent | React.Touch;
+            if ('touches' in e && e.touches.length > 0) {
+                eventForMenu = e.touches[0];
+            } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+                eventForMenu = e.changedTouches[0];
+            } else {
+                eventForMenu = e as React.MouseEvent;
+            }
             ui.setContextMenu({
                 options: [
-                    { label: 'Open World Map', onClick: () => ui.setIsExpandedMapViewOpen(true) },
+                    { label: 'Open World Map', onClick: () => {
+                        ui.setActiveMapRegionId('world');
+                        ui.setIsExpandedMapViewOpen(true);
+                    } },
                     { label: 'Open Atlas', onClick: () => ui.setIsAtlasViewOpen(true) },
                 ],
-                event,
-                isTouchInteraction: 'touches' in e,
+                triggerEvent: eventForMenu,
+                isTouchInteraction: 'touches' in e || 'changedTouches' in e,
+                title: "Map"
             });
         },
-        onClick: () => ui.setIsExpandedMapViewOpen(true), // Default action
+        onClick: handleMapOpen,
     });
-
-    const handleDevToggle = () => {
-        onToggleDevPanel();
-        // Use a small timeout to ensure the panel is rendered before we try to scroll on mobile.
-        setTimeout(() => {
-            if (window.innerWidth < 768) { // md breakpoint from Tailwind
-                const gameContainer = document.querySelector('.game-container');
-                if (gameContainer) {
-                    gameContainer.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-            }
-        }, 50); 
-    };
 
     if (!currentPoi) return null;
 
@@ -148,13 +225,26 @@ const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, ui, i
 
                 {/* HP Orb Overlay - Placed in the top-left corner of the panel */}
                 <div className="absolute z-10 top-px left-px">
-                    <HpOrb currentHp={currentHp} maxHp={maxHp} showHealthNumbers={showMinimapHealth} />
+                    <HpOrb
+                        currentHp={currentHp}
+                        maxHp={maxHp}
+                        showHealthNumbers={showMinimapHealth}
+                        isPoisoned={isPoisoned}
+                        onCurePoison={onCurePoison}
+                        setContextMenu={ui.setContextMenu}
+                        isTouchDevice={isTouchDevice}
+                    />
+                </div>
+
+                 {/* Prayer Orb Overlay */}
+                <div className="absolute z-10 top-px right-px">
+                    <PrayerOrb currentPrayer={currentPrayer} maxPrayer={maxPrayer} />
                 </div>
                 
                 {isDevMode && (
                     <button 
-                        onClick={handleDevToggle}
-                        className="absolute z-10 w-8 h-8 bg-gray-800 hover:bg-gray-700 border-2 border-gray-500 rounded-full flex items-center justify-center top-px right-px"
+                        onClick={onToggleDevPanel}
+                        className="absolute z-10 w-8 h-8 bg-gray-800 hover:bg-gray-700 border-2 border-gray-500 rounded-full flex items-center justify-center bottom-px left-px"
                         aria-label="Open Dev Panel"
                     >
                         <img src="https://api.iconify.design/game-icons:wrench.svg" alt="Dev Panel" className="w-5 h-5 filter invert" />

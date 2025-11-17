@@ -1,3 +1,4 @@
+
 import { Quest, SkillName } from '../../types';
 
 export const embrune101: Quest = {
@@ -64,6 +65,29 @@ export const embrune101: Quest = {
         xp: [{ skill: SkillName.Attack, amount: 100 }],
         coins: 100
     },
+    dialogueEntryPoints: [
+        { npcName: 'Leo the Guide', response: { text: "I'm ready to begin my training.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 0 }], successNode: 'in_progress_embrune_101_0', failureNode: '' } } },
+        { npcName: 'Survival Guide', response: { text: "What do I do now?", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 1 }], successNode: 'in_progress_embrune_101_1', failureNode: '' } } },
+        { npcName: 'Survival Guide', response: { text: "I've cooked the shrimp.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 2 }], successNode: 'in_progress_embrune_101_2', failureNode: '' } } },
+        { npcName: 'Baker', response: { text: "The Survival Guide sent me.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 3 }], successNode: 'in_progress_embrune_101_3', failureNode: '' } } },
+        { npcName: 'Baker', response: { text: "I need help with making bread.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 4 }], successNode: 'in_progress_embrune_101_4', failureNode: '' } } },
+        { npcName: 'Baker', response: { text: "I've baked the bread!", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 5 }], successNode: 'in_progress_embrune_101_5', failureNode: '' } } },
+        { npcName: 'Information Guide', response: { text: "The Baker sent me to learn about my journal.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 6 }], successNode: 'in_progress_embrune_101_6', failureNode: '' } } },
+        { npcName: 'Mining Guide', response: { text: "I'm here to learn about mining and smithing.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 7 }], successNode: 'in_progress_embrune_101_7', failureNode: '' } } },
+        { npcName: 'Mining Guide', response: { text: "How do I make a dagger?", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 8 }], successNode: 'in_progress_embrune_101_8', failureNode: '' } } },
+        { npcName: 'Mining Guide', response: { text: "I've forged the dagger.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 9 }], successNode: 'in_progress_embrune_101_9', failureNode: '' } } },
+        { npcName: 'Weapon Guide', response: { text: "The Mining Guide sent me for combat training.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 10 }], successNode: 'in_progress_embrune_101_10', failureNode: '' } } },
+        { npcName: 'Weapon Guide', response: { text: "I defeated the rat with melee.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 12 }], successNode: 'in_progress_embrune_101_12', failureNode: '' } } },
+        { npcName: 'Weapon Guide', response: { text: "I defeated the rat with ranged.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 14 }], successNode: 'in_progress_embrune_101_14', failureNode: '' } } },
+        { npcName: 'Banker', response: { text: "I'm here to learn about the bank.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 15 }], successNode: 'in_progress_embrune_101_15', failureNode: '' } } },
+        { npcName: 'Money Guide', response: { text: "I'm here to learn about money.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 16 }], successNode: 'in_progress_embrune_101_16', failureNode: '' } } },
+        { npcName: 'Prayer Guide', response: { text: "I'm here to learn about Prayer.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 17 }], successNode: 'in_progress_embrune_101_17', failureNode: '' } } },
+        { npcName: 'Tavern Manager', response: { text: "The Prayer Guide sent me.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 18 }], successNode: 'in_progress_embrune_101_18', failureNode: '' } } },
+        { npcName: 'Tavern Manager', response: { text: "I've completed the task from the board.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 22 }], successNode: 'in_progress_embrune_101_22', failureNode: '' } } },
+        { npcName: 'Magic Guide', response: { text: "I've accepted the task. I'm ready to learn magic.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 20 }], successNode: 'in_progress_embrune_101_20', failureNode: '' } } },
+        { npcName: 'Magic Guide', response: { text: "I'm ready for my final lesson.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 23 }], successNode: 'in_progress_embrune_101_23', failureNode: '' } } },
+        { npcName: 'Magic Guide', response: { text: "I am ready to leave.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 24 }], successNode: 'in_progress_embrune_101_23', failureNode: '' } } }
+    ],
     dialogue: {
         in_progress_embrune_101_0: {
             npcName: 'Leo the Guide',
@@ -92,12 +116,12 @@ export const embrune101: Quest = {
         in_progress_embrune_101_1: {
             npcName: 'Survival Guide',
             npcIcon: '/assets/npcChatHeads/survival_guide.png',
-            text: "Ah, a newcomer! Ready to learn about survival? Your first task is to chop a tree, catch a fish, and cook it on a fire. What have you accomplished so far?",
+            text: "Leo sent you, right? Good. Let's not waste time. An adventurer who can't feed themselves is a dead adventurer. Your first task: chop a tree for logs, and catch a raw shrimp from the fishing spot. Come back to me when you have both.",
             responses: [],
             conditionalResponses: [
                 { text: "I have the logs and the shrimp. What now?", check: { requirements: [{ type: 'items', items: [{ itemId: 'logs', quantity: 1 }, { itemId: 'raw_shrimp', quantity: 1 }] }], successNode: 'survival_guide_cook', failureNode: 'survival_guide_fail_both' } },
                 { text: "I have the logs. What's next?", check: { requirements: [{ type: 'items', items: [{ itemId: 'logs', quantity: 1 }] }], successNode: 'survival_guide_fish', failureNode: 'survival_guide_fail_logs' } },
-                { text: "I don't have the tools for that.", check: { requirements: [{ type: 'items', items: [{ itemId: 'bronze_axe', quantity: -1 }] }], successNode: 'survival_guide_give_tools', failureNode: 'survival_guide_has_tools' } }
+                { text: "I don't have the tools for that.", check: { requirements: [{ type: 'items', items: [{ itemId: 'bronze_axe', quantity: 0, operator: 'eq' }] }], successNode: 'survival_guide_give_tools', failureNode: 'survival_guide_has_tools' } }
             ]
         },
         survival_guide_give_tools: {
@@ -121,7 +145,7 @@ export const embrune101: Quest = {
             highlight: 'activity-button-2',
             responses: [],
             conditionalResponses: [
-                { text: "(Take the Small Fishing Net)", check: { requirements: [{ type: 'items', items: [{ itemId: 'small_fishing_net', quantity: -1 }] }], successNode: 'survival_guide_give_net_action', failureNode: 'survival_guide_has_net' } }
+                { text: "(Take the Small Fishing Net)", check: { requirements: [{ type: 'items', items: [{ itemId: 'small_fishing_net', quantity: 0, operator: 'eq' }] }], successNode: 'survival_guide_give_net_action', failureNode: 'survival_guide_has_net' } }
             ]
         },
         survival_guide_give_net_action: {
@@ -159,20 +183,74 @@ export const embrune101: Quest = {
             npcIcon: '/assets/npcChatHeads/baker.png',
             text: "Hello there! The Survival Guide sent you? Wonderful! Cooking on a fire is fine, but a real range is much better. I'll teach you to make bread from scratch. First, take this bucket and gather some wheat from the field.",
             highlight: 'activity-button-1',
-            responses: [{ text: "Got it! Fill bucket, mix flour to make dough then cook it.", actions: [{ type: 'give_item', itemId: 'bucket', quantity: 1 }, { type: 'advance_quest', questId: 'embrune_101' }] }]
+            responses: [{ text: "Got it! Wheat, mill, flour, dough, then bake.", actions: [{ type: 'give_item', itemId: 'bucket', quantity: 1 }, { type: 'advance_quest', questId: 'embrune_101' }] }]
         },
         in_progress_embrune_101_4: {
             npcName: 'Baker',
             npcIcon: '/assets/npcChatHeads/baker.png',
-            text: "Making bread is a process. Let me know what step you're on if you need help.",
+            text: "How's the baking coming along? Let me know if you need a hand.",
             responses: [
-                { text: "I'm a bit lost. Can you explain again?", next: 'baker_guide_full_explanation' }
+                { text: "I'm a bit lost. Can you walk me through it?", next: 'baker_walkthrough_1' }
             ],
             conditionalResponses: [
-                { text: "I have the wheat. What's next?", check: { requirements: [{ type: 'items', items: [{ itemId: 'wheat', quantity: 1 }] }], successNode: 'baker_guide_mill', failureNode: 'baker_guide_fail_wheat' } },
-                { text: "I've milled the flour. Now what?", check: { requirements: [{ type: 'world_state', property: 'windmillFlour', value: 1, operator: 'gte' }], successNode: 'baker_guide_collect', failureNode: 'baker_guide_fail_mill' } },
-                { text: "I have the flour. What do I do with it?", check: { requirements: [{ type: 'items', items: [{ itemId: 'flour', quantity: 1 }] }], successNode: 'baker_guide_dough', failureNode: 'baker_guide_fail_flour' } },
-                { text: "I've made the dough. What's the last step?", check: { requirements: [{ type: 'items', items: [{ itemId: 'bread_dough', quantity: 1 }] }], successNode: 'baker_guide_bake', failureNode: 'baker_guide_fail_dough' } },
+                { text: "", check: { requirements: [{ type: 'items', items: [{ itemId: 'bread_dough', quantity: 1 }] }], successNode: 'baker_hint_bake', failureNode: '' } },
+                { text: "", check: { requirements: [{ type: 'items', items: [{ itemId: 'flour', quantity: 1 }] }], successNode: 'baker_hint_dough', failureNode: '' } },
+                { text: "", check: { requirements: [{ type: 'world_state', property: 'windmillFlour', value: 1, operator: 'gte' }], successNode: 'baker_hint_collect', failureNode: '' } },
+                { text: "", check: { requirements: [{ type: 'items', items: [{ itemId: 'wheat', quantity: 1 }] }], successNode: 'baker_hint_mill', failureNode: 'baker_hint_wheat' } },
+            ]
+        },
+        baker_hint_bake: { npcName: 'Baker', npcIcon: '/assets/npcChatHeads/baker.png', text: "You've made the dough! Just 'Use' it on the 'Cooking Range' to bake it.", responses: [], highlight: ['inventory-slot-bread_dough', 'activity-button-3'] },
+        baker_hint_dough: { npcName: 'Baker', npcIcon: '/assets/npcChatHeads/baker.png', text: "Perfect, you have the flour. Now fill your bucket with water from the 'Fill Container' source, then 'Use' the 'Bucket of Water' on your flour in your inventory.", responses: [], highlight: ['inventory-slot-bucket', 'activity-button-4', 'inventory-slot-flour'] },
+        baker_hint_collect: { npcName: 'Baker', npcIcon: '/assets/npcChatHeads/baker.png', text: "Great, you've milled the wheat! The flour is in the hopper. Just press the 'Collect Flour' button on the windmill to get it.", responses: [], highlight: 'activity-button-2' },
+        baker_hint_mill: { npcName: 'Baker', npcIcon: '/assets/npcChatHeads/baker.png', text: "Excellent, you have the wheat. Now, 'long-press' or 'right-click' the 'Windmill' and select 'Mill Wheat' to grind it into flour.", responses: [], highlight: ['inventory-slot-wheat', 'activity-button-2'] },
+        baker_hint_wheat: { npcName: 'Baker', npcIcon: '/assets/npcChatHeads/baker.png', text: "You need to start with some wheat. Just click the 'Harvest Wheat' button in the field over there.", responses: [], highlight: 'activity-button-1' },
+        baker_walkthrough_1: {
+            npcName: 'Baker',
+            npcIcon: '/assets/npcChatHeads/baker.png',
+            text: "Of course! First, you need wheat. Just 'click' on the 'Harvest Wheat' button over in the field to gather some.",
+            highlight: 'activity-button-1',
+            responses: [
+                { text: "Okay, what's next?", next: 'baker_walkthrough_2' },
+                { text: "Got it." }
+            ]
+        },
+        baker_walkthrough_2: {
+            npcName: 'Baker',
+            npcIcon: '/assets/npcChatHeads/baker.png',
+            text: "Now, take the wheat to the windmill. 'Long-press' or 'right-click' on the windmill and select 'Mill Wheat'. This will add your wheat to the hopper.",
+            highlight: ['inventory-slot-wheat', 'activity-button-2'],
+            responses: [
+                { text: "And after that?", next: 'baker_walkthrough_3' },
+                { text: "Got it." }
+            ]
+        },
+        baker_walkthrough_3: {
+            npcName: 'Baker',
+            npcIcon: '/assets/npcChatHeads/baker.png',
+            text: "The flour is now in the windmill's hopper. 'Click' the 'Collect Flour' button on the windmill to put it in your inventory.",
+            highlight: 'activity-button-2',
+            responses: [
+                { text: "What do I do with the flour?", next: 'baker_walkthrough_4' },
+                { text: "Got it." }
+            ]
+        },
+        baker_walkthrough_4: {
+            npcName: 'Baker',
+            npcIcon: '/assets/npcChatHeads/baker.png',
+            text: "Now for the messy part! Fill your bucket with water from the well by clicking 'Fill Container'. Then, in your inventory, select 'Use' on the 'Bucket of Water', and then click on your 'Sack of Flour'. That'll make dough!",
+            highlight: ['activity-button-4', 'inventory-slot-bucket_of_water', 'inventory-slot-flour'],
+            responses: [
+                { text: "I have the dough. What's the last step?", next: 'baker_walkthrough_5' },
+                { text: "Got it." }
+            ]
+        },
+        baker_walkthrough_5: {
+            npcName: 'Baker',
+            npcIcon: '/assets/npcChatHeads/baker.png',
+            text: "The final step! Just 'Use' your 'Bread Dough' on the 'Cooking Range' right here, and you'll have a fresh loaf of bread in no time.",
+            highlight: ['inventory-slot-bread_dough', 'activity-button-3'],
+            responses: [
+                { text: "Thanks for the detailed help!" }
             ]
         },
         in_progress_embrune_101_5: {
@@ -181,15 +259,6 @@ export const embrune101: Quest = {
             text: "Smells delicious! You're a natural. There's more to learn than just skills. Head south and speak to the Information Guide. She'll teach you about your interface.",
             responses: [{ text: "Thanks for the lesson!", actions: [{ type: 'advance_quest', questId: 'embrune_101' }] }]
         },
-        baker_guide_mill: { npcName: 'Baker', npcIcon: '/assets/npcChatHeads/baker.png', text: "Excellent! Now mill it into flour at the windmill. Long-press or right-click the windmill to see all actions.", highlight: 'activity-button-2', responses: [] },
-        baker_guide_collect: { npcName: 'Baker', npcIcon: '/assets/npcChatHeads/baker.png', text: "Great job! The flour is in the hopper. Click 'Collect Flour' on the windmill to get it.", highlight: 'activity-button-2', responses: [] },
-        baker_guide_dough: { npcName: 'Baker', npcIcon: '/assets/npcChatHeads/baker.png', text: "Perfect! Now fill your bucket at the well. Then, 'Use' the bucket of water on your flour in your inventory to make dough.", highlight: ['inventory-slot-bucket_of_water', 'inventory-slot-flour'], responses: [] },
-        baker_guide_bake: { npcName: 'Baker', npcIcon: '/assets/npcChatHeads/baker.png', text: "You're so close! Just 'Use' that dough on the cooking range right here to bake your bread.", highlight: ['inventory-slot-bread_dough', 'activity-button-3'], responses: [] },
-        baker_guide_full_explanation: { npcName: 'Baker', npcIcon: '/assets/npcChatHeads/baker.png', text: "Of course! Gather wheat. Mill it. Collect the flour. Add water to make dough. Finally, bake the dough on the range.", responses: [] },
-        baker_guide_fail_wheat: { npcName: 'Baker', npcIcon: '/assets/npcChatHeads/baker.png', text: "You need wheat first. Gather it from the field.", highlight: 'activity-button-1', responses: [] },
-        baker_guide_fail_mill: { npcName: 'Baker', npcIcon: '/assets/npcChatHeads/baker.png', text: "You need to mill your wheat into flour at the windmill first.", highlight: 'activity-button-2', responses: [] },
-        baker_guide_fail_flour: { npcName: 'Baker', npcIcon: '/assets/npcChatHeads/baker.png', text: "You need to collect the flour from the windmill's hopper.", highlight: 'activity-button-2', responses: [] },
-        baker_guide_fail_dough: { npcName: 'Baker', npcIcon: '/assets/npcChatHeads/baker.png', text: "You need to make dough by combining flour with a bucket of water.", highlight: ['inventory-slot-bucket_of_water', 'inventory-slot-flour'], responses: [] },
         in_progress_embrune_101_6: {
             npcName: 'Information Guide',
             npcIcon: '/assets/npcChatHeads/information_guide.png',
@@ -214,7 +283,7 @@ export const embrune101: Quest = {
         in_progress_embrune_101_7: {
             npcName: 'Mining Guide',
             npcIcon: '/assets/npcChatHeads/mining_guide.png',
-            text: "Welcome to the forge! To make anything useful, you need metal. To make bronze, you need one Copper Ore and one Tin Ore. Mine one of each from the rocks here. I've given you a pickaxe.",
+            text: "So you're the new adventurer everyone's been training up. Good to see some fresh muscle. In my line of work, you make your own tools and your own fortune. To make a simple Bronze Bar, you'll need one Copper Ore and one Tin Ore. Mine them from the rocks here. I've given you a pickaxe to get started.",
             highlight: ['activity-button-1', 'activity-button-2'],
             responses: [{ text: "Manual labor again? *sigh* I guess I can do that.", actions: [{ type: 'give_item', itemId: 'bronze_pickaxe', quantity: 1 }, { type: 'advance_quest', questId: 'embrune_101' }] }]
         },
@@ -244,7 +313,7 @@ export const embrune101: Quest = {
         in_progress_embrune_101_10: {
             npcName: 'Weapon Guide',
             npcIcon: '/assets/npcChatHeads/weapon_guide.png',
-            text: "So, you've made a weapon. Good. But a weapon is useless if you don't know how to wield it. First, you need to equip it. Open your Equipment panel to see what you're wearing.",
+            text: "The Mining Guide sent you, eh? He said you forged a decent dagger. Let's see if you can use it. A weapon is useless if you don't know how to wield it. First, you must equip it. Open your Equipment panel.",
             highlight: 'side-panel-button-equipment',
             responses: [{ text: "Okay, I see it.", next: 'weapon_guide_explain_stances_10' }]
         },
@@ -283,7 +352,7 @@ export const embrune101: Quest = {
         in_progress_embrune_101_15: {
             npcName: 'Banker',
             npcIcon: '/assets/npcChatHeads/banker.png',
-            text: "Welcome to the Bank of Embrune. Your inventory is limited, but your bank is not. Here you can store all your items safely. Would you like to access it now?",
+            text: "Ah, the new adventurer. The Weapon Guide sent word you were coming. It's wise to learn about finances early. Your inventory is limited, but your bank vault is not. Here you can store all your items safely. Would you like me to open your vault?",
             highlight: 'activity-button-0',
             responses: [
                 { text: "Yes, I'd like to try.", actions: [{ type: 'open_bank' }, { type: 'advance_quest', questId: 'embrune_101' }] },
@@ -293,34 +362,34 @@ export const embrune101: Quest = {
         in_progress_embrune_101_16: {
             npcName: 'Money Guide',
             npcIcon: '/assets/npcChatHeads/money_guide.png',
-            text: "Ah, money. It makes the world go 'round. In Embrune, coins can be hard to come by. You get them from quests, selling items to shops, or transmuting them with magic. There are other powers besides wealth. Head east to the chapel and speak to the Prayer Guide.",
+            text: "Finished with the banker, are we? Good. Storing items is one thing, but acquiring wealth is another. In Embrune, coins can be hard to come by. You get them from quests, selling items, or transmutation. But there are other powers besides wealth. Head east to the chapel and speak to the Prayer Guide.",
             responses: [{ text: "Will do.", actions: [{ type: 'advance_quest', questId: 'embrune_101' }] }]
         },
         in_progress_embrune_101_17: {
             npcName: 'Prayer Guide',
             npcIcon: '/assets/npcChatHeads/prayer_guide.png',
-            text: "Blessings upon you. Prayer is a skill that can protect you. After defeating an enemy, you can bury their bones to gain Prayer experience. Why don't you try burying the rat bones you collected? Once you've done that, head north to the tavern for your next lesson.",
+            text: "Welcome, child. The other guides have taught you of the body and the mind. I am here to teach you of the spirit. Prayer is a skill that can protect you. After defeating an enemy, you can bury their bones to gain Prayer experience. Bury the rat bones you collected, then head north to the tavern.",
             highlight: 'inventory-slot-bones',
             responses: [{ text: "Okay, I understand.", actions: [{ type: 'advance_quest', questId: 'embrune_101' }] }]
         },
         in_progress_embrune_101_18: {
             npcName: 'Tavern Manager',
             npcIcon: '/assets/npcChatHeads/barkeep_grimley.png',
-            text: "Welcome to the inn! A fine place to rest or find work. See that board? That's a Quest Board. It has tasks for adventurers like you. There's a special one just for you. Go on, check the board.",
+            text: "The Prayer Guide sent you? Bless his heart. Welcome to the tavern, the heart of any adventurer's career! This is where you'll find work, rest, and maybe a bit of trouble. See that board? That's a Quest Board. There's a special one just for you. Go on, check the board.",
             highlight: 'activity-button-2',
             responses: [{ text: "I'll check it out.", actions: [{ type: 'advance_quest', questId: 'embrune_101' }] }]
         },
         in_progress_embrune_101_19: {
             npcName: 'Tavern Manager',
             npcIcon: '/assets/npcChatHeads/barkeep_grimley.png',
-            text: "The board is right over there. Just check the posting.",
+            text: "The board is right over there. Just check the posting. Speak with the Magic guide once you've accepted the quest, he'll supply you with some fancy doo-dads to help kill that rat!",
             highlight: 'activity-button-2',
             responses: []
         },
         in_progress_embrune_101_20: {
             npcName: 'Magic Guide',
             npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
-            text: "So, you want to learn magic? It is a powerful art, fueled by runes. I will give you what you need. Take these runes and use our most basic combat spell, Gust Dart, to defeat the rat in the corner.",
+            text: "Ah, so you've accepted the pest control task. Good. Some problems require a more... delicate touch than a sword or arrow. Magic is a powerful art, fueled by runes. I will give you what you need. Take these runes and use our most basic combat spell, Gust Dart, to defeat the rat in the corner.",
             highlight: ['side-panel-button-spellbook', 'activity-button-3'],
             responses: [{ text: "Thanks, I'll try to kill that rat with magic now.", actions: [{ type: 'give_item', itemId: 'gust_rune', quantity: 40 }, { type: 'give_item', itemId: 'binding_rune', quantity: 40 }, { type: 'advance_quest', questId: 'embrune_101' }] }]
         },

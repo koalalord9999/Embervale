@@ -1,4 +1,5 @@
 
+
 import { SkillName, Item } from '../types';
 
 export const SKILL_ICONS: Record<SkillName, string> = {
@@ -7,19 +8,19 @@ export const SKILL_ICONS: Record<SkillName, string> = {
     [SkillName.Defence]: 'https://api.iconify.design/game-icons:checked-shield.svg',
     [SkillName.Ranged]: 'https://api.iconify.design/game-icons:high-shot.svg',
     [SkillName.Magic]: 'https://api.iconify.design/game-icons:pointy-hat.svg',
-    [SkillName.Hitpoints]: 'https://api.iconify.design/game-icons:health-normal.svg',
+    [SkillName.Hitpoints]: 'https://api.iconify.design/game-icons:hearts.svg',
     [SkillName.Prayer]: 'https://api.iconify.design/game-icons:polar-star.svg',
     [SkillName.Woodcutting]: 'https://api.iconify.design/game-icons:beech.svg',
     [SkillName.Fletching]: 'https://api.iconify.design/game-icons:whiplash.svg',
     [SkillName.Firemaking]: 'https://api.iconify.design/game-icons:campfire.svg',
     [SkillName.Fishing]: 'https://api.iconify.design/game-icons:fishing.svg',
-    [SkillName.Cooking]: 'https://api.iconify.design/game-icons:chef-toque.svg',
+    [SkillName.Cooking]: 'https://api.iconify.design/game-icons:cauldron.svg',
     [SkillName.Crafting]: 'https://api.iconify.design/game-icons:sewing-needle.svg',
     [SkillName.Mining]: 'https://api.iconify.design/game-icons:mining.svg',
     [SkillName.Smithing]: 'https://api.iconify.design/game-icons:anvil.svg',
-    [SkillName.Herblore]: 'https://api.iconify.design/game-icons:apothecary.svg',
+    [SkillName.Herblore]: 'https://api.iconify.design/game-icons:three-leaves.svg',
     [SkillName.Runecrafting]: 'https://api.iconify.design/game-icons:rune-stone.svg',
-    [SkillName.Slayer]: 'https://api.iconify.design/game-icons:blade-bite.svg',
+    [SkillName.Slayer]: 'https://api.iconify.design/game-icons:william-tell-skull.svg',
     [SkillName.Thieving]: 'https://api.iconify.design/game-icons:domino-mask.svg',
     [SkillName.Agility]: 'https://api.iconify.design/game-icons:sprint.svg',
 };
@@ -67,6 +68,10 @@ export const getIconClassName = (item?: Item | null): string => {
         case 'uncut-ruby': return 'item-icon-uncut-ruby';
         case 'diamond': return 'item-icon-diamond';
         case 'uncut-diamond': return 'item-icon-uncut-diamond';
+        case 'sunstone': return 'item-icon-sunstone';
+        case 'uncut-sunstone': return 'item-icon-uncut-sunstone';
+        case 'tenebrite': return 'item-icon-tenebrite';
+        case 'uncut-tenebrite': return 'item-icon-uncut-tenebrite';
         case 'leather': return 'item-icon-leather';
         case 'wizard-blue': return 'item-icon-wizard-blue';
         case 'gold': return 'item-icon-gold';
@@ -132,5 +137,39 @@ export const getIconClassName = (item?: Item | null): string => {
         case 'rune-astral': return 'item-icon-rune-astral';
         case 'rune-aether': return 'item-icon-rune-aether';
         default: return 'item-icon-default';
+    }
+};
+
+export const getSkillColorClass = (skillName: SkillName): string => {
+    switch (skillName) {
+        // Combat
+        case SkillName.Attack: return 'bg-slate-300';
+        case SkillName.Strength: return 'bg-[#c1a476]';
+        case SkillName.Defence: return 'bg-blue-300';
+        case SkillName.Hitpoints: return 'bg-red-500';
+        case SkillName.Ranged: return 'bg-amber-700';
+        case SkillName.Magic: return 'bg-sky-400';
+        case SkillName.Prayer: return 'bg-sky-300';
+        case SkillName.Slayer: return 'bg-slate-300';
+
+        // Gathering
+        case SkillName.Mining: return 'bg-slate-600';
+        case SkillName.Fishing: return 'bg-blue-400';
+        case SkillName.Woodcutting: return 'bg-lime-800';
+
+        // Artisan
+        case SkillName.Smithing: return 'bg-slate-700';
+        case SkillName.Herblore: return 'bg-lime-500';
+        case SkillName.Fletching: return 'bg-amber-200';
+        case SkillName.Crafting: return 'bg-gray-400';
+        case SkillName.Firemaking: return 'bg-orange-500';
+        case SkillName.Cooking: return 'bg-gray-400';
+        case SkillName.Runecrafting: return 'bg-indigo-500';
+
+        // Support
+        case SkillName.Agility: return 'bg-slate-500';
+        case SkillName.Thieving: return 'bg-gray-600';
+
+        default: return 'bg-gray-500';
     }
 };

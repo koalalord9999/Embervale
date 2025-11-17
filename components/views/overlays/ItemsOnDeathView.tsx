@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import Button from '../../common/Button';
 import { InventorySlot, Equipment, Item } from '../../../types';
 import { ITEMS, getIconClassName } from '../../../constants';
@@ -13,18 +13,29 @@ interface ItemsOnDeathViewProps {
 
 const ItemsOnDeathView: React.FC<ItemsOnDeathViewProps> = ({ inventory, equipment, coins, onClose }) => {
     
-    // Calculate which items are kept
-    const allItems: InventorySlot[] = [];
-    inventory.forEach(slot => { if (slot) allItems.push(slot); });
-    // FIX: Use Object.keys for type-safe iteration over equipment slots.
-    (Object.keys(equipment) as Array<keyof Equipment>).forEach(slotKey => {
-        const slot = equipment[slotKey];
-        if (slot) allItems.push(slot);
-    });
-    
-    allItems.sort((a, b) => (ITEMS[b.itemId]?.value ?? 0) - (ITEMS[a.itemId]?.value ?? 0));
-    const keptItems = allItems.slice(0, 3);
-    const lostCoins = coins;
+    const { keptItems, lostCoins } = useMemo(() => {
+        const allItems: InventorySlot[] = [];
+        inventory.forEach(slot => { if (slot) allItems.push(slot); });
+        (Object.keys(equipment) as Array<keyof Equipment>).forEach(slotKey => {
+            const slot = equipment[slotKey];
+            if (slot) allItems.push(slot);
+        });
+
+        const expandedItems: InventorySlot[] = [];
+        allItems.forEach(slot => {
+            for (let i = 0; i < slot.quantity; i++) {
+                expandedItems.push({ ...slot, quantity: 1 });
+            }
+        });
+
+        expandedItems.sort((a, b) => (ITEMS[b.itemId]?.value ?? 0) - (ITEMS[a.itemId]?.value ?? 0));
+        
+        return {
+            keptItems: expandedItems.slice(0, 3),
+            lostCoins: coins
+        };
+    }, [inventory, equipment, coins]);
+
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
@@ -49,6 +60,14 @@ const ItemsOnDeathView: React.FC<ItemsOnDeathViewProps> = ({ inventory, equipmen
                                     <div key={index} className="flex flex-col items-center text-center text-xs">
                                         <div className="w-16 h-16 bg-gray-900 border border-gray-700 rounded-md p-1 relative">
                                             <img src={ITEMS[item.itemId].iconUrl} alt={ITEMS[item.itemId].name} className={`w-full h-full ${getIconClassName(ITEMS[item.itemId])}`} />
+                                            {item.statsOverride?.poisoned && (
+                                                <img 
+                                                    src="https://api.iconify.design/game-icons:boiling-bubbles.svg" 
+                                                    alt="Poisoned"
+                                                    className="poison-overlay-icon item-icon-uncut-emerald"
+                                                    title="Poisoned"
+                                                />
+                                            )}
                                         </div>
                                         <span>{getDisplayName(item)}</span>
                                     </div>

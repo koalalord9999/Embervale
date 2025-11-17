@@ -1,7 +1,8 @@
 
+
 import React, { useEffect } from 'react';
 import { SkillName } from '../../types';
-import { SKILL_ICONS } from '../../constants';
+import { SKILL_ICONS, getSkillColorClass } from '../../constants';
 
 export interface XpDrop {
   id: number;
@@ -24,7 +25,19 @@ const XpDropDisplay: React.FC<{ drop: XpDrop; onRemove: (id: number) => void }> 
 
   return (
     <div className="animate-xp-drop flex items-center gap-2 p-1 bg-black/70 rounded-lg shadow-lg" style={{textShadow: '1px 1px 2px black'}}>
-      <img src={SKILL_ICONS[drop.skillName]} alt={drop.skillName} className="w-5 h-5 filter invert" />
+      <div
+          className={`w-5 h-5 ${getSkillColorClass(drop.skillName)}`}
+          style={{
+              maskImage: `url(${SKILL_ICONS[drop.skillName]})`,
+              maskSize: 'contain',
+              maskRepeat: 'no-repeat',
+              maskPosition: 'center',
+              WebkitMaskImage: `url(${SKILL_ICONS[drop.skillName]})`,
+              WebkitMaskSize: 'contain',
+              WebkitMaskRepeat: 'no-repeat',
+              WebkitMaskPosition: 'center',
+          }}
+      />
       <span className="font-bold text-yellow-300 text-sm">+{drop.amount.toLocaleString()}</span>
     </div>
   );

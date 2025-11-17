@@ -1,3 +1,4 @@
+
 import React, { useCallback } from 'react';
 import { useQuestLogic } from './useQuestLogic';
 import { useRepeatableQuests } from './useRepeatableQuests';
@@ -34,7 +35,8 @@ export const useKillHandler = (deps: KillHandlerDependencies) => {
         // Check for and grant quest combat rewards
         if (worldState.pendingQuestCombatReward) {
             const reward = worldState.pendingQuestCombatReward;
-            inv.modifyItem(reward.itemId, reward.quantity, false, undefined, { bypassAutoBank: true });
+            // FIX: The `modifyItem` function expects 4 arguments, with the last being an options object. This call had 5 arguments.
+            inv.modifyItem(reward.itemId, reward.quantity, false, { bypassAutoBank: true });
             setWorldState(ws => ({ ...ws, pendingQuestCombatReward: null }));
             addLog(`You retrieve the ${MONSTERS[monsterId].name}'s essence from the altar.`);
         }

@@ -1,5 +1,5 @@
 import { SkillName, InventorySlot, ToolType } from './';
-import { DialogueNode } from './quests';
+import { DialogueNode, DialogueCheckRequirement, QuestId } from './quests';
 
 export interface SkillRequirement {
     skill: SkillName;
@@ -19,25 +19,37 @@ export interface Region {
   y: number; // World map y
   description?: string;
   recommendedCombatLevel?: number;
+  worldMapConnections?: string[]; // POI IDs this region connects to on the world map
+  isDesert?: boolean;
 }
 
 export type BonfireActivity = { type: 'bonfire', uniqueId: string, logId: string, expiresAt: number, poiId: string };
 
-// Defines the structure for quest-based activity visibility.
-// - questId: The ID of the quest to check.
-// - stages: An array of quest stages during which this activity is visible.
-// - visibleAfterCompletion: If true, the activity becomes visible again after the quest is complete.
 export interface QuestCondition {
-    questId: string;
+    questId: QuestId;
     stages: number[];
     visibleAfterCompletion?: boolean;
 }
 
 export type POIActivity =
   | { type: 'skilling'; id: string; name?: string; skill: SkillName; requiredLevel: number; loot: { itemId: string; chance: number; xp: number; requiredLevel?: number }[]; resourceCount: { min: number, max: number }; respawnTime: number; gatherTime: number; harvestBoost?: number; requiredTool?: ToolType; treeHardness?: number; questCondition?: QuestCondition; }
+  | { type: 'cut_cactus'; id: string; name: string; }
   | { type: 'combat'; monsterId: string }
   | { type: 'shop'; shopId: string }
-  | { type: 'npc'; name: string; icon: string; dialogue?: Record<string, DialogueNode>; startNode?: string; actions?: { label: string; action: 'open_bank' | 'deposit_backpack' | 'deposit_equipment' }[]; dialogueType?: 'random'; questCondition?: QuestCondition; attackableMonsterId?: string; pickpocket?: { lootTableId: string; }; }
+  | { 
+      type: 'npc'; 
+      name: string; 
+      icon: string; 
+      dialogue?: Record<string, DialogueNode>; 
+      startNode?: string; 
+      questTopics?: QuestId[]; 
+      actions?: { label: string; action: 'open_bank' | 'deposit_backpack' | 'deposit_equipment' }[]; 
+      dialogueType?: 'random'; 
+      questCondition?: QuestCondition; 
+      attackableMonsterId?: string; 
+      pickpocket?: { lootTableId: string; };
+      conditionalGreetings?: { text: string; check: { requirements: DialogueCheckRequirement[] }; }[];
+    }
   | { type: 'cooking_range' }
   | { type: 'furnace' }
   | { type: 'anvil' }
@@ -47,14 +59,15 @@ export type POIActivity =
   | { type: 'quest_board'; questCondition?: QuestCondition; }
   | { type: 'bank' }
   | { type: 'spinning_wheel' }
-  | { type: 'blimp_travel'; requiredSlayerLevel: number; }
+  | { type: 'blimp_travel'; requiredSlayerLevel: number; name: string; }
   | { type: 'slayer_master'; name: string; icon: string; }
-  | { type: 'water_source', name: string }
+  // FIX: Added optional 'isHoly' property to support special water sources like the one in Sanctity.
+  | { type: 'water_source', name: string, isHoly?: boolean }
   | { type: 'milking' }
   | { type: 'windmill' }
   | { type: 'runecrafting_altar'; runeId: string; questCondition?: QuestCondition; }
   | { type: 'ancient_chest'; name: string; }
-  | { type: 'quest_start'; questId: string }
+  | { type: 'quest_start'; questId: QuestId }
   | { type: 'ladder'; name: string; direction: 'up' | 'down'; toPoiId: string; questCondition?: QuestCondition; }
   | { 
       type: 'thieving_lockpick';
@@ -81,11 +94,13 @@ export interface POI {
   description: string;
   connections: string[];
   activities: POIActivity[];
-  unlockRequirement?: { type: 'quest'; questId: string; stage: number }
+  unlockRequirement?: { type: 'quest'; questId: QuestId; stage: number }
   connectionRequirements?: Record<string, SkillRequirement>; // Key is the destination POI id
   regionId: string;
   x: number; // Coordinate for its own map (world or internal)
   y: number; // Coordinate for its own map (world or internal)
+  eX?: number; // External X for world map display of internal POIs
+  eY?: number; // External Y for world map display of internal POIs
   type?: 'internal';
   cityMapX?: number; // X coordinate for display on a city map, if this is an exit
   cityMapY?: number; // Y coordinate for display on a city map, if this is an exit
@@ -146,4 +161,5 @@ export interface WorldState {
     generatedHouses?: Record<string, { tierId: string, level: number, activities: POIActivity[] }>; // Maps door ID to a generated house tier with pre-generated activities
     depletedHouses?: string[];
     nextHouseResetTimestamp?: number;
+    dehydrationLevel: number;
 }

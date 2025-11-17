@@ -34,7 +34,7 @@ interface PlayerDeathDependencies {
 export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
     const { skilling, interactQuest, ui, session, char, inv, addLog, playerQuests, onItemDropped, setWorldState, playerType, slotId, onReturnToMenu, repeatableQuests, setDynamicActivities, worldState, onResetGame } = deps;
 
-    const handlePlayerDeath = useCallback(async () => {
+    const handlePlayerDeath = useCallback(async (currentState: any) => {
         skilling.stopSkilling();
         interactQuest.handleCancelInteractQuest();
         ui.setCombatQueue([]);
@@ -52,8 +52,9 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
         }
 
         if (playerType === PlayerType.Hardcore) {
-            addLog("You have fallen in combat and your hardcore journey has come to an end. Your character is lost forever.");
-            onResetGame();
+            addLog("You have fallen in combat! As a Hardcore adventurer, your journey ends here. Your character will be permanently lost.");
+            const finalState = { ...currentState, isDead: true, currentHp: 0 };
+            onReturnToMenu(finalState);
             return;
         }
 
@@ -111,41 +112,97 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
             }
         }
 
-        const allItems: { slot: InventorySlot; from: 'inventory' | keyof Equipment }[] = [];
-        inv.inventory.forEach((slot) => {
-            if (slot) allItems.push({ slot, from: 'inventory' });
-        });
-        (Object.keys(inv.equipment) as Array<keyof Equipment>).forEach(slotKey => {
-            const slot = inv.equipment[slotKey];
-            if (slot) allItems.push({ slot, from: slotKey });
+        const expandedItems: { item: InventorySlot; from: 'inventory' | keyof Equipment }[] = [];
+
+        // Expand inventory items
+        inv.inventory.forEach(slot => {
+            if (slot) {
+                for (let i = 0; i < slot.quantity; i++) {
+                    expandedItems.push({ item: { ...slot, quantity: 1 }, from: 'inventory' });
+                }
+            }
         });
 
-        allItems.sort((a, b) => (ITEMS[b.slot.itemId]?.value ?? 0) - (ITEMS[a.slot.itemId]?.value ?? 0));
+        // Expand equipment items
+        (Object.keys(inv.equipment) as Array<keyof Equipment>).forEach(slotKey => {
+            const slot = inv.equipment[slotKey];
+            if (slot) {
+                for (let i = 0; i < slot.quantity; i++) {
+                    expandedItems.push({ item: { ...slot, quantity: 1 }, from: slotKey });
+                }
+            }
+        });
+
+        // Sort by single item value, descending
+        expandedItems.sort((a, b) => (ITEMS[b.item.itemId]?.value ?? 0) - (ITEMS[a.item.itemId]?.value ?? 0));
+
+        const keptSingleItems = expandedItems.slice(0, 3);
+        const droppedSingleItems = expandedItems.slice(3);
+
+        // --- Process Kept Items ---
+        const newInventory: (InventorySlot | null)[] = new Array(INVENTORY_CAPACITY).fill(null);
+        const newEquipment: Equipment = { weapon: null, shield: null, head: null, body: null, legs: null, ammo: null, gloves: null, boots: null, cape: null, necklace: null, ring: null };
+
+        let invIndex = 0;
+        const equipmentSlotsFilled: Set<keyof Equipment> = new Set();
         
-        const keptItems = allItems.slice(0, 3);
-        const droppedItems = allItems.slice(3);
+        keptSingleItems.forEach(singleItem => {
+            const { item, from } = singleItem;
+            const itemData = ITEMS[item.itemId];
         
+            if (from !== 'inventory' && !equipmentSlotsFilled.has(from as keyof Equipment)) {
+                const slotKey = from as keyof Equipment;
+                if (newEquipment[slotKey] === null) {
+                    newEquipment[slotKey] = JSON.parse(JSON.stringify(item));
+                    equipmentSlotsFilled.add(slotKey);
+                    return;
+                }
+            }
+            
+            if (itemData.stackable || item.noted) {
+                const existingStack = newInventory.find(i => 
+                    i?.itemId === item.itemId &&
+                    !!i.noted === !!item.noted &&
+                    i.nameOverride === item.nameOverride &&
+                    JSON.stringify(i.statsOverride) === JSON.stringify(item.statsOverride)
+                );
+                if (existingStack) {
+                    existingStack.quantity += 1;
+                } else if (invIndex < INVENTORY_CAPACITY) {
+                    newInventory[invIndex++] = JSON.parse(JSON.stringify(item));
+                }
+            } else {
+                if (invIndex < INVENTORY_CAPACITY) {
+                    newInventory[invIndex++] = JSON.parse(JSON.stringify(item));
+                }
+            }
+        });
+
+        // --- Process Dropped Items ---
+        const droppedConsolidated: Record<string, InventorySlot> = {};
+        droppedSingleItems.forEach(singleItem => {
+            const { item } = singleItem;
+            const itemData = ITEMS[item.itemId];
+            const key = `${item.itemId}:${!!item.noted}:${item.nameOverride || ''}:${JSON.stringify(item.statsOverride) || ''}`;
+
+            if (itemData.stackable || item.noted) {
+                if (droppedConsolidated[key]) {
+                    droppedConsolidated[key].quantity += 1;
+                } else {
+                    droppedConsolidated[key] = JSON.parse(JSON.stringify(item));
+                }
+            } else {
+                const uniqueKey = key + Math.random();
+                droppedConsolidated[uniqueKey] = JSON.parse(JSON.stringify(item));
+            }
+        });
+
         const lostCoins = inv.coins;
-        
         if (lostCoins > 0) {
             onItemDropped({ itemId: 'coins', quantity: lostCoins }, dropPoiId, true);
         }
-        droppedItems.forEach(item => {
-            onItemDropped(item.slot, dropPoiId, true);
-        });
-
-        const newInventory: (InventorySlot | null)[] = new Array(INVENTORY_CAPACITY).fill(null);
-        const newEquipment: Equipment = { weapon: null, shield: null, head: null, body: null, legs: null, ammo: null, gloves: null, boots: null, cape: null, necklace: null, ring: null };
-        
-        let invIndex = 0;
-        keptItems.forEach(item => {
-            if (item.from !== 'inventory') {
-                newEquipment[item.from as keyof Equipment] = item.slot;
-            } else {
-                if (invIndex < INVENTORY_CAPACITY) {
-                    newInventory[invIndex++] = item.slot;
-                }
-            }
+        Object.values(droppedConsolidated).forEach(itemStack => {
+            onItemDropped(itemStack, dropPoiId, true);
         });
 
         inv.setInventory(newInventory);

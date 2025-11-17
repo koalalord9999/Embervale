@@ -60,7 +60,11 @@ export enum WeaponType {
     Axe = "Axe",
     Battleaxe = "Battleaxe",
     Warhammer = "Warhammer",
+    Spear = "Spear",
     Bow = "Bow",
+    Crossbow = "Crossbow",
+    Arrow = "Arrow",
+    Bolt = "Bolt",
     Staff = "Staff",
 }
 

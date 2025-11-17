@@ -1,3 +1,4 @@
+
 import { Quest, SkillName } from '../../types';
 
 export const banditToll: Quest = {
@@ -5,7 +6,6 @@ export const banditToll: Quest = {
     name: 'Bandit Toll',
     description: "The road to the southern town of Oakhaven is plagued by bandits, disrupting trade. The clerk in Meadowdale's town hall is offering a reward for clearing them out.",
     startHint: "Speak to Clerk Augustus in the Meadowdale Town Hall about the trouble on the southern road.",
-    startDialogueNode: 'quest_intro_bandit_toll',
     playerStagePerspectives: [
         "I need to defeat 5 of the Cloaked Bandits on the road to Oakhaven.",
         "I should return to Clerk Augustus in Meadowdale to claim my reward."
@@ -25,6 +25,12 @@ export const banditToll: Quest = {
         xp: [{ skill: SkillName.Strength, amount: 200 }],
         coins: 500,
     },
+    dialogueEntryPoints: [
+        { npcName: 'Clerk Augustus', response: { text: "Is there any work available?", check: { requirements: [{ type: 'quest', questId: 'bandit_toll', status: 'not_started' }], successNode: 'quest_intro_bandit_toll', failureNode: '' } } },
+        { npcName: 'Clerk Augustus', response: { text: "About the bandit problem...", check: { requirements: [{ type: 'quest', questId: 'bandit_toll', status: 'in_progress', stage: 0 }], successNode: 'in_progress_bandit_toll_0', failureNode: '' } } },
+        { npcName: 'Clerk Augustus', response: { text: "I've dealt with the bandits on the southern road.", check: { requirements: [{ type: 'quest', questId: 'bandit_toll', status: 'in_progress', stage: 1 }], successNode: 'in_progress_bandit_toll_1', failureNode: '' } } },
+        { npcName: 'Clerk Augustus', response: { text: "How is trade with Oakhaven?", check: { requirements: [{ type: 'quest', questId: 'bandit_toll', status: 'completed' }], successNode: 'post_quest_bandit_toll', failureNode: '' } } }
+    ],
     dialogue: {
         quest_intro_bandit_toll: {
             npcName: 'Clerk Augustus',

@@ -19,7 +19,7 @@ const CombatStylePanel: React.FC<CombatStylePanelProps> = ({ combatStance, setCo
         const itemData = weaponSlot ? ITEMS[weaponSlot.itemId] : null;
         const weaponType = itemData?.equipment?.weaponType ?? WeaponType.Unarmed;
 
-        if (weaponType === WeaponType.Bow) {
+        if (weaponType === WeaponType.Bow || weaponType === WeaponType.Crossbow) {
             return {
                 stanceOptions: [CombatStance.RangedAccurate, CombatStance.RangedRapid, CombatStance.RangedDefence],
                 stanceLabels: {

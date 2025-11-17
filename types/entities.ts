@@ -1,3 +1,4 @@
+
 import { EquipmentSlot, MonsterType, SkillName, ToolType, WeaponType } from './enums';
 import { GuaranteedDrop, WeightedDrop, TertiaryDrop } from './drops';
 import { SpellElement } from './spells';
@@ -44,6 +45,10 @@ export interface EquipmentStats {
     providesRune?: string;
     ammoTier?: 'iron' | 'steel' | 'mithril' | 'adamantite' | 'runic';
     resistsDragonfire?: number; // Damage multiplier, e.g., 0.3 for 70% reduction
+    poisoned?: {
+        chance: number; // e.g., 0.25 for a successful hit
+        damage: number; // The initial damage per tick. The poison will wear off as this number decays to 0.
+    };
 }
 
 
@@ -58,6 +63,7 @@ export interface Item {
   maxDoses?: number;
   initialDoses?: number;
   charges?: number;
+  destroyOnEmpty?: boolean;
   equipment?: EquipmentStats & { slot: EquipmentSlot };
   consumable?: { 
     healAmount?: number; 
@@ -66,12 +72,12 @@ export interface Item {
         value?: number;
         base?: number;
         percent?: number;
-        duration: number; 
+        duration?: number; 
     }[];
     givesCoins?: { min: number; max: number; };
     curesPoison?: boolean; 
     buffs?: { 
-        type: 'recoil' | 'flat_damage' | 'poison_on_hit' | 'accuracy_boost' | 'evasion_boost' | 'damage_on_hit' | 'attack_speed_boost' | 'poison_immunity' | 'damage_reduction'; 
+        type: 'recoil' | 'flat_damage' | 'poison_on_hit' | 'accuracy_boost' | 'evasion_boost' | 'damage_on_hit' | 'attack_speed_boost' | 'poison_immunity' | 'damage_reduction' | 'antifire' | 'stun' | 'poison'; 
         value: number; 
         duration: number; 
         chance?: number; 
@@ -80,6 +86,7 @@ export interface Item {
     }[]; 
     potionEffect?: { description: string };
     special?: 'treasure_chest';
+    teleportOptions?: { label: string; poiId: string; disabled?: boolean }[];
   };
   buryable?: { prayerXp: number };
   tool?: { type: ToolType; power: number; requiredLevels?: { skill: SkillName; level: number }[] };
@@ -89,7 +96,7 @@ export interface Item {
   divining?: { poiId: string; };
   runecrafting?: { xp: number; runeId: string; requiredLevel: number; };
   mappable?: { regionId: string; mapTitle: string; };
-  material?: 'bronze' | 'iron' | 'steel' | 'mithril' | 'adamantite' | 'runic' | 'aquatite' | 'copper' | 'tin' | 'iron-ore' | 'mithril-ore' | 'adamantite-ore' | 'titanium-ore' | 'silver' | 'coal' | 'raw-fish' | 'raw-meat' | 'cooked-fish' | 'cooked-meat' | 'burnt' | 'sapphire' | 'uncut-sapphire' | 'emerald' | 'uncut-emerald' | 'ruby' | 'uncut-ruby' | 'diamond' | 'uncut-diamond' | 'leather' | 'wizard-blue' | 'gold' | 'wood-normal' | 'wood-oak' | 'wood-willow' | 'wood-feywood' | 'wood-yew' | 'wood-driftwood' | 'wood-mahogany' | 'grimy-herb' | 'clean-herb' | 'unfinished-potion' | 'potion' | 'vial' | 'vial-water' | 'potion-weak-attack' | 'potion-attack' | 'potion-super-attack' | 'potion-weak-strength' | 'potion-strength' | 'potion-super-strength' | 'potion-weak-defence' | 'potion-defence' | 'potion-super-defence' | 'potion-weak-ranged' | 'potion-ranged' | 'potion-super-ranged' | 'potion-weak-magic' | 'potion-magic' | 'potion-super-magic' | 'potion-antipoison' | 'potion-super-antipoison' | 'potion-poison' | 'potion-restore' | 'potion-prayer' | 'potion-combo' | 'potion-weak-mining' | 'potion-mining' | 'potion-weak-smithing' | 'potion-smithing' | 'potion-weak-woodcutting' | 'potion-woodcutting' | 'potion-weak-fletching' | 'potion-fletching' | 'potion-weak-crafting' | 'potion-crafting' | 'potion-weak-fishing' | 'potion-fishing' | 'potion-weak-herblore' | 'potion-herblore' | 'potion-antifire' | 'potion-stamina' | 'rune-gust' | 'rune-binding' | 'rune-stone' | 'rune-aqua' | 'rune-ember' | 'rune-flux' | 'rune-verdant' | 'rune-nexus' | 'rune-hex' | 'rune-passage' | 'rune-anima' | 'rune-astral' | 'rune-aether';
+  material?: 'bronze' | 'iron' | 'steel' | 'mithril' | 'adamantite' | 'runic' | 'aquatite' | 'copper' | 'tin' | 'iron-ore' | 'mithril-ore' | 'adamantite-ore' | 'titanium-ore' | 'silver' | 'coal' | 'raw-fish' | 'raw-meat' | 'cooked-fish' | 'cooked-meat' | 'burnt' | 'sapphire' | 'uncut-sapphire' | 'emerald' | 'uncut-emerald' | 'ruby' | 'uncut-ruby' | 'diamond' | 'uncut-diamond' | 'sunstone' | 'uncut-sunstone' | 'tenebrite' | 'uncut-tenebrite' | 'leather' | 'wizard-blue' | 'gold' | 'wood-normal' | 'wood-oak' | 'wood-willow' | 'wood-feywood' | 'wood-yew' | 'wood-driftwood' | 'wood-mahogany' | 'grimy-herb' | 'clean-herb' | 'unfinished-potion' | 'potion' | 'vial' | 'vial-water' | 'potion-weak-attack' | 'potion-attack' | 'potion-super-attack' | 'potion-weak-strength' | 'potion-strength' | 'potion-super-strength' | 'potion-weak-defence' | 'potion-defence' | 'potion-super-defence' | 'potion-weak-ranged' | 'potion-ranged' | 'potion-super-ranged' | 'potion-weak-magic' | 'potion-magic' | 'potion-super-magic' | 'potion-antipoison' | 'potion-super-antipoison' | 'potion-poison' | 'potion-restore' | 'potion-prayer' | 'potion-combo' | 'potion-stamina' | 'potion-antifire' | 'potion-weak-mining' | 'potion-mining' | 'potion-weak-smithing' | 'potion-smithing' | 'potion-weak-woodcutting' | 'potion-woodcutting' | 'potion-weak-fletching' | 'potion-fletching' | 'potion-weak-crafting' | 'potion-crafting' | 'potion-weak-fishing' | 'potion-fishing' | 'potion-weak-herblore' | 'potion-herblore' | 'rune-gust' | 'rune-binding' | 'rune-stone' | 'rune-aqua' | 'rune-ember' | 'rune-flux' | 'rune-verdant' | 'rune-nexus' | 'rune-hex' | 'rune-passage' | 'rune-anima' | 'rune-astral' | 'rune-aether';
 }
 
 export interface InventorySlot {
@@ -98,6 +105,9 @@ export interface InventorySlot {
   doses?: number;
   noted?: boolean;
   charges?: number;
+  chargeProgress?: number;
+  nameOverride?: string;
+  statsOverride?: Partial<EquipmentStats>;
 }
 
 export interface Equipment {
@@ -120,7 +130,8 @@ export type MonsterSpecialAttack =
   | { name: string; chance: number; effect: 'stat_drain_multi'; skills: { skill: SkillName; value: number }[] }
   | { name: string; chance: number; effect: 'stun'; duration: number }
   | { name: string; chance: number; effect: 'magic_bypass_defence'; maxHit: number }
-  | { name: string; chance: number; effect: 'elemental_shift' };
+  | { name: string; chance: number; effect: 'elemental_shift' }
+  | { name: string; chance: number; effect: 'poison'; damage: number; poisonChance?: number };
 
 export interface Monster {
   id: string;
@@ -130,6 +141,8 @@ export interface Monster {
   attack: number;
   ranged?: number;
   magic?: number;
+  strength: number;
+  defence: number;
   // Defence stats
   stabDefence: number;
   slashDefence: number;
@@ -149,10 +162,16 @@ export interface Monster {
   aggressive: boolean;
   alwaysAggressive?: boolean;
   alwaysDrops?: boolean;
+  useWeightedMainDrops?: boolean;
   customMaxHit?: number;
   elementalWeakness?: SpellElement;
   pickpocket?: { lootTableId: string; };
   elementalWeaknessCycle?: SpellElement[];
+  maxTaskCount?: [number, number];
+  poisonsOnHit?: {
+    chance: number; // e.g., 0.25 for 25%
+    damage: number;
+  };
 }
 
 export interface ActiveStatModifier {
@@ -160,17 +179,21 @@ export interface ActiveStatModifier {
     skill: SkillName;
     initialValue: number;
     currentValue: number;
-    durationPerLevel: number; // ms per level decay
-    decayTimer: number; // ms until next decay
     baseLevelOnConsumption: number;
+    nextDecayTimestamp: number;
 }
 
 export interface ActiveBuff {
     id: number;
-    type: 'recoil' | 'flat_damage' | 'poison_on_hit' | 'accuracy_boost' | 'evasion_boost' | 'damage_on_hit' | 'attack_speed_boost' | 'poison_immunity' | 'damage_reduction' | 'antifire' | 'stun';
+    type: 'recoil' | 'flat_damage' | 'poison_on_hit' | 'accuracy_boost' | 'evasion_boost' | 'damage_on_hit' | 'attack_speed_boost' | 'poison_immunity' | 'damage_reduction' | 'antifire' | 'stun' | 'poison' | 'stat_boost';
     value: number;
     duration: number; // initial duration in ms
     durationRemaining: number; // ms remaining
     chance?: number;
     style?: 'melee' | 'ranged' | 'all';
+    statBoost?: {
+        skill: SkillName;
+        value: number;
+    };
+    ticksApplied?: number;
 }

@@ -1,13 +1,16 @@
 
-
 import React from 'react';
 import { InventorySlot, PlayerSkill, PlayerQuestState, SkillName } from '../../../../types';
 import { COOKING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
+import Button from '../../../common/Button';
+import { ContextMenuOption } from '../../../common/ContextMenu';
+import { MakeXPrompt, ContextMenuState } from '../../../../hooks/useUIState';
+// FIX: Import `CraftingViewProps` to resolve type errors.
 import { CraftingViewProps } from '../CraftingView';
 import { useLongPress } from '../../../../hooks/useLongPress';
 import { useIsTouchDevice } from '../../../../hooks/useIsTouchDevice';
 
-const CookingSlot: React.FC<{
+interface CookingSlotProps {
     recipe: typeof COOKING_RECIPES[0];
     cookingLevel: number;
     getItemCount: (itemId: string) => number;
@@ -16,7 +19,9 @@ const CookingSlot: React.FC<{
     setMakeXPrompt: CraftingViewProps['setMakeXPrompt'];
     setTooltip: CraftingViewProps['setTooltip'];
     isTouchDevice: boolean;
-}> = ({ recipe, cookingLevel, getItemCount, onCook, setContextMenu, setMakeXPrompt, setTooltip, isTouchDevice }) => {
+}
+
+const CookingSlot: React.FC<CookingSlotProps> = ({ recipe, cookingLevel, getItemCount, onCook, setContextMenu, setMakeXPrompt, setTooltip, isTouchDevice }) => {
     const item = ITEMS[recipe.itemId];
     if (!item) return null;
     
@@ -31,7 +36,14 @@ const CookingSlot: React.FC<{
     
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();
-        const event = 'touches' in e ? e.touches[0] : e;
+        let eventForMenu: React.MouseEvent | React.Touch;
+        if ('touches' in e && e.touches.length > 0) {
+            eventForMenu = e.touches[0];
+        } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+            eventForMenu = e.changedTouches[0];
+        } else {
+            eventForMenu = e as React.MouseEvent;
+        }
         setContextMenu({
             options: [
                 { label: 'Cook 1', onClick: () => onCook(recipe.itemId, 1), disabled: !canCook },
@@ -40,12 +52,15 @@ const CookingSlot: React.FC<{
                 { 
                     label: 'Cook X...', 
                     onClick: () => setMakeXPrompt({
-                        title: `Cook ${item.name}`, max: maxCook,
+                        title: `Cook ${ITEMS[recipe.itemId].name}`, max: maxCook,
                         onConfirm: (quantity) => onCook(recipe.itemId, quantity)
                     }), 
                     disabled: !canCook 
                 },
-            ], event, isTouchInteraction: isTouchDevice
+            ],
+            triggerEvent: eventForMenu,
+            isTouchInteraction: isTouchDevice,
+            title: item.name
         });
     };
 
@@ -74,7 +89,6 @@ const CookingSlot: React.FC<{
                     <span className="text-gray-400">Craft Time:</span>
                     <span className="font-semibold text-right">{craftTime.toFixed(1)}s</span>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">On failure: {ITEMS[recipe.burntItemId].name}</p>
             </div>
         );
     

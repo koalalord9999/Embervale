@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SkillName } from '../../../../types';
 import { ITEMS, getIconClassName, SMELTING_RECIPES } from '../../../../constants';
@@ -30,7 +31,14 @@ const FurnaceSlot: React.FC<{
 
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();
-        const event = 'touches' in e ? e.touches[0] : e;
+        let eventForMenu: React.MouseEvent | React.Touch;
+        if ('touches' in e && e.touches.length > 0) {
+            eventForMenu = e.touches[0];
+        } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+            eventForMenu = e.changedTouches[0];
+        } else {
+            eventForMenu = e as React.MouseEvent;
+        }
         setContextMenu({
             options: [
                 { label: 'Smelt 1', onClick: () => onSmithBar(recipe.barType, 1), disabled: !canSmelt },
@@ -44,7 +52,10 @@ const FurnaceSlot: React.FC<{
                     }),
                     disabled: !canSmelt
                 },
-            ], event, isTouchInteraction: isTouchDevice
+            ],
+            triggerEvent: eventForMenu,
+            isTouchInteraction: isTouchDevice,
+            title: item.name
         });
     };
 

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useUIState, TooltipState } from '../../hooks/useUIState';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -14,10 +15,11 @@ import InventoryPanel from '../panels/InventoryPanel';
 import EquipmentPanel from '../panels/EquipmentPanel';
 import SkillsPanel from '../panels/SkillsPanel';
 import QuestsPanel from '../panels/QuestsPanel';
+import PrayerPanel from '../panels/PrayerPanel';
 import SpellbookPanel from '../panels/SpellbookPanel';
 import SettingsPanel from '../panels/SettingsPanel';
 import DevPanel from '../panels/DevPanel';
-import { ActivePanel, CombatStance, Spell, InventorySlot, SkillName, Item } from '../../types';
+import { ActivePanel, CombatStance, Spell, InventorySlot, SkillName, Item, Equipment } from '../../types';
 
 interface SidePanelProps {
     ui: ReturnType<typeof useUIState>;
@@ -45,6 +47,10 @@ interface SidePanelProps {
     onCastSpell: (spell: Spell) => void;
     onSpellOnItem: (spell: Spell, target: { item: InventorySlot, index: number }) => void;
     isEquipmentStatsOpen?: boolean;
+    activePrayers: string[];
+    onTogglePrayer: (prayerId: string) => void;
+    isPoisoned: boolean;
+    onCurePoison: () => void;
 }
 
 const PanelIcon: React.FC<{
@@ -101,9 +107,9 @@ const PlaceholderIcon: React.FC = () => (
 
 
 const SidePanel: React.FC<SidePanelProps> = (props) => {
-    const { ui, char, inv, quests, repeatableQuests, slayer, onReturnToMenu, isDevMode, isTouchSimulationEnabled, onToggleTouchSimulation, itemActions, isBusy, handleExamine, session, addLog, activeCombatStyleHighlight, isBankOpen, isShopOpen, onDeposit, onNavigate, unlockedPois, onCastSpell, onSpellOnItem, isEquipmentStatsOpen = false, initialState } = props;
+    const { ui, char, inv, quests, repeatableQuests, slayer, onReturnToMenu, isDevMode, isTouchSimulationEnabled, onToggleTouchSimulation, itemActions, isBusy, handleExamine, session, addLog, activeCombatStyleHighlight, isBankOpen, isShopOpen, onDeposit, onNavigate, unlockedPois, onCastSpell, onSpellOnItem, isEquipmentStatsOpen = false, initialState, activePrayers, onTogglePrayer, isPoisoned, onCurePoison } = props;
     const { activePanel, setActivePanel } = ui;
-    
+
     const inventoryPanelProps = {
         inventory: inv.inventory, coins: inv.coins, skills: char.skills, onEquip:(item, idx) => inv.handleEquip(item, idx, char.skills, char.combatStance), onConsume: itemActions.handleConsume, onDropItem: inv.handleDropItem, onBury: itemActions.handleBuryBones, onEmpty: itemActions.handleEmptyItem, setTooltip: ui.setTooltip, setContextMenu: ui.setContextMenu, addLog, itemToUse: ui.itemToUse, setItemToUse: ui.setItemToUse, 
         onUseItemOn: itemActions.handleUseItemOn, isBusy, onMoveItem: inv.moveItem, setConfirmationPrompt: ui.setConfirmationPrompt,
@@ -121,6 +127,7 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
         confirmValuableDrops: ui.confirmValuableDrops,
         valuableDropThreshold: ui.valuableDropThreshold,
         isOneClickMode: ui.isOneClickMode,
+        onTeleport: itemActions.handleTeleport,
     };
 
     const renderActivePanel = () => {
@@ -141,13 +148,14 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     onExamine={handleExamine}
                     isTouchSimulationEnabled={isTouchSimulationEnabled}
                     isOneClickMode={ui.isOneClickMode}
+                    onTeleport={itemActions.handleTeleport}
                 />;
             case 'skills':
-                return <SkillsPanel skills={char.skills} setTooltip={ui.setTooltip} onOpenGuide={ui.setActiveSkillGuide} />;
+                return <SkillsPanel skills={char.skills} setTooltip={ui.setTooltip} onOpenGuide={ui.setActiveSkillGuide} isTouchSimulationEnabled={isTouchSimulationEnabled} />;
             case 'quests':
                  return <QuestsPanel playerQuests={quests.playerQuests} activeRepeatableQuest={repeatableQuests.activePlayerQuest} inventory={inv.inventory} slayerTask={slayer.slayerTask} onSelectQuest={(questId) => ui.setActiveQuestDetail({ questId: questId, playerQuests: quests.playerQuests })} />;
             case 'prayer':
-                return <div className="text-center text-gray-400">Prayer skill is not yet implemented.</div>;
+                return <PrayerPanel skills={char.skills} activePrayers={activePrayers} onTogglePrayer={onTogglePrayer} setTooltip={ui.setTooltip} playerQuests={quests.playerQuests} />;
             case 'spellbook':
                 return <SpellbookPanel
                     skills={char.skills}
@@ -172,6 +180,8 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     currentPoiId={session.currentPoiId} 
                     currentHp={char.currentHp}
                     maxHp={char.maxHp}
+                    currentPrayer={char.currentPrayer}
+                    maxPrayer={char.maxPrayer}
                     ui={ui}
                     isTouchSimulationEnabled={isTouchSimulationEnabled}
                     onNavigate={onNavigate}
@@ -180,6 +190,8 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     isDevMode={isDevMode}
                     onToggleDevPanel={() => ui.setIsDevPanelOpen(true)}
                     showMinimapHealth={ui.showMinimapHealth}
+                    isPoisoned={isPoisoned}
+                    onCurePoison={onCurePoison}
                 />
                 {/* Top row */}
                 <div className="grid grid-cols-7 gap-1 p-1 bg-black/30 border-b-2 border-gray-600">
@@ -188,7 +200,7 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-quests" icon="eclipse-flare" label="Quest Journal" ariaLabel="Quest Journal" isActive={activePanel==='quests'} onClick={() => setActivePanel('quests')} />
                     <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-inventory" icon="knapsack" label="Inventory" ariaLabel="Inventory" isActive={activePanel==='inventory'} onClick={() => setActivePanel('inventory')} />
                     <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-equipment" icon="battle-gear" label="Equipment" ariaLabel="Equipment" isActive={activePanel==='equipment'} onClick={() => setActivePanel('equipment')} />
-                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-prayer" icon="polar-star" label="Prayer" ariaLabel="Prayer" isActive={activePanel==='prayer'} onClick={() => { setActivePanel('prayer'); addLog("Prayer skill is not yet implemented."); }} />
+                    <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-prayer" icon="polar-star" label="Prayer" ariaLabel="Prayer" isActive={activePanel==='prayer'} onClick={() => setActivePanel('prayer')} />
                     <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-spellbook" icon="book-cover" label="Spellbook" ariaLabel="Spellbook" isActive={activePanel==='spellbook'} onClick={() => setActivePanel('spellbook')} />
                 </div>
             </div>
@@ -201,14 +213,7 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     <PlaceholderIcon />
                     <PlaceholderIcon />
                     <PlaceholderIcon />
-                    <PanelIcon 
-                        setTooltip={ui.setTooltip} 
-                        icon="exit-door" 
-                        label="Logout"
-                        ariaLabel="Logout"
-                        isActive={false} 
-                        onClick={onReturnToMenu}
-                    />
+                    <PanelIcon setTooltip={ui.setTooltip} icon="exit-door" label="Logout" ariaLabel="Logout" isActive={false} onClick={onReturnToMenu} />
                     <PlaceholderIcon />
                     <PlaceholderIcon />
                     <PanelIcon setTooltip={ui.setTooltip} tutorialId="side-panel-button-settings" icon="gears" label="Settings" ariaLabel="Settings" isActive={ui.isSettingsViewOpen} onClick={() => ui.setIsSettingsViewOpen(true)} />

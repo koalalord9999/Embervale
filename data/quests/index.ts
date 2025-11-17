@@ -1,4 +1,3 @@
-
 import { Quest } from '../../types';
 import { aSmithsApprentice } from './a_smiths_apprentice';
 import { ancientBlade } from './ancient_blade';
@@ -15,6 +14,12 @@ import { petuniaProblems } from './petunia_problems';
 import { anEchoOfBattle } from './an_echo_of_battle';
 import { depthsOfDespair } from './depths_of_despair';
 import { whispersOfTheDivine } from './whispers_of_the_divine';
+import { theFrozenGate } from './the_frozen_gate';
+import { artOfTheWarhammer } from './art_of_the_warhammer';
+import { theSaintsFirstStep } from './the_saints_first_step';
+import { theTrialOfWar } from './the_trial_of_war';
+import { theGreatHunt } from './the_great_hunt';
+import { theSorcerersTrial } from './the_sorcerers_trial';
 
 
 export const QUESTS: Record<string, Quest> = {
@@ -33,4 +38,10 @@ export const QUESTS: Record<string, Quest> = {
     [anEchoOfBattle.id]: anEchoOfBattle,
     [depthsOfDespair.id]: depthsOfDespair,
     [whispersOfTheDivine.id]: whispersOfTheDivine,
+    [theFrozenGate.id]: theFrozenGate,
+    [artOfTheWarhammer.id]: artOfTheWarhammer,
+    [theSaintsFirstStep.id]: theSaintsFirstStep,
+    [theTrialOfWar.id]: theTrialOfWar,
+    [theGreatHunt.id]: theGreatHunt,
+    [theSorcerersTrial.id]: theSorcerersTrial,
 };

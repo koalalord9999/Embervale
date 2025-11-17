@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { InventorySlot, PlayerSkill, SkillName } from '../../../types';
 import { GEM_CUTTING_RECIPES, ITEMS, getIconClassName } from '../../../constants';
@@ -40,7 +39,7 @@ const GemCuttingView: React.FC<GemCuttingViewProps> = ({ inventory, skills, onCu
                 disabled: !hasLevel || maxCut < 1 || !hasChisel
             },
         ];
-        setContextMenu({ options, event: e, isTouchInteraction: false });
+        setContextMenu({ options, triggerEvent: e, isTouchInteraction: false });
     };
 
     return (

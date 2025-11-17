@@ -1,5 +1,4 @@
 
-
 import { POI } from '../../types';
 import { meadowdalePois } from './meadowdale';
 import { minePois } from './mines';
@@ -24,6 +23,16 @@ import { crystallineIslesPois } from './crystalline_isles';
 import { magusSpirePois } from './dungeon_magus_spire';
 import { chasmOfWoePois } from './dungeon_chasm_of_woe';
 import { pilferingPois } from './pilfering';
+import { fouthiaPois } from './fouthia';
+import { futureZonePois } from './future_zones';
+import { sanctityPois } from './sanctity';
+import { volcanicSteamVentsPois } from './volcanic_steam_vents';
+import { sunbrightPlainsPois } from './sunbright_plains';
+import { wyrmwoodGrovePois } from './wyrmwood_grove';
+import { frostfangPeaksPois } from './frostfang_peaks';
+import { sunscorchedWastesPois } from './sunscorched_wastes';
+import { barrowOfTheRevenantPois } from './dungeon_barrow';
+import { sunbrightUndergroundCavePois } from './sunbright_underground_cave';
 
 export const POIS: Record<string, POI> = {
     ...tutorialZonePois,
@@ -49,4 +58,14 @@ export const POIS: Record<string, POI> = {
     ...magusSpirePois,
     ...chasmOfWoePois,
     ...pilferingPois,
+    ...fouthiaPois,
+    ...futureZonePois,
+    ...sanctityPois,
+    ...volcanicSteamVentsPois,
+    ...sunbrightPlainsPois,
+    ...sunbrightUndergroundCavePois,
+    ...wyrmwoodGrovePois,
+    ...frostfangPeaksPois,
+    ...sunscorchedWastesPois,
+    ...barrowOfTheRevenantPois,
 };

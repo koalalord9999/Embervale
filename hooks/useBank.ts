@@ -1,5 +1,7 @@
+
+
 import React, { useCallback, useMemo } from 'react';
-import { InventorySlot, Equipment, CombatStance, BankTab } from '../types';
+import { InventorySlot, Equipment, CombatStance, BankTab, EquipmentStats } from '../types';
 import { ITEMS, BANK_CAPACITY, INVENTORY_CAPACITY, MAX_BANK_TABS } from '../constants';
 
 interface BankDependencies {
@@ -8,7 +10,8 @@ interface BankDependencies {
     setInventory: React.Dispatch<React.SetStateAction<(InventorySlot | null)[]>>;
     equipment: Equipment;
     setEquipment: React.Dispatch<React.SetStateAction<Equipment>>;
-    modifyItem: (itemId: string, quantity: number, quiet?: boolean, doses?: number, options?: { noted?: boolean, bypassAutoBank?: boolean }) => void;
+    // FIX: Standardize modifyItem signature to use a single options object.
+    modifyItem: (itemId: string, quantity: number, quiet?: boolean, slotOverrides?: Partial<Omit<InventorySlot, 'itemId' | 'quantity'>> & { bypassAutoBank?: boolean }) => void;
     setCombatStance: (stance: CombatStance) => void;
     bankPlaceholders: boolean;
 }
@@ -42,9 +45,6 @@ export const useBank = (bankState: BankState, deps: BankDependencies) => {
     
         if (qtyToDeposit <= 0) return;
     
-        const effectiveItemId = itemSlot.itemId;
-        const effectiveDoses = itemSlot.doses;
-
         setBank(prevBank => {
             const newBank = JSON.parse(JSON.stringify(prevBank));
             let targetTab: BankTab | undefined;
@@ -52,7 +52,13 @@ export const useBank = (bankState: BankState, deps: BankDependencies) => {
 
             // Search all tabs for an existing stack first
             for (const tab of newBank) {
-                const slotIndex = tab.items.findIndex((s: InventorySlot | null) => s?.itemId === effectiveItemId && (!itemData.doseable || s?.doses === effectiveDoses));
+                const slotIndex = tab.items.findIndex((s: InventorySlot | null) => 
+                    s?.itemId === itemSlot.itemId &&
+                    (!itemData.doseable || s?.doses === itemSlot.doses) &&
+                    s?.charges === itemSlot.charges &&
+                    s.nameOverride === itemSlot.nameOverride &&
+                    JSON.stringify(s.statsOverride) === JSON.stringify(itemSlot.statsOverride)
+                );
                 if (slotIndex > -1) {
                     targetTab = tab;
                     existingSlotIndex = slotIndex;
@@ -106,7 +112,14 @@ export const useBank = (bankState: BankState, deps: BankDependencies) => {
 
             if (needsNewSlot) {
                 const emptySlotIndex = targetTab.items.findIndex((s: InventorySlot | null) => s === null);
-                const newItem = { itemId: effectiveItemId, quantity: qtyToDeposit, doses: effectiveDoses };
+                const newItem = { 
+                    itemId: itemSlot.itemId, 
+                    quantity: qtyToDeposit, 
+                    doses: itemSlot.doses, 
+                    charges: itemSlot.charges, 
+                    nameOverride: itemSlot.nameOverride, 
+                    statsOverride: itemSlot.statsOverride 
+                };
                 if (emptySlotIndex > -1) {
                     targetTab.items[emptySlotIndex] = newItem;
                 } else {
@@ -147,7 +160,12 @@ export const useBank = (bankState: BankState, deps: BankDependencies) => {
                 return;
             }
         } else if (itemData.stackable) {
-            const hasStack = inventory.some(s => s?.itemId === itemId && (!itemData.doseable || s.doses === bankSlot.doses));
+            const hasStack = inventory.some(s => 
+                s?.itemId === itemId && 
+                (!itemData.doseable || s.doses === bankSlot.doses) &&
+                s.nameOverride === bankSlot.nameOverride &&
+                JSON.stringify(s.statsOverride) === JSON.stringify(bankSlot.statsOverride)
+            );
             if (!hasStack && emptyInvSlots < 1) {
                 addLog("You don't have enough inventory space.");
                 return;
@@ -165,7 +183,15 @@ export const useBank = (bankState: BankState, deps: BankDependencies) => {
             addLog("You don't have enough inventory space to withdraw the full amount.");
         }
     
-        modifyItem(itemId, actualQtyToWithdraw, true, bankSlot.doses, { noted: withdrawNoted, bypassAutoBank: true });
+        // FIX: The `modifyItem` function expects 4 arguments, with the last being an options object. This call was incorrect.
+        modifyItem(itemId, actualQtyToWithdraw, true, { 
+            doses: bankSlot.doses,
+            noted: withdrawNoted, 
+            bypassAutoBank: true,
+            nameOverride: bankSlot.nameOverride,
+            statsOverride: bankSlot.statsOverride,
+            charges: bankSlot.charges
+        });
     
         setBank(prevBank => {
             const newBank = [...prevBank];
@@ -204,7 +230,13 @@ export const useBank = (bankState: BankState, deps: BankDependencies) => {
                 let existingSlotIndex = -1;
 
                 for (const tab of newBank) {
-                    const slotIndex = tab.items.findIndex((s: InventorySlot | null) => s?.itemId === slot.itemId && (!itemData.doseable || s?.doses === slot.doses));
+                    const slotIndex = tab.items.findIndex((s: InventorySlot | null) => 
+                        s?.itemId === slot.itemId && 
+                        (!itemData.doseable || s?.doses === slot.doses) &&
+                        s?.charges === slot.charges &&
+                        s.nameOverride === slot.nameOverride &&
+                        JSON.stringify(s.statsOverride) === JSON.stringify(slot.statsOverride)
+                    );
                     if (slotIndex > -1) {
                         targetTab = tab;
                         existingSlotIndex = slotIndex;
@@ -279,7 +311,13 @@ export const useBank = (bankState: BankState, deps: BankDependencies) => {
                 let existingSlotIndex = -1;
 
                 for (const tab of newBank) {
-                    const slotIndex = tab.items.findIndex((s: InventorySlot | null) => s?.itemId === slot.itemId && (!itemData.doseable || s.doses === slot.doses));
+                    const slotIndex = tab.items.findIndex((s: InventorySlot | null) => 
+                        s?.itemId === slot.itemId && 
+                        (!itemData.doseable || s.doses === slot.doses) &&
+                        s?.charges === slot.charges &&
+                        s.nameOverride === slot.nameOverride &&
+                        JSON.stringify(s.statsOverride) === JSON.stringify(slot.statsOverride)
+                    );
                     if (slotIndex > -1) {
                         targetTab = tab;
                         existingSlotIndex = slotIndex;
@@ -414,7 +452,14 @@ export const useBank = (bankState: BankState, deps: BankDependencies) => {
                 fromTab.items.splice(fromItemIndex, 1);
             }
 
-            const existingStackIndex = toTab.items.findIndex((s: InventorySlot | null) => s?.itemId === itemToMove.itemId && (!ITEMS[itemToMove.itemId].doseable || s.doses === itemToMove.doses));
+            const existingStackIndex = toTab.items.findIndex((s: InventorySlot | null) => 
+                s?.itemId === itemToMove.itemId && 
+                (!ITEMS[itemToMove.itemId].doseable || s.doses === itemToMove.doses) &&
+                s?.charges === itemToMove.charges &&
+                s.nameOverride === itemToMove.nameOverride &&
+                JSON.stringify(s.statsOverride) === JSON.stringify(itemToMove.statsOverride)
+            );
+
             if (existingStackIndex > -1) {
                 toTab.items[existingStackIndex].quantity += itemToMove.quantity;
             } else {

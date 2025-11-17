@@ -35,9 +35,11 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ playerQuests, activeRepeatabl
     };
 
     const allQuests = Object.values(QUESTS);
-    const inProgressQuests = allQuests.filter(q => playerQuests.some(pq => pq.questId === q.id && !pq.isComplete));
-    const notStartedQuests = allQuests.filter(q => !q.isHidden && !playerQuests.some(pq => pq.questId === q.id));
-    const completedQuests = allQuests.filter(q => playerQuests.some(pq => pq.questId === q.id && pq.isComplete));
+    const visibleQuests = allQuests.filter(q => !q.isSuperHidden);
+
+    const inProgressQuests = visibleQuests.filter(q => playerQuests.some(pq => pq.questId === q.id && !pq.isComplete));
+    const notStartedQuests = visibleQuests.filter(q => !q.isHidden && !playerQuests.some(pq => pq.questId === q.id));
+    const completedQuests = visibleQuests.filter(q => playerQuests.some(pq => pq.questId === q.id && pq.isComplete));
     const completedHiddenQuests = completedQuests.filter(q => q.isHidden);
 
     return (
@@ -82,14 +84,18 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ playerQuests, activeRepeatabl
                      {inProgressQuests.length === 0 && notStartedQuests.length === 0 && completedQuests.filter(q => !q.isHidden).length === 0 && (
                         <p className="text-center text-gray-400 italic">You have no active quests.</p>
                      )}
-                     {inProgressQuests.map(quest => (
-                        <button key={quest.id} onClick={() => onSelectQuest(quest.id)} className="w-full text-left text-yellow-300 hover:text-yellow-200 py-1">{quest.name}</button>
-                     ))}
+                     {inProgressQuests.map(quest => {
+                        const playerQuestState = playerQuests.find(pq => pq.questId === quest.id);
+                        const stageInfo = playerQuestState ? ` (Stage ${playerQuestState.currentStage})` : '';
+                        return (
+                            <button key={quest.id} onClick={() => onSelectQuest(quest.id)} className="w-full text-left text-yellow-300 hover:text-yellow-200 py-1">{quest.name}{stageInfo}</button>
+                        );
+                     })}
                      {notStartedQuests.map(quest => (
                         <button key={quest.id} onClick={() => onSelectQuest(quest.id)} className="w-full text-left text-red-400 hover:text-red-300 py-1">{quest.name}</button>
                      ))}
                      {completedQuests.filter(q => !q.isHidden).map(quest => (
-                        <button key={quest.id} onClick={() => onSelectQuest(quest.id)} className="w-full text-left text-green-400 hover:text-green-300 py-1 line-through">{quest.name}</button>
+                        <button key={quest.id} onClick={() => onSelectQuest(quest.id)} className="w-full text-left text-green-400 hover:text-green-300 py-1">{quest.name}</button>
                      ))}
                 </div>
 

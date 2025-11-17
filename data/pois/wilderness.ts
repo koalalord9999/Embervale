@@ -1,3 +1,4 @@
+
 import { POI, SkillName, ToolType } from '../../types';
 
 export const wildernessPois: Record<string, POI> = {
@@ -55,7 +56,17 @@ export const wildernessPois: Record<string, POI> = {
                 name: 'Approach the altar',
                 icon: 'https://api.iconify.design/game-icons:rune-stone.svg',
                 questCondition: { questId: 'magical_runestone_discovery', stages: [4, 6] },
-                startNode: 'start'
+                startNode: 'gust_altar_router',
+                conditionalGreetings: [
+                    {
+                        text: "You approach the altar again, and a hazy memory of what Elmsworth told you comes to mind...",
+                        check: { requirements: [{ type: 'quest', questId: 'magical_runestone_discovery', status: 'in_progress', stage: 6 }] }
+                    },
+                    {
+                        text: "As you get closer, the trinket in your pack vibrates violently, seemingly drawn to the altar's energy.",
+                        check: { requirements: [{ type: 'quest', questId: 'magical_runestone_discovery', status: 'in_progress', stage: 4 }] }
+                    }
+                ]
             },
         ],
         regionId: 'wilderness',
@@ -94,7 +105,6 @@ export const wildernessPois: Record<string, POI> = {
             { type: 'skilling', id: 'overgrown_path_oak_tree', name: 'Chop Oak Tree', skill: SkillName.Woodcutting, requiredLevel: 15, loot: [{ itemId: 'oak_logs', chance: 1, xp: 65 }], resourceCount: { min: 6, max: 32 }, respawnTime: 18000, gatherTime: 3000 },
             { type: 'skilling', id: 'overgrown_path_trees_1', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 1, xp: 25 }], resourceCount: { min: 2, max: 5 }, respawnTime: 12000, gatherTime: 2000 },
             { type: 'skilling', id: 'overgrown_path_trees_2', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 1, xp: 25 }], resourceCount: { min: 2, max: 5 }, respawnTime: 12000, gatherTime: 2000 },
-// FIX: Removed redundant level, xp, and respawnTime properties.
             { type: 'thieving_lockpick', id: 'overgrown_path_chest_1', targetName: 'Rotting Chest', lootTableId: 'thieving_dungeon_chest_low' },
         ],
         regionId: 'wilderness',

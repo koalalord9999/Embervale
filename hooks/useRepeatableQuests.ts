@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { PlayerRepeatableQuest, GeneratedRepeatableQuest, RepeatableQuestsState, SkillName, PlayerSkill } from '../types';
 import { REPEATABLE_QUEST_POOL, MONSTERS, ITEMS, XP_TABLE, TELEPORT_UNLOCK_THRESHOLD } from '../constants';
@@ -245,5 +246,6 @@ export const useRepeatableQuests = (
         acceptQuest,
         checkProgressOnKill,
         handleTurnInRepeatableQuest,
+        resetBoards,
     };
 };

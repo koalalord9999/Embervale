@@ -327,10 +327,21 @@ export const magusSpirePois: Record<string, POI> = {
         description: 'The apex of the spire, open to the swirling cosmos. A massive arcane wyvern guards a floating altar.',
         connections: ['ms_f5_final_approach'],
         activities: [
-            { type: 'runecrafting_altar', runeId: 'astral_rune' },
             { type: 'combat', monsterId: 'arcane_wyvern' },
         ],
         regionId: 'magus_spire',
         x: 1954, y: 280,
     },
+    ms_f5_astral_altar: {
+        id: 'ms_f5_astral_altar',
+        name: 'Astral Altar',
+        description: 'Just beyond the wyvern, is a cosmicly charged altar with a teleport pad, leading back to the entrance.',
+        connections: ['ms_f5_wyvern_roost'],
+        activities: [
+            { type: 'runecrafting_altar', runeId: 'astral_rune' },
+            { type: 'ladder', name: 'Telepad to Entrance', direction: 'down', toPoiId: 'magus_spire_entrance' },
+        ],
+        regionId: 'magus_spire',
+        x: 1954, y: 280,
+    }
 };

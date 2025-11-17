@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 
 export const minePois: Record<string, POI> = {
@@ -85,13 +86,13 @@ export const minePois: Record<string, POI> = {
         description: 'A cavern filled with strange, floating rocks that hum with a pure, magical energy.',
         connections: ['mine_depths'],
         activities: [
-            { type: 'skilling', id: 'rune_essence_mine_1', name: 'Mine Rune Essence', skill: SkillName.Mining, requiredLevel: 1, loot: [{ itemId: 'rune_essence', chance: 1, xp: 5 }], resourceCount: { min: 999999, max: 999999 }, respawnTime: 5000, gatherTime: 4200, questCondition: { questId: 'magical_runestone_discovery', stages: [2, 3, 4, 5, 6], visibleAfterCompletion: true } },
+            { type: 'skilling', id: 'rune_essence_mine_1', name: 'Mine Rune Essence', skill: SkillName.Mining, requiredLevel: 1, loot: [{ itemId: 'rune_essence', chance: 1, xp: 5 }], resourceCount: { min: 999999, max: 999999 }, respawnTime: 5000, gatherTime: 4200 },
             {
                 type: 'npc',
                 name: 'Wizard Elmsworth (Projection)',
                 icon: 'https://api.iconify.design/game-icons:wizard-face.svg',
-                questCondition: { questId: 'magical_runestone_discovery', stages: [1, 2, 3] },
-                startNode: 'in_progress_magical_runestone_discovery_1'
+                questCondition: { questId: 'magical_runestone_discovery', stages: [1] },
+                startNode: 'mrd_projection_intro'
             }
         ],
         unlockRequirement: { type: 'quest', questId: 'magical_runestone_discovery', stage: 1 },

@@ -1,17 +1,34 @@
+
 // This barrel file combines all monster data from the /monsters directory.
 
 import { Monster } from '../types';
 import { beasts } from './monsters/beasts';
 import { humanoids } from './monsters/humanoids';
-import { magicalAndUndead } from './monsters/magicalAndUndead';
 import { dragons } from './monsters/dragons';
+import { undead } from './monsters/undead';
+import { elemental } from './monsters/elemental';
+import { demon } from './monsters/demon';
+import { armored } from './monsters/armored';
+import { vampire } from './monsters/vampire';
+import { sunbright } from './monsters/sunbright';
+import { frostfang } from './monsters/frostfang';
+import { wyrmwoodMonsters } from './monsters/wyrmwood';
+import { sunscorchedMonsters } from './monsters/sunscorched';
 
 // Assemble all monsters into a single array
 const allMonstersUnsorted: Monster[] = [
     ...beasts,
     ...humanoids,
-    ...magicalAndUndead,
     ...dragons,
+    ...undead,
+    ...elemental,
+    ...demon,
+    ...armored,
+    ...vampire,
+    ...sunbright,
+    ...frostfang,
+    ...wyrmwoodMonsters,
+    ...sunscorchedMonsters,
 ];
 
 // Sort the array alphabetically by monster name

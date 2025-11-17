@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { InventorySlot, PlayerSkill, PlayerQuestState, SkillName, WeaponType } from '../../../../types';
 import { SMITHING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
@@ -6,7 +7,6 @@ import { CraftingViewProps } from '../CraftingView';
 import { useLongPress } from '../../../../hooks/useLongPress';
 import { useIsTouchDevice } from '../../../../hooks/useIsTouchDevice';
 
-// FIX: Add 'silver_bar' to the BarType to allow smithing with silver.
 type BarType = 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar' | 'gold_bar' | 'silver_bar';
 
 const AnvilSlot: React.FC<{
@@ -32,7 +32,14 @@ const AnvilSlot: React.FC<{
 
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();
-        const event = 'touches' in e ? e.touches[0] : e;
+        let eventForMenu: React.MouseEvent | React.Touch;
+        if ('touches' in e && e.touches.length > 0) {
+            eventForMenu = e.touches[0];
+        } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+            eventForMenu = e.changedTouches[0];
+        } else {
+            eventForMenu = e as React.MouseEvent;
+        }
         setContextMenu({
             options: [
                 { label: 'Smith 1', onClick: () => onSmithItem(recipe.itemId, 1), disabled: !hasLevel || maxSmith < 1 },
@@ -47,7 +54,10 @@ const AnvilSlot: React.FC<{
                     }), 
                     disabled: !hasLevel || maxSmith < 1 
                 },
-            ], event, isTouchInteraction: isTouchDevice
+            ],
+            triggerEvent: eventForMenu,
+            isTouchInteraction: isTouchDevice,
+            title: item.name
         });
     };
     
@@ -125,7 +135,6 @@ const AnvilInterface: React.FC<CraftingViewProps> = ({ inventory, skills, player
         adamantite_bar: getItemCount('adamantite_bar'),
         runic_bar: getItemCount('runic_bar'),
         gold_bar: getItemCount('gold_bar'),
-        // FIX: Add silver_bar to the counts object.
         silver_bar: getItemCount('silver_bar'),
     };
 
@@ -140,8 +149,7 @@ const AnvilInterface: React.FC<CraftingViewProps> = ({ inventory, skills, player
         }
     
         // Otherwise, fall back to the highest tier available bar.
-        // FIX: Add silver_bar to the available bars list.
-        const availableBars: BarType[] = ['runic_bar', 'adamantite_bar', 'mithril_bar', 'gold_bar', 'silver_bar', 'steel_bar', 'iron_bar', 'bronze_bar'];
+        const availableBars: BarType[] = ['runic_bar', 'adamantite_bar', 'mithril_bar', 'steel_bar', 'iron_bar', 'bronze_bar'];
         const firstAvailable = availableBars.find(bar => barCounts[bar] > 0);
         setSelectedBar(firstAvailable || null);
     }, [context, inventory]); // Using inventory to trigger re-evaluation when bar counts change
@@ -151,7 +159,7 @@ const AnvilInterface: React.FC<CraftingViewProps> = ({ inventory, skills, player
     return (
         <div className="flex flex-col flex-grow min-h-0">
             <div className="flex gap-2 mb-4 flex-wrap flex-shrink-0">
-                {Object.entries(barCounts).filter(([_, count]) => count > 0).map(([barType, count]) => (
+                {Object.entries(barCounts).filter(([barType, count]) => count > 0 && barType !== 'gold_bar' && barType !== 'silver_bar').map(([barType, count]) => (
                     <Button 
                         key={barType}
                         onClick={() => setSelectedBar(barType as BarType)} 

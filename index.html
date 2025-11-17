@@ -153,9 +153,11 @@
         background-color: var(--magic-color);
         box-shadow: 0 0 15px var(--magic-color), 0 0 25px var(--magic-color);
         animation: magic-fly 0.5s linear forwards;
-        border-radius: 50% 50% 50% 0; /* Teardrop shape pointed right */
       }
-      .anim-magic::after {
+
+      /* Trail effect for lower tiers */
+      .anim-magic-1::after,
+      .anim-magic-2::after {
           content: '';
           position: absolute;
           left: 50%;
@@ -184,11 +186,102 @@
       .element-fire { --magic-color: #FFA500; } /* orange */
       
       /* Tier Sizes & Special Animations */
-      .anim-magic-1 { width: 30px; height: 30px; }
-      .anim-magic-2 { width: 40px; height: 40px; animation-name: magic-fly, magic-pulse; animation-duration: 0.5s, 0.2s; animation-iteration-count: 1, infinite; animation-direction: normal, alternate; }
-      .anim-magic-3 { width: 50px; height: 50px; }
-      .anim-magic-4 { width: 60px; height: 60px; animation-name: magic-fly, magic-wobble; animation-duration: 0.5s, 0.3s; animation-iteration-count: 1, infinite; }
-      .anim-magic-5 { width: 70px; height: 70px; animation-name: magic-fly, magic-spin; animation-duration: 0.5s, 0.4s; animation-iteration-count: 1, infinite; }
+      /* Tier 1 (Dart) - Teardrop shape */
+      .anim-magic-1 {
+        width: 30px;
+        height: 30px;
+        border-radius: 50% 50% 50% 0;
+      }
+      /* Tier 2 (Bolt) - Energetic oval */
+      .anim-magic-2 {
+        width: 40px;
+        height: 25px;
+        border-radius: 50%;
+        animation-name: magic-fly, magic-pulse;
+        animation-duration: 0.5s, 0.2s;
+        animation-iteration-count: 1, infinite;
+        animation-direction: normal, alternate;
+      }
+      /* Tier 3 (Blast) - Rotating diamond */
+      .anim-magic-3 {
+        width: 50px;
+        height: 50px;
+        border-radius: 0;
+        clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+        animation-name: magic-fly, magic-spin;
+        animation-duration: 0.5s, 2s;
+        animation-iteration-count: 1, infinite;
+        animation-timing-function: linear, linear;
+      }
+      .anim-magic-3::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40%;
+        height: 40%;
+        background: white;
+        filter: blur(5px);
+        border-radius: 50%;
+        opacity: 0.8;
+      }
+      /* Tier 4 (Wave) - Counter-rotating crescents */
+      .anim-magic-4 {
+        width: 60px;
+        height: 60px;
+        background: none;
+        box-shadow: none;
+      }
+      .anim-magic-4::before,
+      .anim-magic-4::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        border: 4px solid var(--magic-color);
+        box-shadow: 0 0 10px var(--magic-color);
+        border-radius: 50%;
+        clip-path: inset(0 50% 0 0);
+        animation-name: magic-fly;
+        animation-duration: 0.5s;
+        animation-iteration-count: 1;
+        animation-timing-function: linear;
+      }
+      .anim-magic-4::before { animation-name: magic-fly, magic-spin; animation-duration: 0.5s, 1.5s; animation-iteration-count: 1, infinite; animation-timing-function: linear, ease-in-out; }
+      .anim-magic-4::after { animation-name: magic-fly, magic-spin-reverse; animation-duration: 0.5s, 1.5s; animation-iteration-count: 1, infinite; animation-timing-function: linear, ease-in-out; }
+
+      /* Tier 5 (Storm) - Chaotic, multi-pronged vortex */
+      .anim-magic-5 {
+        width: 70px;
+        height: 70px;
+        background: none;
+        box-shadow: none;
+        animation: magic-fly 0.5s linear forwards, magic-spin 1s linear infinite;
+      }
+      .anim-magic-5::before,
+      .anim-magic-5::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--magic-color);
+        box-shadow: 0 0 15px var(--magic-color);
+      }
+      .anim-magic-5::before {
+        clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+        animation: magic-spin-reverse 1.2s linear infinite;
+      }
+      .anim-magic-5::after {
+        clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+        animation: magic-spin 0.8s linear infinite;
+        transform: scale(0.6) rotate(45deg);
+        background-color: white;
+        box-shadow: 0 0 15px white;
+      }
+
 
       @keyframes magic-fly {
           from { opacity: 1; transform: scale(0.5); }
@@ -196,15 +289,56 @@
       }
       @keyframes magic-pulse {
           from { box-shadow: 0 0 20px var(--magic-color), 0 0 30px var(--magic-color); }
-          to { box-shadow: 0 0 25px var(--magic-color), 0 0 40px white; }
-      }
-      @keyframes magic-wobble {
-          0%, 100% { transform: rotate(0deg) scale(1); }
-          50% { transform: rotate(10deg) scale(1.1); }
+          to { box-shadow: 0 0 25px var(--magic-color), 0 0 40px white, 0 0 50px var(--magic-color); }
       }
       @keyframes magic-spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+      }
+      @keyframes magic-spin-reverse {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(-360deg); }
+      }
+
+      /* Hitsplat Styles */
+      .hitsplat-container {
+        position: absolute;
+        width: 5rem;
+        height: 5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        will-change: transform, opacity, top;
+        transition: top 0.5s ease-out, opacity 0.5s ease-out, transform 0.2s ease-out;
+      }
+
+      .hitsplat-splat {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        mask-image: url('https://api.iconify.design/game-icons:gooey-impact.svg');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
+        -webkit-mask-image: url('https://api.iconify.design/game-icons:gooey-impact.svg');
+        -webkit-mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+      }
+
+      .hitsplat-red { background-color: rgb(185, 28, 28); } /* red-700 */
+      .hitsplat-blue { background-color: rgb(37, 99, 235); } /* blue-600 */
+      .hitsplat-orange { background-color: rgb(234, 88, 12); } /* orange-600 */
+      .hitsplat-green { background-color: rgb(22, 163, 74); } /* green-600 */
+      .hitsplat-dragonfire { background-color: rgb(255, 130, 20); }
+
+      .hitsplat-text {
+        position: relative;
+        color: white;
+        font-weight: bold;
+        font-size: 1.75rem; /* 28px */
+        text-shadow: 1px 1px 3px black, -1px -1px 3px black, 1px -1px 3px black, -1px 1px 3px black;
       }
 
       /* Level Up Animation */
@@ -463,6 +597,10 @@
         image-rendering: pixelated; /* Standard */
       }
       
+      .poisoned-heart-icon {
+        filter: invert(50%) sepia(90%) saturate(1000%) hue-rotate(80deg) brightness(1.2) opacity(0.8);
+      }
+      
       /* New styles for icon-based crafting */
       .crafting-grid {
           display: grid;
@@ -640,6 +778,15 @@
         transform: translate(-50%, -50%) scale(2.2);
         filter: invert(60%) sepia(80%) saturate(1500%) hue-rotate(80deg) brightness(1.0) contrast(0.9);
         opacity: 0.9;
+      }
+      .poison-overlay-icon {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 16px;
+        height: 16px;
+        z-index: 5;
+        pointer-events: none;
       }
 
       /* Bank Tab Styles */
@@ -828,8 +975,35 @@
         filter: invert(95%) sepia(10%) saturate(1000%) hue-rotate(180deg) brightness(1.5) contrast(1.5) drop-shadow(0 0 5px white) var(--item-shadow);
         opacity: 0.9;
       }
+      @keyframes pulse-diamond-shadow {
+        0%, 100% {
+          filter: invert(95%) sepia(10%) saturate(1000%) hue-rotate(180deg) brightness(1.5) contrast(1.5) drop-shadow(0 0 5px white) drop-shadow(0 0 15px #a7f3d0) var(--item-shadow);
+        }
+        50% {
+          filter: invert(95%) sepia(10%) saturate(1000%) hue-rotate(180deg) brightness(1.8) contrast(1.8) drop-shadow(0 0 10px white) drop-shadow(0 0 25px #a7f3d0) var(--item-shadow);
+        }
+      }
+      .item-icon-diamond-charged {
+        animation: pulse-diamond-shadow 2s infinite ease-in-out;
+      }
       .item-icon-uncut-diamond { /* Darker, less brilliant white/blue */
         filter: invert(90%) sepia(10%) saturate(800%) hue-rotate(180deg) brightness(1.1) contrast(1.2) var(--item-shadow);
+        opacity: 0.85;
+      }
+      .item-icon-sunstone { /* Fiery orange/yellow */
+        filter: invert(75%) sepia(90%) saturate(1800%) hue-rotate(10deg) brightness(1.2) contrast(1.1) var(--item-shadow);
+        opacity: 0.9;
+      }
+      .item-icon-uncut-sunstone { /* Duller orange/yellow */
+        filter: invert(75%) sepia(80%) saturate(1500%) hue-rotate(10deg) brightness(0.9) contrast(1.0) var(--item-shadow);
+        opacity: 0.85;
+      }
+      .item-icon-tenebrite { /* Deep void purple/black */
+        filter: invert(10%) sepia(20%) saturate(1500%) hue-rotate(240deg) brightness(1.6) contrast(1.2) drop-shadow(1px 1px 0 #555) drop-shadow(-1px -1px 0 #555) drop-shadow(1px -1px 0 #4c1d95) drop-shadow(-1px 1px 0 #4c1d95);
+        opacity: 0.9;
+      }
+      .item-icon-uncut-tenebrite { /* Duller void purple/black */
+        filter: invert(15%) sepia(20%) saturate(1200%) hue-rotate(240deg) brightness(0.8) contrast(1.1) drop-shadow(1px 1px 0 #555) drop-shadow(-1px -1px 0 #555) drop-shadow(1px -1px 0 #4c1d95) drop-shadow(-1px 1px 0 #4c1d95);
         opacity: 0.85;
       }
       .item-icon-gold { /* Gold color */
@@ -1021,7 +1195,7 @@
       .item-icon-rune-ember { filter: invert(50%) sepia(80%) saturate(1500%) hue-rotate(330deg) brightness(1.2) contrast(1.1); opacity: 0.9; }
       .item-icon-rune-flux { filter: invert(20%) sepia(80%) saturate(1500%) hue-rotate(330deg) brightness(0.9) contrast(1.1); opacity: 0.9; }
       .item-icon-rune-verdant { filter: invert(60%) sepia(80%) saturate(1500%) hue-rotate(80deg) brightness(1.0) contrast(0.9); opacity: 0.9; }
-      .item-icon-rune-nexus { filter: invert(10%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(1) contrast(1); opacity: 0.9; }
+      .item-icon-rune-nexus { filter: invert(10%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(1) contrast(1) drop-shadow(1px 1px 0 #555) drop-shadow(-1px -1px 0 #555) drop-shadow(1px -1px 0 #555) drop-shadow(-1px 1px 0 #555); opacity: 0.9;}
       .item-icon-rune-hex { filter: invert(30%) sepia(40%) saturate(800%) hue-rotate(240deg) brightness(0.8) contrast(0.9); opacity: 0.9; }
       .item-icon-rune-passage { filter: invert(80%) sepia(50%) saturate(1000%) hue-rotate(180deg) brightness(1.2) contrast(1.1); opacity: 0.9; }
       .item-icon-rune-anima { filter: invert(25%) sepia(80%) saturate(2000%) hue-rotate(330deg) brightness(1.1) contrast(1.1); opacity: 0.9; }

@@ -1,10 +1,11 @@
+
 import { Item } from './entities';
 import { SkillName } from './enums';
 
 export interface Shop {
     id: string;
     name: string;
-    inventory: { itemId: string; quantity: number; priceModifier: number }[]; // modifier for buying/selling
+    inventory: { itemId: string; quantity: number; priceModifier: number; doses?: number; }[]; // modifier for buying/selling
 }
 
 export interface ShopItemState {
@@ -51,8 +52,7 @@ export interface SkillGuideEntry {
 export interface ActiveCraftingAction {
     recipeId: string;
     // Distinguishes between different types of recipes that might share item IDs
-    // FIX: Replaced 'firemaking' with specific types 'firemaking-light' and 'firemaking-stoke' to support new actions.
-    recipeType: 'smithing-bar' | 'smithing-item' | 'fletching-carve' | 'fletching-string' | 'fletching-headless' | 'fletching-tip' | 'crafting' | 'gem-cutting' | 'spinning' | 'cooking' | 'herblore-unfinished' | 'herblore-finished' | 'jewelry' | 'firemaking-light' | 'firemaking-stoke' | 'milling' | 'dough-making';
+    recipeType: 'smithing-bar' | 'smithing-item' | 'fletching-carve' | 'fletching-string' | 'fletching-headless' | 'fletching-tip' | 'crafting' | 'gem-cutting' | 'spinning' | 'cooking' | 'herblore-unfinished' | 'herblore-finished' | 'jewelry' | 'firemaking-light' | 'firemaking-stoke' | 'milling' | 'dough-making' | 'fletching-stock' | 'fletching-assembly' | 'fletching-feather' | 'consecration' | 'grinding' | 'paste-making' | 'offering';
     totalQuantity: number;
     completedQuantity: number;
     successfulQuantity?: number;
@@ -68,7 +68,9 @@ export interface ActiveCraftingAction {
         cleanHerbId?: string; // for herblore-unfinished
         unfinishedPotionId?: string; // for herblore-finished
         secondaryId?: string; // for herblore-finished
-        // FIX: Added bonfireId to support stoking bonfires.
         bonfireId?: string; // for firemaking-stoke
+        unfBoltsId?: string; // for fletching-feather
+        totalItems?: number;
+        prayerCost?: number;
     }
 }

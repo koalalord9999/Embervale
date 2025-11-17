@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { POIActivity, SkillName, InventorySlot, PlayerSkill, SkillRequirement, PlayerQuestState, ActiveCraftingAction, WorldState } from '../types';
+import { POIActivity, SkillName, InventorySlot, PlayerSkill, SkillRequirement, PlayerQuestState, ActiveCraftingAction, WorldState, WeaponType, Equipment } from '../types';
 import { ITEMS, INVENTORY_CAPACITY, rollOnLootTable, LootRollResult, FIREMAKING_RECIPES } from '../constants';
 import { POIS } from '../data/pois';
 import { MakeXPrompt } from './useUIState';
@@ -7,7 +7,7 @@ import { MakeXPrompt } from './useUIState';
 interface UseWorldActionsProps {
     hasItems: (items: { itemId: string; quantity: number }[]) => boolean;
     inventory: (InventorySlot | null)[];
-    modifyItem: (itemId: string, quantity: number, quiet?: boolean, doses?: number, options?: { noted?: boolean; bypassAutoBank?: boolean }) => void;
+    modifyItem: (itemId: string, quantity: number, quiet?: boolean, slotOverrides?: Partial<Omit<InventorySlot, 'itemId' | 'quantity'>> & { bypassAutoBank?: boolean; }) => void;
     addLog: (message: string) => void;
     coins: number;
     skills: (PlayerSkill & { currentLevel: number; })[];
@@ -18,10 +18,12 @@ interface UseWorldActionsProps {
     windmillFlour: number;
     setWindmillFlour: React.Dispatch<React.SetStateAction<number>>;
     setActiveCraftingAction: (action: ActiveCraftingAction | null) => void;
+    setInventory: React.Dispatch<React.SetStateAction<(InventorySlot | null)[]>>;
+    equipment: Equipment;
 }
 
 export const useWorldActions = (props: UseWorldActionsProps) => {
-    const { hasItems, inventory, modifyItem, addLog, coins, skills, addXp, setClearedSkillObstacles, playerQuests, setMakeXPrompt, windmillFlour, setWindmillFlour, setActiveCraftingAction } = props;
+    const { hasItems, inventory, modifyItem, addLog, coins, skills, addXp, setClearedSkillObstacles, playerQuests, setMakeXPrompt, windmillFlour, setWindmillFlour, setActiveCraftingAction, setInventory, equipment } = props;
 
     const handleMilking = useCallback(() => {
         if (!hasItems([{ itemId: 'bucket', quantity: 1 }])) {
@@ -29,7 +31,7 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
             return;
         }
         modifyItem('bucket', -1, true);
-        modifyItem('bucket_of_milk', 1, false, undefined, { bypassAutoBank: true });
+        modifyItem('bucket_of_milk', 1, false, { bypassAutoBank: true });
         addLog("You milk the cow and fill your bucket.");
     }, [hasItems, modifyItem, addLog]);
 
@@ -50,7 +52,7 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
 
         modifyItem('coins', -totalCost);
         modifyItem(inputId, -quantity);
-        modifyItem(outputId, quantity, false, undefined, { bypassAutoBank: true });
+        modifyItem(outputId, quantity, false, { bypassAutoBank: true });
         addLog(`You pay the tanner ${totalCost} coins to turn ${quantity} ${inputItemName} into ${outputItemName}.`);
     }, [coins, hasItems, modifyItem, addLog]);
 
@@ -64,7 +66,7 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
 
         if (Math.random() <= 1 / 1000) {
             addLog("You hear a faint clink from the bottom of the well... something is different.");
-            modifyItem('rusty_iron_sword', 1, false, undefined, { bypassAutoBank: true });
+            modifyItem('rusty_iron_sword', 1, false, { bypassAutoBank: true });
         } else {
             addLog("The coin disappears into the depths with a faint splash.");
         }
@@ -93,58 +95,139 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
 
     }, [skills, addXp, setClearedSkillObstacles, addLog, hasItems, modifyItem]);
 
-    const handleCollectWater = useCallback(() => {
+    const handleCollectWater = useCallback((activity: Extract<POIActivity, { type: 'water_source' }>) => {
+        const isHoly = (activity as any).isHoly === true;
+
         const vialCount = inventory.reduce((total, slot) => slot?.itemId === 'vial' ? total + slot.quantity : total, 0);
-        const bucketCount = inventory.filter(slot => slot?.itemId === 'bucket').length;
-        const totalContainers = vialCount + bucketCount;
+        
+        if (isHoly) {
+            if (vialCount === 0) {
+                addLog("You need an empty vial to collect holy water.");
+                return;
+            }
+            const onConfirm = (quantity: number) => {
+                if (quantity <= 0) return;
+                const vialsToFill = Math.min(quantity, vialCount);
+                if (vialsToFill > 0) {
+                    modifyItem('vial', -vialsToFill, true);
+                    modifyItem('holy_water', vialsToFill, false, { bypassAutoBank: true });
+                    addLog(`You fill ${vialsToFill} vial${vialsToFill > 1 ? 's' : ''} with holy water.`);
+                }
+            };
+            if (vialCount === 1) {
+                onConfirm(1);
+            } else {
+                setMakeXPrompt({
+                    title: 'Collect Holy Water',
+                    max: vialCount,
+                    onConfirm
+                });
+            }
+        } else {
+            const bucketCount = inventory.filter(slot => slot?.itemId === 'bucket').length;
+            const waterskinCount = inventory.filter(slot => slot?.itemId === 'waterskin' && (slot.doses === undefined || slot.doses === 0)).length;
+            const totalContainers = vialCount + bucketCount + waterskinCount;
+        
+            if (totalContainers === 0) {
+                addLog("You don't have any empty containers to fill with water.");
+                return;
+            }
+        
+            const onConfirm = (quantity: number) => {
+                if (quantity <= 0) return;
+        
+                const vialsToFill = Math.min(quantity, vialCount);
+                const bucketsToFill = Math.min(quantity - vialsToFill, bucketCount);
+                const waterskinsToFill = Math.min(quantity - vialsToFill - bucketsToFill, waterskinCount);
+                
+                if (vialsToFill > 0) {
+                    modifyItem('vial', -vialsToFill, true);
+                    modifyItem('vial_of_water', vialsToFill, true, { bypassAutoBank: true });
+                }
+                if (bucketsToFill > 0) {
+                    modifyItem('bucket', -bucketsToFill, true);
+                    modifyItem('bucket_of_water', bucketsToFill, true, { bypassAutoBank: true }); 
+                }
+                if (waterskinsToFill > 0) {
+                    setInventory(prevInv => {
+                        const newInv = [...prevInv];
+                        let filledCount = 0;
+                        for (let i = 0; i < newInv.length && filledCount < waterskinsToFill; i++) {
+                            const slot = newInv[i];
+                            if (slot?.itemId === 'waterskin' && (slot.doses === undefined || slot.doses === 0)) {
+                                newInv[i] = { ...slot, doses: 4 };
+                                filledCount++;
+                            }
+                        }
+                        return newInv;
+                    });
+                }
     
-        if (totalContainers === 0) {
-            addLog("You don't have any empty containers to fill with water.");
+                const logParts = [];
+                if (vialsToFill > 0) logParts.push(`${vialsToFill} vial${vialsToFill > 1 ? 's' : ''}`);
+                if (bucketsToFill > 0) logParts.push(`${bucketsToFill} bucket${bucketsToFill > 1 ? 's' : ''}`);
+                if (waterskinsToFill > 0) logParts.push(`${waterskinsToFill} waterskin${waterskinsToFill > 1 ? 's' : ''}`);
+        
+                if (logParts.length > 0) {
+                    addLog(`You fill ${logParts.join(' and ')} with water.`);
+                }
+            };
+    
+            if (totalContainers === 1) {
+                onConfirm(1);
+            } else {
+                setMakeXPrompt({
+                    title: 'Collect Water',
+                    max: totalContainers,
+                    onConfirm
+                });
+            }
+        }
+    }, [inventory, addLog, modifyItem, setMakeXPrompt, setInventory]);
+    
+    const handleCutCactus = useCallback(() => {
+        const slashWeapons = [WeaponType.Sword, WeaponType.Scimitar, WeaponType.Dagger, WeaponType.Axe, WeaponType.Battleaxe];
+        const equippedWeapon = equipment.weapon ? ITEMS[equipment.weapon.itemId] : null;
+        const hasSlashWeapon = (equippedWeapon && equippedWeapon.equipment?.weaponType && slashWeapons.includes(equippedWeapon.equipment.weaponType)) || hasItems([{ itemId: 'knife', quantity: 1 }]);
+
+        if (!hasSlashWeapon) {
+            addLog("You need a knife or a slash weapon to cut this cactus.");
             return;
         }
-    
-        const onConfirm = (quantity: number) => {
-            if (quantity <= 0) return;
-    
-            const vialsToFill = Math.min(quantity, vialCount);
-            const bucketsToFill = Math.min(quantity - vialsToFill, bucketCount);
-            
-            if (vialsToFill > 0) {
-                modifyItem('vial', -vialsToFill, true);
-                modifyItem('vial_of_water', vialsToFill, true, undefined, { bypassAutoBank: true });
-            }
-            if (bucketsToFill > 0) {
-                modifyItem('bucket', -bucketsToFill, true);
-                modifyItem('bucket_of_water', bucketsToFill, true, undefined, { bypassAutoBank: true }); 
-            }
-    
-            const logParts = [];
-            if (vialsToFill > 0) logParts.push(`${vialsToFill} vial${vialsToFill > 1 ? 's' : ''}`);
-            if (bucketsToFill > 0) logParts.push(`${bucketsToFill} bucket${bucketsToFill > 1 ? 's' : ''}`);
-    
-            if (logParts.length > 0) {
-                addLog(`You fill ${logParts.join(' and ')} with water.`);
-            }
-        };
 
-        if (totalContainers === 1) {
-            onConfirm(1);
-        } else {
-            setMakeXPrompt({
-                title: 'Collect Water',
-                max: totalContainers,
-                onConfirm
-            });
+        let waterskinToFillIndex = -1;
+        // Prioritize empty waterskins
+        waterskinToFillIndex = inventory.findIndex(slot => slot?.itemId === 'waterskin' && (slot.doses === 0 || slot.doses === undefined));
+        // If no empty ones, find a partially filled one
+        if (waterskinToFillIndex === -1) {
+            waterskinToFillIndex = inventory.findIndex(slot => slot?.itemId === 'waterskin' && slot.doses !== undefined && slot.doses > 0 && slot.doses < 4);
         }
-    }, [inventory, addLog, modifyItem, setMakeXPrompt]);
-    
+
+        if (waterskinToFillIndex === -1) {
+            addLog("You don't have any waterskins that need filling.");
+            return;
+        }
+        
+        setInventory(prevInv => {
+            const newInv = [...prevInv];
+            const waterskinSlot = newInv[waterskinToFillIndex];
+            if (waterskinSlot) {
+                newInv[waterskinToFillIndex] = { ...waterskinSlot, doses: 4 };
+            }
+            return newInv;
+        });
+
+        addLog("You skillfully slice the cactus and fill your waterskin.");
+        addXp(SkillName.Woodcutting, 15);
+    }, [equipment.weapon, hasItems, inventory, addLog, setInventory, addXp]);
+
     const handleCollectFlour = useCallback(() => {
         if (windmillFlour <= 0) {
             addLog("The windmill's hopper is empty. You need to mill some wheat first.");
             return;
         }
         setWindmillFlour(f => f - 1);
-        modifyItem('flour', 1, false, undefined, { bypassAutoBank: true });
+        modifyItem('flour', 1, false, { bypassAutoBank: true });
         addLog("You collect some flour from the hopper.");
     }, [windmillFlour, addLog, hasItems, setWindmillFlour, modifyItem]);
 
@@ -197,28 +280,29 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
         addLog("You insert the strange key into the ancient chest... it clicks open!");
 
         const randomHighGem = Math.random() < 0.75 ? 'uncut_ruby' : 'uncut_diamond';
-        modifyItem(randomHighGem, 1, false, undefined, { bypassAutoBank: true });
+        modifyItem(randomHighGem, 1, false, { bypassAutoBank: true });
+        modifyItem('uncut_sunstone', 1, false, { bypassAutoBank: true });
         
         const highRunes = ['nexus_rune', 'anima_rune', 'aether_rune', 'passage_rune'];
         for (let i = 0; i < 5; i++) {
             const rune = highRunes[Math.floor(Math.random() * highRunes.length)];
             const quantity = Math.floor(Math.random() * 21) + 10;
-            modifyItem(rune, quantity, true, undefined, { bypassAutoBank: true });
+            modifyItem(rune, quantity, true, { bypassAutoBank: true });
         }
         
         modifyItem('coins', Math.floor(Math.random() * 10001) + 5000, true);
 
         if (Math.random() < 0.5) {
-            modifyItem('adamantite_bar', Math.floor(Math.random() * 3) + 1, true, undefined, { bypassAutoBank: true });
+            modifyItem('adamantite_bar', Math.floor(Math.random() * 3) + 1, true, { bypassAutoBank: true });
         }
         if (Math.random() < 0.25) {
-            modifyItem('runic_bar', Math.floor(Math.random() * 2) + 1, true, undefined, { bypassAutoBank: true });
+            modifyItem('runic_bar', Math.floor(Math.random() * 2) + 1, true, { bypassAutoBank: true });
         }
         
         if (Math.random() < 0.01) {
             const aquatiteGear = ['aquatite_sword', 'aquatite_kiteshield', 'aquatite_platebody', 'aquatite_platelegs', 'aquatite_full_helm'];
             const randomPiece = aquatiteGear[Math.floor(Math.random() * aquatiteGear.length)];
-            modifyItem(randomPiece, 1, false, undefined, { bypassAutoBank: true });
+            modifyItem(randomPiece, 1, false, { bypassAutoBank: true });
             addLog("Incredibly lucky! You found a piece of Aquatite armor inside!");
         }
         addLog(`You find a pile of loot inside the chest!`);
@@ -234,5 +318,6 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
         handleCollectFlour,
         handleMillWheat,
         handleOpenAncientChest,
+        handleCutCactus,
     };
 };

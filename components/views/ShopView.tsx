@@ -98,7 +98,7 @@ const ShopSlot: React.FC<ShopSlotProps> = ({ slot, price, stock, shopId, playerC
                 disabled: maxBuyable < 1
             },
         ];
-        setContextMenu({ options, event: eventForMenu, isTouchInteraction: 'touches' in e || 'changedTouches' in e });
+        setContextMenu({ options, triggerEvent: eventForMenu, isTouchInteraction: 'touches' in e || 'changedTouches' in e, title: getDisplayName(slot) });
     };
 
 

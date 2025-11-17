@@ -34,7 +34,14 @@ const JewelrySlot: React.FC<{
 
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();
-        const event = 'touches' in e ? e.touches[0] : e;
+        let eventForMenu: React.MouseEvent | React.Touch;
+        if ('touches' in e && e.touches.length > 0) {
+            eventForMenu = e.touches[0];
+        } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+            eventForMenu = e.changedTouches[0];
+        } else {
+            eventForMenu = e as React.MouseEvent;
+        }
         setContextMenu({
             options: [
                 { label: 'Craft 1', onClick: () => onCraftItem(recipe.itemId, 1), disabled: !canCraft },
@@ -48,7 +55,10 @@ const JewelrySlot: React.FC<{
                     }),
                     disabled: !canCraft
                 },
-            ], event, isTouchInteraction: isTouchDevice
+            ],
+            triggerEvent: eventForMenu,
+            isTouchInteraction: isTouchDevice,
+            title: item.name
         });
     };
 

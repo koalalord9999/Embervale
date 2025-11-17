@@ -15,7 +15,6 @@ import { useSkilling } from '../../hooks/useSkilling';
 import { useInteractQuest } from '../../hooks/useInteractQuest';
 import { useGameSession } from '../../hooks/useGameSession';
 import { useItemActions } from '../../hooks/useItemActions';
-// FIX: Import the 'POI' type to resolve a 'Cannot find name' error for the 'poi' prop.
 import { SkillName, InventorySlot, CombatStance, POIActivity, GroundItem, Spell, BonfireActivity, DialogueCheckRequirement, DialogueAction, BankTab, WorldState, PlayerRepeatableQuest, ActiveBuff, DialogueResponse, Monster, MonsterType, SpellElement, PlayerType, POI } from '../../types';
 import { POIS } from '../../data/pois';
 import CraftingProgressView from '../views/crafting/CraftingProgressView';
@@ -113,6 +112,8 @@ interface MainViewControllerProps {
     worldState: WorldState;
     onStartCombat: (uniqueInstanceId: string) => void;
     poi: POI | null;
+    activePrayers: string[];
+    onJewelryCraft: (itemId: string, quantity: number) => void;
 }
 
 const MainViewController: React.FC<MainViewControllerProps> = (props) => {
@@ -137,6 +138,8 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
         worldState,
         onStartCombat,
         poi,
+        activePrayers,
+        onJewelryCraft,
     } = props;
 
     const handleTeleport = useCallback((toBoardId: string) => {
@@ -190,6 +193,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 showPlayerHealthNumbers={ui.showCombatPlayerHealth}
                 showEnemyHealthNumbers={ui.showCombatEnemyHealth}
                 showHitsplats={ui.showHitsplats}
+                activePrayers={activePrayers}
             />;
         }
         if (ui.activeTeleportBoardId) {
@@ -240,6 +244,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
             playerQuests={quests.playerQuests}
             onCook={crafting.handleCooking}
             onCraftItem={crafting.handleCrafting}
+            onMakeDough={crafting.handleDoughMaking}
             onFletch={crafting.handleFletching}
             onCut={crafting.handleGemCutting}
             onSmithBar={crafting.handleSmelting}
@@ -249,6 +254,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
             setContextMenu={ui.setContextMenu}
             setMakeXPrompt={ui.setMakeXPrompt}
             setTooltip={ui.setTooltip}
+            onJewelryCraft={onJewelryCraft}
         />;
         
         if (ui.activeQuestBoardId) return <QuestBoardView 
@@ -308,7 +314,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 ui={ui}
                 isTouchSimulationEnabled={isTouchSimulationEnabled}
                 worldActions={worldActions}
-                bonfires={bonfires}
+                bonfires={bonfires.filter(b => b.uniqueId.startsWith(session.currentPoiId))}
                 onStokeBonfire={onStokeBonfire}
                 isOneClickMode={ui.isOneClickMode}
                 onPickpocket={onPickpocket}
@@ -318,6 +324,8 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 onStealFromStall={onStealFromStall}
                 worldState={worldState}
                 groundItemsForCurrentPoi={groundItemsForCurrentPoi}
+                handleCutCactus={worldActions.handleCutCactus}
+                equipment={inv.equipment}
             />
         );
     })();

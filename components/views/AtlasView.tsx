@@ -1,3 +1,5 @@
+
+
 import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { POI, Region, WorldState } from '../../types';
 import { REGIONS, MAP_FEATURES } from '../../constants';
@@ -163,7 +165,7 @@ const AtlasView: React.FC<AtlasViewProps> = ({ currentPoiId, unlockedPois, onClo
         // 1. Initial grouping of POIs by region
         poisForHull.forEach(poi => {
             const region = REGIONS[poi.regionId];
-            if (region?.type !== 'city' && region?.type !== 'dungeon') {
+            if (region?.type !== 'city' && region?.type !== 'dungeon' && region?.type !== 'underground') {
                 if (!poisByRegion[poi.regionId]) {
                     poisByRegion[poi.regionId] = [];
                 }
@@ -180,14 +182,14 @@ const AtlasView: React.FC<AtlasViewProps> = ({ currentPoiId, unlockedPois, onClo
         // 3. Find connections between regions and add "bridge" points
         poisForHull.forEach(startPoi => {
             const startRegion = REGIONS[startPoi.regionId];
-            if (!startRegion || startRegion.type === 'city' || startRegion.type === 'dungeon') return;
+            if (!startRegion || ['city', 'dungeon', 'underground'].includes(startRegion.type)) return;
 
             startPoi.connections.forEach(connId => {
                 const endPoi = POIS[connId];
                 if (!endPoi || (!showAllPois && !unlockedPois.includes(endPoi.id))) return;
 
                 const endRegion = REGIONS[endPoi.regionId];
-                if (!endRegion || endRegion.type === 'city' || endRegion.type === 'dungeon' || endRegion.id === startRegion.id) return;
+                if (!endRegion || ['city', 'dungeon', 'underground'].includes(endRegion.type) || endRegion.id === startRegion.id) return;
                 
                 // Add a midpoint to push the hulls together
                 const bridgePoint = {
@@ -224,7 +226,7 @@ const AtlasView: React.FC<AtlasViewProps> = ({ currentPoiId, unlockedPois, onClo
         return {
             regionPolygons: polygons,
             regionsToDisplay: Object.values(REGIONS).filter(r => r.type === 'city'),
-            dungeonsToDisplay: Object.values(REGIONS).filter(r => r.type === 'dungeon'),
+            dungeonsToDisplay: Object.values(REGIONS).filter(r => r.type === 'dungeon' || r.type === 'underground'),
         };
     }, [unlockedPois, showAllPois]);
 
@@ -246,7 +248,7 @@ const AtlasView: React.FC<AtlasViewProps> = ({ currentPoiId, unlockedPois, onClo
                 className="bg-gray-800 border-4 border-gray-600 rounded-lg shadow-xl w-full max-w-6xl h-full max-h-[90vh] flex flex-col"
                 onClick={e => e.stopPropagation()}
             >
-                <div className="flex justify-between items-center p-4 bg-gray-900/50 border-b-2 border-gray-600">
+                <div className="flex justify-between items-center p-4 bg-gray-900/50 border-b-2 border-gray-700">
                     <h1 className="text-3xl font-bold text-yellow-400">World Atlas</h1>
                     <Button onClick={onClose} size="sm">Close</Button>
                 </div>

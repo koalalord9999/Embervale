@@ -1,3 +1,4 @@
+
 import { Quest, SkillName } from '../../types';
 
 export const aSmithsApprentice: Quest = {
@@ -5,7 +6,6 @@ export const aSmithsApprentice: Quest = {
     name: "A Smith's Apprentice",
     description: "Valerius the Master Smith is looking for an extra pair of hands to help around the smithy. This could be a good opportunity to learn the craft.",
     startHint: "Speak to Valerius the Master Smith in Meadowdale.",
-    startDialogueNode: 'quest_intro_a_smiths_apprentice',
     playerStagePerspectives: [
         "Valerius needs me to bring him 1 Copper Ore and 1 Tin Ore.",
         "I should bring the ore back to Valerius.",
@@ -39,6 +39,13 @@ export const aSmithsApprentice: Quest = {
         xp: [{ skill: SkillName.Smithing, amount: 100 }],
         coins: 100
     },
+    dialogueEntryPoints: [
+        { npcName: 'Valerius the Master Smith', response: { text: "I've smithed the dagger.", check: { requirements: [{ type: 'quest', questId: 'a_smiths_apprentice', status: 'in_progress', stage: 3 }], successNode: 'in_progress_a_smiths_apprentice_3', failureNode: '' } } },
+        { npcName: 'Valerius the Master Smith', response: { text: "About the dagger...", check: { requirements: [{ type: 'quest', questId: 'a_smiths_apprentice', status: 'in_progress', stage: 2 }], successNode: 'in_progress_a_smiths_apprentice_2', failureNode: '' } } },
+        { npcName: 'Valerius the Master Smith', response: { text: "I have the ores you asked for.", check: { requirements: [{ type: 'quest', questId: 'a_smiths_apprentice', status: 'in_progress', stage: 1 }], successNode: 'in_progress_a_smiths_apprentice_1', failureNode: '' } } },
+        { npcName: 'Valerius the Master Smith', response: { text: "About the apprenticeship...", check: { requirements: [{ type: 'quest', questId: 'a_smiths_apprentice', status: 'in_progress', stage: 0 }], successNode: 'in_progress_a_smiths_apprentice_0', failureNode: '' } } },
+        { npcName: 'Valerius the Master Smith', response: { text: "I'm looking for work.", check: { requirements: [{ type: 'quest', questId: 'a_smiths_apprentice', status: 'not_started' }], successNode: 'quest_intro_a_smiths_apprentice', failureNode: '' } } }
+    ],
     dialogue: {
         quest_intro_a_smiths_apprentice: {
             npcName: 'Valerius the Master Smith',
@@ -63,6 +70,18 @@ export const aSmithsApprentice: Quest = {
                 { text: "I'll be back with your ore.", actions: [{ type: 'start_quest', questId: 'a_smiths_apprentice' }] },
             ],
         },
+        a_smiths_apprentice_progress_router: {
+            npcName: 'Valerius the Master Smith',
+            npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
+            text: '',
+            responses: [],
+            conditionalResponses: [
+                { text: '', check: { requirements: [{ type: 'quest', questId: 'a_smiths_apprentice', status: 'in_progress', stage: 0 }], successNode: 'in_progress_a_smiths_apprentice_0', failureNode: '' } },
+                { text: '', check: { requirements: [{ type: 'quest', questId: 'a_smiths_apprentice', status: 'in_progress', stage: 1 }], successNode: 'in_progress_a_smiths_apprentice_1', failureNode: '' } },
+                { text: '', check: { requirements: [{ type: 'quest', questId: 'a_smiths_apprentice', status: 'in_progress', stage: 2 }], successNode: 'in_progress_a_smiths_apprentice_2', failureNode: '' } },
+                { text: '', check: { requirements: [{ type: 'quest', questId: 'a_smiths_apprentice', status: 'in_progress', stage: 3 }], successNode: 'in_progress_a_smiths_apprentice_3', failureNode: '' } },
+            ]
+        },
         in_progress_a_smiths_apprentice_0: {
             npcName: 'Valerius the Master Smith',
             npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
@@ -82,7 +101,7 @@ export const aSmithsApprentice: Quest = {
             npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
             text: "That's the heart of smithing: making things better than they were before. Here, take this bar I've smelted for you. Now, to the anvil! Turn that metal into a Bronze Dagger.",
             responses: [
-                { text: "Thank you, I'll get to it.", actions: [{ type: 'advance_quest', questId: 'a_smiths_apprentice' }, { type: 'take_item', itemId: 'copper_ore', quantity: 1 }, { type: 'take_item', itemId: 'tin_ore', quantity: 1 }, { type: 'give_item', itemId: 'bronze_bar', quantity: 1 }, { type: 'give_item', itemId: 'hammer', quantity: 1 }] }
+                { text: "Thank you, I'll get to it.", actions: [{ type: 'advance_quest', questId: 'a_smiths_apprentice' }, { type: 'take_item', itemId: 'copper_ore', quantity: 1 }, { type: 'take_item', itemId: 'tin_ore', quantity: 1 }, { type: 'give_item', itemId: 'hammer', quantity: 1 }] }
             ]
         },
         in_progress_a_smiths_apprentice_2: {

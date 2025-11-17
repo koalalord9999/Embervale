@@ -1,3 +1,5 @@
+
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { POIActivity, ResourceNodeState, SkillName, PlayerSkill, InventorySlot, ToolType, Equipment, Item } from '../types';
 import { INVENTORY_CAPACITY, ITEMS, rollOnLootTable, LootRollResult, LOG_HARDNESS, ORE_HARDNESS } from '../constants';
@@ -10,7 +12,7 @@ interface SkillingDependencies {
     skills: (PlayerSkill & { currentLevel: number })[];
     addXp: (skill: SkillName, amount: number) => void;
     inventory: (InventorySlot | null)[];
-    modifyItem: (itemId: string, quantity: number, quiet?: boolean) => void;
+    modifyItem: (itemId: string, quantity: number, quiet?: boolean, slotOverrides?: Partial<Omit<InventorySlot, 'itemId' | 'quantity'>> & { bypassAutoBank?: boolean }) => void;
     equipment: Equipment;
     setEquipment: React.Dispatch<React.SetStateAction<Equipment>>;
     checkQuestProgressOnShear: () => void;
@@ -45,13 +47,32 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
                 return;
             }
 
+            const { inventory, addLog, skills, addXp, modifyItem, checkQuestProgressOnShear, equipment } = depsRef.current;
+            const { nodeId, activity } = activeSkilling;
+
+            // Check if skill level is still high enough to perform the action.
+            const skillNeeded = skills.find(s => s.name === activity.skill);
+            if (skillNeeded && skillNeeded.currentLevel < activity.requiredLevel) {
+                let actionVerb = 'gathering';
+                switch (activity.skill) {
+                    case SkillName.Fishing: actionVerb = 'catching'; break;
+                    case SkillName.Woodcutting: actionVerb = 'chopping'; break;
+                    case SkillName.Mining: actionVerb = 'mining'; break;
+                    case SkillName.Crafting: actionVerb = 'crafting'; break;
+                }
+                
+                const primaryLootItemName = activity.loot[0] ? ITEMS[activity.loot[0].itemId]?.name.replace('Raw ', '').toLowerCase() : 'resources';
+                
+                addLog(`Your ${activity.skill} level is too low to continue ${actionVerb} ${primaryLootItemName}.`);
+                setActiveSkilling(null);
+                return;
+            }
+
             if (inventory.filter(Boolean).length >= INVENTORY_CAPACITY) {
                 addLog("Your inventory is full. You stop gathering.");
                 setActiveSkilling(null);
                 return;
             }
-
-            const { nodeId, activity } = activeSkilling;
             
             setSkillingTick(t => t + 1);
             
@@ -87,6 +108,50 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
                             });
                         }
                         break; 
+                    }
+                }
+                
+                // Gem finding logic for mining
+                if (activity.skill === SkillName.Mining) {
+                    const { equipment, addLog, modifyItem } = depsRef.current;
+                    const gemChance = equipment.necklace?.itemId === 'amulet_of_fate' ? 1 / 625 : 1 / 1000;
+
+                    if (Math.random() < gemChance) {
+                        if (equipment.ring?.itemId === 'ring_of_greed') {
+                            addLog("Your ring tugs at your finger");
+                        }
+
+                        const gemRank: Record<string, number> = { 
+                            'uncut_sapphire': 1, 
+                            'uncut_emerald': 2, 
+                            'uncut_ruby': 3, 
+                            'uncut_diamond': 4,
+                            'uncut_sunstone': 5,
+                            'uncut_tenebrite': 6
+                        };
+                        let gemToAward: string | null = null;
+                        
+                        if (equipment.necklace?.itemId === 'amulet_of_fate') {
+                            addLog("Your Amulet of Fate glows, improving your luck.");
+                            const roll1 = rollOnLootTable('gem_table');
+                            const roll2 = rollOnLootTable('gem_table');
+                            
+                            if (typeof roll1 === 'string' && typeof roll2 === 'string') {
+                                gemToAward = gemRank[roll2 as keyof typeof gemRank] > gemRank[roll1 as keyof typeof gemRank] ? roll2 : roll1;
+                            } else {
+                                gemToAward = (typeof roll1 === 'string' ? roll1 : null) || (typeof roll2 === 'string' ? roll2 : null);
+                            }
+                        } else {
+                            const result = rollOnLootTable('gem_table');
+                            if (typeof result === 'string') {
+                                gemToAward = result;
+                            }
+                        }
+                        
+                        if (gemToAward) {
+                            modifyItem(gemToAward, 1);
+                            addLog(`You find a gem in the rock!`);
+                        }
                     }
                 }
             }

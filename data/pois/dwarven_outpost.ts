@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 
 export const dwarvenOutpostPois: Record<string, POI> = {
@@ -26,10 +27,33 @@ export const dwarvenOutpostPois: Record<string, POI> = {
                 pickpocket: { lootTableId: 'pickpocket_dwarf_table' },
                 attackableMonsterId: 'dwarf',
                 startNode: 'durin_default',
+                questTopics: ['the_arcane_awakening', 'depths_of_despair'],
+                conditionalGreetings: [
+                    // Depths of Despair (HIGHEST PRIORITY)
+                    { text: "The tremors... they've stopped! By my ancestors, you're back! Did you find the source? Tell me everything!", check: { requirements: [{ type: 'quest', questId: 'depths_of_despair', status: 'in_progress', stage: 3 }] } },
+                    { text: "The shaking has gotten worse! What are you doing back here? You must be close to the source. Get back down there and put a stop to it!", check: { requirements: [{ type: 'quest', questId: 'depths_of_despair', status: 'in_progress', stage: 2 }] } },
+                    { text: "What are you doing back here? The source of the tremors is deep within that chasm, not up here! Be careful down there.", check: { requirements: [{ type: 'quest', questId: 'depths_of_despair', status: 'in_progress', stage: 1 }] } },
+                    { text: "Still here? The tremors are getting worse! The entrance to the chasm is through our outpost mine. Get a move on!", check: { requirements: [{ type: 'quest', questId: 'depths_of_despair', status: 'in_progress', stage: 0 }] } },
+                    { text: "Ah, the hero of the outpost! That pickaxe I forged for you... my finest work. The chasm is stable, and the mines are rich. We owe you a great debt.", check: { requirements: [{ type: 'quest', questId: 'depths_of_despair', status: 'completed' }] } },
+                    { text: "*Durin looks worried, constantly checking the vibrations in the floor.* The whole outpost shakes like a jelly in a giant's hand!", check: { requirements: [{ type: 'quest', questId: 'depths_of_despair', status: 'not_started' }, { type: 'skill', skill: SkillName.Smithing, level: 40 }] } },
+
+                    // The Arcane Awakening
+                    { text: "Another gawker? If you're not here to buy a pickaxe, state your business and be on your way.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 3 }] } },
+                    { text: "Still gathering the parts for that dampener? The Golem Cores are tough, but the Pearl is the real prize. Don't dawdle, the sky isn't getting any calmer.", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 4 }] } },
+                    { text: "Back so soon? Let me guess, you couldn't find the pearl?", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 5 }] } },
+                ],
+                dialogue: {
+                    durin_default: {
+                        npcName: 'Durin',
+                        npcIcon: '/assets/npcChatHeads/prospector_gudrun.png',
+                        text: "If it's a pickaxe you need, you've come to the right place. Finest in the land.",
+                        responses: []
+                    }
+                }
              }
         ],
         regionId: 'dwarven_outpost',
-        x: 250, y: 300,
+        x: 250, y: 600,
         type: 'internal',
     },
     outpost_mine: {
@@ -49,7 +73,7 @@ export const dwarvenOutpostPois: Record<string, POI> = {
             { type: 'thieving_lockpick', id: 'do_mine_chest_1', targetName: 'Dwarven Footlocker', lootTableId: 'thieving_dungeon_chest_mid' },
         ],
         regionId: 'dwarven_outpost',
-        x: 250, y: 150,
+        x: 250, y: 650,
         type: 'internal',
     },
 };

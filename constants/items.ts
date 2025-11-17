@@ -1,11 +1,10 @@
-
-
 // This barrel file combines all item data from the /items directory.
 
 import { Item } from '../types';
 import { armor } from './items/armor';
 import { foodAndPotions } from './items/foodAndPotions';
 import { misc } from './items/misc';
+import { misc_two } from './items/misc_two';
 import { resources } from './items/resources';
 import { weaponsAndTools } from './items/weaponsAndTools';
 import { herbloreItems } from './items/herbloreItems';
@@ -16,6 +15,7 @@ const allItemsUnsorted: Item[] = [
     ...armor,
     ...foodAndPotions,
     ...misc,
+    ...misc_two,
     ...resources,
     ...weaponsAndTools,
     ...herbloreItems,

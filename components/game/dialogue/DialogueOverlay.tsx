@@ -9,7 +9,7 @@ interface DialogueOverlayProps {
 }
 
 const DialogueOverlay: React.FC<DialogueOverlayProps> = ({ dialogue, setActivePanel }) => {
-    const { npcName, npcIcon, nodes, currentNodeKey, onEnd, onResponse, handleDialogueCheck } = dialogue;
+    const { npcName, npcIcon, nodes, currentNodeKey, onEnd, onResponse, handleDialogueCheck, onNavigate } = dialogue;
     
     const [textPage, setTextPage] = useState(0);
     const [optionPage, setOptionPage] = useState(0);
@@ -39,6 +39,20 @@ const DialogueOverlay: React.FC<DialogueOverlayProps> = ({ dialogue, setActivePa
         return pages;
     }, [currentNode]);
 
+    useEffect(() => {
+        const node = nodes[currentNodeKey];
+        if (node && node.conditionalResponses && onNavigate && handleDialogueCheck) {
+            // Find the first matching conditional response that acts as a router
+            const routerResponse = node.conditionalResponses.find(res => 
+                res.check && (res.text === "" || res.text === undefined) && handleDialogueCheck(res.check.requirements)
+            );
+            if (routerResponse) {
+                onNavigate(routerResponse.check!.successNode);
+                return; // Navigate and prevent rendering this node
+            }
+        }
+    }, [currentNodeKey, nodes, onNavigate, handleDialogueCheck]);
+
     const visibleResponses = useMemo(() => {
         if (!currentNode) return [];
         
@@ -48,6 +62,7 @@ const DialogueOverlay: React.FC<DialogueOverlayProps> = ({ dialogue, setActivePa
         if (currentNode.conditionalResponses && handleDialogueCheck) {
             conditionalVisibleResponses = currentNode.conditionalResponses.filter(res => {
                 if (!res.check) return true; // Show if no check is defined
+                if (res.text === "" || res.text === undefined) return false; // Hide router responses
                 return handleDialogueCheck(res.check.requirements);
             });
         }

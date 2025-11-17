@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { InventorySlot, PlayerSkill, SkillName } from '../../../types';
 import { SPINNING_RECIPES, ITEMS, getIconClassName } from '../../../constants';
@@ -48,7 +46,7 @@ const SpinningView: React.FC<SpinningViewProps> = ({ inventory, skills, onSpin, 
                 disabled: !hasLevel || maxCraftable < 1 
             },
         ];
-        setContextMenu({ options, event: e, isTouchInteraction: false });
+        setContextMenu({ options, triggerEvent: e, isTouchInteraction: false });
     };
 
     return (

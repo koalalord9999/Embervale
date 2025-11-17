@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
+
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Button from '../common/Button';
 import { useInventory } from '../../hooks/useInventory';
 import { Item, SkillName, ToolType } from '../../types';
@@ -16,11 +17,14 @@ interface GameManagerProps {
     hasMapChanges: boolean;
     isTouchSimulationEnabled: boolean;
     onToggleTouchSimulation: () => void;
+    onResetQuestBoards: () => void;
+    onResetPilferingHouses: () => void;
 }
 
 const GameManagerComponent: React.FC<GameManagerProps> = ({
     onResetQuest, showAllPois, onToggleShowAllPois, isMapManagerEnabled,
-    onToggleMapManager, onCommitMapChanges, hasMapChanges, isTouchSimulationEnabled, onToggleTouchSimulation
+    onToggleMapManager, onCommitMapChanges, hasMapChanges, isTouchSimulationEnabled, onToggleTouchSimulation,
+    onResetQuestBoards, onResetPilferingHouses
 }) => {
     const [questToReset, setQuestToReset] = useState<string>('');
 
@@ -35,6 +39,15 @@ const GameManagerComponent: React.FC<GameManagerProps> = ({
                         {Object.values(QUESTS).sort((a,b) => a.name.localeCompare(b.name)).map(q => <option key={q.id} value={q.id}>{q.name}</option>)}
                     </select>
                     <Button size="sm" onClick={() => { if (questToReset) onResetQuest(questToReset); }} disabled={!questToReset}>Reset</Button>
+                </div>
+            </div>
+
+            {/* Reset Timers */}
+            <div>
+                <label className="block text-sm font-semibold mb-1">Reset Timers</label>
+                <div className="grid grid-cols-2 gap-2">
+                    <Button size="sm" onClick={onResetQuestBoards}>Quest Boards</Button>
+                    <Button size="sm" onClick={onResetPilferingHouses}>Pilfering Houses</Button>
                 </div>
             </div>
 
@@ -71,8 +84,8 @@ interface CheatsComponentProps {
     instantRespawnCounter: number | null;
     setInstantRespawnCounter: (count: number | null) => void;
     isInCombat: boolean;
-    isCurrentMonsterAggro: boolean;
-    onToggleAggro: () => void;
+    isPermAggroOn: boolean;
+    onTogglePermAggro: () => void;
     isPlayerInvisible: boolean;
     setIsPlayerInvisible: (isInvisible: boolean) => void;
     isAutoBankOn: boolean;
@@ -83,14 +96,16 @@ interface CheatsComponentProps {
     onKillMonster: () => void;
     onAddCoins: (amount: number) => void;
     onSetSkillLevel: (skill: SkillName, level: number) => void;
+    isGodModeOn: boolean;
+    setIsGodModeOn: (isOn: boolean) => void;
 }
 
 const CheatsComponent: React.FC<CheatsComponentProps> = ({
     combatSpeedMultiplier, setCombatSpeedMultiplier, isInstantRespawnOn, setIsInstantRespawnOn,
-    instantRespawnCounter, setInstantRespawnCounter, isInCombat, isCurrentMonsterAggro,
-    onToggleAggro, isPlayerInvisible, setIsPlayerInvisible, isAutoBankOn, setIsAutoBankOn,
+    instantRespawnCounter, setInstantRespawnCounter, isInCombat,
+    isPermAggroOn, onTogglePermAggro, isPlayerInvisible, setIsPlayerInvisible, isAutoBankOn, setIsAutoBankOn,
     xpMultiplier, setXpMultiplier,
-    onHealPlayer, onKillMonster, onAddCoins, onSetSkillLevel
+    onHealPlayer, onKillMonster, onAddCoins, onSetSkillLevel, isGodModeOn, setIsGodModeOn
 }) => {
     const [skillToSet, setSkillToSet] = useState<SkillName | ''>('');
     const [levelToSet, setLevelToSet] = useState(1);
@@ -132,20 +147,18 @@ const CheatsComponent: React.FC<CheatsComponentProps> = ({
              {/* XP Multiplier */}
             <div>
                 <label className="block text-sm font-semibold mb-1">XP Multiplier</label>
-                <div className="flex gap-2 items-center">
-                    <div className="flex flex-wrap gap-1">
-                        {[1, 2, 5, 10, 25, 50, 100].map(val => (
-                            <Button
-                                key={val}
-                                size="sm"
-                                variant={xpMultiplier === val ? 'primary' : 'secondary'}
-                                onClick={() => setXpMultiplier(val)}
-                                className="px-1.5" // Tighter padding
-                            >
-                                {val}x
-                            </Button>
-                        ))}
-                    </div>
+                <div className="flex flex-wrap gap-1">
+                    {[1, 2, 5, 10, 25, 50, 100].map(val => (
+                        <Button
+                            key={val}
+                            size="sm"
+                            variant={xpMultiplier === val ? 'primary' : 'secondary'}
+                            onClick={() => setXpMultiplier(val)}
+                            className="px-1.5" // Tighter padding
+                        >
+                            {val}x
+                        </Button>
+                    ))}
                 </div>
             </div>
             {/* Combat Speed */}
@@ -167,6 +180,11 @@ const CheatsComponent: React.FC<CheatsComponentProps> = ({
                     <input type="number" placeholder="Count" disabled={!isInstantRespawnOn} value={instantRespawnCounter ?? ''} onChange={e => setInstantRespawnCounter(e.target.value ? parseInt(e.target.value, 10) : null)} className="w-20 p-1 text-xs bg-gray-800 border border-gray-600 rounded disabled:opacity-50 text-center" />
                 </div>
             </div>
+            {/* God Mode */}
+            <div>
+                <label className="block text-sm font-semibold mb-1">God Mode</label>
+                <button onClick={() => setIsGodModeOn(!isGodModeOn)} className={`w-full py-1 text-xs rounded font-bold transition-colors ${isGodModeOn ? 'bg-green-600 hover:bg-green-500' : 'bg-red-700 hover:bg-red-600'}`}>{isGodModeOn ? 'ON' : 'OFF'}</button>
+            </div>
             {/* Invisibility */}
             <div>
                 <label className="block text-sm font-semibold mb-1">Invisibility</label>
@@ -180,8 +198,8 @@ const CheatsComponent: React.FC<CheatsComponentProps> = ({
             {/* Perm-Aggro */}
             <div>
                 <label className="block text-sm font-semibold mb-1">Permanent Aggro</label>
-                <button onClick={onToggleAggro} disabled={!isInCombat} className={`w-full py-1 text-xs rounded font-bold transition-colors ${isCurrentMonsterAggro ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-700 hover:bg-gray-600'} disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed`}>
-                    {isCurrentMonsterAggro ? 'ON (Current)' : 'OFF (Current)'}
+                <button onClick={onTogglePermAggro} className={`w-full py-1 text-xs rounded font-bold transition-colors ${isPermAggroOn ? 'bg-green-600 hover:bg-green-500' : 'bg-red-700 hover:bg-red-600'}`}>
+                    {isPermAggroOn ? 'ON (Global)' : 'OFF (Global)'}
                 </button>
             </div>
         </div>
@@ -219,12 +237,16 @@ const ItemSpawnerComponent: React.FC<ItemSpawnerProps> = ({ inv, setTooltip, sea
 
     useEffect(() => {
         setQuantity(selectedItem?.stackable ? 1000 : 1);
-    }, [selectedItem]);
+    }, [selectedItem, setQuantity]);
 
     const handleSpawn = () => {
         if (!selectedItem || quantity <= 0) return;
         const actualQuantity = Math.min(quantity, maxQty);
-        modifyItem(selectedItem.id, actualQuantity, false, undefined, { bypassAutoBank: true });
+        modifyItem(selectedItem.id, actualQuantity, false, {
+            doses: selectedItem.initialDoses,
+            charges: selectedItem.charges,
+            bypassAutoBank: true
+        });
     };
     
     const handleQuantityChange = (value: string) => {
@@ -358,6 +380,8 @@ interface DevPanelProps {
     instantRespawnCounter: number | null;
     setInstantRespawnCounter: (count: number | null) => void;
     isInCombat: boolean;
+    isPermAggroOn: boolean;
+    onTogglePermAggro: () => void;
     isCurrentMonsterAggro: boolean;
     onToggleAggro: () => void;
     isPlayerInvisible: boolean;
@@ -370,6 +394,8 @@ interface DevPanelProps {
     onKillMonster: () => void;
     onAddCoins: (amount: number) => void;
     onSetSkillLevel: (skill: SkillName, level: number) => void;
+    isGodModeOn: boolean;
+    setIsGodModeOn: (isOn: boolean) => void;
 
     // Game Manager Props
     onResetQuest: (questId: string) => void;
@@ -383,6 +409,8 @@ interface DevPanelProps {
     onToggleTouchSimulation: () => void;
     setTooltip: (tooltip: TooltipState | null) => void;
     onForcedNavigate: (poiId: string) => void;
+    onResetQuestBoards: () => void;
+    onResetPilferingHouses: () => void;
 }
 
 const DevPanel: React.FC<DevPanelProps> = (props) => {
@@ -392,6 +420,11 @@ const DevPanel: React.FC<DevPanelProps> = (props) => {
     const setActiveTab = (tab: 'cheats' | 'items' | 'teleport' | 'game-manager' | 'monsters') => updateDevPanelState({ activeTab: tab });
 
     const selectedItem = useMemo(() => selectedItemId ? ITEMS[selectedItemId] : null, [selectedItemId]);
+
+    // Memoize the callbacks
+    const setSearchTerm = useCallback((term: string) => updateDevPanelState({ itemSearchTerm: term }), [updateDevPanelState]);
+    const setSelectedItem = useCallback((item: Item | null) => updateDevPanelState({ selectedItemId: item ? item.id : null }), [updateDevPanelState]);
+    const setQuantity = useCallback((qty: number) => updateDevPanelState({ spawnQuantity: qty }), [updateDevPanelState]);
 
     return (
         <div className="flex flex-col h-full text-gray-300 font-sans">
@@ -411,11 +444,11 @@ const DevPanel: React.FC<DevPanelProps> = (props) => {
                     inv={inv}
                     setTooltip={setTooltip}
                     searchTerm={itemSearchTerm}
-                    setSearchTerm={(term) => updateDevPanelState({ itemSearchTerm: term })}
+                    setSearchTerm={setSearchTerm}
                     selectedItem={selectedItem}
-                    setSelectedItem={(item) => updateDevPanelState({ selectedItemId: item ? item.id : null })}
+                    setSelectedItem={setSelectedItem}
                     quantity={spawnQuantity}
-                    setQuantity={(qty) => updateDevPanelState({ spawnQuantity: qty })}
+                    setQuantity={setQuantity}
                 />}
                 {activeTab === 'game-manager' && <GameManagerComponent {...otherProps} />}
                 {activeTab === 'teleport' && <TeleportComponent

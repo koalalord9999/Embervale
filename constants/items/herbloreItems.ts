@@ -28,8 +28,12 @@ const getPotionMaterial = (potionId: string): Item['material'] => {
 };
 
 // This helper function creates consumable properties for potions
-const getPotionEffect = (potionId: string): Item['consumable'] => {
+const getPotionEffect = (potionId: string): Item['consumable'] | undefined => {
     switch (potionId) {
+        case 'weapon_poison_weak':
+        case 'weapon_poison_strong':
+        case 'weapon_poison_super':
+            return undefined; // Weapon poisons are not directly consumable; they are used on items.
         case 'weak_attack_potion':
             return { statModifiers: [{ skill: SkillName.Attack, percent: 0.10, base: 2, duration: 180000 }] };
         case 'attack_potion':
@@ -100,10 +104,6 @@ const getPotionEffect = (potionId: string): Item['consumable'] => {
              return { buffs: [{ type: 'poison_immunity', value: 1, duration: 180000 }], curesPoison: true };
         case 'super_antipoison':
              return { buffs: [{ type: 'poison_immunity', value: 1, duration: 360000 }], curesPoison: true };
-        case 'weapon_poison_weak':
-            return { buffs: [{ type: 'poison_on_hit', style: 'melee', value: 1, duration: 300000, chance: 0.25 }] };
-        case 'weapon_poison_strong':
-             return { buffs: [{ type: 'poison_on_hit', style: 'melee', value: 3, duration: 300000, chance: 0.33 }] };
         case 'accuracy_potion':
             return { buffs: [{ type: 'accuracy_boost', style: 'all', value: 10, duration: 180000 }] };
         case 'evasion_potion':
@@ -180,7 +180,9 @@ const unfinishedPotions: Item[] = HERBLORE_RECIPES.unfinished.map(recipe => {
     }
 });
 
-const finishedPotions: Item[] = HERBLORE_RECIPES.finished.map(recipe => {
+const finishedPotions: Item[] = HERBLORE_RECIPES.finished
+    .filter(r => r.finishedPotionId !== 'anointing_oil')
+    .map(recipe => {
     const name = recipe.finishedPotionId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     const effect = getPotionEffect(recipe.finishedPotionId);
     let description = `A magical potion.`;
@@ -189,15 +191,17 @@ const finishedPotions: Item[] = HERBLORE_RECIPES.finished.map(recipe => {
     else if (effect?.buffs) description = `Grants a temporary buff.`;
     else if (recipe.finishedPotionId.includes('poison')) description = `A vial of deadly poison.`
     else if (recipe.finishedPotionId.includes('antipoison')) description = `Cures and prevents poison.`
+
+    const isWeaponPoison = recipe.finishedPotionId.startsWith('weapon_poison');
     
     // Special handling for Pouch Cleanser
     if (recipe.finishedPotionId === 'pouch_cleanser') {
         return {
             id: recipe.finishedPotionId,
             name: name,
+            stackable: false,
             description: 'A special herbal concoction that can clean grime off items. Has 25 charges.',
-            stackable: true,
-            value: recipe.level * 8,
+            value: 300,
             iconUrl: 'https://api.iconify.design/game-icons:potion-ball.svg',
             material: getPotionMaterial(recipe.finishedPotionId),
             charges: 25,
@@ -213,9 +217,10 @@ const finishedPotions: Item[] = HERBLORE_RECIPES.finished.map(recipe => {
         iconUrl: 'https://api.iconify.design/game-icons:potion-ball.svg',
         material: getPotionMaterial(recipe.finishedPotionId),
         consumable: effect,
-        doseable: true,
-        maxDoses: 4,
-        initialDoses: 3,
+        doseable: !isWeaponPoison,
+        maxDoses: isWeaponPoison ? 1 : 4,
+        initialDoses: isWeaponPoison ? 1 : 3,
+        emptyable: { emptyItemId: 'vial' },
     }
 });
 

@@ -1,0 +1,98 @@
+import { POI } from '../../types';
+
+export const sunbrightUndergroundCavePois: Record<string, POI> = {
+    suc_entrance: {
+        id: 'suc_entrance',
+        name: 'Cave Mouth',
+        description: 'The bottom of the ladder. The air is damp and smells of earth and decay. Several passages branch off into the gloom.',
+        connections: ['sunbright_cave_entrance', 'suc_botanist_den', 'suc_spider_nest'],
+        activities: [
+            { type: 'combat', monsterId: 'cloaked_bandit' },
+            { type: 'combat', monsterId: 'cloaked_bandit' },
+            { type: 'combat', monsterId: 'cloaked_bandit' },
+            { type: 'combat', monsterId: 'cloaked_bandit' },
+        ],
+        regionId: 'sunbright_underground_cave',
+        x: 100, y: 200, type: 'internal',
+    },
+    suc_botanist_den: {
+        id: 'suc_botanist_den',
+        name: 'Fungal Grotto',
+        description: 'This cavern is filled with strange, faintly glowing fungi. Several robed figures are tending to them.',
+        connections: ['suc_entrance', 'suc_skeleton_hall'],
+        activities: [
+            { type: 'combat', monsterId: 'deranged_botanist' },
+            { type: 'combat', monsterId: 'deranged_botanist' },
+            { type: 'combat', monsterId: 'deranged_botanist' },
+            { type: 'combat', monsterId: 'deranged_botanist' },
+            { type: 'combat', monsterId: 'deranged_botanist' },
+            { type: 'combat', monsterId: 'deranged_botanist' },
+        ],
+        regionId: 'sunbright_underground_cave',
+        x: 50, y: 200, type: 'internal',
+    },
+    suc_spider_nest: {
+        id: 'suc_spider_nest',
+        name: 'Web-Choked Tunnel',
+        description: 'Thick, sticky webs cover the walls and ceiling of this tunnel, making passage difficult.',
+        connections: ['suc_entrance', 'suc_revenant_crypt_1', 'suc_skeleton_hall'],
+        activities: [
+            { type: 'combat', monsterId: 'giant_spider' },
+            { type: 'combat', monsterId: 'giant_spider' },
+            { type: 'combat', monsterId: 'giant_spider' },
+        ],
+        regionId: 'sunbright_underground_cave',
+        x: 100, y: 150, type: 'internal',
+    },
+    suc_revenant_crypt_1: {
+        id: 'suc_revenant_crypt_1',
+        name: 'The Silent Crypt',
+        description: 'An old, forgotten crypt. Sarcophagi line the walls, some of which are broken open. A cold dread fills the air.',
+        connections: ['suc_spider_nest', 'suc_revenant_crypt_2'],
+        activities: [
+            { type: 'combat', monsterId: 'grave_revenant' },
+            { type: 'combat', monsterId: 'grave_revenant' },
+            { type: 'combat', monsterId: 'grave_revenant' },
+        ],
+        regionId: 'sunbright_underground_cave',
+        x: 100, y: 100, type: 'internal',
+    },
+    suc_revenant_crypt_2: {
+        id: 'suc_revenant_crypt_2',
+        name: 'Crypt of the Restless',
+        description: 'Deeper into the crypt, more figures stir in the darkness, their eyes burning with cold light.',
+        connections: ['suc_revenant_crypt_1'],
+        activities: [
+            { type: 'combat', monsterId: 'grave_revenant' },
+            { type: 'combat', monsterId: 'grave_revenant' },
+            { type: 'combat', monsterId: 'grave_revenant' },
+        ],
+        regionId: 'sunbright_underground_cave',
+        x: 100, y: 50, type: 'internal',
+    },
+    suc_skeleton_hall: {
+        id: 'suc_skeleton_hall',
+        name: 'Hall of Bones',
+        description: 'Piles of bones litter the floor of this wide hall. Several armed skeletons stand guard.',
+        connections: ['suc_spider_nest', 'suc_botanist_den', 'suc_incubus_chamber'],
+        activities: [
+            { type: 'combat', monsterId: 'skeletal_archer' },
+            { type: 'combat', monsterId: 'skeletal_archer' },
+            { type: 'combat', monsterId: 'skeletal_archer' },
+        ],
+        regionId: 'sunbright_underground_cave',
+        x: 50, y: 150, type: 'internal',
+    },
+    suc_incubus_chamber: {
+        id: 'suc_incubus_chamber',
+        name: 'Unholy Chamber',
+        description: 'This chamber is unnaturally warm, and the air is thick with a strange, cloying scent. Dark figures lurk in the shadows.',
+        connections: ['suc_skeleton_hall'],
+        activities: [
+            { type: 'combat', monsterId: 'lesser_incubus' },
+            { type: 'combat', monsterId: 'lesser_incubus' },
+        ],
+        regionId: 'sunbright_underground_cave',
+        x: 0, y: 150, type: 'internal',
+    },
+};

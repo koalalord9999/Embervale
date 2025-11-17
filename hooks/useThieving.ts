@@ -1,6 +1,8 @@
+
+
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Monster, SkillName, PlayerSkill, InventorySlot, Equipment, Item, POIActivity, ActiveBuff, ThievingContainerState, WorldState, ActivePilferingSession } from '../types';
-import { ITEMS, rollOnLootTable, LootRollResult, THIEVING_POCKET_TARGETS, THIEVING_CONTAINER_TARGETS, THIEVING_STALL_TARGETS, HOUSE_TIERS, PILFERING_DURATION } from '../constants';
+import { Monster, SkillName, PlayerSkill, InventorySlot, Equipment, Item, POIActivity, ActiveBuff, ThievingContainerState, WorldState } from '../types';
+import { ITEMS, rollOnLootTable, LootRollResult, THIEVING_POCKET_TARGETS, THIEVING_CONTAINER_TARGETS, THIEVING_STALL_TARGETS } from '../constants';
 import { useNavigation } from './useNavigation';
 
 type LockpickActivity = Extract<POIActivity, { type: 'thieving_lockpick' }>;
@@ -12,7 +14,7 @@ interface ThievingDependencies {
     skills: (PlayerSkill & { currentLevel: number })[];
     addXp: (skill: SkillName, amount: number) => void;
     inventory: (InventorySlot | null)[];
-    modifyItem: (itemId: string, quantity: number, quiet?: boolean, doses?: number, options?: { noted?: boolean, bypassAutoBank?: boolean }) => void;
+    modifyItem: (itemId: string, quantity: number, quiet?: boolean, slotOverrides?: Partial<Omit<InventorySlot, 'itemId' | 'quantity'>> & { bypassAutoBank?: boolean; }) => void;
     equipment: Equipment;
     addBuff: (buff: Omit<ActiveBuff, 'id' | 'durationRemaining'>) => void;
     setPlayerHp: React.Dispatch<React.SetStateAction<number>>;
@@ -61,53 +63,6 @@ export const useThieving = (
         return () => clearInterval(interval);
     }, []);
     
-    const handlePilfer = useCallback((activity: Extract<POIActivity, { type: 'thieving_pilfer' }>) => {
-        const { isStunned, addLog, skills, inventory, isInCombat, setWorldState, currentPoiId } = depsRef.current;
-        if (isStunned || activeTimeoutRef.current || isInCombat) return;
-
-        const houseInfo = depsRef.current.worldState.generatedHouses?.[activity.id];
-        if (!houseInfo) { addLog("Error determining house tier."); return; }
-        
-        const containerData = THIEVING_CONTAINER_TARGETS[houseInfo.tierId];
-        if (!containerData) { addLog("Error loading house data."); return; }
-
-        const thievingSkill = skills.find(s => s.name === SkillName.Thieving);
-        if (!thievingSkill || thievingSkill.currentLevel < containerData.level) {
-            addLog(`You need a Thieving level of ${containerData.level}.`);
-            return;
-        }
-        const bestLockpick = inventory.map(s => s ? ITEMS[s.itemId] : null).filter((item): item is Item => !!(item && item.lockpick)).sort((a, b) => (b.lockpick!.power) - (a.lockpick!.power))[0];
-        if (!bestLockpick) { addLog("You need a lockpick."); return; }
-
-        addLog(`You attempt to pick the lock on the ${activity.name}...`);
-        activeTimeoutRef.current = window.setTimeout(() => {
-            const { skills: currentSkills, inventory: currentInventory, modifyItem, addXp, addLog: log, setWorldState, currentPoiId } = depsRef.current;
-            const successChance = Math.max(5, Math.min(95, 30 + (currentSkills.find(s => s.name === SkillName.Thieving)!.currentLevel - containerData.level) * 1.5 + (bestLockpick.lockpick!.power)));
-            if (Math.random() * 100 < successChance) {
-                log("The lock clicks open. You slip inside.");
-                addXp(SkillName.Thieving, containerData.xp);
-                const tierIndex = HOUSE_TIERS.findIndex(t => t.level === houseInfo.level);
-                
-                const newSession: ActivePilferingSession = {
-                    housePoiId: activity.id,
-                    entryPoiId: currentPoiId,
-                    startTime: Date.now(),
-                    tierId: houseInfo.tierId,
-                    tierLevel: tierIndex !== -1 ? tierIndex + 1 : 1,
-                    lootedContainerIds: [],
-                };
-                
-                setWorldState(ws => ({ ...ws, activePilferingSession: newSession }));
-            } else {
-                log("You fail to pick the lock.");
-                if (!bestLockpick.lockpick!.unbreakable && Math.random() < bestLockpick.lockpick!.breakChance) {
-                    modifyItem(bestLockpick.id, -1, false);
-                    log(`Your ${bestLockpick.name} breaks.`);
-                }
-            }
-            activeTimeoutRef.current = null;
-        }, 1200);
-    }, []);
 
     const handlePickpocket = useCallback((target: { name: string; pickpocket: PickpocketData }, targetInstanceId: string) => {
         const { isStunned, addLog, skills, inventory, modifyItem, addXp, addBuff, setPlayerHp, currentHp, onPlayerDeath, isInCombat } = depsRef.current;
@@ -128,7 +83,7 @@ export const useThieving = (
         addLog(`You attempt to pickpocket the ${target.name}...`);
 
         activeTimeoutRef.current = window.setTimeout(() => {
-            const { skills: currentSkills, addXp, addLog: log, addBuff: buff, setPlayerHp, currentHp, onPlayerDeath, modifyItem } = depsRef.current;
+            const { skills: currentSkills, addXp, addLog: log, addBuff: buff, setPlayerHp, currentHp, onPlayerDeath, modifyItem, equipment } = depsRef.current;
 
             const baseSuccessChance = 50;
             const levelDifference = currentSkills.find(s => s.name === SkillName.Thieving)!.currentLevel - targetData.level;
@@ -139,64 +94,103 @@ export const useThieving = (
                 addXp(SkillName.Thieving, targetData.xp);
                 const lootResult = rollOnLootTable(target.pickpocket.lootTableId);
                 if (lootResult) {
-                    const loot = typeof lootResult === 'string' ? { itemId: lootResult, quantity: 1, noted: false } : lootResult;
-                    modifyItem(loot.itemId, loot.quantity, false, undefined, { bypassAutoBank: true, noted: loot.noted });
+                    let loot = typeof lootResult === 'string' ? { itemId: lootResult, quantity: 1, noted: false } : lootResult;
+                    modifyItem(loot.itemId, loot.quantity, false, { bypassAutoBank: true, noted: loot.noted });
                 }
             } else {
                 log(`You have been caught!`);
                 buff({ type: 'stun', value: 0, duration: targetData.stunDuration });
                 const newHp = currentHp - targetData.damageOnFailure;
                 setPlayerHp(newHp);
-                if (newHp <= 0) {
-                    onPlayerDeath();
-                }
             }
             activeTimeoutRef.current = null;
         }, 600);
     }, []);
 
     const handleLockpick = useCallback((activity: LockpickActivity) => {
-        const { isStunned, addLog, skills, inventory, modifyItem, addXp, isInCombat, setWorldState } = depsRef.current;
+        const { isStunned, addLog, skills, inventory, modifyItem, addXp, isInCombat, worldState, setWorldState } = depsRef.current;
         if (isStunned || activeTimeoutRef.current || isInCombat) return;
-
+    
         const containerData = THIEVING_CONTAINER_TARGETS[activity.lootTableId];
         if (!containerData) {
             addLog(`You can't figure out how to open this.`);
             return;
         }
-
+    
         const thievingSkill = skills.find(s => s.name === SkillName.Thieving);
         if (!thievingSkill || thievingSkill.currentLevel < containerData.level) {
             addLog(`You need a Thieving level of ${containerData.level} to attempt this lock.`);
             return;
         }
-
+    
         const bestLockpick = inventory.map(s => s ? ITEMS[s.itemId] : null).filter((item): item is Item => !!(item && item.lockpick)).sort((a, b) => (b.lockpick!.power) - (a.lockpick!.power))[0];
-        if (!bestLockpick) {
+        if (!bestLockpick && !activity.lootTableId.includes('_dusty')) {
             addLog("You need a lockpick to attempt this.");
             return;
         }
-
+    
         addLog(`You attempt to pick the lock...`);
-
+    
         activeTimeoutRef.current = window.setTimeout(() => {
-            const { skills: currentSkills, addXp, addLog: log, modifyItem, setPlayerHp, currentHp, onPlayerDeath, startCombat, setWorldState } = depsRef.current;
-            const successChance = Math.max(5, Math.min(95, 30 + (currentSkills.find(s => s.name === SkillName.Thieving)!.currentLevel - containerData.level) * 1.5 + (bestLockpick.lockpick!.power)));
-
+            const { skills: currentSkills, addXp, addLog: log, modifyItem, setPlayerHp, currentHp, onPlayerDeath, startCombat, worldState, setWorldState, equipment } = depsRef.current;
+            const lockpickPower = bestLockpick?.lockpick?.power ?? 0;
+            const successChance = Math.max(5, Math.min(95, 30 + (currentSkills.find(s => s.name === SkillName.Thieving)!.currentLevel - containerData.level) * 1.5 + (lockpickPower)));
+    
             if (Math.random() * 100 < successChance) {
                 log("The lock clicks open.");
                 addXp(SkillName.Thieving, containerData.xp);
-
+    
                 if (containerData.trap?.mimicChance && Math.random() < containerData.trap.mimicChance) {
                     log("It's a mimic! It attacks!");
                     startCombat([`${depsRef.current.currentPoiId}:mimic:0`]);
                 } else {
-                    const lootResult = rollOnLootTable(activity.lootTableId);
-                    if (lootResult) {
-                        const loot = typeof lootResult === 'string' ? { itemId: lootResult, quantity: 1, noted: false } : lootResult;
-                        modifyItem(loot.itemId, loot.quantity, false, undefined, { bypassAutoBank: true, noted: loot.noted });
+                    const isPilfering = worldState.activePilferingSession && activity.id.startsWith('pilfer_');
+                    
+                    if (isPilfering && (activity.lootTableId.includes('_cabinet_') || activity.lootTableId.includes('_chest_'))) {
+                        const isCabinet = activity.lootTableId.includes('_cabinet_');
+                        const numRolls = isCabinet ? 2 : 3;
+    
+                        const loots: LootRollResult[] = [];
+                        for (let i = 0; i < numRolls; i++) {
+                            const lootResult = rollOnLootTable(activity.lootTableId);
+                            if (lootResult) {
+                                let loot = typeof lootResult === 'string' ? { itemId: lootResult, quantity: 1, noted: false } : lootResult;
+                                loots.push(loot);
+                            }
+                        }
+    
+                        if (loots.length > 0) {
+                            loots.forEach(loot => {
+                                modifyItem(loot.itemId, loot.quantity, false, { bypassAutoBank: true, noted: loot.noted });
+                            });
+                        } else {
+                            const fallbackCoins: Record<string, number> = {
+                                'thieving_house_cabinet_dusty': 5, 'thieving_house_chest_dusty': 20,
+                                'thieving_house_cabinet_locked': 30, 'thieving_house_chest_locked': 100,
+                                'thieving_house_cabinet_pristine': 120, 'thieving_house_chest_pristine': 150,
+                                'thieving_house_cabinet_ornate': 200, 'thieving_house_chest_ornate': 500,
+                                'thieving_house_cabinet_gilded': 400, 'thieving_house_chest_gilded': 1000,
+                                'thieving_house_cabinet_royal': 800, 'thieving_house_chest_royal': 2000,
+                            };
+                            const coinAmount = fallbackCoins[activity.lootTableId];
+                            if (coinAmount) {
+                                let finalAmount = coinAmount;
+                                modifyItem('coins', finalAmount, false, { bypassAutoBank: true });
+                                log(`You find only ${finalAmount} coins.`);
+                            } else {
+                                log("You find nothing of interest.");
+                            }
+                        }
+                    } else { // Standard single roll for everything else
+                        const lootResult = rollOnLootTable(activity.lootTableId);
+                        if (lootResult) {
+                            let loot = typeof lootResult === 'string' ? { itemId: lootResult, quantity: 1, noted: false } : lootResult;
+                            modifyItem(loot.itemId, loot.quantity, false, { bypassAutoBank: true, noted: loot.noted });
+                        } else {
+                             log("You find nothing of interest.");
+                        }
                     }
-
+    
                     if (activity.id.startsWith('pilfer_')) {
                         setWorldState(ws => {
                             if (!ws.activePilferingSession) return ws;
@@ -212,7 +206,6 @@ export const useThieving = (
                         setContainerStates(prev => ({ ...prev, [activity.id]: { depleted: true, respawnTimer: containerData.respawnTime } }));
                     }
                 }
-
             } else {
                 log("You fail to pick the lock.");
                 
@@ -231,25 +224,22 @@ export const useThieving = (
                         return ws;
                     });
                 }
-
+    
                 if (containerData.trap) {
                     log("You've triggered a trap!");
                     const newHp = currentHp - (containerData.trap.damage || 0);
                     setPlayerHp(newHp);
-                    if (newHp <= 0) {
-                        onPlayerDeath();
-                    }
                 }
-
-                if (!bestLockpick.lockpick!.unbreakable && Math.random() < bestLockpick.lockpick!.breakChance) {
+    
+                if (bestLockpick && !bestLockpick.lockpick!.unbreakable && Math.random() < bestLockpick.lockpick!.breakChance) {
                     modifyItem(bestLockpick.id, -1, false);
                     log(`Your ${bestLockpick.name} breaks.`);
                 }
             }
-
+    
             activeTimeoutRef.current = null;
         }, 1200);
-
+    
     }, []);
 
     const handleStealFromStall = useCallback((activity: StallActivity) => {
@@ -271,7 +261,7 @@ export const useThieving = (
         addLog(`You attempt to steal from the ${stallData.name}...`);
         
         activeTimeoutRef.current = window.setTimeout(() => {
-            const { skills: currentSkills, addXp, addLog: log, addBuff: buff, setPlayerHp, currentHp, onPlayerDeath, modifyItem } = depsRef.current;
+            const { skills: currentSkills, addXp, addLog: log, addBuff: buff, setPlayerHp, currentHp, onPlayerDeath, modifyItem, equipment } = depsRef.current;
             
             const successChance = Math.max(20, Math.min(98, 50 + (currentSkills.find(s => s.name === SkillName.Thieving)!.currentLevel - stallData.level) * 2));
             
@@ -280,8 +270,8 @@ export const useThieving = (
                 addXp(SkillName.Thieving, stallData.xp);
                 const lootResult = rollOnLootTable(activity.lootTableId);
                 if (lootResult) {
-                    const loot = typeof lootResult === 'string' ? { itemId: lootResult, quantity: 1, noted: false } : lootResult;
-                    modifyItem(loot.itemId, loot.quantity, false, undefined, { bypassAutoBank: true, noted: loot.noted });
+                    let loot = typeof lootResult === 'string' ? { itemId: lootResult, quantity: 1, noted: false } : lootResult;
+                    modifyItem(loot.itemId, loot.quantity, false, { bypassAutoBank: true, noted: loot.noted });
                 }
                 setContainerStates(prev => ({ ...prev, [activity.id]: { depleted: true, respawnTimer: stallData.respawnTime } }));
 
@@ -294,7 +284,6 @@ export const useThieving = (
     }, []);
 
     return {
-        handlePilfer,
         handlePickpocket,
         handleLockpick,
         handleStealFromStall,

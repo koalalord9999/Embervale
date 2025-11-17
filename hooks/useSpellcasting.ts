@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { Spell, SkillName, InventorySlot, WeaponType } from '../types';
 import { useCharacter } from './useCharacter';
@@ -21,14 +20,17 @@ const ENCHANTMENT_MAP: Record<string, string> = {
     'emerald_ring': 'ring_of_the_woodsman',
     'ruby_ring': 'ring_of_the_forge',
     'diamond_ring': 'ring_of_mastery',
+    'sunstone_ring': 'ring_of_greed',
     'sapphire_necklace': 'necklace_of_binding',
     'emerald_necklace': 'necklace_of_the_angler',
     'ruby_necklace': 'necklace_of_passage_ruby',
     'diamond_necklace': 'necklace_of_passage_diamond',
+    'sunstone_necklace': 'necklace_of_fortune',
     'sapphire_amulet': 'amulet_of_magic',
     'emerald_amulet': 'amulet_of_ranging',
     'ruby_amulet': 'amulet_of_strength',
-    'diamond_amulet': 'amulet_of_power'
+    'diamond_amulet': 'amulet_of_power',
+    'sunstone_amulet': 'amulet_of_fate'
 };
 
 export const useSpellcasting = (deps: SpellcastingDependencies) => {
@@ -60,7 +62,8 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
                 runesNeeded.forEach(rune => inv.modifyItem(rune.itemId, -rune.quantity, true));
                 char.addXp(SkillName.Magic, spell.xp);
                 inv.modifyItem(target.item.itemId, -1, true);
-                inv.modifyItem(enchantedItemId, 1, false, undefined, { bypassAutoBank: true });
+                // FIX: The `modifyItem` function expects 4 arguments, with the last being an options object. This call had 5 arguments.
+                inv.modifyItem(enchantedItemId, 1, false, { bypassAutoBank: true });
                 addLog(`You enchant the ${ITEMS[target.item.itemId].name}.`);
             } else {
                 addLog(`You cannot enchant this item with ${spell.name}.`);
@@ -75,8 +78,10 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
             runesNeeded.forEach(rune => inv.modifyItem(rune.itemId, -rune.quantity, true));
             char.addXp(SkillName.Magic, spell.xp);
 
-            const coinValue = Math.floor(itemData.value * (spell.id === 'greater_transmutation' ? 0.85 : 0.4));
-            inv.modifyItem(target.item.itemId, -1, true);
+            const coinValue = Math.floor(itemData.value * (spell.id === 'greater_transmutation' ? 0.7 : 0.3));
+            
+            // FIX: The `modifyItem` function expects 4 arguments, with the last being an options object. This call had 5 arguments.
+            inv.modifyItem(target.item.itemId, -1, true, { noted: target.item.noted });
             inv.modifyItem('coins', coinValue, true);
             addLog(`You transmute the ${itemData.name} into ${coinValue} coins.`);
         }
@@ -176,7 +181,7 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
             const boostValue = Math.floor(baseStat * 0.20) + 6;
             if (boostValue > 0) {
                 // Duration of 6 minutes
-                char.applyStatModifier(skillToBoost, boostValue, 360000, baseStat);
+                char.applyStatModifier(skillToBoost, boostValue, baseStat);
             } else {
                 addLog("The spell has no effect at your current level.");
             }

@@ -4,6 +4,11 @@ export interface BaseDrop {
     minQuantity?: number;
     maxQuantity?: number;
     noted?: boolean;
+    multiRoll?: {
+        tableId: string;
+        maxRolls: number;
+        rollAgainChance: number;
+    };
 }
 export interface GuaranteedDrop extends BaseDrop {}
 export interface WeightedDrop extends BaseDrop {

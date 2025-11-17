@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { InventorySlot, PlayerSkill, SkillName } from '../../../../types';
 import { FLETCHING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
@@ -10,7 +9,7 @@ import { useLongPress } from '../../../../hooks/useLongPress';
 import { useIsTouchDevice } from '../../../../hooks/useIsTouchDevice';
 
 const FletchingSlot: React.FC<{
-    recipe: typeof FLETCHING_RECIPES.carving['logs'][0];
+    recipe: { itemId: string; level: number; xp: number; quantity?: number; actionType: 'carve' | 'stock'; outputId: string };
     fletchingLevel: number;
     logId: string;
     logCount: number;
@@ -27,13 +26,20 @@ const FletchingSlot: React.FC<{
     const hasLevel = fletchingLevel >= recipe.level;
     const hasLogs = logCount >= 1;
     const canFletch = hasLevel && hasLogs;
-    const action = { type: 'carve', payload: { logId, outputItemId: recipe.itemId } } as const;
+    const action = { type: recipe.actionType, payload: { logId, outputItemId: recipe.outputId } } as const;
 
     const handleSingleTap = () => { if(canFletch) { onFletch(action, 1); setTooltip(null); } };
 
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();
-        const event = 'touches' in e ? e.touches[0] : e;
+        let eventForMenu: React.MouseEvent | React.Touch;
+        if ('touches' in e && e.touches.length > 0) {
+            eventForMenu = e.touches[0];
+        } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+            eventForMenu = e.changedTouches[0];
+        } else {
+            eventForMenu = e as React.MouseEvent;
+        }
         setContextMenu({
             options: [
                 { label: 'Fletch 1', onClick: () => onFletch(action, 1), disabled: !canFletch },
@@ -47,7 +53,10 @@ const FletchingSlot: React.FC<{
                     }),
                     disabled: !canFletch
                 },
-            ], event, isTouchInteraction: isTouchDevice
+            ],
+            triggerEvent: eventForMenu,
+            isTouchInteraction: isTouchDevice,
+            title: item.name
         });
     };
 
@@ -114,7 +123,14 @@ const FletchingInterface: React.FC<CraftingViewProps> = ({ inventory, skills, on
     const fletchingLevel = skills.find(s => s.name === SkillName.Fletching)?.currentLevel ?? 1;
     const isTouchDevice = useIsTouchDevice(false);
     const logName = ITEMS[logId].name;
-    const recipes = FLETCHING_RECIPES.carving[logId] ?? [];
+    
+    const carvingRecipes = FLETCHING_RECIPES.carving[logId] ?? [];
+    const stockRecipes = FLETCHING_RECIPES.stocks.filter(r => r.logId === logId);
+
+    const allRecipes = [
+        ...carvingRecipes.map(r => ({ ...r, actionType: 'carve' as const, outputId: r.itemId })),
+        ...stockRecipes.map(r => ({ itemId: r.stockId, level: r.level, xp: r.xp, actionType: 'stock' as const, outputId: r.stockId }))
+    ].sort((a, b) => a.level - b.level);
     
     const logCount = inventory.reduce((total, slot) => {
         if (slot && slot.itemId === logId && !slot.noted) {
@@ -127,7 +143,7 @@ const FletchingInterface: React.FC<CraftingViewProps> = ({ inventory, skills, on
         <div className="flex-grow overflow-y-auto pr-2">
             <p className="mb-4 text-lg">Your {logName}: <span className="text-yellow-400">{logCount}</span></p>
             <div className="crafting-grid">
-                {recipes.map((recipe) => (
+                {allRecipes.map((recipe) => (
                     <FletchingSlot
                         key={recipe.itemId}
                         recipe={recipe}

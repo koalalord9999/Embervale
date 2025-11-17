@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 import { CIVILLIAN_DIALOGUE } from '../../constants/dialogue';
 
@@ -6,43 +7,47 @@ export const meadowdalePois: Record<string, POI> = {
         id: 'meadowdale_south_gate',
         name: 'Meadowdale South Gate',
         description: 'The southern gates of Meadowdale, opening up to the road south. A single guard keeps a lazy watch.',
-        connections: ['meadowdale_north_gate', 'meadowdale_east_gate', 'meadowdale_west_gate', 'south_meadow_road', 'south_meadow_street'],
+        connections: ['south_meadow_road', 'south_meadow_street'],
         activities: [
             { type: 'npc', name: 'Guard', icon: 'https://api.iconify.design/game-icons:guard.svg', pickpocket: { lootTableId: 'pickpocket_guard_table' }, attackableMonsterId: 'guard', dialogue: { start: { npcName: 'Guard', npcIcon: 'https://api.iconify.design/game-icons:guard.svg', text: "Just keeping an eye on things. Move along.", responses: [] } }, startNode: 'start' }
         ],
-        regionId: 'wilderness',
-        x: 1000, y: 1050,
-        cityMapX: 250, cityMapY: 475,
+        regionId: 'meadowdale',
+        type: 'internal',
+        x: 250, y: 500,
+        eX: 1000, eY: 1000,
     },
     meadowdale_north_gate: {
         id: 'meadowdale_north_gate',
         name: 'Meadowdale North Gate',
         description: 'The northern gates of Meadowdale, leading towards the Whispering Woods.',
-        connections: ['meadowdale_south_gate', 'meadowdale_east_gate', 'meadowdale_west_gate', 'whispering_woods', 'north_meadow_street'],
+        connections: ['whispering_woods', 'north_meadow_street'],
         activities: [],
-        regionId: 'wilderness',
-        x: 1000, y: 950,
-        cityMapX: 250, cityMapY: 25,
+        regionId: 'meadowdale',
+        type: 'internal',
+        x: 250, y: 0,
+        eX: 1000, eY: 1000,
     },
     meadowdale_east_gate: {
         id: 'meadowdale_east_gate',
         name: 'Meadowdale East Gate',
         description: 'The eastern gates of Meadowdale, facing the direction of the mines.',
-        connections: ['meadowdale_south_gate', 'meadowdale_north_gate', 'meadowdale_west_gate', 'stonebreak_mine', 'east_meadow_street'],
+        connections: ['stonebreak_mine', 'east_meadow_street'],
         activities: [],
-        regionId: 'wilderness',
-        x: 1080, y: 1000,
-        cityMapX: 475, cityMapY: 250,
+        regionId: 'meadowdale',
+        type: 'internal',
+        x: 500, y: 250,
+        eX: 1000, eY: 1000,
     },
     meadowdale_west_gate: {
         id: 'meadowdale_west_gate',
         name: 'Meadowdale West Gate',
         description: 'The western gates of Meadowdale, opening up to the farmlands.',
-        connections: ['meadowdale_north_gate', 'meadowdale_south_gate', 'meadowdale_east_gate', 'west_meadow_street', 'mcgregors_ranch'],
+        connections: ['west_meadow_street', 'mcgregors_ranch'],
         activities: [],
-        regionId: 'wilderness',
-        x: 900, y: 1000,
-        cityMapX: 25, cityMapY: 250,
+        regionId: 'meadowdale',
+        type: 'internal',
+        x: 0, y: 250,
+        eX: 1000, eY: 1000,
     },
     // STREETS
     south_meadow_street: {
@@ -84,8 +89,8 @@ export const meadowdalePois: Record<string, POI> = {
     west_meadow_street: {
         id: 'west_meadow_street',
         name: 'West Meadow Street',
-        description: 'The western road of Meadowdale. A quiet residential street.',
-        connections: ['meadowdale_west_gate', 'meadowdale_square'],
+        description: 'The western road of Meadowdale. A quiet residential street with a small fishing shop.',
+        connections: ['meadowdale_west_gate', 'meadowdale_square', 'meadowdale_fishing_shop'],
         activities: [
             { type: 'thieving_pilfer', id: 'meadowdale_house_1', name: 'Locked House' },
             { type: 'thieving_pilfer', id: 'meadowdale_house_2', name: 'Locked House' },
@@ -109,22 +114,39 @@ export const meadowdalePois: Record<string, POI> = {
                 name: 'Old Man Fitzwilliam',
                 icon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
                 startNode: 'fitzwilliam_default',
+                questTopics: ['goblin_menace', 'petunia_problems'],
+                conditionalGreetings: [
+                   { text: "*You see Old Man Fitzwilliam mumbling to himself about curses* What do you want now? Can't you see I'm having a rough time?", check: { requirements: [{ type: 'quest', questId: 'petunia_problems', status: 'not_started' }, { type: 'quest', questId: 'goblin_menace', status: 'completed'}] } }
+                ],
                 dialogue: {
                     fitzwilliam_default: {
                         npcName: 'Old Man Fitzwilliam',
                         npcIcon: '/assets/npcChatHeads/old_man_fitzwilliam.png',
                         text: "Hmph. What do you want? Can't you see I'm busy being miserable?",
                         responses: [],
-                        conditionalResponses: [
-                            { text: "You seem troubled.", check: { requirements: [{ type: 'quest', questId: 'goblin_menace', status: 'not_started' }], successNode: 'quest_intro_goblin_menace', failureNode: '' } },
-                            { text: "About your petunias...", check: { requirements: [{ type: 'quest', questId: 'petunia_problems', status: 'not_started' }], successNode: 'quest_intro_petunia_problems', failureNode: '' } },
-                        ]
                     }
                 }
             },
             { type: 'npc', name: 'Man', icon: 'https://api.iconify.design/game-icons:person.svg', dialogue: { start: { npcName: 'Man', npcIcon: 'https://api.iconify.design/game-icons:person.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man', pickpocket: { lootTableId: 'pickpocket_man_woman_table' } },
             { type: 'npc', name: 'Woman', icon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', dialogue: { start: { npcName: 'Woman', npcIcon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'woman', pickpocket: { lootTableId: 'pickpocket_man_woman_table' } },
             { type: 'npc', name: 'Use Blight Ward Potion', icon: 'https://api.iconify.design/game-icons:sprout.svg', questCondition: { questId: 'petunia_problems', stages: [3] }, startNode: 'petunia_use_potion' },
+            {
+                type: 'npc',
+                name: 'Altar',
+                icon: 'https://api.iconify.design/game-icons:altar.svg',
+                dialogue: {
+                    start: {
+                        npcName: 'Altar',
+                        npcIcon: 'https://api.iconify.design/game-icons:altar.svg',
+                        text: 'You feel a divine presence. Your prayer may be answered here.',
+                        responses: [
+                            { text: 'Pray', actions: [{ type: 'restore_prayer' }] },
+                            { text: 'Leave' }
+                        ]
+                    }
+                },
+                startNode: 'start'
+            }
         ],
         regionId: 'meadowdale',
         x: 250, y: 250,
@@ -144,18 +166,33 @@ export const meadowdalePois: Record<string, POI> = {
                 name: 'Valerius the Master Smith',
                 icon: '/assets/npcChatHeads/valerius_the_master_smith.png',
                 startNode: 'valerius_default',
+                questTopics: ['a_smiths_apprentice', 'ancient_blade', 'an_echo_of_battle', 'art_of_the_warhammer'],
+                conditionalGreetings: [
+                    // AN ECHO OF BATTLE (Highest Priority)
+                    { text: "Have you brought the Glimmerhorn Dust for the key?", check: { requirements: [{ type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 4 }] } },
+                    { text: "Hello there apprentice, how's your training been?", check: { requirements: [{ type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 2 }, { type: 'items', items: [{ itemId: 'broken_barrow_key', quantity: 1 }] }] } },
+                    { text: "Thank you for your help with reforging the key for Bronn. It was a masterwork of old.", check: { requirements: [{ type: 'quest', questId: 'an_echo_of_battle', status: 'completed' }] } },
+                    
+                    // ART OF THE WARHAMMER
+                    { text: "You should probably return to Bronn, now that you've crafted the hammer.", check: { requirements: [{ type: 'quest', questId: 'art_of_the_warhammer', status: 'in_progress', stage: 2 }] } },
+                    { text: "Bronn sent you about a warhammer, did he? That old fool. He thinks no one knows how to smith properly anymore. Let's see if you're worthy of the lesson.", check: { requirements: [{ type: 'quest', questId: 'art_of_the_warhammer', status: 'in_progress', stage: 0 }] } },
+                    { text: "How's that hammer holding up? A fine piece of work, if I do say so myself.", check: { requirements: [{ type: 'quest', questId: 'art_of_the_warhammer', status: 'completed' }] } },
+
+                    // A SMITH'S APPRENTICE
+                    { text: "Finished with the dagger? Let's have a look at your work.", check: { requirements: [{ type: 'quest', questId: 'a_smiths_apprentice', status: 'in_progress', stage: 3 }, { type: 'items', items: [{ itemId: 'bronze_dagger', quantity: 1 }] }] } },
+                    { text: "Ah, you have the ore? Good. Let's begin your first lesson.", check: { requirements: [{ type: 'quest', questId: 'a_smiths_apprentice', status: 'in_progress', stage: 1 }] } },
+                    { text: "Good to see you again, apprentice. Keep practicing at the anvil.", check: { requirements: [{ type: 'quest', questId: 'a_smiths_apprentice', status: 'completed' }] } },
+                    
+                    // ANCIENT BLADE (Lowest Priority)
+                    { text: "Have you gathered the iron ore to restore the old blade?", check: { requirements: [{ type: 'quest', questId: 'ancient_blade', status: 'in_progress', stage: 1 }] } },
+                    { text: "That old blade I restored for you... it was a fine piece of history.", check: { requirements: [{ type: 'quest', questId: 'ancient_blade', status: 'completed' }] } },
+                ],
                 dialogue: {
                     valerius_default: {
                         npcName: 'Valerius the Master Smith',
                         npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
                         text: "Welcome to the forge. If you need something smithed, you've come to the right place. Just don't waste my time.",
                         responses: [],
-                        conditionalResponses: [
-                            { text: "I'm looking for work.", check: { requirements: [{ type: 'quest', questId: 'a_smiths_apprentice', status: 'not_started' }], successNode: 'quest_intro_a_smiths_apprentice', failureNode: '' } },
-                            { text: "About this old sword...", check: { requirements: [{ type: 'quest', questId: 'ancient_blade', status: 'in_progress', stage: 0 }], successNode: 'item_trigger_ancient_blade', failureNode: '' } },
-                            { text: "I have the ore for the old sword.", check: { requirements: [{ type: 'quest', questId: 'ancient_blade', status: 'in_progress', stage: 1 }], successNode: 'in_progress_ancient_blade_1', failureNode: '' } },
-                            { text: "I have a broken key.", check: { requirements: [{ type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 1 }], successNode: 'in_progress_an_echo_of_battle_1', failureNode: '' } },
-                        ]
                     }
                 }
             }
@@ -321,11 +358,34 @@ export const meadowdalePois: Record<string, POI> = {
                 startNode: 'start',
                 dialogueType: 'random',
             },
+            /*
+                dialogueEntryPoints: [
+not_started "You seem excited. What are you researching?", check: { requirements: [{ type: 'quest', questId: 'magical_runestone_discovery', status: 'not_started' }], successNode: 'quest_intro_magical_runestone_discovery', failureNode: '' } } },
+0 "I'm ready for that teleport.", check: { requirements: [{ type: 'quest', questId: 'magical_runestone_discovery', status: 'in_progress', stage: 0 }], successNode: 'mrd_teleport_dialogue', failureNode: '' } } },
+3 "I've returned from the essence mine.", check: { requirements: [{ type: 'quest', questId: 'magical_runestone_discovery', status: 'in_progress', stage: 3 }], successNode: 'mrd_library_stage_3', failureNode: '' } } },
+5 "I found where the talisman was leading.", check: { requirements: [{ type: 'quest', questId: 'magical_runestone_discovery', status: 'in_progress', stage: 5 }], successNode: 'mrd_library_stage_5', failureNode: '' } } },
+7 "I've crafted the runes!", check: { requirements: [{ type: 'quest', questId: 'magical_runestone_discovery', status: 'in_progress', stage: 7 }], successNode: 'mrd_library_stage_7', failureNode: '' } } },
+completed "How goes the Runecrafting research?", check: { requirements: [{ type: 'quest', questId: 'magical_runestone_discovery', status: 'completed' }], successNode: 'post_quest_magical_runestone_discovery', failureNode: '' } } }
+    ],
+            */
             {
                 type: 'npc',
                 name: 'Wizard Elmsworth',
                 icon: 'https://api.iconify.design/game-icons:wizard-face.svg',
-                startNode: 'default_dialogue',
+                startNode: 'elmsworth_default',
+                questTopics: ['magical_runestone_discovery'],
+                conditionalGreetings: [
+                    { text: "*whisper* Oh! Simply magnificent, the power being called by this spell is simply serendipitous... If only someone was here to help...*whisper* Oh hello there adventurer, might you be interested in helping me with something? It's got me all giddy and excited, but I cannot do it by myself.", check: { requirements: [{ type: 'quest', questId: 'magical_runestone_discovery', status: 'not_started' }] } },
+                    { text: "Still here? Did my teleport fail? Well, anyway, are you ready to try again?", check: { requirements: [{ type: 'quest', questId: 'magical_runestone_discovery', status: 'in_progress', stage: 0 }] } },
+                    { text: "You need to speak with my projection at the teleport location, please return there at once!", check: { requirements: [{ type: 'quest', questId: 'magical_runestone_discovery', status: 'in_progress', stage: 1 }] } },
+                    { text: "Come now, you still have to gather those samples, I know its busy work, but its a very important step of finding out what is causing these readings!", check: { requirements: [{ type: 'quest', questId: 'magical_runestone_discovery', status: 'in_progress', stage: 2 }] } },
+                    { text: "You've returned! Have you brought the samples with you?", check: { requirements: [{ type: 'quest', questId: 'magical_runestone_discovery', status: 'in_progress', stage: 3 }] } },
+                    { text: "Have you found the source of the pull? You can hold it up in front of you with the \"Divine\" feature.", check: { requirements: [{ type: 'quest', questId: 'magical_runestone_discovery', status: 'in_progress', stage: 4 }] } },
+                    { text: "You've returned! I assume you found the source of the pull? Tell me, what was it?", check: { requirements: [{ type: 'quest', questId: 'magical_runestone_discovery', status: 'in_progress', stage: 5 }] } },
+                    { text: "Have you combined my trinket with those rock chunks yet? Time spent dillydallying could be spent being productive, get a move on!", check: { requirements: [{ type: 'quest', questId: 'magical_runestone_discovery', status: 'in_progress', stage: 6 }] } },
+                    { text: "I felt a hum of magic come from the north, did you combine them?", check: { requirements: [{ type: 'quest', questId: 'magical_runestone_discovery', status: 'in_progress', stage: 7 }] } },
+
+                ]
             }
         ],
         regionId: 'meadowdale',
@@ -342,6 +402,16 @@ export const meadowdalePois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Clerk Augustus',
                 icon: '/assets/npcChatHeads/clerk_augustus.png',
+                startNode: 'augustus_default',
+                questTopics: ['bandit_toll'],
+                dialogue: {
+                    augustus_default: {
+                        npcName: 'Clerk Augustus',
+                        npcIcon: '/assets/npcChatHeads/clerk_augustus.png',
+                        text: "Welcome to the Meadowdale Town Hall. State your business.",
+                        responses: []
+                    }
+                }
             }
         ],
         regionId: 'meadowdale',
@@ -402,4 +472,16 @@ export const meadowdalePois: Record<string, POI> = {
         x: 203, y: 106,
         type: 'internal',
     },
+    meadowdale_fishing_shop: {
+        id: 'meadowdale_fishing_shop',
+        name: "Angler's Repose",
+        description: "A quaint fishing shop with a fishing sign. It smells of worms, and other fishing supplies.",
+        connections: ['west_meadow_street'],
+        activities: [
+            { type: 'shop', shopId: 'meadowdale_fishing'},
+        ],
+        regionId: 'meadowdale',
+        x: 150, y: 275,
+        type: 'internal',
+    }
 };

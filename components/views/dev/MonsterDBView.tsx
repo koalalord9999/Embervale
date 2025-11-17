@@ -50,6 +50,9 @@ const MonsterDBView: React.FC<MonsterDBViewProps> = ({ monsters, setMonsters, mo
             level: 1,
             maxHp: 10,
             attack: 1,
+            // FIX: Add missing required properties 'strength' and 'defence'.
+            strength: 1,
+            defence: 1,
             stabDefence: 0,
             slashDefence: 0,
             crushDefence: 0,

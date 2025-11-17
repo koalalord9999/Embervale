@@ -6,6 +6,7 @@ import { useUIState, TooltipState, ContextMenuState } from '../../../hooks/useUI
 import { ContextMenuOption } from '../../common/ContextMenu';
 import { useLongPress } from '../../../hooks/useLongPress';
 import { useIsTouchDevice } from '../../../hooks/useIsTouchDevice';
+import { getDisplayName } from '../../panels/InventorySlot';
 
 interface EquipmentStatsViewProps {
     equipment: Equipment;
@@ -96,7 +97,7 @@ const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, it
         }
         
         options.push({ label: 'Examine', onClick: () => performAction(() => onExamine(item)) });
-        setContextMenu({ options, event: eventForMenu, isTouchInteraction: 'touches' in e || 'changedTouches' in e });
+        setContextMenu({ options, triggerEvent: eventForMenu, isTouchInteraction: 'touches' in e || 'changedTouches' in e, title: getDisplayName(itemSlot) });
     };
 
     const longPressHandlers = useLongPress({ onLongPress: handleContextMenu, onClick: handleUnequip });
@@ -112,6 +113,14 @@ const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, it
             {item ? (
                 <>
                     <img src={item.iconUrl} alt={item.name} className={`w-full h-full ${getIconClassName(item)}`} />
+                    {itemSlot?.statsOverride?.poisoned && (
+                        <img 
+                            src="https://api.iconify.design/game-icons:boiling-bubbles.svg" 
+                            alt="Poisoned"
+                            className="poison-overlay-icon item-icon-uncut-emerald"
+                            title="Poisoned"
+                        />
+                    )}
                     {item.stackable && itemSlot && itemSlot.quantity > 0 && (
                         <span className="absolute bottom-0 right-1 text-xs font-bold text-yellow-300" style={{ textShadow: '1px 1px 1px black' }}>
                             {itemSlot.quantity > 999 ? `${Math.floor(itemSlot.quantity/1000)}k` : itemSlot.quantity.toLocaleString()}

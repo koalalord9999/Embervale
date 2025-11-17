@@ -99,6 +99,14 @@ const LootSlot: React.FC<{
             ) : (
                 <img src={itemData.iconUrl} alt={itemData.name} className={`w-full h-full ${getIconClassName(itemData)}`} />
             )}
+             {item.statsOverride?.poisoned && (
+                <img 
+                    src="https://api.iconify.design/game-icons:boiling-bubbles.svg" 
+                    alt="Poisoned"
+                    className="poison-overlay-icon item-icon-uncut-emerald"
+                    title="Poisoned"
+                />
+            )}
             {item.quantity > 1 && !itemData.doseable && (
                 <span className={`absolute bottom-0 right-1 text-xs font-bold ${getQuantityColor(item.quantity)}`} style={{ textShadow: '1px 1px 1px black', zIndex: 2 }}>
                     {formatItemQuantity(item.quantity)}

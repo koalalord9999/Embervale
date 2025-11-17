@@ -1,3 +1,4 @@
+
 import { POI, SkillName, ToolType } from '../../types';
 
 export const theVerdantFieldsPois: Record<string, POI> = {
@@ -14,6 +15,14 @@ export const theVerdantFieldsPois: Record<string, POI> = {
                 icon: '/assets/npcChatHeads/rancher_mcgregor.png',
                 pickpocket: { lootTableId: 'pickpocket_farmer_table' },
                 attackableMonsterId: 'farmer',
+                startNode: 'mcgregor_default',
+                questTopics: ['sheep_troubles'],
+                conditionalGreetings: [
+                    { text: "Have you sheared those ten sheep yet? They're starting to look like clouds with legs.", check: { requirements: [{ type: 'quest', questId: 'sheep_troubles', status: 'in_progress', stage: 0 }] } },
+                    { text: "That's a fine pile of wool! What else do you need?", check: { requirements: [{ type: 'quest', questId: 'sheep_troubles', status: 'in_progress', stage: 1 }] } },
+                    { text: "You've finished spinning all of it? Great! Hand them over when you're ready.", check: { requirements: [{ type: 'quest', questId: 'sheep_troubles', status: 'in_progress', stage: 2 }] } },
+                    { text: "Thanks again for helping me with those sheep. It's a relief to have that sorted!", check: { requirements: [{ type: 'quest', questId: 'sheep_troubles', status: 'completed' }] } }
+                ]
             },
             { type: 'skilling', id: 'mcgregors_ranch_tree', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 1, xp: 25 }], resourceCount: { min: 1, max: 3 }, respawnTime: 15000, gatherTime: 2000 },
         ],
@@ -227,7 +236,7 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         id: 'ancient_standing_stones',
         name: 'Ancient Standing Stones',
         description: 'A circle of moss-covered stones hums with a faint energy. The air feels strangely alive.',
-        connections: ['shepherds_peak', 'giants_foothold', 'thorny_thicket'],
+        connections: ['shepherds_peak', 'giants_foothold', 'thorny_thicket', 'forgotten_barrow'],
         activities: [ { type: 'combat', monsterId: 'forest_spirit' } ],
         regionId: 'the_verdant_fields',
         x: 450, y: 950
@@ -384,7 +393,9 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         description: 'A low, grass-covered mound with a single stone door, sealed shut with an ancient lock.',
         connections: ['ancient_standing_stones'],
         activities: [
-            { type: 'npc', name: 'Examine Seal', icon: 'https://api.iconify.design/game-icons:locked-fortress.svg', questCondition: { questId: 'an_echo_of_battle', stages: [0] } }
+            { type: 'npc', name: 'Examine Seal', icon: 'https://api.iconify.design/game-icons:locked-fortress.svg', questCondition: { questId: 'an_echo_of_battle', stages: [0] }, startNode: 'aeb_barrow_seal' },
+            { type: 'ladder', name: 'Enter the Barrow', questCondition: { questId: 'an_echo_of_battle', stages: [6,7,8], visibleAfterCompletion: true }, direction: 'down', toPoiId: `barrow_entrance_hall` },
+            { type: 'npc', name: 'Use Reforged Key', icon: 'https://api.iconify.design/game-icons:key-skeleton.svg', questCondition: { questId: 'an_echo_of_battle', stages: [5] }, startNode: 'aeb_barrow_door_puzzle_start' }
         ],
         regionId: 'the_verdant_fields',
         x: 400, y: 950

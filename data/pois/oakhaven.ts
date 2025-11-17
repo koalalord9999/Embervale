@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 import { CIVILLIAN_DIALOGUE } from '../../constants/dialogue';
 
@@ -9,9 +10,10 @@ export const oakhavenPois: Record<string, POI> = {
         description: 'Sturdy wooden gates mark the entrance to the town of Oakhaven. The scent of sawdust and tanning leather hangs in the air.',
         connections: ['oakhaven_road_2', 'oakhaven_square'],
         activities: [],
-        regionId: 'wilderness',
-        x: 1000, y: 1750,
-        cityMapX: 250, cityMapY: 100,
+        regionId: 'oakhaven',
+        type: 'internal',
+        x: 250, y: 0,
+        eX: 1000, eY: 1800,
         unlockRequirement: { type: 'quest', questId: 'bandit_toll', stage: 1 }
     },
     oakhaven_west_gate: {
@@ -29,9 +31,10 @@ export const oakhavenPois: Record<string, POI> = {
                 startNode: 'elara_default',
             },
         ],
-        regionId: 'wilderness',
-        x: 950, y: 1800,
-        cityMapX: 100, cityMapY: 160,
+        regionId: 'oakhaven',
+        type: 'internal',
+        x: 0, y: 160,
+        eX: 1000, eY: 1800,
     },
 
     // CITY CENTER (Internal POI)
@@ -61,6 +64,23 @@ export const oakhavenPois: Record<string, POI> = {
                 startNode: 'start',
                 dialogueType: 'random'
             },
+            {
+                type: 'npc',
+                name: 'Altar',
+                icon: 'https://api.iconify.design/game-icons:altar.svg',
+                dialogue: {
+                    start: {
+                        npcName: 'Altar',
+                        npcIcon: 'https://api.iconify.design/game-icons:altar.svg',
+                        text: 'You feel a divine presence. Your prayer may be answered here.',
+                        responses: [
+                            { text: 'Pray', actions: [{ type: 'restore_prayer' }] },
+                            { text: 'Leave' }
+                        ]
+                    }
+                },
+                startNode: 'start'
+            }
         ],
         regionId: 'oakhaven',
         x: 250, y: 160,
@@ -168,6 +188,7 @@ export const oakhavenPois: Record<string, POI> = {
                 },
                 startNode: 'start',
                 dialogueType: 'random',
+                questTopics: ['petunia_problems'],
             }
         ],
         regionId: 'oakhaven',
@@ -273,6 +294,34 @@ export const oakhavenPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Bronn the Retired Adventurer',
                 icon: '/assets/npcChatHeads/bronn_the_retired_adventurer.png',
+                startNode: 'default_dialogue',
+                questTopics: ['an_echo_of_battle', 'art_of_the_warhammer'],
+                conditionalGreetings: [
+                    // AN ECHO OF BATTLE (HIGHEST PRIORITY)
+                    { text: "Thank you again, my friend. It's... quieter now. In my head.", check: { requirements: [{ type: 'quest', questId: 'an_echo_of_battle', status: 'completed' }] } },
+                    { text: "Have you uncovered any information about the barrow?", check: { requirements: [{ type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 1 }] }},
+                    { text: "Have you uncovered any information about the barrow?", check: { requirements: [{ type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 0 }] }},
+                    { text: "The barrow seal is weakening. I knew it. What are you waiting for? Take the key to Valerius!", check: { requirements: [{ type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 2 }] } },
+                    { text: "Have you reforged the key yet?", check: { requirements: [{ type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 3 }] } },
+                    { text: "You have the reforged key? Then what are you doing here? Get to the barrow!", check: { requirements: [{ type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 5 }] } },
+                    { text: "You've returned, what news do you have?", check: { requirements: [{ type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 6 }] } },
+                    
+                    // ART OF THE WARHAMMER (LOWER PRIORITY)
+                    { text: "Still here? Valerius isn't getting any younger. You'll find him at the smithy in Meadowdale.", check: { requirements: [{ type: 'quest', questId: 'art_of_the_warhammer', status: 'in_progress', stage: 0 }] } },
+                    { text: "Have you forged that warhammer yet? The anvil awaits!", check: { requirements: [{ type: 'quest', questId: 'art_of_the_warhammer', status: 'in_progress', stage: 1 }] } },
+                    { text: "Let's see that hammer you've made, then. Show it to me.", check: { requirements: [{ type: 'quest', questId: 'art_of_the_warhammer', status: 'in_progress', stage: 2 }] } },
+                    // ART OF THE WARHAMMER POSTQUEST
+                    { text: "(Bronn finishes his mug of ale with a troubled look on his face) Ahhh, hello again adventurer... Nice to see a proper smith around here. How's the hammer holding up?", check: { requirements: [{ type: 'quest', questId: 'art_of_the_warhammer', status: 'completed' }, { type: 'quest', questId: 'an_echo_of_battle', status: 'not_started'}] } },
+                ],
+
+                dialogue: {
+                    default_dialogue: {
+                        npcName: 'Bronn the Retired Adventurer',
+                        npcIcon: '/assets/npcChatHeads/bronn_the_retired_adventurer.png',
+                        text: "Another pint, barkeep! What's an old soldier to do but drink and remember?",
+                        responses: [],
+                    }
+                },
             }
         ],
         regionId: 'oakhaven',

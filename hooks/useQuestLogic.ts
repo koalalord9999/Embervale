@@ -1,8 +1,7 @@
 
 
-
 import React, { useCallback } from 'react';
-import { PlayerQuestState, SkillName } from '../types';
+import { PlayerQuestState, SkillName, InventorySlot } from '../types';
 import { ITEMS, MONSTERS } from '../constants';
 import { QUESTS } from '../constants';
 import { POIS } from '../data/pois';
@@ -11,7 +10,7 @@ interface UseQuestLogicProps {
     playerQuests: PlayerQuestState[];
     setPlayerQuests: React.Dispatch<React.SetStateAction<PlayerQuestState[]>>;
     addLog: (message: string) => void;
-    modifyItem: (itemId: string, quantity: number, quiet?: boolean, doses?: number, options?: { noted?: boolean; bypassAutoBank?: boolean }) => void;
+    modifyItem: (itemId: string, quantity: number, quiet?: boolean, slotOverrides?: Partial<Omit<InventorySlot, 'itemId' | 'quantity'>> & { bypassAutoBank?: boolean }) => void;
     addXp: (skill: SkillName, amount: number) => void;
     hasItems: (items: { itemId: string, quantity: number }[]) => boolean;
     setLockedPois: React.Dispatch<React.SetStateAction<string[]>>;
@@ -127,7 +126,7 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
                     addLog(`Congratulations! You have completed the quest: ${questData.name}!`);
                     const rewards = questData.rewards;
                     if (rewards.coins) modifyItem('coins', rewards.coins);
-                    rewards.items?.forEach(item => modifyItem(item.itemId, item.quantity, false, item.doses, { bypassAutoBank: true }));
+                    rewards.items?.forEach(item => modifyItem(item.itemId, item.quantity, false, { doses: item.doses, bypassAutoBank: true }));
                     rewards.xp?.forEach(xpReward => addXp(xpReward.skill, xpReward.amount));
                     return { ...updatedQuest, isComplete: true };
                 } else {
@@ -138,6 +137,25 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
             return updatedQuest;
         }));
     }, [setPlayerQuests, addLog, modifyItem, addXp, hasItems]);
+
+    const checkQuestProgressOnOffer = useCallback((itemId: string, quantity: number) => {
+        setPlayerQuests(qs => qs.map(q => {
+            const questData = QUESTS[q.questId];
+            if (!q.isComplete && questData && questData.stages[q.currentStage]) {
+                const stage = questData.stages[q.currentStage];
+                if (stage?.requirement.type === 'offer' && stage.requirement.itemId === itemId) {
+                    const newProgress = q.progress + quantity;
+                    if (newProgress >= stage.requirement.quantity) {
+                        addLog(`Quest updated: ${questData.name} - stage completed!`);
+                        return { ...q, currentStage: q.currentStage + 1, progress: 0 };
+                    }
+                    addLog(`Quest progress: Offered ${newProgress}/${stage.requirement.quantity}.`);
+                    return { ...q, progress: newProgress };
+                }
+            }
+            return q;
+        }));
+    }, [setPlayerQuests, addLog]);
 
     const checkGatherQuests = useCallback(() => {
         setPlayerQuests(qs => {
@@ -166,7 +184,7 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
         });
     }, [hasItems, addLog, setPlayerQuests]);
     
-    const completeQuestStage = useCallback((questId: string) => {
+    const completeQuestStage = useCallback((questId: string, stagesToAdvance: number = 1) => {
         setPlayerQuests(qs => qs.map(q => {
             if(q.questId === questId && !q.isComplete) {
                 const questData = QUESTS[q.questId];
@@ -193,7 +211,7 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
                         addLog(`You received ${rewards.coins} coins.`);
                     }
                     rewards.items?.forEach(item => {
-                        modifyItem(item.itemId, item.quantity, false, item.doses, { bypassAutoBank: true });
+                        modifyItem(item.itemId, item.quantity, false, { doses: item.doses, bypassAutoBank: true });
                         addLog(`You received ${item.quantity}x ${ITEMS[item.itemId].name}.`);
                     });
                     rewards.xp?.forEach(xpReward => {
@@ -202,7 +220,7 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
                     });
                 }
 
-                const nextStageIndex = q.currentStage + 1;
+                const nextStageIndex = q.currentStage + stagesToAdvance;
                 Object.values(POIS).forEach(poi => {
                     if (poi.unlockRequirement?.type === 'quest' && poi.unlockRequirement.questId === questId && poi.unlockRequirement.stage <= nextStageIndex) {
                         setLockedPois(prev => {
@@ -215,13 +233,13 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
                     }
                 });
 
-                const isCompletingFinalStage = q.currentStage >= questData.stages.length - 1;
+                const isCompletingFinalStage = q.currentStage >= questData.stages.length - stagesToAdvance;
 
                 if(isCompletingFinalStage) {
                     addLog(`Congratulations! You have completed the quest: ${questData.name}!`);
                     const rewards = questData.rewards;
                     if(rewards.coins) modifyItem('coins', rewards.coins);
-                    rewards.items?.forEach(item => modifyItem(item.itemId, item.quantity, false, item.doses, { bypassAutoBank: true }));
+                    rewards.items?.forEach(item => modifyItem(item.itemId, item.quantity, false, { doses: item.doses, bypassAutoBank: true }));
                     rewards.xp?.forEach(xpReward => addXp(xpReward.skill, xpReward.amount));
                     
                     if (questData.id === 'capitals_call') {
@@ -236,8 +254,7 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
                     }
                     return {...q, isComplete: true};
                 }
-                addLog(`Quest updated: ${questData.name} - stage completed!`);
-                return { ...q, currentStage: q.currentStage + 1, progress: 0 };
+                return { ...q, currentStage: q.currentStage + stagesToAdvance, progress: 0 };
             }
             return q;
         }))
@@ -269,7 +286,7 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
 
         const rewards = questData.rewards;
         if (rewards.coins) modifyItem('coins', rewards.coins);
-        rewards.items?.forEach(item => modifyItem(item.itemId, item.quantity, false, item.doses, { bypassAutoBank: true }));
+        rewards.items?.forEach(item => modifyItem(item.itemId, item.quantity, false, { doses: item.doses, bypassAutoBank: true }));
         rewards.xp?.forEach(xpReward => addXp(xpReward.skill, xpReward.amount));
     
         Object.values(POIS).forEach(poi => {
@@ -295,8 +312,9 @@ export const useQuestLogic = (props: UseQuestLogicProps) => {
         checkQuestProgressOnSpin,
         checkQuestProgressOnKill,
         checkQuestProgressOnSmith,
+        checkQuestProgressOnOffer,
         completeQuestStage,
         checkGatherQuests,
         forceCompleteQuest,
     };
-};
+}

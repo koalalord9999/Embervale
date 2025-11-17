@@ -92,7 +92,6 @@ export const sunkenLandsPois: Record<string, POI> = {
         activities: [
             { type: 'combat', monsterId: 'swamp_horror' },
             { type: 'skilling', id: 'sunken_ruins_adamantite_1', name: 'Mine Adamantite Rock', skill: SkillName.Mining, requiredLevel: 65, loot: [{ itemId: 'adamantite_ore', chance: 1, xp: 120 }], resourceCount: { min: 1, max: 1 }, respawnTime: 50000, gatherTime: 5000 },
-// FIX: Removed redundant level, xp, and respawnTime properties.
             { type: 'thieving_lockpick', id: 'sl_ruins_chest_1', targetName: 'Submerged Chest', lootTableId: 'thieving_dungeon_chest_mid' },
         ],
         regionId: 'sunken_lands',
@@ -126,7 +125,6 @@ export const sunkenLandsPois: Record<string, POI> = {
         activities: [
             { type: 'combat', monsterId: 'swamp_horror' },
             { type: 'combat', monsterId: 'swamp_horror' },
-// FIX: Removed redundant level, xp, and respawnTime properties.
             { type: 'thieving_lockpick', id: 'sl_crypt_chest_1', targetName: 'Sarcophagus Lockbox', lootTableId: 'thieving_dungeon_chest_mid' },
         ],
         regionId: 'sunken_lands',

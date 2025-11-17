@@ -1,3 +1,4 @@
+
 import { Quest, SkillName } from '../../types';
 
 export const sheepTroubles: Quest = {
@@ -5,7 +6,6 @@ export const sheepTroubles: Quest = {
     name: 'Sheep Troubles',
     description: "Rancher McGregor's sheep are getting overgrown. He needs a hand shearing them and preparing the wool.",
     startHint: "Speak to Rancher McGregor at his ranch, west of Meadowdale.",
-    startDialogueNode: 'start',
     playerStagePerspectives: [
         "I need to shear 10 sheep in the pen at the ranch.",
         "I need to use the spinning wheel in the barn to turn the 10 pieces of wool into balls of wool.",
@@ -15,11 +15,11 @@ export const sheepTroubles: Quest = {
     stages: [
         {
             description: 'Shear 10 wool from the sheep in the pen.',
-            requirement: { type: 'shear', quantity: 10 },
+            requirement: { type: 'gather', itemId: 'wool', quantity: 10 },
         },
         {
             description: 'Use the spinning wheel in the barn to create 10 balls of wool.',
-            requirement: { type: 'spin', quantity: 10 },
+            requirement: { type: 'gather', itemId: 'ball_of_wool', quantity: 10 },
         },
         {
             description: 'Return to Rancher McGregor with the 10 balls of wool.',
@@ -31,64 +31,81 @@ export const sheepTroubles: Quest = {
         coins: 300
     },
     dialogue: {
+        mcgregor_default: {
+            npcName: 'Rancher McGregor',
+            npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
+            text: "Another fine day on the ranch. These sheep are getting a bit too fluffy, though.",
+            responses: [],
+            conditionalResponses: [
+                { text: "You seem to be having some trouble with your sheep.", check: { requirements: [{ type: 'quest', questId: 'sheep_troubles', status: 'not_started' }], successNode: 'quest_intro_sheep_troubles', failureNode: '' } },
+                { text: "How am I doing on the shearing task?", check: { requirements: [{ type: 'quest', questId: 'sheep_troubles', status: 'in_progress', stage: 0 }], successNode: 'in_progress_sheep_troubles_0', failureNode: '' } },
+                { text: "What do I need to with the wool again?", check: { requirements: [{ type: 'quest', questId: 'sheep_troubles', status: 'in_progress', stage: 1 }], successNode: 'in_progress_sheep_troubles_1', failureNode: '' } },
+                { text: "I have the 10 balls of wool for you.", check: { requirements: [{ type: 'quest', questId: 'sheep_troubles', status: 'in_progress', stage: 2 }], successNode: 'in_progress_sheep_troubles_2', failureNode: '' } },
+                { text: "How are the sheep faring?", check: { requirements: [{ type: 'quest', questId: 'sheep_troubles', status: 'completed' }], successNode: 'post_quest_sheep_troubles', failureNode: '' } }
+            ]
+        },
         quest_intro_sheep_troubles: {
             npcName: 'Rancher McGregor',
             npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-            text: "Frazzled? That's putting it mildly! Look at 'em! My prize sheep have gotten so woolly they're starting to roll instead of walk. They're like fluffy, bleating boulders! It's a woolly catastrophe!",
+            text: "Trouble? That's putting it mildly! Look at 'em! They're more wool than sheep at this point. My usual shearer's down with a cold, and I can't keep up! Plus, the weavers in Oakhaven won't take raw wool. It all needs to be spun first.",
             responses: [
-                { text: "They do look rather spherical. What happened?", next: 'problem_sheep_troubles' },
-                { text: "Sounds like a you problem.", next: 'you_problem_response' },
-            ],
-        },
-        you_problem_response: {
-            npcName: 'Rancher McGregor',
-            npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-            text: "Well, it'll be your problem too when the price of wool blankets skyrockets before winter! A little help here benefits everyone, you know.",
-            responses: [
-                { text: "Alright, you've got a point. What's the issue?", next: 'problem_sheep_troubles' }
+                { text: "So you need someone to both shear and spin them?", next: 'st_offer' }
             ]
         },
-        problem_sheep_troubles: {
+        st_offer: {
             npcName: 'Rancher McGregor',
             npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-            text: "Spherical! Exactly! It's a woolly catastrophe. My usual shearer is out with a case of the sniffles, and I can't keep up myself. The wool is so thick the poor things can barely see! I need someone to shear ten of 'em for me. The raw wool isn't much use to the weavers in Oakhaven on its own, though.",
-            responses: [
-                { text: "What needs to be done with it?", next: 'solution_sheep_troubles' },
-            ],
-        },
-        solution_sheep_troubles: {
-            npcName: 'Rancher McGregor',
-            npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-            text: "It needs to be spun into proper balls of wool. I've got a spinning wheel in the barn you can use. If you can shear ten sheep, spin the wool, and bring me back ten finished balls, I'd be mighty grateful. Here, take these shears to get you started. I'll pay you well for your trouble, of course.",
+            text: "Exactly! If you could shear ten of them, use the spinning wheel in my barn to turn the wool into ten balls, and bring them to me, I'd pay you handsomely. Here, you'll need these shears to get started.",
             responses: [
                 { text: "You've got a deal. I'll get right on it.", actions: [{ type: 'start_quest', questId: 'sheep_troubles' }, { type: 'give_item', itemId: 'shears', quantity: 1 }] },
-                { text: "That sounds like a lot of work." },
-            ],
+                { text: "That sounds like too much work for me." }
+            ]
         },
         in_progress_sheep_troubles_0: {
             npcName: 'Rancher McGregor',
             npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-            text: "Those sheep aren't going to shear themselves! Grab some shears and get to it. You'll find plenty in the pen.",
+            text: "You've still got more to shear. Keep at it!",
             responses: []
         },
         in_progress_sheep_troubles_1: {
             npcName: 'Rancher McGregor',
             npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-            text: "That's a fine pile of wool! Now head into the barn and use the spinning wheel to turn it into balls of wool.",
+            text: "All you need to do is take the wool, and use the spinning wheel there in the barn. It'll make spinning them into balls much easier than knitting them.",
             responses: []
         },
         in_progress_sheep_troubles_2: {
             npcName: 'Rancher McGregor',
             npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
+            text: "Let's see here...",
+            responses: [
+                { 
+                    text: "(Show McGregor the balls of wool))", 
+                    check: {
+                        requirements: [{ type: 'items', items: [{ itemId: 'ball_of_wool', quantity: 10 }] }],
+                        successNode: 'st_final_success',
+                        failureNode: 'st_final_fail'
+                    }
+                },
+            ]
+        },
+        st_final_success: {
+            npcName: 'Rancher McGregor',
+            npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
             text: "Well I'll be! You've got the knack for it. These are perfect. Thank you kindly, adventurer. Here's your payment, as promised.",
             responses: [
-                { text: "Happy to help.", actions: [{ type: 'give_xp', skill: SkillName.Crafting, amount: 150 }, { type: 'give_coins', amount: 300 }, {type: 'take_item', itemId: 'ball_of_wool', quantity: 10}, { type: 'advance_quest', questId: 'sheep_troubles' }] },
+                { text: "Happy to help.", actions: [ { type: 'take_item', itemId: 'ball_of_wool', quantity: 10 }, { type: 'advance_quest', questId: 'sheep_troubles' } ] }
             ]
+        },
+        st_final_fail: {
+            npcName: 'Rancher McGregor',
+            npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
+            text: "Wait a minute... you don't have all ten balls of wool! Are you trying to pull a fast one on old McGregor?",
+            responses: []
         },
         post_quest_sheep_troubles: {
             npcName: 'Rancher McGregor',
             npcIcon: '/assets/npcChatHeads/rancher_mcgregor.png',
-            text: "Thanks again for helping me with those sheep. It's a relief to have that sorted!",
+            text: "The sheep look much happier now, and so do the weavers in Oakhaven! Thanks again for your help.",
             responses: []
         }
     }

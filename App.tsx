@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useUIState } from './hooks/useUIState';
 import { useSaveSlotManager } from './hooks/useSaveSlotManager';
@@ -238,7 +239,8 @@ const App: React.FC = () => {
             
             {/* Global Modals & Overlays */}
             {ui.showTooltips && ui.tooltip && <Tooltip tooltipState={ui.tooltip} isCtrlPressed={isCtrlPressed} />}
-            {ui.contextMenu && <ContextMenu options={ui.contextMenu.options} triggerEvent={ui.contextMenu.event} isTouchInteraction={ui.contextMenu.isTouchInteraction} onClose={ui.closeContextMenu} />}
+            {/* The `ui.contextMenu` state provides the `triggerEvent` prop which is spread into the ContextMenu component. */}
+            {ui.contextMenu && <ContextMenu {...ui.contextMenu} onClose={ui.closeContextMenu} />}
             {ui.makeXPrompt && <MakeXModal title={ui.makeXPrompt.title} maxQuantity={ui.makeXPrompt.max} onConfirm={ui.makeXPrompt.onConfirm} onCancel={ui.closeMakeXPrompt} />}
             {ui.confirmationPrompt && <ConfirmationModal message={ui.confirmationPrompt.message} onConfirm={ui.confirmationPrompt.onConfirm} onCancel={ui.closeConfirmationPrompt} />}
             {ui.exportData && <ExportModal exportState={ui.exportData} onClose={ui.exportData.onClose ?? ui.closeExportModal} />}

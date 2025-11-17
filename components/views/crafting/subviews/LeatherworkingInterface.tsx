@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SkillName } from '../../../../types';
 import { CRAFTING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
@@ -18,7 +19,7 @@ const LeatherworkingSlot: React.FC<{
     const item = ITEMS[recipe.itemId];
     if (!item) return null;
 
-    const hasLevel = craftingLevel >= recipe.level;
+    const hasLevel = craftingLevel >= (recipe.level ?? 1);
     const maxCraftable = Math.min(
         ...recipe.ingredients.map(ing => Math.floor(getIngredientCount(ing.itemId) / ing.quantity))
     );
@@ -29,7 +30,14 @@ const LeatherworkingSlot: React.FC<{
 
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();
-        const event = 'touches' in e ? e.touches[0] : e;
+        let eventForMenu: React.MouseEvent | React.Touch;
+        if ('touches' in e && e.touches.length > 0) {
+            eventForMenu = e.touches[0];
+        } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+            eventForMenu = e.changedTouches[0];
+        } else {
+            eventForMenu = e as React.MouseEvent;
+        }
         setContextMenu({
             options: [
                 { label: 'Craft 1', onClick: () => onCraftItem(recipe.itemId, 1), disabled: !canCraft },
@@ -43,7 +51,10 @@ const LeatherworkingSlot: React.FC<{
                     }),
                     disabled: !canCraft
                 },
-            ], event, isTouchInteraction: isTouchDevice
+            ],
+            triggerEvent: eventForMenu,
+            isTouchInteraction: isTouchDevice,
+            title: item.name
         });
     };
 
@@ -68,7 +79,7 @@ const LeatherworkingSlot: React.FC<{
                 
                 <div className="grid grid-cols-2 gap-x-4 text-xs">
                     <span className="text-gray-400">{SkillName.Crafting} XP:</span>
-                    <span className="font-semibold text-right">{recipe.xp.toLocaleString()}</span>
+                    <span className="font-semibold text-right">{recipe.xp?.toLocaleString()}</span>
                     <span className="text-gray-400">Craft Time:</span>
                     <span className="font-semibold text-right">{craftTime.toFixed(1)}s</span>
                 </div>

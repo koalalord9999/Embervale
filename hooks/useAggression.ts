@@ -1,3 +1,5 @@
+
+
 import React, { useEffect } from 'react';
 import { MONSTERS } from '../constants';
 import { POI, POIActivity, Equipment, WorldState, PlayerRepeatableQuest } from '../types';
@@ -11,7 +13,7 @@ export const useAggression = (
     startCombat: (monsterIds: string[]) => void,
     addLog: (message: string) => void,
     monsterRespawnTimers: Record<string, number>,
-    devAggroIds: string[],
+    isPermAggroOn: boolean,
     isPlayerInvisible: boolean,
     isPlayerImmune: boolean,
     equipment: Equipment,
@@ -58,13 +60,14 @@ export const useAggression = (
                         (activeRepeatableQuest.generatedQuest.isInstance && activeRepeatableQuest.generatedQuest.instancePoiId === currentPoiId && activeRepeatableQuest.generatedQuest.target.monsterId === monster.id)
                     );
     
-                    // This combined boolean expression correctly prioritizes overrides.
-                    // If any of the first three conditions are true, the monster is aggressive.
+                    // Global dev tool for permanent aggression
+                    const isEffectivelyAggressive = monster.aggressive || isPermAggroOn;
+                    const effectivePlayerCombatLevel = isPermAggroOn ? 1 : playerCombatLevel;
+
                     // The final level-based check is only evaluated if the others are false.
-                    return devAggroIds.includes(uniqueInstanceId) ||
-                           monster.alwaysAggressive ||
+                    return monster.alwaysAggressive ||
                            isQuestAggressive ||
-                           (monster.aggressive && playerCombatLevel < monster.level * 2);
+                           (isEffectivelyAggressive && effectivePlayerCombatLevel < monster.level * 2);
                 });
             
             if (aggressiveMonsterInstances.length > 0) {
@@ -91,5 +94,5 @@ export const useAggression = (
 
         return () => clearInterval(interval);
         
-    }, [currentPoi, isGameLoaded, isBusy, isInCombat, playerCombatLevel, startCombat, addLog, monsterRespawnTimers, devAggroIds, isPlayerInvisible, isPlayerImmune, equipment, setEquipment, worldState, activeRepeatableQuest]);
+    }, [currentPoi, isGameLoaded, isBusy, isInCombat, playerCombatLevel, startCombat, addLog, monsterRespawnTimers, isPermAggroOn, isPlayerInvisible, isPlayerImmune, equipment, setEquipment, worldState, activeRepeatableQuest]);
 };

@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { SkillName } from '../../../../types';
 import { DOUGH_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
@@ -10,12 +11,12 @@ const DoughMakingSlot: React.FC<{
     recipe: typeof DOUGH_RECIPES[0];
     cookingLevel: number;
     getItemCount: (itemId: string) => number;
-    onCraftItem: (recipeId: string, quantity: number) => void;
+    onMakeDough: (recipeId: string, quantity: number) => void;
     setContextMenu: CraftingViewProps['setContextMenu'];
     setMakeXPrompt: CraftingViewProps['setMakeXPrompt'];
     setTooltip: CraftingViewProps['setTooltip'];
     isTouchDevice: boolean;
-}> = ({ recipe, cookingLevel, getItemCount, onCraftItem, setContextMenu, setMakeXPrompt, setTooltip, isTouchDevice }) => {
+}> = ({ recipe, cookingLevel, getItemCount, onMakeDough, setContextMenu, setMakeXPrompt, setTooltip, isTouchDevice }) => {
     const item = ITEMS[recipe.itemId];
     if (!item) return null;
 
@@ -26,25 +27,35 @@ const DoughMakingSlot: React.FC<{
     const hasIngredients = maxCraftable > 0;
     const canCraft = hasLevel && hasIngredients;
 
-    const handleSingleTap = () => { if(canCraft) { onCraftItem(recipe.itemId, 1); setTooltip(null); } };
+    const handleSingleTap = () => { if(canCraft) { onMakeDough(recipe.itemId, 1); setTooltip(null); } };
     
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();
-        const event = 'touches' in e ? e.touches[0] : e;
+        let eventForMenu: React.MouseEvent | React.Touch;
+        if ('touches' in e && e.touches.length > 0) {
+            eventForMenu = e.touches[0];
+        } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+            eventForMenu = e.changedTouches[0];
+        } else {
+            eventForMenu = e as React.MouseEvent;
+        }
         setContextMenu({
             options: [
-                { label: 'Make 1', onClick: () => onCraftItem(recipe.itemId, 1), disabled: !canCraft },
-                { label: 'Make 5', onClick: () => onCraftItem(recipe.itemId, 5), disabled: !canCraft || maxCraftable < 5 },
-                { label: 'Make All', onClick: () => onCraftItem(recipe.itemId, maxCraftable), disabled: !canCraft },
+                { label: 'Make 1', onClick: () => onMakeDough(recipe.itemId, 1), disabled: !canCraft },
+                { label: 'Make 5', onClick: () => onMakeDough(recipe.itemId, 5), disabled: !canCraft || maxCraftable < 5 },
+                { label: 'Make All', onClick: () => onMakeDough(recipe.itemId, maxCraftable), disabled: !canCraft },
                 {
                     label: 'Make X...',
                     onClick: () => setMakeXPrompt({
                         title: `Make ${item.name}`, max: maxCraftable,
-                        onConfirm: (quantity) => onCraftItem(recipe.itemId, quantity)
+                        onConfirm: (quantity) => onMakeDough(recipe.itemId, quantity)
                     }),
                     disabled: !canCraft
                 },
-            ], event, isTouchInteraction: isTouchDevice
+            ],
+            triggerEvent: eventForMenu,
+            isTouchInteraction: isTouchDevice,
+            title: item.name
         });
     };
 
@@ -101,7 +112,7 @@ const DoughMakingSlot: React.FC<{
     );
 };
 
-const DoughMakingInterface: React.FC<CraftingViewProps> = ({ inventory, skills, onCraftItem, setContextMenu, setMakeXPrompt, setTooltip }) => {
+const DoughMakingInterface: React.FC<CraftingViewProps> = ({ inventory, skills, onMakeDough, setContextMenu, setMakeXPrompt, setTooltip }) => {
     const cookingLevel = skills.find(s => s.name === SkillName.Cooking)?.currentLevel ?? 1;
     const isTouchDevice = useIsTouchDevice(false);
 
@@ -123,7 +134,7 @@ const DoughMakingInterface: React.FC<CraftingViewProps> = ({ inventory, skills, 
                         recipe={recipe}
                         cookingLevel={cookingLevel}
                         getItemCount={getItemCount}
-                        onCraftItem={onCraftItem}
+                        onMakeDough={onMakeDough}
                         setContextMenu={setContextMenu}
                         setMakeXPrompt={setMakeXPrompt}
                         setTooltip={setTooltip}

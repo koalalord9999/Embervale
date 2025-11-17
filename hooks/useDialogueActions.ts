@@ -1,6 +1,8 @@
+
+
 import React, { useCallback } from 'react';
 import { DialogueAction, DialogueCheckRequirement, WorldState, InventorySlot, BankTab, ActivePanel, POIActivity, DialogueResponse, SkillName } from '../types';
-import { INVENTORY_CAPACITY, QUESTS } from '../constants';
+import { INVENTORY_CAPACITY, QUESTS, ITEMS } from '../constants';
 import { useQuests } from './useQuests';
 import { useQuestLogic } from './useQuestLogic';
 import { useNavigation } from './useNavigation';
@@ -85,7 +87,7 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
         for (const action of actions) {
             switch (action.type) {
                 case 'give_item':
-                    inv.modifyItem(action.itemId, action.quantity, false, undefined, { bypassAutoBank: true, noted: action.noted });
+                    inv.modifyItem(action.itemId, action.quantity, false, { bypassAutoBank: true, noted: action.noted });
                     break;
                 case 'take_item':
                     inv.modifyItem(action.itemId, -action.quantity, true);
@@ -103,7 +105,7 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                     quests.startQuest(action.questId, addLog);
                     break;
                 case 'advance_quest':
-                    questLogic.completeQuestStage(action.questId);
+                    questLogic.completeQuestStage(action.questId, action.quantity ?? 1);
                     break;
                 case 'complete_quest':
                     questLogic.forceCompleteQuest(action.questId);
@@ -116,6 +118,13 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                     if (action.amount === 'full') {
                         addLog("You feel fully rested.");
                     }
+                    break;
+                case 'restore_prayer':
+                    char.setCurrentPrayer(char.maxPrayer);
+                    addLog("You pray at the altar and feel your spiritual energy return.");
+                    break;
+                case 'add_log':
+                    addLog(action.message);
                     break;
                 case 'restore_stats':
                     char.clearStatModifiers();
@@ -154,7 +163,7 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                         { id: 'gust_rune', qty: 50 },
                         { id: 'binding_rune', qty: 50 },
                     ];
-                    starterItems.forEach(item => inv.modifyItem(item.id, item.qty, true, undefined, { bypassAutoBank: true }));
+                    starterItems.forEach(item => inv.modifyItem(item.id, item.qty, true, { bypassAutoBank: true }));
                     addLog("You have completed your training and received a starter pack!");
 
                     questLogic.forceCompleteQuest('embrune_101');
@@ -196,7 +205,7 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
 
                     hidesToTan.forEach(hide => {
                         inv.modifyItem(hide.hideId, -hide.quantity, true);
-                        inv.modifyItem(hide.leatherId, hide.quantity, false, undefined, { bypassAutoBank: true });
+                        inv.modifyItem(hide.leatherId, hide.quantity, false, { bypassAutoBank: true });
                         totalTanned += hide.quantity;
                     });
 
@@ -206,9 +215,37 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                     
                     break;
                 }
+                 case 'open_make_x_for_grinding': {
+                    const { itemId } = action;
+                    const count = inv.inventory.filter(slot => slot?.itemId === itemId).length;
+                    if (count > 0) {
+                        const onConfirm = (quantity: number) => {
+                            ui.setActiveCraftingAction({
+                                recipeId: itemId,
+                                recipeType: 'grinding',
+                                totalQuantity: quantity,
+                                completedQuantity: 0,
+                                successfulQuantity: 0,
+                                startTime: Date.now(),
+                                duration: 1800,
+                            });
+                        };
+                        if (count === 1) {
+                            onConfirm(1);
+                        } else {
+                            ui.setMakeXPrompt({
+                                title: `Grind ${ITEMS[itemId].name}`,
+                                max: count,
+                                onConfirm,
+                            });
+                        }
+                    }
+                    ui.setActiveDialogue(null);
+                    break;
+                }
             }
         }
-    }, [inv, char, quests, questLogic, navigation, addLog, setBank, setActivityLog, repeatableQuests, worldState, ui, setWorldState, session.currentPoiId]);
+    }, [quests, questLogic, navigation, inv, char, worldActions, addLog, worldState, setBank, setActivityLog, repeatableQuests, ui, setWorldState, session.currentPoiId]);
 
     const onResponse = useCallback((response: DialogueResponse) => {
         if (response.check) {

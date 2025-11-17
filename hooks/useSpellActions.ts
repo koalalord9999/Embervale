@@ -1,17 +1,23 @@
-
-import { useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { InventorySlot, PlayerSkill, SkillName, Spell, Equipment, WeaponType } from '../types';
 import { ITEMS } from '../constants';
 import { useUIState } from './useUIState';
+import { POIS } from '../data/pois';
+
+const BANK_POI_IDS = Object.values(POIS)
+    .filter(poi => poi.activities.some(act => act.type === 'bank' || (act.type === 'npc' && act.actions?.some(a => a.action === 'open_bank'))))
+    .map(poi => poi.id);
 
 interface SpellActionDependencies {
     addLog: (message: string) => void;
     addXp: (skill: SkillName, amount: number) => void;
-    modifyItem: (itemId: string, quantity: number, quiet?: boolean, doses?: number, options?: { noted?: boolean, bypassAutoBank?: boolean }) => void;
+    modifyItem: (itemId: string, quantity: number, quiet?: boolean, slotOverrides?: Partial<Omit<InventorySlot, 'itemId' | 'quantity'>> & { bypassAutoBank?: boolean; }) => void;
     hasItems: (items: { itemId: string, quantity: number }[]) => boolean;
     skills: (PlayerSkill & { currentLevel: number; })[];
     ui: ReturnType<typeof useUIState>;
     equipment: Equipment;
+    currentPoiId: string;
+    setInventory: React.Dispatch<React.SetStateAction<(InventorySlot | null)[]>>;
 }
 
 const ENCHANTMENT_MAP: Record<string, string> = {
@@ -19,21 +25,29 @@ const ENCHANTMENT_MAP: Record<string, string> = {
     'emerald_ring': 'ring_of_the_woodsman',
     'ruby_ring': 'ring_of_the_forge',
     'diamond_ring': 'ring_of_mastery',
+    'sunstone_ring': 'ring_of_greed',
     'sapphire_necklace': 'necklace_of_binding',
     'emerald_necklace': 'necklace_of_the_angler',
-    'ruby_necklace': 'necklace_of_passage_ruby',
-    'diamond_necklace': 'necklace_of_passage_diamond',
+    'ruby_necklace': 'necklace_of_pyromancy',
+    'diamond_necklace': 'necklace_of_shadows',
+    'sunstone_necklace': 'necklace_of_fortune',
     'sapphire_amulet': 'amulet_of_magic',
     'emerald_amulet': 'amulet_of_ranging',
     'ruby_amulet': 'amulet_of_strength',
-    'diamond_amulet': 'amulet_of_power'
+    'diamond_amulet': 'amulet_of_power',
+    'sunstone_amulet': 'amulet_of_fate'
 };
 
 export const useSpellActions = (deps: SpellActionDependencies) => {
-    const { addLog, addXp, modifyItem, hasItems, skills, ui, equipment } = deps;
+    const { addLog, addXp, modifyItem, hasItems, skills, ui, equipment, currentPoiId, setInventory } = deps;
 
     const handleSpellOnItem = useCallback((spell: Spell, target: { item: InventorySlot, index: number }) => {
         ui.setSpellToCast(null);
+
+        const isTargetValid = spell.targetItems?.includes(target.item.itemId) || spell.targetItems?.includes('all');
+        if (!isTargetValid) {
+            return;
+        }
 
         const runesNeeded = spell.runes.filter(r => {
             const staff = equipment.weapon ? ITEMS[equipment.weapon.itemId] : null;
@@ -43,6 +57,41 @@ export const useSpellActions = (deps: SpellActionDependencies) => {
         if (!hasItems(runesNeeded)) {
             addLog("You do not have enough runes to cast this spell.");
             return;
+        }
+
+        if (spell.id === 'enchant_sunstone') {
+            const itemData = ITEMS[target.item.itemId];
+            const maxCharges = itemData.charges;
+            const enchantedJewelryIds = ['ring_of_greed', 'necklace_of_fortune', 'amulet_of_fate'];
+
+            // Handle recharging enchanted jewelry
+            if (enchantedJewelryIds.includes(target.item.itemId)) {
+                
+                if (!BANK_POI_IDS.includes(currentPoiId)) {
+                    addLog("You can only recharge this item at a bank.");
+                    return;
+                }
+
+                if (maxCharges !== undefined && (target.item.charges ?? 0) >= maxCharges) {
+                    addLog(`Your ${itemData.name} is already fully charged.`);
+                    return;
+                }
+
+                runesNeeded.forEach(rune => modifyItem(rune.itemId, -rune.quantity, true));
+                addXp(SkillName.Magic, spell.xp);
+                
+                setInventory(prevInv => {
+                    const newInv = [...prevInv];
+                    const slotToUpdate = newInv[target.index];
+                    if (slotToUpdate) {
+                        newInv[target.index] = { ...slotToUpdate, charges: maxCharges };
+                    }
+                    return newInv;
+                });
+                
+                addLog(`You recharge your ${itemData.name}. It now has ${maxCharges} charges.`);
+                return; // End the function here to prevent other logic from running
+            }
         }
 
         if (spell.id === 'superheat_ore') {
@@ -65,7 +114,7 @@ export const useSpellActions = (deps: SpellActionDependencies) => {
 
                 runesNeeded.forEach(rune => modifyItem(rune.itemId, -rune.quantity, true));
                 ingredients.forEach(ing => modifyItem(ing.itemId, -ing.quantity, true));
-                modifyItem(bar.itemId, bar.quantity, false, undefined, { bypassAutoBank: true });
+                modifyItem(bar.itemId, bar.quantity, false, { bypassAutoBank: true });
                 addXp(SkillName.Magic, spell.xp);
                 addXp(SkillName.Smithing, smithingXp);
                 addLog(`You superheat the ore into a ${ITEMS[bar.itemId].name}.`);
@@ -106,17 +155,12 @@ export const useSpellActions = (deps: SpellActionDependencies) => {
                     return;
             }
         } else if (spell.type === 'utility-enchant') {
-            const isTargetValid = spell.targetItems?.includes(target.item.itemId);
-            if (!isTargetValid) {
-                addLog(`You cannot cast ${spell.name} on this item.`);
-                return;
-            }
             const enchantedItemId = ENCHANTMENT_MAP[target.item.itemId];
             if (enchantedItemId) {
                 runesNeeded.forEach(rune => modifyItem(rune.itemId, -rune.quantity, true));
                 addXp(SkillName.Magic, spell.xp);
                 modifyItem(target.item.itemId, -1, true);
-                modifyItem(enchantedItemId, 1, false, undefined, { bypassAutoBank: true });
+                modifyItem(enchantedItemId, 1, false, { bypassAutoBank: true });
                 addLog(`You enchant the ${ITEMS[target.item.itemId].name}.`);
             } else {
                 addLog(`You cannot enchant this item with ${spell.name}.`);
@@ -133,11 +177,11 @@ export const useSpellActions = (deps: SpellActionDependencies) => {
 
             const coinValue = Math.floor(itemData.value * (spell.id === 'greater_transmutation' ? 0.6 : 0.3));
             
-            modifyItem(target.item.itemId, -1, true, undefined, { noted: target.item.noted });
+            modifyItem(target.item.itemId, -1, true, { noted: target.item.noted });
             modifyItem('coins', coinValue, true);
             addLog(`You transmute the ${itemData.name} into ${coinValue} coins.`);
         }
-    }, [addLog, addXp, modifyItem, hasItems, skills, ui, equipment]);
+    }, [addLog, addXp, modifyItem, hasItems, skills, ui, equipment, currentPoiId, setInventory]);
 
     return { handleSpellOnItem };
 };

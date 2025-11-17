@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { InventorySlot, PlayerSkill, Item, Spell } from '../../types';
+import { InventorySlot, PlayerSkill, Item, Spell, Equipment } from '../../types';
 import { ITEMS, INVENTORY_CAPACITY, getIconClassName } from '../../constants';
 import { ContextMenuOption } from '../common/ContextMenu';
 import { ConfirmationPrompt, ContextMenuState, MakeXPrompt } from '../../hooks/useUIState';
@@ -10,8 +11,16 @@ const TUTORIAL_ITEM_IDS = ['bronze_axe', 'tinderbox', 'logs', 'bronze_sword', 'u
 
 export const getDisplayName = (slot: InventorySlot | null): string => {
     if (!slot) return '';
+    if (slot.nameOverride) return slot.nameOverride;
     const item = ITEMS[slot.itemId];
     if (!item) return "Unknown Item";
+
+    if (item.consumable?.teleportOptions && typeof slot.charges === 'number') {
+        if (item.destroyOnEmpty === false && slot.charges === 0) {
+            return item.name;
+        }
+        return `${item.name} (${slot.charges})`;
+    }
 
     if (item.doseable && typeof slot.doses === 'number') {
         return `${item.name} (${slot.doses})`;
@@ -79,10 +88,11 @@ interface InventorySlotProps {
     valuableDropThreshold: number;
     isOneClickMode: boolean;
     onReadMap: (item: Item) => void;
+    onTeleport: (itemSlot: InventorySlot, slotIdentifier: number | keyof Equipment, from: 'inventory' | keyof Equipment, poiId: string) => void;
 }
 
 const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
-    const { index, slot, inventory, skills, onEquip, onConsume, onDropItem, onBury, onEmpty, setTooltip, setContextMenu, addLog, isBankOpen = false, onDeposit = () => {}, itemToUse, setItemToUse, onUseItemOn, isBusy = false, setConfirmationPrompt, onExamine, draggingIndex, setDraggingIndex, dragOverIndex, setDragOverIndex, onDrop, isTouchSimulationEnabled, onDivine, onReadMap, isShopOpen = false, onSell = () => {}, spellToCast, onSpellOnItem, confirmValuableDrops, valuableDropThreshold, isOneClickMode } = props;
+    const { index, slot, inventory, skills, onEquip, onConsume, onDropItem, onBury, onEmpty, setTooltip, setContextMenu, addLog, isBankOpen = false, onDeposit = () => {}, itemToUse, setItemToUse, onUseItemOn, isBusy = false, setConfirmationPrompt, onExamine, draggingIndex, setDraggingIndex, dragOverIndex, setDragOverIndex, onDrop, isTouchSimulationEnabled, onDivine, onReadMap, isShopOpen = false, onSell = () => {}, spellToCast, onSpellOnItem, confirmValuableDrops, valuableDropThreshold, isOneClickMode, onTeleport } = props;
 
     const isTouchDevice = useIsTouchDevice(isTouchSimulationEnabled);
 
@@ -111,7 +121,6 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
 
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         let eventForMenu: React.MouseEvent | React.Touch;
-        // Correctly get coordinates from touch or mouse event
         if ('touches' in e && e.touches.length > 0) {
             eventForMenu = e.touches[0];
         } else if ('changedTouches' in e && e.changedTouches.length > 0) {
@@ -161,7 +170,7 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
         } else if (isShopOpen) {
             if (item.value === 0) {
                 options.push({ label: 'Examine', onClick: () => onExamine(item) });
-                setContextMenu({ options, event: eventForMenu, isTouchInteraction: isTouchDevice });
+                setContextMenu({ options, triggerEvent: eventForMenu, isTouchInteraction: isTouchDevice, title: getDisplayName(slot) });
                 return;
             }
             
@@ -190,13 +199,39 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
             if (item.equipment) options.push({ label: 'Equip', onClick: () => performActionAndClose(() => onEquip(slot, index)), disabled: isBusy });
             if (item.buryable) options.push({ label: 'Bury', onClick: () => performActionAndClose(() => onBury(item.id, index)), disabled: isBusy });
             if (item.cleanable) options.push({ label: 'Clean', onClick: () => performActionAndClose(() => onConsume(item.id, index)), disabled: isBusy });
-            if (item.consumable) {
+
+            if (item.consumable?.teleportOptions) {
+                const charges = slot.charges ?? item.charges ?? 0;
+                const isDisabled = (item.destroyOnEmpty === false && charges <= 0) || isBusy;
+                options.push({
+                    label: 'Rub',
+                    disabled: isDisabled,
+                    onClick: () => {
+                        const teleportOptions: ContextMenuOption[] = item.consumable!.teleportOptions!.map(opt => ({
+                            label: opt.label,
+                            disabled: opt.disabled,
+                            onClick: () => {
+                                onTeleport(slot, index, 'inventory', opt.poiId);
+                                return false;
+                            }
+                        }));
+                        setContextMenu({
+                            options: teleportOptions,
+                            title: getDisplayName(slot),
+                            triggerEvent: eventForMenu,
+                            isTouchInteraction: isTouchDevice,
+                        });
+                        return true; // Keep menu open
+                    },
+                });
+            } else if (item.consumable) {
                 let actionText = 'Consume';
                 if (item.consumable.givesCoins) actionText = 'Open';
                 else if (item.doseable) actionText = 'Drink';
                 else if (item.consumable.healAmount) actionText = 'Eat';
                 options.push({ label: actionText, onClick: () => performActionAndClose(() => onConsume(item.id, index)), disabled: isBusy });
             }
+
             if (item.divining) {
                 options.push({ label: 'Divine', onClick: () => performActionAndClose(() => onDivine(item.id, index)), disabled: isBusy });
             }
@@ -211,7 +246,7 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
         }
 
         options.push({ label: 'Examine', onClick: () => onExamine(item) });
-        setContextMenu({ options, event: eventForMenu, isTouchInteraction: isTouchDevice });
+        setContextMenu({ options, triggerEvent: eventForMenu, isTouchInteraction: isTouchDevice, title: getDisplayName(slot) });
     };
 
     const handleSingleTap = (e: React.MouseEvent | React.TouchEvent) => {
@@ -359,6 +394,14 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
                                 ? `G${item.name.split(' ')[1]?.substring(0, 3) ?? ''}`
                                 : item.name.split(' ')[0].substring(0, 4)}
                         </span>
+                    )}
+                    {slot?.statsOverride?.poisoned && (
+                        <img 
+                            src="https://api.iconify.design/game-icons:boiling-bubbles.svg" 
+                            alt="Poisoned"
+                            className="poison-overlay-icon item-icon-uncut-emerald"
+                            title="Poisoned"
+                        />
                     )}
                 </>
             )}

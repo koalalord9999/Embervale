@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { InventorySlot, PlayerSkill, Item, Spell } from '../../types';
+import { InventorySlot, PlayerSkill, Item, Spell, Equipment } from '../../types';
 import { INVENTORY_CAPACITY } from '../../constants';
 import { ConfirmationPrompt, ContextMenuState, MakeXPrompt } from '../../hooks/useUIState';
 import InventorySlotDisplay from './InventorySlot';
@@ -36,6 +37,7 @@ interface InventoryPanelProps {
     confirmValuableDrops: boolean;
     valuableDropThreshold: number;
     isOneClickMode: boolean;
+    onTeleport: (itemSlot: InventorySlot, slotIdentifier: number | keyof Equipment, from: 'inventory' | keyof Equipment, poiId: string) => void;
 }
 
 const formatCoins = (quantity: number): string => {

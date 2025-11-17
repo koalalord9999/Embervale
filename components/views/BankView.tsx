@@ -73,8 +73,9 @@ const BankSlot: React.FC<BankSlotProps> = (props) => {
                     { label: 'Clear placeholder', onClick: () => performActionAndClose(() => onClearPlaceholder(activeTabId, index)) },
                     { label: 'Examine', onClick: () => { setTooltip(null); setContextMenu(null); alert(item.description); } }
                 ],
-                event: eventForMenu,
+                triggerEvent: eventForMenu,
                 isTouchInteraction: 'touches' in e || 'changedTouches' in e,
+                title: getDisplayName(slot)
             });
             return;
         }
@@ -101,7 +102,7 @@ const BankSlot: React.FC<BankSlotProps> = (props) => {
             options.push({ label: `Withdraw All`, onClick: () => performActionAndClose(() => performWithdrawAction('all')), disabled: isPlaceholder });
         }
         options.push({ label: 'Examine', onClick: () => { setTooltip(null); setContextMenu(null); alert(item.description); } });
-        setContextMenu({ options, event: eventForMenu, isTouchInteraction: isTouchDevice });
+        setContextMenu({ options, triggerEvent: eventForMenu, isTouchInteraction: isTouchDevice, title: getDisplayName(slot) });
     };
 
     const handleSingleTap = (e: React.MouseEvent | React.TouchEvent) => {
@@ -130,6 +131,14 @@ const BankSlot: React.FC<BankSlotProps> = (props) => {
             {slot && item && (
                 <>
                     <img src={item.iconUrl} alt={item.name} className={`w-full h-full ${getIconClassName(item)} ${isPlaceholder ? 'opacity-10' : ''}`} />
+                    {slot.statsOverride?.poisoned && (
+                        <img 
+                            src="https://api.iconify.design/game-icons:boiling-bubbles.svg" 
+                            alt="Poisoned"
+                            className="poison-overlay-icon item-icon-uncut-emerald"
+                            title="Poisoned"
+                        />
+                    )}
                     <span className={`absolute bottom-0 right-1 text-xs font-bold ${getQuantityColor(slot.quantity)} ${isPlaceholder ? 'opacity-20' : ''}`} style={{ textShadow: '1px 1px 1px black' }}>
                         {isPlaceholder ? '0' : formatQuantity(slot.quantity)}
                     </span>
@@ -214,7 +223,7 @@ const BankView: React.FC<BankViewProps> = (props) => {
     const handleTabContextMenu = (e: React.MouseEvent, tab: BankTab) => {
         e.preventDefault();
         setContextMenu({
-            event: e, isTouchInteraction: isTouchDevice,
+            triggerEvent: e, isTouchInteraction: isTouchDevice,
             options: [
                 { label: 'Rename', onClick: () => {
                     const newName = window.prompt("Enter new tab name (max 12 chars):", tab.name);

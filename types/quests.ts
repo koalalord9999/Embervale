@@ -1,8 +1,15 @@
+
+
 import { SkillName } from './enums';
 import { InventorySlot } from './entities';
+import { QUESTS } from '../constants/quests';
+
+// This creates a union type of all the keys from the QUESTS object, e.g., "goblin_menace" | "a_smiths_apprentice" | ...
+export type QuestId = keyof typeof QUESTS;
+
 
 export interface PlayerQuestState {
-  questId: string;
+  questId: QuestId;
   currentStage: number;
   progress: number;
   isComplete: boolean;
@@ -22,7 +29,8 @@ export type QuestRequirement =
   | { type: 'shear'; quantity: number }
   | { type: 'smith'; itemId: string; quantity: number }
   | { type: 'spin'; quantity: number }
-  | { type: 'accept_repeatable_quest'; questId: string };
+  | { type: 'accept_repeatable_quest'; questId: string }
+  | { type: 'offer'; itemId: string; quantity: number; poiId: string; npcName: string };
 
 export type DialogueAction =
   | { type: 'give_item'; itemId: string; quantity: number; noted?: boolean }
@@ -30,9 +38,9 @@ export type DialogueAction =
   | { type: 'give_coins'; amount: number }
   | { type: 'take_coins'; amount: number }
   | { type: 'give_xp'; skill: SkillName; amount: number }
-  | { type: 'start_quest'; questId: string }
-  | { type: 'advance_quest'; questId: string }
-  | { type: 'complete_quest'; questId: string }
+  | { type: 'start_quest'; questId: QuestId }
+  | { type: 'advance_quest'; questId: QuestId; quantity?: number }
+  | { type: 'complete_quest'; questId: QuestId }
   | { type: 'teleport'; poiId: string }
   | { type: 'heal'; amount: 'full' | number }
   | { type: 'restore_stats' }
@@ -40,14 +48,17 @@ export type DialogueAction =
   | { type: 'complete_tutorial' }
   | { type: 'set_quest_combat_reward'; itemId: string; quantity: number }
   | { type: 'start_mandatory_combat'; monsterId: string }
-  | { type: 'tan_all_hides' };
+  | { type: 'tan_all_hides' }
+  | { type: 'add_log'; message: string }
+  | { type: 'restore_prayer' }
+  | { type: 'open_make_x_for_grinding'; itemId: 'consecrated_bones' | 'consecrated_big_bones' | 'consecrated_dragon_bones' };
 
 export type DialogueCheckRequirement = 
     | { type: 'items'; items: { itemId: string, quantity: number, operator?: 'gte' | 'lt' | 'eq' }[] }
     | { type: 'coins'; amount: number }
     | { type: 'skill'; skill: SkillName; level: number }
     | { type: 'world_state'; property: 'windmillFlour'; value: number; operator?: 'gte' | 'eq' }
-    | { type: 'quest'; questId: string; status: 'not_started' | 'in_progress' | 'completed'; stage?: number };
+    | { type: 'quest'; questId: QuestId; status: 'not_started' | 'in_progress' | 'completed'; stage?: number };
 
 export interface DialogueCheck {
     requirements: DialogueCheckRequirement[];
@@ -71,6 +82,11 @@ export interface DialogueNode {
     highlight?: string | string[];
 }
 
+export interface DialogueEntryPoint {
+    npcName: string;
+    response: DialogueResponse;
+}
+
 export interface QuestStage {
   description: string;
   requirement: QuestRequirement;
@@ -82,13 +98,15 @@ export interface QuestStage {
 }
 
 export interface Quest {
-  id:string;
+  id: QuestId;
   name: string;
   description: string;
   stages: QuestStage[];
   rewards: { xp?: { skill: SkillName; amount: number }[]; items?: InventorySlot[]; coins?: number };
   isHidden?: boolean;
+  isSuperHidden?: boolean;
   dialogue?: Record<string, DialogueNode>;
+  dialogueEntryPoints?: DialogueEntryPoint[];
   startDialogueNode?: string;
   startHint: string;
   playerStagePerspectives: string[];
@@ -106,7 +124,6 @@ export interface RepeatableQuest {
     type: 'gather' | 'interact' | 'kill';
     title: string;
     description: string;
-    // FIX: Add 'isle_of_whispers' to the location type to allow quests for this region.
     location: 'meadowdale' | 'oakhaven' | 'general' | 'isle_of_whispers' | 'silverhaven';
     locationPoiId?: string; // For 'interact' type
     target: {

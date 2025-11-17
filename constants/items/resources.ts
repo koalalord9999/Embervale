@@ -1,37 +1,38 @@
+
 import { Item } from '../../types';
 
 export const resources: Item[] = [
     // Ores
-    { id: 'copper_ore', name: 'Copper Ore', description: 'A lump of copper ore.', stackable: false, value: 4, iconUrl: 'https://api.iconify.design/game-icons:ore.svg', material: 'copper' },
-    { id: 'tin_ore', name: 'Tin Ore', description: 'A lump of tin ore.', stackable: false, value: 4, iconUrl: 'https://api.iconify.design/game-icons:ore.svg', material: 'tin' },
-    { id: 'iron_ore', name: 'Iron Ore', description: 'A lump of iron ore, requires level 15 Mining.', stackable: false, value: 10, iconUrl: 'https://api.iconify.design/game-icons:ore.svg', material: 'iron-ore' },
-    { id: 'coal', name: 'Coal', description: 'A lump of coal, essential for smelting high-grade metals.', stackable: false, value: 25, iconUrl: 'https://api.iconify.design/game-icons:coal-wagon.svg', material: 'burnt' },
+    { id: 'copper_ore', name: 'Copper Ore', description: 'A lump of copper ore.', stackable: false, value: 10, iconUrl: 'https://api.iconify.design/game-icons:ore.svg', material: 'copper' },
+    { id: 'tin_ore', name: 'Tin Ore', description: 'A lump of tin ore.', stackable: false, value: 10, iconUrl: 'https://api.iconify.design/game-icons:ore.svg', material: 'tin' },
+    { id: 'iron_ore', name: 'Iron Ore', description: 'A lump of iron ore.', stackable: false, value: 30, iconUrl: 'https://api.iconify.design/game-icons:ore.svg', material: 'iron-ore' },
+    { id: 'coal', name: 'Coal', description: 'A lump of coal, essential for smelting high-grade metals.', stackable: false, value: 30, iconUrl: 'https://api.iconify.design/game-icons:coal-wagon.svg', material: 'burnt' },
     { id: 'silver_ore', name: 'Silver Ore', description: 'A chunk of rock containing veins of silver.', stackable: false, value: 40, iconUrl: 'https://api.iconify.design/game-icons:ore.svg', material: 'silver' },
-    { id: 'gold_ore', name: 'Gold Ore', description: 'A lump of gold ore.', stackable: false, value: 70, iconUrl: 'https://api.iconify.design/game-icons:ore.svg', material: 'gold' },
-    { id: 'mithril_ore', name: 'Mithril Ore', description: 'A chunk of raw, silvery-blue mithril ore.', stackable: false, value: 50, iconUrl: 'https://api.iconify.design/game-icons:ore.svg', material: 'mithril-ore' },
-    { id: 'adamantite_ore', name: 'Adamantite Ore', description: 'A chunk of raw, dark green adamantite ore.', stackable: false, value: 80, iconUrl: 'https://api.iconify.design/game-icons:ore.svg', material: 'adamantite-ore' },
-    { id: 'titanium_ore', name: 'Titanium Ore', description: 'A chunk of incredibly rare, purplish titanium ore.', stackable: false, value: 120, iconUrl: 'https://api.iconify.design/game-icons:ore.svg', material: 'titanium-ore' },
-    { id: 'rune_essence', name: 'Rune Essence', description: 'A fragment of rock containing pure magical energy.', stackable: false, value: 2, iconUrl: 'https://api.iconify.design/game-icons:rock.svg', material: 'mithril' },
+    { id: 'gold_ore', name: 'Gold Ore', description: 'A lump of gold ore.', stackable: false, value: 120, iconUrl: 'https://api.iconify.design/game-icons:ore.svg', material: 'gold' },
+    { id: 'mithril_ore', name: 'Mithril Ore', description: 'A chunk of raw, silvery-blue mithril ore.', stackable: false, value: 300, iconUrl: 'https://api.iconify.design/game-icons:ore.svg', material: 'mithril-ore' },
+    { id: 'adamantite_ore', name: 'Adamantite Ore', description: 'A chunk of raw, dark green adamantite ore.', stackable: false, value: 400, iconUrl: 'https://api.iconify.design/game-icons:ore.svg', material: 'adamantite-ore' },
+    { id: 'titanium_ore', name: 'Titanium Ore', description: 'A chunk of incredibly rare, purplish titanium ore.', stackable: false, value: 600, iconUrl: 'https://api.iconify.design/game-icons:ore.svg', material: 'titanium-ore' },
+    { id: 'rune_essence', name: 'Rune Essence', description: 'A fragment of rock containing pure magical energy.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:rock.svg', material: 'mithril' },
 
     // Bars
-    { id: 'bronze_bar', name: 'Bronze Bar', description: 'A bar of bronze, ready for smithing.', stackable: false, value: 15, iconUrl: 'https://api.iconify.design/game-icons:metal-bar.svg', material: 'bronze' },
-    { id: 'iron_bar', name: 'Iron Bar', description: 'A bar of iron, ready for smithing.', stackable: false, value: 40, iconUrl: 'https://api.iconify.design/game-icons:metal-bar.svg', material: 'iron' },
-    { id: 'steel_bar', name: 'Steel Bar', description: 'A bar of steel, ready for smithing.', stackable: false, value: 100, iconUrl: 'https://api.iconify.design/game-icons:metal-bar.svg', material: 'steel' },
-    { id: 'silver_bar', name: 'Silver Bar', description: 'A bar of pure silver.', stackable: false, value: 80, iconUrl: 'https://api.iconify.design/game-icons:gold-bar.svg', material: 'silver' },
-    { id: 'gold_bar', name: 'Gold Bar', description: 'A bar of pure gold.', stackable: false, value: 100, iconUrl: 'https://api.iconify.design/game-icons:gold-bar.svg', material: 'gold' },
-    { id: 'mithril_bar', name: 'Mithril Bar', description: 'A bar of refined mithril.', stackable: false, value: 150, iconUrl: 'https://api.iconify.design/game-icons:metal-bar.svg', material: 'mithril' },
-    { id: 'adamantite_bar', name: 'Adamantite Bar', description: 'A bar of refined adamantite.', stackable: false, value: 250, iconUrl: 'https://api.iconify.design/game-icons:metal-bar.svg', material: 'adamantite' },
-    { id: 'runic_bar', name: 'Runic Bar', description: 'A bar of refined, durable runic metal.', stackable: false, value: 400, iconUrl: 'https://api.iconify.design/game-icons:metal-bar.svg', material: 'runic' },
+    { id: 'bronze_bar', name: 'Bronze Bar', description: 'A bar of bronze, ready for smithing.', stackable: false, value: 20, iconUrl: 'https://api.iconify.design/game-icons:metal-bar.svg', material: 'bronze' },
+    { id: 'iron_bar', name: 'Iron Bar', description: 'A bar of iron, ready for smithing.', stackable: false, value: 100, iconUrl: 'https://api.iconify.design/game-icons:metal-bar.svg', material: 'iron' },
+    { id: 'steel_bar', name: 'Steel Bar', description: 'A bar of steel, ready for smithing.', stackable: false, value: 300, iconUrl: 'https://api.iconify.design/game-icons:metal-bar.svg', material: 'steel' },
+    { id: 'silver_bar', name: 'Silver Bar', description: 'A bar of pure silver.', stackable: false, value: 130, iconUrl: 'https://api.iconify.design/game-icons:gold-bar.svg', material: 'silver' },
+    { id: 'gold_bar', name: 'Gold Bar', description: 'A bar of pure gold.', stackable: false, value: 250, iconUrl: 'https://api.iconify.design/game-icons:gold-bar.svg', material: 'gold' },
+    { id: 'mithril_bar', name: 'Mithril Bar', description: 'A bar of refined mithril.', stackable: false, value: 1400, iconUrl: 'https://api.iconify.design/game-icons:metal-bar.svg', material: 'mithril' },
+    { id: 'adamantite_bar', name: 'Adamantite Bar', description: 'A bar of refined adamantite.', stackable: false, value: 2000, iconUrl: 'https://api.iconify.design/game-icons:metal-bar.svg', material: 'adamantite' },
+    { id: 'runic_bar', name: 'Runic Bar', description: 'A bar of refined, durable runic metal.', stackable: false, value: 5000, iconUrl: 'https://api.iconify.design/game-icons:metal-bar.svg', material: 'runic' },
     
     // Logs
-    { id: 'logs', name: 'Logs', description: 'Standard logs from a tree.', stackable: false, value: 2, iconUrl: 'https://api.iconify.design/game-icons:wood-pile.svg', material: 'wood-normal' },
-    { id: 'oak_logs', name: 'Oak Logs', description: 'Sturdy logs from a mighty oak tree.', stackable: false, value: 15, iconUrl: 'https://api.iconify.design/game-icons:wood-pile.svg', material: 'wood-oak' },
-    { id: 'willow_logs', name: 'Willow Logs', description: 'Flexible logs from a willow tree.', stackable: false, value: 40, iconUrl: 'https://api.iconify.design/game-icons:wood-pile.svg', material: 'wood-willow' },
+    { id: 'logs', name: 'Logs', description: 'Standard logs from a tree.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:wood-pile.svg', material: 'wood-normal' },
+    { id: 'oak_logs', name: 'Oak Logs', description: 'Sturdy logs from a mighty oak tree.', stackable: false, value: 20, iconUrl: 'https://api.iconify.design/game-icons:wood-pile.svg', material: 'wood-oak' },
+    { id: 'willow_logs', name: 'Willow Logs', description: 'Flexible logs from a willow tree.', stackable: false, value: 35, iconUrl: 'https://api.iconify.design/game-icons:wood-pile.svg', material: 'wood-willow' },
     { id: 'maple_logs', name: 'Maple Logs', description: 'Hard logs from a maple tree, excellent for strong bows.', stackable: false, value: 60, iconUrl: 'https://api.iconify.design/game-icons:wood-pile.svg', material: 'wood-oak' },
-    { id: 'feywood_logs', name: 'Feywood Logs', description: 'Logs from a Feywood tree. They shimmer with a faint, magical light.', stackable: false, value: 90, iconUrl: 'https://api.iconify.design/game-icons:wood-pile.svg', material: 'wood-feywood' },
-    { id: 'yew_logs', name: 'Yew Logs', description: 'Logs from an ancient yew tree, perfect for powerful bows.', stackable: false, value: 120, iconUrl: 'https://api.iconify.design/game-icons:wood-pile.svg', material: 'wood-yew' },
+    { id: 'feywood_logs', name: 'Feywood Logs', description: 'Logs from a Feywood tree. They shimmer with a faint, magical light.', stackable: false, value: 120, iconUrl: 'https://api.iconify.design/game-icons:wood-pile.svg', material: 'wood-feywood' },
+    { id: 'yew_logs', name: 'Yew Logs', description: 'Logs from an ancient yew tree, perfect for powerful bows.', stackable: false, value: 300, iconUrl: 'https://api.iconify.design/game-icons:wood-pile.svg', material: 'wood-yew' },
     { id: 'driftwood_logs', name: 'Driftwood Logs', description: 'Weathered logs, hardened by the sea.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:wood-pile.svg', material: 'wood-driftwood' },
-    { id: 'mahogany_logs', name: 'Mahogany Logs', description: 'Rich, dark red logs from a tropical tree.', stackable: false, value: 150, iconUrl: 'https://api.iconify.design/game-icons:wood-pile.svg', material: 'wood-mahogany' },
+    { id: 'mahogany_logs', name: 'Mahogany Logs', description: 'Rich, dark red logs from a tropical tree.', stackable: false, value: 120, iconUrl: 'https://api.iconify.design/game-icons:wood-pile.svg', material: 'wood-mahogany' },
     
     // Gems
     { id: 'uncut_sapphire', name: 'Uncut Sapphire', description: 'A raw, uncut sapphire. Could be cut with a chisel.', stackable: false, value: 50, iconUrl: 'https://api.iconify.design/game-icons:emerald.svg', material: 'uncut-sapphire' },
@@ -42,6 +43,10 @@ export const resources: Item[] = [
     { id: 'ruby', name: 'Ruby', description: 'A deep red gemstone.', stackable: false, value: 400, iconUrl: 'https://api.iconify.design/game-icons:rupee.svg', material: 'ruby' },
     { id: 'uncut_diamond', name: 'Uncut Diamond', description: 'A raw, uncut diamond. Could be cut with a chisel.', stackable: false, value: 1000, iconUrl: 'https://api.iconify.design/game-icons:emerald.svg', material: 'uncut-diamond' },
     { id: 'diamond', name: 'Diamond', description: 'A brilliant, clear gemstone.', stackable: false, value: 2000, iconUrl: 'https://api.iconify.design/game-icons:rupee.svg', material: 'diamond' },
+    { id: 'uncut_sunstone', name: 'Uncut Sunstone', description: "A raw, uncut sunstone. It seems to glow with an inner warmth. Could be cut with a chisel.", stackable: false, value: 5000, iconUrl: 'https://api.iconify.design/game-icons:emerald.svg', material: 'uncut-sunstone' },
+    { id: 'sunstone', name: 'Sunstone', description: 'A brilliant yellow gemstone that seems to capture the light of the sun.', stackable: false, value: 10000, iconUrl: 'https://api.iconify.design/game-icons:rupee.svg', material: 'sunstone' },
+    { id: 'uncut_tenebrite', name: 'Uncut Tenebrite', description: "A raw, uncut piece of tenebrite. It seems to absorb light. Could be cut with a chisel.", stackable: false, value: 20000, iconUrl: 'https://api.iconify.design/game-icons:emerald.svg', material: 'uncut-tenebrite' },
+    { id: 'tenebrite', name: 'Tenebrite', description: 'A perfectly cut, deep black gemstone that seems to drink the light around it.', stackable: false, value: 40000, iconUrl: 'https://api.iconify.design/game-icons:rupee.svg', material: 'tenebrite' },
 
     // Monster Drops & Crafting Materials
     { id: 'crystal_shard', name: 'Crystal Shard', description: 'A sharp, resonating shard of pure crystal.', stackable: true, value: 75, iconUrl: 'https://api.iconify.design/game-icons:gold-nuggets.svg', material: 'diamond' },
@@ -55,7 +60,6 @@ export const resources: Item[] = [
     { id: 'bones', name: 'Bones', description: 'A set of ordinary bones. Can be buried for Prayer experience.', stackable: false, value: 2, iconUrl: 'https://api.iconify.design/game-icons:crossed-bones.svg', buryable: { prayerXp: 5 } },
     { id: 'big_bones', name: 'Big Bones', description: 'Larger bones from a tougher creature. Can be buried for Prayer experience.', stackable: false, value: 10, iconUrl: 'https://api.iconify.design/game-icons:crossed-bones.svg', buryable: { prayerXp: 15 } },
     { id: 'dragon_bones', name: 'Dragon Bones', description: 'Large, scorched bones from a dragon. Bury them for a large amount of Prayer experience.', stackable: false, value: 200, iconUrl: 'https://api.iconify.design/game-icons:dinosaur-bones.svg', buryable: { prayerXp: 100 } },
-    { id: 'dragon_hide', name: 'Dragon Hide', description: 'A tough, scaly hide from a dragon. Tanners cannot work with this material.', stackable: false, value: 500, iconUrl: 'https://api.iconify.design/game-icons:dragon-scale.svg', material: 'leather' },
     { id: 'feathers', name: 'Feathers', description: 'A soft feather of an avian.', stackable: true, value: 1, iconUrl: 'https://api.iconify.design/game-icons:feather.svg' },
     { id: 'eggs', name: 'Chicken Egg', description: 'A fresh egg. A simple cooking ingredient.', stackable: false, value: 2, iconUrl: 'https://api.iconify.design/game-icons:egg-clutch.svg' },
     { id: 'cowhide', name: 'Cowhide', description: 'The unprocessed hide of a cow. It needs to be tanned.', stackable: false, value: 6, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg' },
@@ -84,19 +88,15 @@ export const resources: Item[] = [
     { id: 'eldritch_pearl', name: 'Eldritch Pearl', description: 'A swirling, dark pearl that seems to whisper secrets when held to the ear. It feels ancient.', stackable: false, value: 1200, iconUrl: 'https://api.iconify.design/game-icons:mineral-pearls.svg', material: 'burnt' },
     // New baking resources
     { id: 'wheat', name: 'Wheat', description: 'A stalk of wheat.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:grain-bundle.svg' },
-    { id: 'flour', name: 'Sack of Flour', description: 'A sack filled with finely milled flour.', stackable: false, value: 3, iconUrl: 'https://api.iconify.design/game-icons:flour.svg' },
+    { id: 'flour', name: 'Sack of Flour', description: 'A sack filled with finely milled flour.', stackable: false, value: 3, iconUrl: 'https://api.iconify.design/game-icons:grain.svg' },
     { id: 'bucket_of_water', name: 'Bucket of Water', description: 'A bucket filled with water.', stackable: false, value: 2, iconUrl: 'https://api.iconify.design/game-icons:full-wood-bucket.svg', emptyable: { emptyItemId: 'bucket' }, material: 'vial-water' },
-    { id: 'bucket_of_milk', name: 'Bucket of Milk', description: 'A bucket filled with fresh milk.', stackable: false, value: 4, iconUrl: 'https://api.iconify.design/game-icons:wood-bucket.svg', emptyable: { emptyItemId: 'bucket' } },
+    { id: 'bucket_of_milk', name: 'Bucket of Milk', description: 'A bucket filled with fresh milk.', stackable: false, value: 4, iconUrl: 'https://api.iconify.design/game-icons:full-wood-bucket.svg', emptyable: { emptyItemId: 'bucket' } },
     // New Salt Flats resources
     { id: 'rock_salt', name: 'Rock Salt', description: 'A sharp, crystalline chunk of salt.', stackable: false, value: 15, iconUrl: 'https://api.iconify.design/game-icons:salt-shaker.svg', material: 'tin' },
     { id: 'brine_crystal', name: 'Brine Crystal', description: 'A perfectly formed crystal, saturated with magical brine.', stackable: false, value: 100, iconUrl: 'https://api.iconify.design/game-icons:crystal-cluster.svg', material: 'sapphire' },
     { id: 'scuttler_shell_fragment', name: 'Scuttler Shell Fragment', description: 'A hard, sharp fragment from a Crystal Scuttler\'s shell.', stackable: false, value: 40, iconUrl: 'https://api.iconify.design/game-icons:sharp-halberd.svg', material: 'steel' },
     { id: 'crystalline_shell_shard', name: 'Crystalline Shell Shard', description: "A shard from a Crystalline Tortoise. It's surprisingly light and sharp.", stackable: false, value: 120, iconUrl: 'https://api.iconify.design/game-icons:oyster.svg', material: 'steel' },
     { id: 'ancient_fossil', name: 'Ancient Fossil', description: 'The fossilized remains of an ancient sea creature.', stackable: false, value: 250, iconUrl: 'https://api.iconify.design/game-icons:ammonite-fossil.svg' },
-    // New Crystalline Isles resources
-    { id: 'crystal_shard', name: 'Crystal Shard', description: 'A sharp, resonating shard of pure crystal.', stackable: true, value: 75, iconUrl: 'https://api.iconify.design/game-icons:gold-nuggets.svg', material: 'diamond' },
-    { id: 'resonating_crystal', name: 'Resonating Crystal', description: 'A larger crystal that hums with a powerful, stored energy.', stackable: false, value: 350, iconUrl: 'https://api.iconify.design/game-icons:crystal-cluster.svg', material: 'diamond' },
-    { id: 'glimmer_thread_fiber', name: 'Glimmer-thread Fiber', description: 'A magical fiber harvested from the mane of a Glimmerhorn Stag.', stackable: true, value: 50, iconUrl: 'https://api.iconify.design/game-icons:yarn.svg', material: 'rune-astral' },
     // Dragonhides
     { id: 'grove_hide', name: 'Grove Hide', description: 'A flexible hide cut from a Grove Dragon', stackable: false, value: 300, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg', material: 'uncut-emerald' },
     { id: 'frost_hide', name: 'Frost Hide', description: 'A tough hide cut from a Frosthide Dragon', stackable: false, value: 400, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg', material: 'uncut-sapphire' },
@@ -108,4 +108,27 @@ export const resources: Item[] = [
     { id: 'emberscale_hide_leather', name: 'Emberscale Leather', description: 'A tough chunk of leather tanned from a dragon hide', stackable: false, value: 700, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg', material: 'ruby' },
     { id: 'deathscythe_hide_leather', name: 'Deathscythe Leather', description: 'A tough chunk of leather tanned from a dragon hide', stackable: false, value: 900, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg', material: 'burnt' },
     
+    // Crossbow Components
+    { id: 'crossbow_string', name: 'Crossbow String', description: 'A sturdy string for a crossbow.', stackable: false, value: 10, iconUrl: 'https://api.iconify.design/game-icons:knot.svg' },
+    // Stocks
+    { id: 'wood_stock', name: 'Wooden Stock', description: 'A stock for a crossbow, made from normal wood.', stackable: false, value: 10, iconUrl: 'https://api.iconify.design/game-icons:gun-stock.svg', material: 'wood-normal' },
+    { id: 'oak_stock', name: 'Oak Stock', description: 'A stock for a crossbow, made from oak.', stackable: false, value: 25, iconUrl: 'https://api.iconify.design/game-icons:gun-stock.svg', material: 'wood-oak' },
+    { id: 'willow_stock', name: 'Willow Stock', description: 'A stock for a crossbow, made from willow.', stackable: false, value: 50, iconUrl: 'https://api.iconify.design/game-icons:gun-stock.svg', material: 'wood-willow' },
+    { id: 'feywood_stock', name: 'Feywood Stock', description: 'A stock for a crossbow, made from feywood.', stackable: false, value: 80, iconUrl: 'https://api.iconify.design/game-icons:gun-stock.svg', material: 'wood-feywood' },
+    { id: 'mahogany_stock', name: 'Mahogany Stock', description: 'A stock for a crossbow, made from mahogany.', stackable: false, value: 120, iconUrl: 'https://api.iconify.design/game-icons:gun-stock.svg', material: 'wood-mahogany' },
+    { id: 'yew_stock', name: 'Yew Stock', description: 'A stock for a crossbow, made from yew.', stackable: false, value: 180, iconUrl: 'https://api.iconify.design/game-icons:gun-stock.svg', material: 'wood-yew' },
+    // Limbs
+    { id: 'bronze_limbs', name: 'Bronze Limbs', description: 'The metal limbs for a bronze crossbow.', stackable: false, value: 20, iconUrl: 'https://api.iconify.design/game-icons:lead-pipe.svg', material: 'bronze' },
+    { id: 'iron_limbs', name: 'Iron Limbs', description: 'The metal limbs for an iron crossbow.', stackable: false, value: 50, iconUrl: 'https://api.iconify.design/game-icons:lead-pipe.svg', material: 'iron' },
+    { id: 'steel_limbs', name: 'Steel Limbs', description: 'The metal limbs for a steel crossbow.', stackable: false, value: 100, iconUrl: 'https://api.iconify.design/game-icons:lead-pipe.svg', material: 'steel' },
+    { id: 'mithril_limbs', name: 'Mithril Limbs', description: 'The metal limbs for a mithril crossbow.', stackable: false, value: 250, iconUrl: 'https://api.iconify.design/game-icons:lead-pipe.svg', material: 'mithril' },
+    { id: 'adamantite_limbs', name: 'Adamantite Limbs', description: 'The metal limbs for an adamantite crossbow.', stackable: false, value: 500, iconUrl: 'https://api.iconify.design/game-icons:lead-pipe.svg', material: 'adamantite' },
+    { id: 'runic_limbs', name: 'Runic Limbs', description: 'The metal limbs for a runic crossbow.', stackable: false, value: 8200, iconUrl: 'https://api.iconify.design/game-icons:lead-pipe.svg', material: 'runic' },
+    // Unfinished Bolts
+    { id: 'bronze_bolts_unf', name: 'Bronze Bolts (unf)', description: 'Unfinished bronze bolts. They need feathers.', stackable: true, value: 1, iconUrl: 'https://api.iconify.design/game-icons:spears.svg', material: 'bronze' },
+    { id: 'iron_bolts_unf', name: 'Iron Bolts (unf)', description: 'Unfinished iron bolts. They need feathers.', stackable: true, value: 3, iconUrl: 'https://api.iconify.design/game-icons:spears.svg', material: 'iron' },
+    { id: 'steel_bolts_unf', name: 'Steel Bolts (unf)', description: 'Unfinished steel bolts. They need feathers.', stackable: true, value: 6, iconUrl: 'https://api.iconify.design/game-icons:spears.svg', material: 'steel' },
+    { id: 'mithril_bolts_unf', name: 'Mithril Bolts (unf)', description: 'Unfinished mithril bolts. They need feathers.', stackable: true, value: 12, iconUrl: 'https://api.iconify.design/game-icons:spears.svg', material: 'mithril' },
+    { id: 'adamantite_bolts_unf', name: 'Adamantite Bolts (unf)', description: 'Unfinished adamantite bolts. They need feathers.', stackable: true, value: 20, iconUrl: 'https://api.iconify.design/game-icons:spears.svg', material: 'adamantite' },
+    { id: 'runic_bolts_unf', name: 'Runic Bolts (unf)', description: 'Unfinished runic bolts. They need feathers.', stackable: true, value: 250, iconUrl: 'https://api.iconify.design/game-icons:spears.svg', material: 'runic' },
 ];

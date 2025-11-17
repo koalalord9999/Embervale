@@ -30,7 +30,14 @@ const GemCuttingSlot: React.FC<{
 
     const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();
-        const event = 'touches' in e ? e.touches[0] : e;
+        let eventForMenu: React.MouseEvent | React.Touch;
+        if ('touches' in e && e.touches.length > 0) {
+            eventForMenu = e.touches[0];
+        } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+            eventForMenu = e.changedTouches[0];
+        } else {
+            eventForMenu = e as React.MouseEvent;
+        }
         const maxCut = getItemCount(recipe.uncutId);
         setContextMenu({
             options: [
@@ -45,7 +52,10 @@ const GemCuttingSlot: React.FC<{
                     }), 
                     disabled: !canCut
                 },
-            ], event, isTouchInteraction: isTouchDevice
+            ],
+            triggerEvent: eventForMenu,
+            isTouchInteraction: isTouchDevice,
+            title: cutItem.name
         });
     };
 

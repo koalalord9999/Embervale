@@ -1,28 +1,9 @@
+
+
 import React, { useCallback } from 'react';
 import { POIActivity, PlayerQuestState, DialogueNode, Quest, DialogueResponse, DialogueCheckRequirement, DialogueAction, InventorySlot } from '../types';
 import { QUESTS } from '../constants';
 import { DialogueState, useUIState } from './useUIState';
-
-const TANNABLE_HIDES: Record<string, { cost: number }> = {
-    'cowhide': { cost: 5 },
-    'boar_hide': { cost: 8 },
-    'wolf_pelt': { cost: 15 },
-    'bear_pelt': { cost: 25 },
-};
-
-const calculateTanningCost = (inventory: (InventorySlot | null)[]) => {
-    let totalCost = 0;
-    for (const hideId in TANNABLE_HIDES) {
-        const count = inventory.reduce((acc, slot) => 
-            (slot && slot.itemId === hideId && !slot.noted) ? acc + slot.quantity : acc, 
-        0);
-        if (count > 0) {
-            totalCost += count * TANNABLE_HIDES[hideId].cost;
-        }
-    }
-    return totalCost;
-};
-
 
 interface SceneInteractionDependencies {
     playerQuests: PlayerQuestState[];
@@ -37,204 +18,82 @@ export const useSceneInteractions = (poiId: string, deps: SceneInteractionDepend
     const { playerQuests, setActiveDialogue, handleDialogueCheck, onResponse, addLog, inventory } = deps;
 
     const handleActivityClick = useCallback((activity: POIActivity) => {
-        if (activity.type !== 'npc') {
+        if (activity.type !== 'npc' || !activity.startNode) {
+            return; // Not a dialogue NPC or no entry point defined
+        }
+
+        const { name, icon, dialogue, startNode, questTopics, dialogueType, conditionalGreetings } = activity;
+
+        const allNodes: Record<string, DialogueNode> = {};
+        Object.values(QUESTS).forEach(quest => {
+            if (quest.dialogue) {
+                Object.assign(allNodes, quest.dialogue);
+            }
+        });
+        if (dialogue) {
+            Object.assign(allNodes, dialogue);
+        }
+
+        const hubNode = allNodes[startNode];
+        if (!hubNode) {
             return;
         }
-        
-        const { name, icon, dialogue: npcDialogue, startNode: defaultStartNode, dialogueType } = activity;
 
-        if (activity.name === 'Tanner Sven') {
-            const totalCost = calculateTanningCost(inventory);
-            let svenDialogue: DialogueState;
-
-            if (totalCost > 0) {
-                svenDialogue = {
-                    npcName: 'Tanner Sven',
-                    npcIcon: '/assets/npcChatHeads/tanner_sven.png',
-                    nodes: {
-                        start: {
-                            npcName: 'Tanner Sven',
-                            npcIcon: '/assets/npcChatHeads/tanner_sven.png',
-                            text: "Need some hides tanned? You've come to the right place. What have you got for me?",
-                            responses: [
-                                {
-                                    text: `Tan all hides (${totalCost} coins)`,
-                                    check: {
-                                        requirements: [{ type: 'coins', amount: totalCost }],
-                                        successNode: 'tan_success',
-                                        failureNode: 'tan_fail_coins'
-                                    },
-                                    actions: [{ type: 'tan_all_hides' }]
-                                },
-                                { text: "Just looking, thanks." }
-                            ]
-                        },
-                        tan_success: {
-                            npcName: 'Tanner Sven',
-                            npcIcon: '/assets/npcChatHeads/tanner_sven.png',
-                            text: "Here is your finished leather.",
-                            responses: []
-                        },
-                        tan_fail_coins: {
-                             npcName: 'Tanner Sven',
-                             npcIcon: '/assets/npcChatHeads/tanner_sven.png',
-                             text: "You don't have enough coins for that.",
-                             responses: []
-                        }
-                    },
-                    currentNodeKey: 'start',
-                    onEnd: () => setActiveDialogue(null),
-                    onResponse: onResponse,
-                    handleDialogueCheck: handleDialogueCheck,
-                };
-            } else {
-                svenDialogue = {
-                    npcName: 'Tanner Sven',
-                    npcIcon: '/assets/npcChatHeads/tanner_sven.png',
-                    nodes: {
-                       start: {
-                           npcName: 'Tanner Sven',
-                           npcIcon: '/assets/npcChatHeads/tanner_sven.png',
-                           text: "You don't seem to have any hides for me to tan. Come back when you do.",
-                           responses: []
-                       }
-                   },
-                   currentNodeKey: 'start',
-                   onEnd: () => setActiveDialogue(null),
-                   onResponse: onResponse,
-                };
+        // Determine the correct greeting text
+        let greetingText = hubNode.text;
+        if (conditionalGreetings) {
+            const overrideGreeting = conditionalGreetings.find(greeting => 
+                handleDialogueCheck(greeting.check.requirements)
+            );
+            if (overrideGreeting) {
+                greetingText = overrideGreeting.text;
             }
-            setActiveDialogue(svenDialogue);
-            return; // Exit early to bypass the normal dialogue flow
         }
-    
-        const startDialogue = (startNodeKey: string, primarySource: Record<string, DialogueNode>) => {
-            const allNodes: Record<string, DialogueNode> = {};
 
-            // Base: NPC's own dialogue from the POI definition
-            if (npcDialogue) {
-                Object.assign(allNodes, npcDialogue);
-            }
-
-            // Override/Extend with the specific dialogue source (e.g., from a quest)
-            Object.assign(allNodes, primarySource);
-
-            if (dialogueType === 'random' && allNodes[startNodeKey]) {
-                const nodeToDisplay = allNodes[startNodeKey];
-                if (nodeToDisplay.responses.length === 0 && nodeToDisplay.text.includes('\n\n')) {
-                    const dialogueOptions = nodeToDisplay.text.split('\n\n');
-                    const randomDialogueText = dialogueOptions[Math.floor(Math.random() * dialogueOptions.length)];
-                    allNodes[startNodeKey] = { ...nodeToDisplay, text: randomDialogueText };
+        const dynamicResponses: DialogueResponse[] = [];
+        // This logic will scan for all possible quest entry points for a given NPC.
+        for (const questData of Object.values(QUESTS)) {
+            if (questData?.dialogueEntryPoints) {
+                for (const entryPoint of questData.dialogueEntryPoints) {
+                    if (entryPoint.npcName === name) {
+                        if (handleDialogueCheck(entryPoint.response.check?.requirements ?? [])) {
+                            dynamicResponses.push(entryPoint.response);
+                        }
+                    }
                 }
             }
-            
-            setActiveDialogue({
-                npcName: name,
-                npcIcon: icon,
-                nodes: allNodes,
-                currentNodeKey: startNodeKey,
-                onEnd: () => setActiveDialogue(null),
-                onResponse: onResponse,
-                handleDialogueCheck: handleDialogueCheck,
-            });
+        }
+        
+        const finalHubNode: DialogueNode = {
+            ...hubNode,
+            text: greetingText,
+            responses: [...(hubNode.responses || []), ...dynamicResponses]
         };
         
-        let effectiveStartNode: string | null = null;
-        let dialogueSource: Record<string, DialogueNode> | null = null;
-
-        // Priority 1: In-progress quest dialogue for this specific NPC.
-        for (const pq of playerQuests) {
-            if (effectiveStartNode) break;
-            if (!pq.isComplete) {
-                const questData = QUESTS[pq.questId];
-                if (!questData) {
-                    continue;
-                }
-                if (!questData.dialogue) {
-                    continue; 
-                }
-                
-                const nodeKey = `in_progress_${pq.questId}_${pq.currentStage}`;
-                const node = questData.dialogue[nodeKey];
-                if (node) {
-                    if (node.npcName.trim() === name.trim()) {
-                        effectiveStartNode = nodeKey;
-                        dialogueSource = questData.dialogue;
-                    }
-                }
-            }
+        if (dialogueType === 'random' && finalHubNode.responses.length === 0 && finalHubNode.text.includes('\n\n')) {
+            const dialogueOptions = finalHubNode.text.split('\n\n');
+            const randomDialogueText = dialogueOptions[Math.floor(Math.random() * dialogueOptions.length)];
+            finalHubNode.text = randomDialogueText;
         }
 
-        // Priority 2: Quest start dialogue initiated by this NPC.
-        if (!effectiveStartNode) {
-            for (const quest of Object.values(QUESTS)) {
-                if (effectiveStartNode) break;
-                const isStarted = playerQuests.some(pq => pq.questId === quest.id);
-                if (!isStarted && quest.dialogue) {
-                    
-                    const explicitStartNode = quest.startDialogueNode;
-                    if (explicitStartNode) {
-                        const node = quest.dialogue[explicitStartNode];
-                        if (node?.npcName.trim() === name.trim()) {
-                            effectiveStartNode = explicitStartNode;
-                            dialogueSource = quest.dialogue;
-                        }
-                    }
-        
-                    const conventionalStartNode = `quest_intro_${quest.id}`;
-                    if (!effectiveStartNode && quest.dialogue[conventionalStartNode]) {
-                        const node = quest.dialogue[conventionalStartNode];
-                        if (node?.npcName.trim() === name.trim()) {
-                            effectiveStartNode = conventionalStartNode;
-                            dialogueSource = quest.dialogue;
-                        }
-                    }
-                }
-            }
-        }
+        const finalNodes = { ...allNodes, [startNode]: finalHubNode };
 
-        // Priority 3: Post-quest dialogue for this NPC.
-        if (!effectiveStartNode) {
-            for (const pq of playerQuests) {
-                if (effectiveStartNode) break;
-                if (pq.isComplete) {
-                    const questData = QUESTS[pq.questId];
-                    if (questData?.dialogue) {
-                        const nodeKey = `post_quest_${pq.questId}`;
-                        const node = questData.dialogue[nodeKey];
-                        if (node?.npcName.trim() === name.trim()) {
-                            effectiveStartNode = nodeKey;
-                            dialogueSource = questData.dialogue;
-                        }
-                    }
-                }
-            }
-        }
+        const onNavigate = (nextNodeKey: string) => {
+            setActiveDialogue(prev => prev ? { ...prev, currentNodeKey: nextNodeKey } : null);
+        };
 
-        // Priority 4: Explicitly defined startNode on the POI activity.
-        if (!effectiveStartNode && defaultStartNode) {
-            // Check if the node exists in any quest dialogue first
-            for (const quest of Object.values(QUESTS)) {
-                // Check if the node exists and if the NPC name in that node matches the current NPC
-                const node = quest.dialogue?.[defaultStartNode];
-                if (node && node.npcName.trim() === name.trim()) {
-                    effectiveStartNode = defaultStartNode;
-                    dialogueSource = quest.dialogue;
-                    break;
-                }
-            }
+        setActiveDialogue({
+            npcName: name,
+            npcIcon: icon,
+            nodes: finalNodes,
+            currentNodeKey: startNode,
+            onEnd: () => setActiveDialogue(null),
+            onResponse: onResponse,
+            onNavigate: onNavigate,
+            handleDialogueCheck: handleDialogueCheck,
+        });
 
-            // If not found in quests, check the inline dialogue object on the activity itself
-            if (!effectiveStartNode && npcDialogue && npcDialogue[defaultStartNode]) {
-                effectiveStartNode = defaultStartNode;
-                dialogueSource = npcDialogue;
-            }
-        }
-
-        if (effectiveStartNode && dialogueSource) {
-            startDialogue(effectiveStartNode, dialogueSource);
-        }
-    }, [playerQuests, setActiveDialogue, handleDialogueCheck, onResponse, addLog, inventory]);
+    }, [playerQuests, setActiveDialogue, handleDialogueCheck, onResponse]);
 
     return { handleActivityClick };
 };

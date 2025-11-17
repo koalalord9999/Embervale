@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 
 export const theSerpentsCoilPois: Record<string, POI> = {
@@ -31,7 +32,6 @@ export const theSerpentsCoilPois: Record<string, POI> = {
         activities: [
             { type: 'combat', monsterId: 'bog_serpent' },
             { type: 'combat', monsterId: 'bog_serpent' },
-// FIX: Removed redundant level, xp, and respawnTime properties.
             { type: 'thieving_lockpick', id: 'sc_chest_1', targetName: 'Submerged Chest', lootTableId: 'thieving_dungeon_chest_mid' },
         ],
         regionId: 'serpents_coil',
@@ -92,7 +92,6 @@ export const theSerpentsCoilPois: Record<string, POI> = {
                 gatherTime: 3500,
                 treeHardness: 250,
             },
-// FIX: Removed redundant level, xp, and respawnTime properties.
             { type: 'thieving_lockpick', id: 'sc_chest_2', targetName: 'Rotten Footlocker', lootTableId: 'thieving_dungeon_chest_mid' },
         ],
         regionId: 'serpents_coil',
@@ -119,7 +118,6 @@ export const theSerpentsCoilPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'bog_serpent' },
             { type: 'combat', monsterId: 'bog_serpent' },
             { type: 'combat', monsterId: 'bog_serpent' },
-// FIX: Removed redundant level, xp, and respawnTime properties.
             { type: 'thieving_lockpick', id: 'sc_chest_3', targetName: 'Offering Chest', lootTableId: 'thieving_dungeon_chest_high' },
         ],
         regionId: 'serpents_coil',
@@ -131,7 +129,14 @@ export const theSerpentsCoilPois: Record<string, POI> = {
         description: 'A dark, foreboding altar made of black, oily stone. It radiates a palpable sense of malice and ancient curses.',
         connections: ['sunken_temple_altar'],
         activities: [
-            { type: 'runecrafting_altar', runeId: 'hex_rune' }
+            { type: 'runecrafting_altar', runeId: 'hex_rune' },
+            {
+                type: 'npc',
+                name: 'Commune with the Altar',
+                icon: 'https://api.iconify.design/game-icons:rune-stone.svg',
+                questCondition: { questId: 'whispers_of_the_divine', stages: [2] },
+                startNode: 'wod_hex_echo'
+            },
         ],
         regionId: 'serpents_coil',
         x: 1600, y: 1140,

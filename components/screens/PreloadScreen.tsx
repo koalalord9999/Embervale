@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Button from '../common/Button';
 import { ContextMenuState } from '../../hooks/useUIState';
@@ -127,9 +128,11 @@ const PreloadScreen: React.FC<PreloadScreenProps> = ({ loadingTips, onContinue, 
 
     const handleContinueContextMenu = (e: React.MouseEvent) => {
         e.preventDefault();
+        // FIX: The 'event' property in ContextMenuState has been renamed to 'triggerEvent'.
         setContextMenu({
             options: [{ label: 'Import Save', onClick: onImport }],
-            event: e,
+            // FIX: Use `triggerEvent` instead of `event` to match the updated type definition.
+            triggerEvent: e,
             isTouchInteraction: false,
         });
     };

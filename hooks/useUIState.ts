@@ -22,8 +22,10 @@ export interface TooltipState {
 
 export interface ContextMenuState {
     options: ContextMenuOption[];
-    event: React.MouseEvent | React.Touch;
+    // Renamed from `event` for clarity and to match component props.
+    triggerEvent: React.MouseEvent | React.Touch;
     isTouchInteraction: boolean;
+    title?: string;
 }
 
 export interface MakeXPrompt {
@@ -106,6 +108,15 @@ export const useUIState = () => {
     const [showHitsplats, setShowHitsplats] = useState<boolean>(true);
     const [isOneClickMode, setIsOneClickMode] = useState<boolean>(false);
 
+    // FIX: Add dev settings state to the UI hook
+    // Dev Mode settings (session only, not persisted in game state)
+    const [xpMultiplier, setXpMultiplier] = useState<number>(1);
+    const [combatSpeedMultiplier, setCombatSpeedMultiplier] = useState<number>(1);
+    const [isPlayerInvisible, setIsPlayerInvisible] = useState<boolean>(false);
+    const [isAutoBankOn, setIsAutoBankOn] = useState<boolean>(false);
+    const [isGodModeOn, setIsGodModeOn] = useState<boolean>(false);
+    const [isPermAggroOn, setIsPermAggroOn] = useState<boolean>(false);
+
     const isBusy = useMemo(() => !!(
         activeShopId ||
         activeCraftingContext ||
@@ -125,8 +136,6 @@ export const useUIState = () => {
         isExpandedMapViewOpen ||
         isLootViewOpen ||
         activeDungeonMap ||
-        isDevPanelOpen ||
-        isSettingsViewOpen ||
         isMonsterDBOpen
     ), [
         activeShopId,
@@ -147,8 +156,6 @@ export const useUIState = () => {
         isExpandedMapViewOpen,
         isLootViewOpen,
         activeDungeonMap,
-        isDevPanelOpen,
-        isSettingsViewOpen,
         isMonsterDBOpen
     ]);
 
@@ -238,6 +245,13 @@ export const useUIState = () => {
         showCombatEnemyHealth, setShowCombatEnemyHealth,
         showHitsplats, setShowHitsplats,
         isOneClickMode, setIsOneClickMode,
+        // FIX: Return dev settings state and setters from the hook.
+        xpMultiplier, setXpMultiplier,
+        combatSpeedMultiplier, setCombatSpeedMultiplier,
+        isPlayerInvisible, setIsPlayerInvisible,
+        isAutoBankOn, setIsAutoBankOn,
+        isGodModeOn, setIsGodModeOn,
+        isPermAggroOn, setIsPermAggroOn,
         closeContextMenu,
         closeMakeXPrompt,
         closeConfirmationPrompt,

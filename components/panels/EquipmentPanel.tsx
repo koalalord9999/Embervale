@@ -1,10 +1,13 @@
+
 import React from 'react';
 import { Equipment, InventorySlot, Item } from '../../types';
 import { ITEMS, getIconClassName } from '../../constants';
-import { ContextMenuState, TooltipState, useUIState } from '../../hooks/useUIState';
+import Button from '../common/Button';
+import { useUIState, TooltipState, ContextMenuState } from '../../hooks/useUIState';
 import { ContextMenuOption } from '../common/ContextMenu';
 import { useLongPress } from '../../hooks/useLongPress';
 import { useIsTouchDevice } from '../../hooks/useIsTouchDevice';
+import { getDisplayName } from './InventorySlot';
 
 interface EquipmentPanelProps {
     equipment: Equipment;
@@ -17,6 +20,7 @@ interface EquipmentPanelProps {
     onExamine: (item: Item) => void;
     isTouchSimulationEnabled: boolean;
     isOneClickMode: boolean;
+    onTeleport: (itemSlot: InventorySlot, slotIdentifier: number | keyof Equipment, from: 'inventory' | keyof Equipment, poiId: string) => void;
 }
 
 const SLOT_PLACEHOLDERS: Record<keyof Equipment, string> = {
@@ -43,9 +47,10 @@ interface EquipmentSlotDisplayProps {
     onExamine: (item: Item) => void;
     isTouchSimulationEnabled: boolean;
     isOneClickMode: boolean;
+    onTeleport: (itemSlot: InventorySlot, slotIdentifier: number | keyof Equipment, from: 'inventory' | keyof Equipment, poiId: string) => void;
 }
 
-const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, itemSlot, onUnequip, setTooltip, setContextMenu, addLog, onExamine, isTouchSimulationEnabled, isOneClickMode }) => {
+const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, itemSlot, onUnequip, setTooltip, setContextMenu, addLog, onExamine, isTouchSimulationEnabled, isOneClickMode, onTeleport }) => {
     const item = itemSlot ? ITEMS[itemSlot.itemId] : null;
 
     const handleMouseEnter = (e: React.MouseEvent) => {
@@ -78,11 +83,34 @@ const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, it
         const options: ContextMenuOption[] = [];
         
         const performAction = (action: () => void) => { action(); setTooltip(null); setContextMenu(null); };
+
+        if (item.consumable?.teleportOptions) {
+            const charges = itemSlot.charges ?? item.charges ?? 0;
+            const isDisabled = item.destroyOnEmpty === false && charges <= 0;
+            options.push({
+                label: 'Rub',
+                disabled: isDisabled,
+                onClick: () => {
+                    const teleportOptions: ContextMenuOption[] = item.consumable!.teleportOptions!.map(opt => ({
+                        label: opt.label,
+                        disabled: opt.disabled,
+                        onClick: () => performAction(() => onTeleport(itemSlot, slotKey, slotKey, opt.poiId))
+                    }));
+                    setContextMenu({
+                        options: teleportOptions,
+                        title: getDisplayName(itemSlot),
+                        triggerEvent: eventForMenu,
+                        isTouchInteraction: 'touches' in e || 'changedTouches' in e,
+                    });
+                    return true; // Keep the menu open to show the sub-menu
+                }
+            });
+        }
         
         options.push({ label: 'Unequip', onClick: () => performAction(handleUnequip) });
         
         const charges = itemSlot.charges ?? item.charges;
-        if (charges !== undefined) {
+        if (charges !== undefined && !item.consumable?.teleportOptions) {
             options.push({
                 label: 'Inspect',
                 onClick: () => performAction(() => addLog(`Your ${item.name} has ${charges} charges left.`))
@@ -90,7 +118,7 @@ const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, it
         }
         
         options.push({ label: 'Examine', onClick: () => performAction(() => onExamine(item)) });
-        setContextMenu({ options, event: eventForMenu, isTouchInteraction: 'touches' in e || 'changedTouches' in e });
+        setContextMenu({ options, triggerEvent: eventForMenu, isTouchInteraction: 'touches' in e || 'changedTouches' in e, title: getDisplayName(itemSlot) });
     };
 
     const handleSingleTap = (e: React.MouseEvent | React.TouchEvent) => {
@@ -117,6 +145,14 @@ const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, it
             {item ? (
                 <>
                     <img src={item.iconUrl} alt={item.name} className={`w-full h-full ${getIconClassName(item)}`} />
+                    {itemSlot?.statsOverride?.poisoned && (
+                        <img 
+                            src="https://api.iconify.design/game-icons:boiling-bubbles.svg" 
+                            alt="Poisoned"
+                            className="poison-overlay-icon item-icon-uncut-emerald"
+                            title="Poisoned"
+                        />
+                    )}
                     {item.stackable && itemSlot && itemSlot.quantity > 0 && (
                         <span className="absolute bottom-0 right-1 text-xs font-bold text-yellow-300" style={{ textShadow: '1px 1px 1px black' }}>
                             {itemSlot.quantity > 999 ? `${Math.floor(itemSlot.quantity/1000)}k` : itemSlot.quantity.toLocaleString()}
@@ -133,7 +169,7 @@ const EquipmentSlotDisplay: React.FC<EquipmentSlotDisplayProps> = ({ slotKey, it
 const EmptySlot = () => <div className="w-full aspect-square" />;
 
 const EquipmentPanel: React.FC<EquipmentPanelProps> = (props) => {
-    const { equipment, inventory, coins, onUnequip, setTooltip, ui, addLog, onExamine, isTouchSimulationEnabled, isOneClickMode } = props;
+    const { equipment, inventory, coins, onUnequip, setTooltip, ui, addLog, onExamine, isTouchSimulationEnabled, isOneClickMode, onTeleport } = props;
 
     const equipmentSlotDisplayProps = {
         onUnequip,
@@ -142,7 +178,8 @@ const EquipmentPanel: React.FC<EquipmentPanelProps> = (props) => {
         addLog,
         onExamine,
         isTouchSimulationEnabled,
-        isOneClickMode
+        isOneClickMode,
+        onTeleport,
     };
 
     return (

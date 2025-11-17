@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { TooltipState } from '../../hooks/useUIState';
 import { getDisplayName } from '../panels/InventorySlot';
-import { Item } from '../../types';
+import { Item, InventorySlot } from '../../types';
 
 interface TooltipProps {
     tooltipState: TooltipState;
@@ -19,10 +19,11 @@ const StatRow: React.FC<{ label: string; value: number }> = ({ label, value }) =
     );
 };
 
-const renderStats = (item: Item) => {
-    const { equipment } = item;
+const renderStats = (item: Item, slot: InventorySlot) => {
     // An item is considered equippable and should show a stat block if it has an equipment property.
-    if (!equipment) return null;
+    if (!item.equipment) return null;
+
+    const equipment = { ...item.equipment, ...slot.statsOverride };
 
     const hasRequirements = equipment.requiredLevels && equipment.requiredLevels.length > 0;
 
@@ -100,7 +101,7 @@ const Tooltip: React.FC<TooltipProps> = ({ tooltipState, isCtrlPressed }) => {
             return (
                 <div>
                     <p className="font-bold text-yellow-300">{getDisplayName(slot)}</p>
-                    {isCtrlPressed && renderStats(item)}
+                    {isCtrlPressed && renderStats(item, slot)}
                     {content} 
                 </div>
             );

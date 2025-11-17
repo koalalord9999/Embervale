@@ -1,3 +1,4 @@
+
 import { POI, SkillName, ToolType } from '../../types';
 
 export const theFeywoodPois: Record<string, POI> = {
@@ -43,7 +44,6 @@ export const theFeywoodPois: Record<string, POI> = {
         activities: [
             { type: 'combat', monsterId: 'fey_sprite' },
             { type: 'combat', monsterId: 'fey_sprite' },
-// FIX: Removed redundant level, xp, and respawnTime properties.
             { type: 'thieving_lockpick', id: 'fw_chest_1', targetName: 'Fey-touched Chest', lootTableId: 'thieving_dungeon_chest_mid' },
         ],
         regionId: 'feywood',
@@ -137,7 +137,6 @@ export const theFeywoodPois: Record<string, POI> = {
         connections: ['ancient_feywood', 'verdant_altar'],
         activities: [
             { type: 'skilling', name: 'Colossal Feywood Tree', id: 'heart_feywood_tree', skill: SkillName.Woodcutting, requiredLevel: 70, loot: [{ itemId: 'feywood_logs', chance: 1, xp: 120 }], resourceCount: { min: 80, max: 300 }, respawnTime: 125000, gatherTime: 4000 },
-// FIX: Removed redundant level, xp, and respawnTime properties.
             { type: 'thieving_lockpick', id: 'fw_chest_2', targetName: 'Heartwood Chest', lootTableId: 'thieving_dungeon_chest_high' },
         ],
         regionId: 'feywood',
@@ -167,7 +166,14 @@ export const theFeywoodPois: Record<string, POI> = {
         description: 'A living altar formed from intertwined roots and glowing moss. It pulses with a vibrant, natural energy.',
         connections: ['heart_of_the_fey'],
         activities: [
-            { type: 'runecrafting_altar', runeId: 'verdant_rune' }
+            { type: 'runecrafting_altar', runeId: 'verdant_rune' },
+            {
+                type: 'npc',
+                name: 'Commune with the Altar',
+                icon: 'https://api.iconify.design/game-icons:rune-stone.svg',
+                questCondition: { questId: 'whispers_of_the_divine', stages: [0] },
+                startNode: 'wod_verdant_echo'
+            },
         ],
         regionId: 'feywood',
         x: 1520, y: 400,

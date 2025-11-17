@@ -5,6 +5,8 @@ import { POIS } from '../data/pois';
 import { CombatStance, PlayerSlayerTask, GeneratedRepeatableQuest, InventorySlot, WorldState, Spell, BankTab, ActiveStatModifier, ActiveBuff, PlayerType, Slot } from '../types';
 import { useUIState } from './useUIState';
 
+type GameState = typeof defaultState;
+
 const defaultSettings = {
     showTooltips: true,
     showXpDrops: true,
@@ -20,6 +22,7 @@ const defaultSettings = {
         combatSpeedMultiplier: 1,
         isPlayerInvisible: false,
         isAutoBankOn: false,
+        isGodModeOn: false,
     }
 };
 
@@ -33,6 +36,8 @@ const defaultState = {
     equipment: { weapon: null, shield: null, head: null, body: null, legs: null, ammo: null, gloves: null, boots: null, cape: null, necklace: null, ring: null },
     combatStance: CombatStance.Accurate,
     currentHp: 10,
+    currentPrayer: 1,
+    activePrayers: [] as string[],
     currentPoiId: 'tutorial_entrance',
     playerQuests: [{ questId: 'embrune_101', currentStage: 0, progress: 0, isComplete: false }],
     lockedPois: Object.keys(POIS).filter(id => !!POIS[id].unlockRequirement),
@@ -49,7 +54,7 @@ const defaultState = {
         boardCompletions: {},
     },
     slayerTask: null as PlayerSlayerTask | null,
-    worldState: { windmillFlour: 0, deathMarker: null, bankPlaceholders: false, hpBoost: null, recentlyKilled: [], depletedHouses: [], nextHouseResetTimestamp: 0 } as WorldState,
+    worldState: { windmillFlour: 0, deathMarker: null, bankPlaceholders: false, hpBoost: null, recentlyKilled: [], depletedHouses: [], nextHouseResetTimestamp: 0, dehydrationLevel: 0 } as WorldState,
     autocastSpell: null as Spell | null,
     settings: defaultSettings,
     statModifiers: [] as ActiveStatModifier[],
@@ -57,8 +62,6 @@ const defaultState = {
     isDead: false,
 };
 
-// Type for the full game state
-type GameState = typeof defaultState;
 
 /**
  * Merges a loaded save state with the default state to ensure compatibility.
@@ -141,7 +144,7 @@ const hydrateGameState = (loadedState: any): GameState => {
     // Ensure array properties are arrays, falling back to default if they're missing or not arrays.
     const arrayKeys: (keyof GameState)[] = [
         'skills', 'inventory', 'bank', 'playerQuests', 'lockedPois', 
-        'clearedSkillObstacles', 'statModifiers', 'activeBuffs', 'activityLog'
+        'clearedSkillObstacles', 'statModifiers', 'activeBuffs', 'activityLog', 'activePrayers'
     ];
     arrayKeys.forEach(key => {
         const loadedValue = loadedState[key];

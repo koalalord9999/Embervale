@@ -12,11 +12,9 @@ export const SHOPS: Record<string, Shop> = {
             { itemId: 'bucket', quantity: 100, priceModifier: 1.0 },
             { itemId: 'pie_dish', quantity: 50, priceModifier: 1.0 },
             { itemId: 'cake_tin', quantity: 50, priceModifier: 1.0 },
+            { itemId: 'bobby_pin', quantity: 25, priceModifier: 20.0 },
             { itemId: 'bronze_axe', quantity: 10, priceModifier: 1.1 },
             { itemId: 'bronze_pickaxe', quantity: 10, priceModifier: 1.1 },
-            { itemId: 'small_fishing_net', quantity: 10, priceModifier: 1.1 },
-            { itemId: 'fishing_rod', quantity: 10, priceModifier: 1.1 },
-            { itemId: 'fishing_bait', quantity: 1000, priceModifier: 1.0 },
             { itemId: 'shortbow', quantity: 5, priceModifier: 1.1 },
             { itemId: 'bronze_arrow', quantity: 1000, priceModifier: 1.1 },
             { itemId: 'bronze_sword', quantity: 10, priceModifier: 1.1},
@@ -24,6 +22,18 @@ export const SHOPS: Record<string, Shop> = {
             { itemId: 'leather_body', quantity: 5, priceModifier: 1.1},
             { itemId: 'vial', quantity: 1000, priceModifier: 1.0 },
             { itemId: 'staff', quantity: 10, priceModifier: 1.2 },
+        ]
+    },
+    meadowdale_fishing: {
+        id: 'meadowdale_fishing',
+        name: "Angler's Repose",
+        inventory: [
+            { itemId: 'small_fishing_net', quantity: 10, priceModifier: 1.1 },
+            { itemId: 'fishing_rod', quantity: 10, priceModifier: 1.1 },
+            { itemId: 'fly_fishing_rod', quantity: 5, priceModifier: 1.2 },
+            { itemId: 'fishing_bait', quantity: 1000, priceModifier: 1.0 },
+            { itemId: 'feathers', quantity: 1000, priceModifier: 1.0 },
+            { itemId: 'basket_trap', quantity: 5, priceModifier: 1.2 },
         ]
     },
     dwarven_pickaxes: {
@@ -65,7 +75,6 @@ export const SHOPS: Record<string, Shop> = {
             { itemId: 'amulet_mould', quantity: 10, priceModifier: 1.0 },
             { itemId: 'tiara_mould', quantity: 10, priceModifier: 1.0 },
             { itemId: 'vial', quantity: 1000, priceModifier: 1.0 },
-            { itemId: 'fire_resistant_shield', quantity: 5, priceModifier: 1.2 },
         ]
     },
     oakhaven_herblore: {
@@ -144,11 +153,18 @@ export const SHOPS: Record<string, Shop> = {
         id: 'silverhaven_fishing',
         name: 'The Salty Catch',
         inventory: [
+            { itemId: 'small_fishing_net', quantity: 10, priceModifier: 1.1 },
+            { itemId: 'fishing_rod', quantity: 10, priceModifier: 1.1 },
+            { itemId: 'fly_fishing_rod', quantity: 5, priceModifier: 1.2 },
+            { itemId: 'harpoon', quantity: 5, priceModifier: 1.2 },
+            { itemId: 'basket_trap', quantity: 5, priceModifier: 1.2 },
+            { itemId: 'ocean_box_trap', quantity: 5, priceModifier: 1.2 },
+            { itemId: 'fishing_bait', quantity: 5000, priceModifier: 1.0 },
+            { itemId: 'feathers', quantity: 5000, priceModifier: 1.0 },
             { itemId: 'raw_shrimp', quantity: 1000, priceModifier: 1.0 },
             { itemId: 'raw_sardine', quantity: 500, priceModifier: 1.0 },
             { itemId: 'raw_herring', quantity: 250, priceModifier: 1.0 },
             { itemId: 'raw_trout', quantity: 100, priceModifier: 1.0 },
-            { itemId: 'feathers', quantity: 1000, priceModifier: 1.0 },
         ]
     },
     gilded_hammer_armory: {
@@ -167,6 +183,7 @@ export const SHOPS: Record<string, Shop> = {
             { itemId: 'steel_platebody', quantity: 5, priceModifier: 1.2 },
             { itemId: 'steel_platelegs', quantity: 5, priceModifier: 1.2 },
             { itemId: 'steel_kiteshield', quantity: 5, priceModifier: 1.2 },
+            { itemId: 'fire_resistant_shield', quantity: 5, priceModifier: 1.2 },
         ]
     },
     slayer_master_shop: {
@@ -188,5 +205,46 @@ export const SHOPS: Record<string, Shop> = {
             { itemId: 'rope', quantity: 10, priceModifier: 1.2 },
             { itemId: 'bronze_sword', quantity: 2, priceModifier: 1.3 },
         ]
-    }
+    },
+    fouthia_general: {
+        id: 'fouthia_general',
+        name: "Wanderer's Wares",
+        inventory: [
+            { itemId: 'waterskin', quantity: 20, priceModifier: 1.0, doses: 4 },
+            { itemId: 'rope', quantity: 10, priceModifier: 1.0 },
+            { itemId: 'knife', quantity: 5, priceModifier: 1.0 },
+            { itemId: 'tinderbox', quantity: 5, priceModifier: 1.0 },
+            { itemId: 'steel_axe', quantity: 2, priceModifier: 1.2 },
+            { itemId: 'steel_pickaxe', quantity: 2, priceModifier: 1.2 },
+            { itemId: 'oak_shortbow', quantity: 3, priceModifier: 1.2 },
+            { itemId: 'steel_arrow', quantity: 500, priceModifier: 1.1 },
+            { itemId: 'cooked_beef', quantity: 50, priceModifier: 1.0 },
+        ]
+    },
+    fouthia_armorer: {
+        id: 'fouthia_armorer',
+        name: 'Desert Armorer',
+        inventory: [
+            { itemId: 'leather_body', quantity: 5, priceModifier: 1.1 },
+            { itemId: 'boar_hide_body', quantity: 3, priceModifier: 1.2 },
+            { itemId: 'wolf_pelt_body', quantity: 2, priceModifier: 1.3 },
+            { itemId: 'fire_resistant_shield', quantity: 5, priceModifier: 1.2 },
+            { itemId: 'iron_full_helm', quantity: 3, priceModifier: 1.1 },
+            { itemId: 'steel_full_helm', quantity: 2, priceModifier: 1.2 },
+            { itemId: 'steel_scimitar', quantity: 3, priceModifier: 1.2 },
+            { itemId: 'mithril_scimitar', quantity: 1, priceModifier: 2 },
+        ]
+    },
+    fouthia_alchemist: {
+        id: 'fouthia_alchemist',
+        name: "Zafira's Remedies",
+        inventory: [
+            { itemId: 'pestle_and_mortar', quantity: 5, priceModifier: 1.0 },
+            { itemId: 'vial_of_water', quantity: 200, priceModifier: 1.0 },
+            { itemId: 'weak_defence_potion', quantity: 10, priceModifier: 10 },
+            { itemId: 'antipoison_potion', quantity: 10, priceModifier: 10 },
+            { itemId: 'spider_eggs', quantity: 20, priceModifier: 1.1 },
+            { itemId: 'glimmerhorn_dust', quantity: 10, priceModifier: 1.2 },
+        ]
+    },
 }

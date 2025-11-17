@@ -1,3 +1,4 @@
+
 import { Item, EquipmentSlot, WeaponType } from '../../types';
 
 export const misc: Item[] = [
@@ -6,9 +7,11 @@ export const misc: Item[] = [
     { id: 'beer_glass', name: 'Beer Glass', description: 'An empty beer glass.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:beer-stein.svg' },
     { id: 'ashes', name: 'Ashes', description: 'A pile of ashes.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:powder.svg' },
     { id: 'fishing_bait', name: 'Fishing Bait', description: 'A wriggling worm, perfect for catching fish.', stackable: true, value: 1, iconUrl: 'https://api.iconify.design/game-icons:worms.svg' },
-    { id: 'seeds', name: 'Seeds', description: "A random assortment of seeds, maybe I can turn them in somewhere? (But not yet)", stackable: true, value: 10, iconUrl: 'https://api.iconify.design/game-icons:seeds.svg' },
+    { id: 'seeds', name: 'Seeds', description: "A random assortment of seeds, maybe I can turn them in somewhere? (But not yet)", stackable: true, value: 10, iconUrl: 'https://api.iconify.design/game-icons:plant-seed.svg' },
+    { id: 'waterskin', name: 'Waterskin', description: 'A skin for carrying water. Can be filled at a water source or from a cactus.', stackable: false, value: 15, iconUrl: 'https://api.iconify.design/game-icons:waterskin.svg', material: 'leather', consumable: { healAmount: 1 }, doseable: true, maxDoses: 4 },
     
     // Quest & Key Items
+    { id: 'frostfang_key', name: 'Frostfang Key', description: 'A key made of enchanted ice that radiates a biting cold. It is used to unlock the Frozen Gate in the Frostfang Peaks.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:key-skeleton.svg', material: 'aquatite' },
     { id: 'arcane_resonator', name: 'Arcane Resonator', description: 'A device given by Archmage Theron to measure arcane energy at runic altars.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:orb-wand.svg' },
     { id: 'gust_reading', name: 'Gust Reading', description: 'A charged reading from the Gust Altar.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:wind-slap.svg', material: 'rune-gust' },
     { id: 'stone_reading', name: 'Stone Reading', description: 'A charged reading from the Stone Altar.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:stone-block.svg', material: 'rune-stone' },
@@ -58,8 +61,8 @@ export const misc: Item[] = [
     { id: 'silver_amulet_u', name: 'Silver Amulet (u)', description: 'An unstrung silver amulet. It needs a string.', stackable: false, value: 780, iconUrl: 'https://api.iconify.design/game-icons:gem-pendant.svg', material: 'silver' },
 
     // Herblore Items
-    { id: 'pestle_and_mortar', name: 'Pestle and Mortar', description: 'Used to grind ingredients for Herblore.', stackable: false, value: 100, iconUrl: 'https://api.iconify.design/game-icons:mortar.svg' },
-    { id: 'pouch_cleanser', name: 'Pouch Cleanser', description: 'A special herbal concoction that can clean grime off items. Has 25 charges.', stackable: true, value: 300, iconUrl: 'https://api.iconify.design/game-icons:potion-ball.svg', charges: 25 },
+    { id: 'pestle_and_mortar', name: 'Pestle and Mortar', description: 'Used to grind ingredients for Herblore.', stackable: false, value: 100, iconUrl: 'https://api.iconify.design/game-icons:apothecary.svg' },
+    { id: 'pouch_cleanser', name: 'Pouch Cleanser', description: 'A special herbal concoction that can clean grime off items. Has 25 charges.', stackable: false, value: 300, iconUrl: 'https://api.iconify.design/game-icons:potion-ball.svg', charges: 25 },
     // Herblore Secondaries
     { id: 'spider_eggs', name: 'Spider Eggs', description: 'A clutch of spider eggs.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:spider-alt.svg' },
     { id: 'boar_tusk', name: 'Boar Tusk', description: 'A sharp tusk from a wild boar.', stackable: false, value: 15, iconUrl: 'https://api.iconify.design/game-icons:ivory-tusks.svg' },
@@ -75,9 +78,11 @@ export const misc: Item[] = [
     { id: 'unicorn_horn_dust', name: 'Unicorn Horn Dust', description: 'The ground-up horn of a unicorn. It has potent anti-poison properties.', stackable: false, value: 250, iconUrl: 'https://api.iconify.design/game-icons:powder.svg' },
     // New Non-Dust Items
     { id: 'glimmerhorn_antler', name: 'Glimmerhorn Antler', description: 'A mystical antler from a Glimmerhorn Stag. Can be ground into dust.', stackable: false, value: 25, iconUrl: 'https://api.iconify.design/game-icons:deer-head.svg' },
-    { id: 'serpent_scale', name: 'Serpent Scale', description: 'A tough, iridescent scale from a Bog Serpent. Can be ground into dust.', stackable: false, value: 120, iconUrl: 'https://api.iconify.design/game-icons:scales.svg' },
+    { id: 'serpent_scale', name: 'Serpent Scale', description: 'A tough, iridescent scale from a Bog Serpent. Can be ground into dust.', stackable: false, value: 120, iconUrl: 'https://api.iconify.design/game-icons:energy-shield.svg' },
     { id: 'unicorn_horn', name: 'Unicorn Horn', description: 'The horn of a unicorn. It has potent anti-poison properties. Can be ground into dust.', stackable: false, value: 200, iconUrl: 'https://api.iconify.design/game-icons:ivory-tusks.svg' },
-    { id: 'wyrmscale', name: 'Wyrmscale', description: "A thick scale from a powerful wyrm. It feels warm. Can be ground into dust.", stackable: false, value: 120, iconUrl: 'https://api.iconify.design/game-icons:scales.svg' },
+    { id: 'wyrmscale', name: 'Wyrmscale', description: "A thick scale from a powerful wyrm. It feels warm. Can be ground into dust.", stackable: false, value: 120, iconUrl: 'https://api.iconify.design/game-icons:energy-shield.svg' },
+    { id: 'glimmer_thread_fiber', name: 'Glimmer Thread Fibers', description: 'A tuft of fur from a Glimmerhorn Stag, it seems a bit mystical and suprisingly strong.', stackable: false, value: 10, iconUrl: 'https://api.iconify.design/game-icons:thread.svg' },
+
     // Dungeon Maps
     { id: 'goblin_dungeon_map', name: 'Goblin Dungeon Map', description: 'A crudely drawn map of the goblin warrens.', stackable: false, value: 500, iconUrl: 'https://api.iconify.design/game-icons:treasure-map.svg', mappable: { regionId: 'goblin_dungeon', mapTitle: 'Goblin Dungeon' } },
     { id: 'sunken_labyrinth_map', name: 'Sunken Labyrinth Map', description: 'A waterlogged map of the ancient labyrinth.', stackable: false, value: 1500, iconUrl: 'https://api.iconify.design/game-icons:treasure-map.svg', mappable: { regionId: 'sunken_labyrinth', mapTitle: 'Sunken Labyrinth' } },
@@ -87,18 +92,16 @@ export const misc: Item[] = [
     { id: 'bobby_pin', name: 'Bobby Pin', description: 'A thin piece of metal, suitable for simple locks.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:safety-pin.svg', lockpick: { level: 1, breakChance: 0.5, power: 5 } },
     { id: 'lockpick', name: 'Lockpick', description: 'A sturdy iron lockpick for more complex locks.', stackable: false, value: 50, iconUrl: 'https://api.iconify.design/game-icons:lockpicks.svg', lockpick: { level: 20, breakChance: 0.2, power: 10 } },
     { id: 'diamond_lockpick', name: 'Diamond Lockpick', description: 'A masterfully crafted lockpick with a diamond tip. Very durable.', stackable: false, value: 5000, iconUrl: 'https://api.iconify.design/game-icons:lockpicks.svg', material: 'diamond', lockpick: { level: 50, breakChance: 0.05, power: 20 } },
-    { id: 'skeleton_key', name: 'Skeleton Key', description: 'An ancient, unbreakable key said to open any lock.', stackable: false, value: 100000, iconUrl: 'https://api.iconify.design/game-icons:key-skeleton.svg', lockpick: { level: 80, breakChance: 0, unbreakable: true, power: 40 } },
+    { id: 'skeleton_key', name: 'Skeleton Key', description: 'An ancient, unbreakable key said to open any lock.', stackable: false, value: 100000, iconUrl: 'https://api.iconify.design/game-icons:skeleton-key.svg', lockpick: { level: 80, breakChance: 0, unbreakable: true, power: 40 } },
 
     // NEW QUEST ITEMS
-    { id: 'blighted_soil', name: 'Blighted Soil', description: 'A sample of soil from near Fitzwilliam\'s petunias. It feels unnaturally cold.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:ground-sprout.svg' },
-    { id: 'blight_ward_potion', name: 'Blight Ward Potion', description: 'A shimmering potion created by Anise to reveal magical blights.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:potion-ball.svg', material: 'potion-prayer' },
-    { id: 'ring_of_preservation', name: 'Ring of Preservation', description: 'A magical ring that has a small chance to save a secondary ingredient when mixing potions.', stackable: false, value: 25000, iconUrl: 'https://api.iconify.design/game-icons:ring.svg', material: 'emerald', equipment: { slot: EquipmentSlot.Ring, magicDefence: 2 } },
-    { id: 'broken_barrow_key', name: 'Broken Barrow Key', description: 'The shattered remains of an ancient key.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:key-skeleton.svg' },
-    { id: 'reforged_barrow_key', name: 'Reforged Barrow Key', description: 'A sturdy steel key, reforged by a master smith.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:key-skeleton.svg', material: 'steel' },
-    { id: 'heart_of_the_mountain', name: 'Heart of the Mountain', description: 'The crystalline core of The Earth-Render. It hums with immense terrestrial energy.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:gem-heart.svg', material: 'diamond' },
+    { id: 'blighted_soil', name: 'Blighted Soil', description: "A sample of soil from near Fitzwilliam's petunias. It feels unnaturally cold.", stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:ground-sprout.svg' },
+    { id: 'broken_barrow_key', name: 'Broken Barrow Key', description: 'Two halves of an ancient, broken key. It feels heavy with purpose.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:key.svg', material: 'uncut-emerald' },
+    { id: 'reforged_barrow_key', name: 'Reforged Barrow Key', description: "A sturdy steel key, masterfully reforged. It hums with a faint energy.", stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:key.svg', material: 'emerald' },
+    { id: 'heart_of_the_mountain', name: 'Heart of the Mountain', description: 'The crystalline core of The Earth-Render. It hums with immense terrestrial energy.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:mineral-heart.svg', material: 'diamond' },
     { id: 'attuned_locus', name: 'Attuned Locus', description: 'A device from Archmage Theron, designed to commune with divine energies.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:orbital-rays.svg', material: 'rune-astral' },
-    { id: 'fragment_of_verdant_verse', name: 'Fragment of Verdant Verse', description: 'A cryptic verse whispered by an echo of a nature god.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:scroll-unfurled.svg', material: 'rune-verdant' },
-    { id: 'fragment_of_nexus_verse', name: 'Fragment of Nexus Verse', description: 'A cryptic verse whispered by an echo of a death god.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:scroll-unfurled.svg', material: 'rune-nexus' },
-    { id: 'fragment_of_hex_verse', name: 'Fragment of Hex Verse', description: 'A cryptic verse whispered by an echo of a curse god.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:scroll-unfurled.svg', material: 'rune-hex' },
+    { id: 'fragment_of_verdant_verse', name: 'Fragment of Verdant Verse', description: 'A recording of a divine echo, stored within your Attuned Locus. The energy is unintelligible on its own.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:scroll-unfurled.svg', material: 'rune-verdant' },
+    { id: 'fragment_of_nexus_verse', name: 'Fragment of Nexus Verse', description: 'A recording of a divine echo, stored within your Attuned Locus. The energy is unintelligible on its own.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:scroll-unfurled.svg', material: 'rune-nexus' },
+    { id: 'fragment_of_hex_verse', name: 'Fragment of Hex Verse', description: 'A recording of a divine echo, stored within your Attuned Locus. The energy is unintelligible on its own.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:scroll-unfurled.svg', material: 'rune-hex' },
     { id: 'celestial_verse', name: 'Celestial Verse', description: 'The combined verses of the divine echoes, forming a piece of profound lore.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:book-cover.svg', material: 'gold' },
 ];

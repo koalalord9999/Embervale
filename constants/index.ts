@@ -12,6 +12,7 @@ export * from './fletching';
 export * from './herblore';
 export * from './lootTables';
 export * from './spells';
+export * from './prayers';
 export * from '../data/pois';
 export * from '../data/regions';
 export * from './map_features';

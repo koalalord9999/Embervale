@@ -73,7 +73,7 @@ const SmithingView: React.FC<SmithingViewProps> = ({ smithingType, inventory, sk
                 disabled: !hasLevel || maxSmith < 1 
             },
         ];
-        setContextMenu({ options, event: e, isTouchInteraction: false });
+        setContextMenu({ options, triggerEvent: e, isTouchInteraction: false });
     };
 
     const smeltingRecipes = [
@@ -108,7 +108,7 @@ const SmithingView: React.FC<SmithingViewProps> = ({ smithingType, inventory, sk
                 disabled: !hasLevel || maxSmelt < 1 
             },
         ];
-        setContextMenu({ options, event: e, isTouchInteraction: false });
+        setContextMenu({ options, triggerEvent: e, isTouchInteraction: false });
     };
 
     const warhammerQuestComplete = playerQuests.some(q => q.questId === 'art_of_the_warhammer' && q.isComplete);

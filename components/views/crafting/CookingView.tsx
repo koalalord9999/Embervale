@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { InventorySlot, PlayerSkill, PlayerQuestState, SkillName } from '../../../types';
 import { COOKING_RECIPES, ITEMS, getIconClassName } from '../../../constants';
@@ -49,7 +47,7 @@ const CookingView: React.FC<CookingViewProps> = ({ inventory, skills, playerQues
                 disabled: !hasLevel || maxCook < 1 
             },
         ];
-        setContextMenu({ options, event: e, isTouchInteraction: false });
+        setContextMenu({ options, triggerEvent: e, isTouchInteraction: false });
     };
     
     const warhammerQuestComplete = playerQuests.some(q => q.questId === 'art_of_the_warhammer' && q.isComplete);

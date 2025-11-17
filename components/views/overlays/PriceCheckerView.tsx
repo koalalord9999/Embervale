@@ -144,7 +144,7 @@ const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose,
             }), disabled: maxQty < 1 },
             { label: 'Price-check All', onClick: () => addToChecker(index, 'all'), disabled: maxQty < 1 },
         ];
-        setContextMenu({ options, event: eventForMenu, isTouchInteraction: 'touches' in e || 'changedTouches' in e });
+        setContextMenu({ options, triggerEvent: eventForMenu, isTouchInteraction: 'touches' in e || 'changedTouches' in e, title: getDisplayName(invSlot) });
     };
 
     const totalValue = checkedItems.reduce((acc, slot) => {
@@ -201,6 +201,14 @@ const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose,
                                             ) : (
                                                 <img src={item.iconUrl} alt={item.name} className={`w-full h-full ${getIconClassName(item)}`} />
                                             )}
+                                            {slot.statsOverride?.poisoned && (
+                                                <img 
+                                                    src="https://api.iconify.design/game-icons:boiling-bubbles.svg" 
+                                                    alt="Poisoned"
+                                                    className="poison-overlay-icon item-icon-uncut-emerald"
+                                                    title="Poisoned"
+                                                />
+                                            )}
                                             {slot.quantity > 1 && !item.doseable && (
                                                 <span className={`absolute bottom-0 right-1 text-xs font-bold ${getQuantityColor(slot.quantity)}`} style={{ textShadow: '1px 1px 1px black', zIndex: 2 }}>
                                                     {formatItemQuantity(slot.quantity)}
@@ -247,6 +255,14 @@ const PriceCheckerView: React.FC<PriceCheckerViewProps> = ({ inventory, onClose,
                                                 </div>
                                             ) : (
                                                 <img src={item.iconUrl} alt={item.name} className={`w-full h-full ${getIconClassName(item)}`} />
+                                            )}
+                                            {slot.statsOverride?.poisoned && (
+                                                <img 
+                                                    src="https://api.iconify.design/game-icons:boiling-bubbles.svg" 
+                                                    alt="Poisoned"
+                                                    className="poison-overlay-icon item-icon-uncut-emerald"
+                                                    title="Poisoned"
+                                                />
                                             )}
                                             {slot.quantity > 1 && !item.doseable && (
                                                 <span className={`absolute bottom-0 right-1 text-xs font-bold ${getQuantityColor(slot.quantity)}`} style={{ textShadow: '1px 1px 1px black' }}>

@@ -1,3 +1,5 @@
+
+
 import { InventorySlot, WeightedDrop } from '../types';
 import { THIEVING_POCKET_TARGETS } from './loot/thievingPocket';
 import { THIEVING_CONTAINER_TARGETS } from './loot/thievingTables';
@@ -28,6 +30,8 @@ const LOOT_TABLES: Record<string, LootTable> = {
         { itemId: 'uncut_emerald', chance: 25 },
         { itemId: 'uncut_ruby', chance: 12.5 },
         { itemId: 'uncut_diamond', chance: 2.5 },
+        { itemId: 'uncut_sunstone', chance: 0.000000000001 },
+        { itemId: 'uncut_tenebrite', chance: 0.000000000001 },
     ],
     herb_table: [
         { itemId: 'grimy_guromoot', chance: 25 },
@@ -54,7 +58,7 @@ const LOOT_TABLES: Record<string, LootTable> = {
         { tableId: 'super_rare_table', chance: 39 }, // Approx 1/256
     ],
     super_rare_table: [
-        // Total item weight is 8000. On a roll out of 10000, this gives a 20% chance of getting nothing.
+        // Total table weight is 10,000
         // Resources (4000 total weight)
         { itemId: 'coal', chance: 500, minQuantity: 500, maxQuantity: 2000, noted: true },
         { itemId: 'silver_ore', chance: 1000, minQuantity: 100, maxQuantity: 100, noted: true },
@@ -65,11 +69,12 @@ const LOOT_TABLES: Record<string, LootTable> = {
         { itemId: 'astral_rune', chance: 100, minQuantity: 100, maxQuantity: 100 },
 
         // Adamantite Gear (2500 total weight)
-        { itemId: 'adamantite_platebody', chance: 500 },
-        { itemId: 'adamantite_platelegs', chance: 500 },
-        { itemId: 'adamantite_full_helm', chance: 500 },
-        { itemId: 'adamantite_kiteshield', chance: 500 },
-        { itemId: 'adamantite_sword', chance: 500 },
+        { itemId: 'sunstone', chance: 500 },
+        { itemId: 'adamantite_platebody', chance: 400 },
+        { itemId: 'adamantite_platelegs', chance: 400 },
+        { itemId: 'adamantite_full_helm', chance: 400 },
+        { itemId: 'adamantite_kiteshield', chance: 400 },
+        { itemId: 'adamantite_sword', chance: 400 },
 
         // Runic Gear (1000 total weight)
         { itemId: 'runic_platebody', chance: 250 },
@@ -83,6 +88,9 @@ const LOOT_TABLES: Record<string, LootTable> = {
         { itemId: 'aquatite_full_helm', chance: 100 },
         { itemId: 'aquatite_kiteshield', chance: 100 },
         { itemId: 'aquatite_sword', chance: 100 },
+        
+        // Nothing (2000 weight)
+        { chance: 2000 },
     ],
     robes_of_power_table: [
         { itemId: 'robe_of_power_hat', chance: 32 },
@@ -99,6 +107,13 @@ const LOOT_TABLES: Record<string, LootTable> = {
         { itemId: 'nexus_rune', chance: 1, minQuantity: 25, maxQuantity: 50 },
         { itemId: 'diamond_lockpick', chance: 0.2, minQuantity: 1, maxQuantity: 3 }, // 1 in 5 chance
         { itemId: 'skeleton_key', chance: 0.01, minQuantity: 1, maxQuantity: 1 }, // 1 in 100 chance
+    ],
+        affinity_robes_table: [
+        { itemId: 'affinity_hat', chance: 20 },
+        { itemId: 'affinity_top', chance: 20 },
+        { itemId: 'affinity_bottoms', chance: 20 },
+        { itemId: 'affinity_gloves', chance: 20 },
+        { itemId: 'affinity_boots', chance: 20 },
     ],
     ...THIEVING_STALL_LOOT_TABLES,
 };
@@ -135,7 +150,7 @@ export const rollOnLootTable = (tableId: string): LootRollResult | string | null
     }
 
     const totalWeight = table.reduce((sum, item) => sum + parseChance(item.chance), 0);
-    const roll = Math.random() * (tableId === 'super_rare_table' ? 10000 : totalWeight);
+    const roll = Math.random() * totalWeight;
     let cumulativeWeight = 0;
 
     for (const item of table) {

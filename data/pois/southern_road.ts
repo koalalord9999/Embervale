@@ -72,8 +72,8 @@ export const southernRoadPois: Record<string, POI> = {
     lonely_cabin: {
         id: 'lonely_cabin',
         name: 'Lonely Cabin',
-        description: 'A small, isolated cabin stands on stilts at the edge of the swamp. It appears to be a dead end.',
-        connections: ['murkwallow_swamp'],
+        description: 'A small, isolated cabin stands on stilts at the edge of the swamp. There is a road going east, you see some walls in the distance',
+        connections: ['swamp_path_east_1', 'murkwallow_swamp'],
         activities: [
              {
                 type: 'npc',

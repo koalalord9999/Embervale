@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 
 export const crystallineIslesPois: Record<string, POI> = {
@@ -9,9 +10,13 @@ export const crystallineIslesPois: Record<string, POI> = {
         activities: [
             {
                 type: 'npc',
-                name: 'Skyship Captain',
+                name: 'Skyship Captain (isle)',
                 icon: '/assets/npcChatHeads/ferryman_silas.png',
                 startNode: 'captain_isles_default',
+                conditionalGreetings: [
+                    { text: "The skies feel... calm. You did it, didn't you? Need a lift back to Silverhaven to report to the Archmage?", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 9 }] } },
+                    { text: "Back from the Spire's peak? The turbulence is wild up there. Need to head back?", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 8 }] } },
+                ],
             }
         ],
         regionId: 'crystalline_isles',
@@ -47,7 +52,6 @@ export const crystallineIslesPois: Record<string, POI> = {
         connections: ['crystalline_path_2', 'crystalline_path_4'],
         activities: [
              { type: 'combat', monsterId: 'shard_golem' },
-// FIX: Removed redundant level, xp, and respawnTime properties.
              { type: 'thieving_lockpick', id: 'ci_chest_1', targetName: 'Glimmering Chest', lootTableId: 'thieving_dungeon_chest_high' },
         ],
         regionId: 'crystalline_isles',
@@ -105,7 +109,6 @@ export const crystallineIslesPois: Record<string, POI> = {
         connections: ['crystalline_path_7', 'crystalline_path_9'],
         activities: [
              { type: 'skilling', id: 'ci_coal_2', name: 'Mine Coal', skill: SkillName.Mining, requiredLevel: 30, loot: [{ itemId: 'coal', chance: 1, xp: 50 }], resourceCount: { min: 2, max: 5 }, respawnTime: 12000, gatherTime: 3500 },
-// FIX: Removed redundant level, xp, and respawnTime properties.
              { type: 'thieving_lockpick', id: 'ci_chest_2', targetName: 'Floating Chest', lootTableId: 'thieving_dungeon_chest_high' },
         ],
         regionId: 'crystalline_isles',

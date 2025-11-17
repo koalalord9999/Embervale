@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useUIState } from './useUIState';
 import { REGIONS, MONSTERS } from '../constants';
@@ -27,12 +28,21 @@ import { tutorialZonePois } from '../data/pois/tutorial_zone';
 import { wildernessPois } from '../data/pois/wilderness';
 import { magusSpirePois } from '../data/pois/dungeon_magus_spire';
 import { chasmOfWoePois } from '../data/pois/dungeon_chasm_of_woe';
+import { pilferingPois } from '../data/pois/pilfering';
+import { fouthiaPois } from '../data/pois/fouthia';
+import { futureZonePois } from '../data/pois/future_zones';
 
 
+// Import all monster file objects for the monster editor
 import { beasts } from '../constants/monsters/beasts';
 import { humanoids } from '../constants/monsters/humanoids';
-import { magicalAndUndead } from '../constants/monsters/magicalAndUndead';
 import { dragons } from '../constants/monsters/dragons';
+import { undead } from '../constants/monsters/undead';
+import { elemental } from '../constants/monsters/elemental';
+import { demon } from '../constants/monsters/demon';
+import { armored } from '../constants/monsters/armored';
+import { vampire } from '../constants/monsters/vampire';
+
 
 interface DevModeDependencies {
     initialState: any;
@@ -49,14 +59,108 @@ interface DevModeDependencies {
     setIsPlayerInvisible: (isInvisible: boolean) => void;
     isAutoBankOn: boolean;
     setIsAutoBankOn: (isOn: boolean) => void;
+    isGodModeOn: boolean;
+    setIsGodModeOn: (isOn: boolean) => void;
 }
+
+// Helper to format an object into a single line string.
+const formatObjectToOneLine = (obj: any): string => {
+    if (obj === null) return 'null';
+    if (typeof obj !== 'object') {
+        if (typeof obj === 'string') return `'${obj.replace(/'/g, "\\'")}'`;
+        return String(obj);
+    }
+
+    if (Array.isArray(obj)) {
+        return `[${obj.map(formatObjectToOneLine).join(', ')}]`;
+    }
+
+    const entries = Object.entries(obj).map(([key, value]) => {
+        let formattedValue;
+        if (key === 'skill' && typeof value === 'string') {
+            formattedValue = `SkillName.${value}`;
+        } else {
+            formattedValue = formatObjectToOneLine(value);
+        }
+        return `${key}: ${formattedValue}`;
+    });
+    return `{ ${entries.join(', ')} }`;
+};
+
+
+const formatObjectToCodeString = (obj: any): string => {
+  const formatValue = (value: any, level: number, key?: string): string => {
+    const indent = ' '.repeat(level * 4);
+    const closingIndent = ' '.repeat((level - 1) * 4);
+
+    if (key === 'skill' && typeof value === 'string') {
+      return `SkillName.${value}`;
+    }
+
+    switch (typeof value) {
+      case 'string':
+        return `'${value.replace(/'/g, "\\'").replace(/\n/g, '\\n')}'`;
+      case 'number':
+      case 'boolean':
+        return String(value);
+      case 'object':
+        if (value === null) return 'null';
+        
+        if (Array.isArray(value)) {
+          if (value.length === 0) return '[]';
+          
+          if (key === 'activities') {
+              return `[\n${value.map(v => `${indent}${formatObjectToOneLine(v)}`).join(',\n')}\n${closingIndent}]`;
+          }
+
+          if (value.every(item => typeof item === 'string')) {
+            return `[${value.map(v => `'${v}'`).join(', ')}]`;
+          }
+
+          return `[\n${value.map(v => `${indent}${formatValue(v, level + 1)}`).join(',\n')}\n${closingIndent}]`;
+        }
+
+        const keys = Object.keys(value);
+        if (keys.length === 0) return '{}';
+        
+        const entries = keys.map(k => {
+          return `${indent}${k}: ${formatValue(value[k], level + 1, k)}`;
+        }).join(',\n');
+        return `{\n${entries}\n${closingIndent}}`;
+      default:
+        return String(value);
+    }
+  };
+
+  return formatValue(obj, 1);
+};
+
+const getVariableNameFromFilePath = (filePath: string): string => {
+    // e.g. data/pois/dungeon_chasm_of_woe.ts
+    let baseName = filePath.split('/').pop()!.replace('.ts', ''); // dungeon_chasm_of_woe
+
+    // Remove known prefixes
+    const prefixes = ['dungeon_', 'region_'];
+    for (const prefix of prefixes) {
+        if (baseName.startsWith(prefix)) {
+            baseName = baseName.substring(prefix.length); // chasm_of_woe
+            break; 
+        }
+    }
+    
+    // Convert snake_case to camelCase
+    const camelCaseName = baseName.replace(/_([a-z0-9])/g, g => g[1].toUpperCase()); // chasmOfWoe
+
+    return `${camelCaseName}Pois`; // chasmOfWoePois
+};
+
 
 export const useDevMode = (deps: DevModeDependencies) => {
     const { 
         initialState, devModeOverride = false, isInCombat, ui, addLog,
         xpMultiplier, setXpMultiplier,
         combatSpeedMultiplier, setCombatSpeedMultiplier, isPlayerInvisible, setIsPlayerInvisible,
-        isAutoBankOn, setIsAutoBankOn
+        isAutoBankOn, setIsAutoBankOn, isGodModeOn, setIsGodModeOn
     } = deps;
 
     const isDevMode = (initialState.username === 'DevKoala') || devModeOverride;
@@ -153,7 +257,7 @@ export const useDevMode = (deps: DevModeDependencies) => {
             addLog("No changes to commit.");
             return;
         }
-    
+
         const allPoiFileObjects = {
             'data/pois/bandit_hideout.ts': banditHideoutPois, 'data/pois/crystalline_isles.ts': crystallineIslesPois,
             'data/pois/dungeon_goblin.ts': goblinDungeonPois, 'data/pois/dungeon_sunken_labyrinth.ts': sunkenLabyrinthPois,
@@ -166,10 +270,14 @@ export const useDevMode = (deps: DevModeDependencies) => {
             'data/pois/the_serpents_coil.ts': theSerpentsCoilPois, 'data/pois/the_verdant_fields.ts': theVerdantFieldsPois,
             'data/pois/tutorial_zone.ts': tutorialZonePois, 'data/pois/wilderness.ts': wildernessPois,
             'data/pois/dungeon_magus_spire.ts': magusSpirePois, 'data/pois/dungeon_chasm_of_woe.ts': chasmOfWoePois,
+            'data/pois/pilfering.ts': pilferingPois, 'data/pois/fouthia.ts': fouthiaPois, 'data/pois/future_zones.ts': futureZonePois,
         };
+
         const allMonsterFileObjects = {
             'constants/monsters/beasts.ts': beasts, 'constants/monsters/humanoids.ts': humanoids,
-            'constants/monsters/magicalAndUndead.ts': magicalAndUndead, 'constants/monsters/dragons.ts': dragons,
+            'constants/monsters/dragons.ts': dragons, 'constants/monsters/undead.ts': undead,
+            'constants/monsters/elemental.ts': elemental, 'constants/monsters/demon.ts': demon,
+            'constants/monsters/armored.ts': armored, 'constants/monsters/vampire.ts': vampire
         };
     
         const poiFileMap: Record<string, string> = {};
@@ -184,55 +292,177 @@ export const useDevMode = (deps: DevModeDependencies) => {
     
         const newCodeBlocks: { filePath: string; content: string }[] = [];
         
-        modifiedMonsters.forEach(monsterId => {
-            const monster = latestMonsterDataRef.current[monsterId];
-            const isNew = !MONSTERS[monsterId];
-            
-            // Clean up the object before stringifying - remove undefined/null/empty values to keep it clean
-            const cleanMonster = JSON.parse(JSON.stringify(monster, (key, value) => {
-                if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
-                    return undefined;
-                }
-                return value;
-            }));
-
-            const code = `${JSON.stringify(cleanMonster, null, 4)},`;
-
-            if (isNew) {
-                let suggestedPath = 'constants/monsters/beasts.ts';
-                const type = monster.types[0];
-                if (type === MonsterType.Humanoid) suggestedPath = 'constants/monsters/humanoids.ts';
-                else if (type === MonsterType.Dragon) suggestedPath = 'constants/monsters/dragons.ts';
-                else if (type === MonsterType.Undead || type === MonsterType.Elemental) suggestedPath = 'constants/monsters/magicalAndUndead.ts';
-                
-                newCodeBlocks.push({
-                    filePath: `NEW MONSTER - Add to ${suggestedPath}`,
-                    content: `// Add this object to the array in ${suggestedPath}\n${code}`,
-                });
-            } else { // This is a modified monster
-                const filePath = monsterFileMap[monsterId] || 'UNKNOWN FILE';
-                newCodeBlocks.push({
-                    filePath: `MODIFIED - ${filePath}`,
-                    content: `// Replace the existing '${monsterId}' object in ${filePath} with this one\n${code}`,
-                });
+        // --- POI CHANGES ---
+        const modifiedPoiFiles = new Map<string, string[]>();
+        modifiedPois.forEach(poiId => {
+            const filePath = poiFileMap[poiId];
+            if (!filePath) return;
+            if (!modifiedPoiFiles.has(filePath)) {
+                modifiedPoiFiles.set(filePath, []);
             }
+            modifiedPoiFiles.get(filePath)!.push(poiId);
         });
+
+        modifiedPoiFiles.forEach((poiIds, filePath) => {
+            const originalFileObject = allPoiFileObjects[filePath as keyof typeof allPoiFileObjects];
+            if (!originalFileObject) return;
+
+            const updatedFileObject = JSON.parse(JSON.stringify(originalFileObject));
+
+            poiIds.forEach(poiId => {
+                const originalPoi = POIS[poiId];
+                if (!originalPoi) return;
+
+                const newCoords = latestPoiCoordsRef.current[poiId];
+                const newConns = latestPoiConnectionsRef.current[poiId];
+                
+                const finalPoi: POI = {
+                    ...originalPoi,
+                    x: newCoords.x,
+                    y: newCoords.y,
+                    connections: newConns,
+                };
+
+                const cleanPoi = JSON.parse(JSON.stringify(finalPoi, (key, value) => {
+                    if (
+                        (value === null || value === undefined) ||
+                        (key !== 'activities' && Array.isArray(value) && value.length === 0) ||
+                        (key !== 'activities' && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0)
+                    ) {
+                       return undefined;
+                   }
+                   return value;
+                }));
+
+                if (!cleanPoi.hasOwnProperty('activities')) {
+                    cleanPoi.activities = [];
+                }
+
+                updatedFileObject[poiId] = cleanPoi;
+            });
+
+            const variableName = getVariableNameFromFilePath(filePath);
+            
+            const needsToolType = Object.values(updatedFileObject).some((poi: any) => poi.activities.some((act: any) => act.requiredTool));
+            
+            let finalImports = `import { POI, SkillName${needsToolType ? ', ToolType' : ''} } from '../../types';\n`;
+
+            if (filePath === 'data/pois/meadowdale.ts' || filePath === 'data/pois/oakhaven.ts') {
+                finalImports += `import { CIVILLIAN_DIALOGUE } from '../../constants/dialogue';\n`;
+            }
+            if (filePath === 'data/pois/fouthia.ts') {
+                finalImports += `import { CIVILLIAN_DIALOGUE, BANKER_ZAHRA_DIALOGUE, BARKEEP_ZALE_DIALOGUE, KHALID_DIALOGUE, ZAFIRA_DIALOGUE, CAPTAIN_OMAR_DIALOGUE } from '../../constants/dialogue';\n`;
+            }
+
+            let fileContent = finalImports + `\nexport const ${variableName}: Record<string, POI> = {\n`;
+
+            const sortedIds = Object.keys(updatedFileObject).sort();
+            
+            sortedIds.forEach((poiId, index) => {
+                const poiData = updatedFileObject[poiId];
+                const formattedPoi = formatObjectToCodeString(poiData);
+                fileContent += `    ${poiId}: ${formattedPoi}${index < sortedIds.length - 1 ? ',' : ''}\n`;
+            });
+
+            fileContent += '};';
+            
+            newCodeBlocks.push({ filePath, content: fileContent });
+        });
+
+        // --- REGION CHANGES ---
+        if (modifiedRegions.size > 0) {
+            const updatedRegions = { ...REGIONS };
+            modifiedRegions.forEach(regionId => {
+                const newCoords = latestRegionCoordsRef.current[regionId];
+                if (updatedRegions[regionId]) {
+                    updatedRegions[regionId] = { ...updatedRegions[regionId], x: newCoords.x, y: newCoords.y };
+                }
+            });
+            let fileContent = `import { Region } from '../types';\n\nexport const REGIONS: Record<string, Region> = {\n`;
+            const sortedRegionIds = Object.keys(updatedRegions).sort();
+            sortedRegionIds.forEach((regionId, index) => {
+                const regionData = updatedRegions[regionId];
+                fileContent += `    ${regionId}: ${JSON.stringify(regionData, null, 4).replace(/"([^"]+)":/g, '$1:')}${index < sortedRegionIds.length - 1 ? ',' : ''}\n`;
+            });
+            fileContent += '};';
+            newCodeBlocks.push({ filePath: `data/regions.ts`, content: fileContent });
+        }
+
+        // --- MONSTER CHANGES ---
+        if (modifiedMonsters.size > 0) {
+            const filesToUpdate = new Map<string, { updatedArray: Monster[], isModified: boolean }>();
+            Object.entries(allMonsterFileObjects).forEach(([path, arr]) => {
+                filesToUpdate.set(path, { updatedArray: JSON.parse(JSON.stringify(arr)), isModified: false });
+            });
+
+            modifiedMonsters.forEach(monsterId => {
+                const updatedMonsterData = latestMonsterDataRef.current[monsterId];
+                const filePath = monsterFileMap[monsterId];
+
+                if (filePath) { // Existing monster
+                    const fileData = filesToUpdate.get(filePath);
+                    if (fileData) {
+                        const index = fileData.updatedArray.findIndex(m => m.id === monsterId);
+                        if (index > -1) {
+                            fileData.updatedArray[index] = updatedMonsterData;
+                            fileData.isModified = true;
+                        }
+                    }
+                } else { // New monster
+                    let suggestedPath = 'constants/monsters/beasts.ts';
+                    const type = updatedMonsterData.types[0];
+                    if (type === MonsterType.Humanoid) suggestedPath = 'constants/monsters/humanoids.ts';
+                    else if (type === MonsterType.Dragon) suggestedPath = 'constants/monsters/dragons.ts';
+                    else if (type === MonsterType.Undead || type === MonsterType.Elemental) suggestedPath = 'constants/monsters/magicalAndUndead.ts';
+                    else if (type === MonsterType.Armored) suggestedPath = 'constants/monsters/armored.ts';
+                    else if (type === MonsterType.Vampire) suggestedPath = 'constants/monsters/vampire.ts';
+                    else if (type === MonsterType.Demon) suggestedPath = 'constants/monsters/demon.ts';
+                    
+                    const fileData = filesToUpdate.get(suggestedPath);
+                    if (fileData) {
+                        fileData.updatedArray.push(updatedMonsterData);
+                        fileData.isModified = true;
+                    }
+                }
+            });
+
+            filesToUpdate.forEach((fileData, filePath) => {
+                if (fileData.isModified) {
+                    fileData.updatedArray.sort((a, b) => a.name.localeCompare(b.name));
+                    const variableName = filePath.split('/').pop()!.replace('.ts', '');
+                    const imports = `import { Monster, MonsterType, SkillName, SpellElement } from '@/types';\n\n`;
+                    let fileContent = imports + `export const ${variableName}: Monster[] = [\n`;
+                    const formattedMonsters = fileData.updatedArray.map(monster => {
+                        const cleanMonster = JSON.parse(JSON.stringify(monster, (key, value) => (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) ? undefined : value));
+                        return '    ' + formatObjectToCodeString(cleanMonster);
+                    }).join(',\n');
+                    fileContent += formattedMonsters + '\n];';
+                    newCodeBlocks.push({ filePath, content: fileContent });
+                }
+            });
+        }
     
         if (newCodeBlocks.length > 0) {
             ui.setExportData({
                 data: newCodeBlocks,
-                title: "Commit Monster Changes",
-                copyButtonText: "Copy to Clipboard",
+                title: "Commit Map & Monster Changes",
+                copyButtonText: 'Copy All',
                 onCopy: () => {
+                    const allContent = newCodeBlocks.map(block => `--- START OF FILE ${block.filePath} ---\n\n${block.content}\n\n--- END OF FILE ${block.filePath} ---`).join('\n\n');
+                    navigator.clipboard.writeText(allContent);
+                },
+                onClose: () => {
+                    setModifiedPois(new Set());
+                    setModifiedRegions(new Set());
                     setModifiedMonsters(new Set());
                     addLog("Changes have been cleared from this session.");
+                    ui.closeExportModal();
                 }
             });
         } else {
-            addLog("No monster changes to commit.");
+            addLog("No changes to commit.");
         }
-
-    }, [modifiedPois, modifiedRegions, modifiedMonsters, addLog, ui]);
+    }, [modifiedPois, modifiedRegions, modifiedMonsters, addLog, ui, latestPoiCoordsRef, latestRegionCoordsRef, latestPoiConnectionsRef, latestMonsterDataRef]);
 
     return {
         isDevMode,
@@ -241,6 +471,7 @@ export const useDevMode = (deps: DevModeDependencies) => {
         combatSpeedMultiplier, setCombatSpeedMultiplier,
         isPlayerInvisible, setIsPlayerInvisible,
         isAutoBankOn, setIsAutoBankOn,
+        isGodModeOn, setIsGodModeOn,
         // Session state
         isInstantRespawnOn, setIsInstantRespawnOn,
         instantRespawnCounter, setInstantRespawnCounter,

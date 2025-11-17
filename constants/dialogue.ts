@@ -1,3 +1,6 @@
+
+import { DialogueNode } from '../types';
+
 export const CIVILLIAN_DIALOGUE: Record<string, string[]> = {
     general: [
         "Heard the goblins in the mines are getting bolder. Nasty little creatures.",
@@ -17,7 +20,7 @@ export const CIVILLIAN_DIALOGUE: Record<string, string[]> = {
         "Some say a witch lives deep in the Murkwallow Swamp. I wouldn't go looking for her.",
         "The Serpent's Coil... a maze of mangroves and monsters. Only the foolish or the brave go there.",
         "The Isle of Whispers... it's a place of ghosts and forgotten gods. Not many who sail there come back.",
-        "They say the salt flats to the west were once a great sea. Now it's just... salt. And strange creatures.",
+        "The salt flats to the west were once a great sea. Now it's just... salt. And strange creatures.",
         "Looking for adventure? You've come to the right place. Just try not to get killed.",
         "Don't forget to check your map if you get lost! It can save your skin.",
         "Always carry a tinderbox. You never know when you'll need a warm fire.",
@@ -131,5 +134,31 @@ export const CIVILLIAN_DIALOGUE: Record<string, string[]> = {
         "Don't wander into the sewers. They say something... ancient... lives down there.",
         "The view from the top of the Slayer's Spire is breathtaking.",
         "Silverhaven is a city of opportunity, but also of great danger. Tread carefully.",
+    ],
+    fouthia: [
+        "Welcome to Fouthia. Keep an eye on your coin purse and an eye on your waterskin.",
+        "The Sand Serpent Inn is the only place to get a drink that isn't half sand.",
+        "Don't wander out into the Salt Flats at night. The things that crawl out there... they're not natural.",
+        "The town guard does their best, but they're outnumbered by the bandits in the surrounding wastes.",
+        "Water is more valuable than gold out here. Don't waste a drop.",
+        "That alchemist, Zafira, can brew a potion for just about anything. Heatstroke, scorpion venom... you name it.",
+        "The bazaar is the heart of this town. You can find anything there, if you've got the coin.",
+        "I heard whispers of a great 'Sunken City' far to the west, but who'd be mad enough to look for it?",
+        "The Scorched Peaks to the north are said to be home to fire drakes and other nasty creatures.",
+        "If you're looking for trouble, you'll find it in the back alleys. Or it'll find you.",
+        "This town was built on an old oasis. The well in the square is the only reason we're still here.",
+        "The armorer, Khalid, knows how to make gear that won't cook you alive in your own armor.",
+    ],
+    sanctity: [
+        "The light protects us here in Sanctity.",
+        "Did you come from the swamps? You have my sympathies. It is a foul place.",
+        "Our artisans in the south are brilliant. They say their forges are blessed.",
+        "The chapel is beautiful at dawn. A true sight to behold.",
+        "I feel safe within these walls. The guards are vigilant, and our faith is strong.",
+        "The Pilgrim's Rest doesn't serve ale, but their milk is the freshest you'll ever taste.",
+        "Have you seen the library? So many holy texts to study.",
+        "We are a town of piety and progress. The two are not mutually exclusive.",
+        "Be wary of the eastern fields. There's an old fear that lingers there.",
+        "The slums are a necessary evil, a place for those still finding their faith. We pray for them daily."
     ],
 };

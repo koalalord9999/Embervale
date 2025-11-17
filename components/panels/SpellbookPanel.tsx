@@ -58,6 +58,7 @@ const getSpellIconClassName = (spell: Spell): string => {
         if (spell.id.includes('emerald')) return 'item-icon-uncut-emerald';
         if (spell.id.includes('ruby')) return 'item-icon-uncut-ruby';
         if (spell.id.includes('diamond')) return 'item-icon-uncut-diamond';
+        if (spell.id.includes('sunstone')) return 'item-icon-uncut-sunstone';
     }
 
     // Transmutation spells are colored like emeralds
@@ -146,6 +147,27 @@ const SpellDisplay: React.FC<SpellDisplayProps> = ({ spell, magicLevel, inventor
         });
     };
 
+    const teleportOverlay = useMemo(() => {
+        if (spell.type !== 'utility-teleport') return null;
+        let letter = '';
+        if (spell.id === 'meadowdale_teleport') letter = 'M';
+        else if (spell.id === 'oakhaven_teleport') letter = 'O';
+        else if (spell.id === 'silverhaven_teleport') letter = 'S';
+
+        if (letter) {
+            const textColorClass = canCast ? 'text-white' : 'text-black';
+            return (
+                <span 
+                    className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${textColorClass} text-1xl font-bold pointer-events-none`}
+                    style={{ textShadow: '1px 1px 3px gray-500, -1px -1px 3px gray-500, 1px -1px 3px gray-500, -1px 1px 3px gray-500' }}
+                >
+                    {letter}
+                </span>
+            );
+        }
+        return null;
+    }, [spell.id, spell.type, canCast]);
+
     return (
         <button
             onClick={() => { onCastSpell(spell); setTooltip(null); }}
@@ -154,6 +176,7 @@ const SpellDisplay: React.FC<SpellDisplayProps> = ({ spell, magicLevel, inventor
             className={`w-full aspect-square rounded-md transition-colors flex items-center justify-center text-center hover:bg-gray-700/20 relative isolate ${isAutocasting ? 'autocast-orb-highlight' : ''}`}
         >
             <img src={getSpellIconUrl(spell)} alt={spell.name} className={`w-full h-full p-1 ${getSpellIconClassName(spell)}`} style={!canCast ? { filter: 'grayscale(0.8) brightness(0.2) drop-shadow(1px 1px 0 #333) drop-shadow(-1px -1px 0 #333)', opacity: 0.9 } : {}} />
+            {teleportOverlay}
         </button>
     );
 };

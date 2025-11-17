@@ -1,6 +1,8 @@
+
 import React, { useCallback, useEffect, useRef } from 'react';
 import { PlayerSkill, SkillName, InventorySlot, ActiveCraftingAction, Equipment, WorldState } from '../types';
 import { ITEMS, SMITHING_RECIPES, COOKING_RECIPES, INVENTORY_CAPACITY, CRAFTING_RECIPES, FLETCHING_RECIPES, GEM_CUTTING_RECIPES, SPINNING_RECIPES, HERBLORE_RECIPES, JEWELRY_CRAFTING_RECIPES, DOUGH_RECIPES, RUNECRAFTING_RECIPES, FIREMAKING_RECIPES } from '../constants';
+import { POIS } from '../data/pois';
 
 interface UseCraftingProps {
     skills: (PlayerSkill & { currentLevel: number; })[];
@@ -9,10 +11,11 @@ interface UseCraftingProps {
     activeCraftingAction: ActiveCraftingAction | null;
     setActiveCraftingAction: (action: ActiveCraftingAction | null) => void;
     inventory: (InventorySlot | null)[];
-    modifyItem: (itemId: string, quantity: number, quiet?: boolean, doses?: number, options?: { noted?: boolean, bypassAutoBank?: boolean }) => void;
+    modifyItem: (itemId: string, quantity: number, quiet?: boolean, slotOverrides?: Partial<Omit<InventorySlot, 'itemId' | 'quantity'>> & { bypassAutoBank?: boolean }) => void;
     addXp: (skill: SkillName, amount: number) => void;
     checkQuestProgressOnSpin: (itemId: string, quantity: number) => void;
     checkQuestProgressOnSmith: (itemId: string, quantity: number) => void;
+    checkQuestProgressOnOffer: (itemId: string, quantity: number) => void;
     advanceTutorial: (condition: string) => void;
     closeCraftingView: () => void;
     setWindmillFlour: React.Dispatch<React.SetStateAction<number>>;
@@ -23,308 +26,14 @@ interface UseCraftingProps {
     onCreateBonfire: (logId: string) => void;
     onRefreshBonfire: (bonfireId: string, logId: string) => void;
     isInCombat: boolean;
+    currentPrayer: number;
+    setCurrentPrayer: (updater: React.SetStateAction<number>) => void;
 }
 
+type BarType = 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'silver_bar' | 'gold_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar';
+
 export const useCrafting = (props: UseCraftingProps) => {
-    const { skills, hasItems, addLog, setActiveCraftingAction, inventory, modifyItem, addXp, checkQuestProgressOnSpin, checkQuestProgressOnSmith, activeCraftingAction, advanceTutorial, closeCraftingView, setWindmillFlour, equipment, setEquipment, worldState, setWorldState, onCreateBonfire, onRefreshBonfire, isInCombat } = props;
-
-    const handleSpinning = useCallback((recipeId: string, quantity: number = 1) => {
-        if (isInCombat) { addLog("You cannot do that while in combat."); return; }
-        const recipe = SPINNING_RECIPES.find(r => r.itemId === recipeId);
-        if (!recipe) { addLog("You don't know how to spin that."); return; }
-        const craftingLevel = skills.find(s => s.name === SkillName.Crafting)?.currentLevel ?? 1;
-        if (recipe.level && craftingLevel < recipe.level) { addLog(`You need a Crafting level of ${recipe.level} to make this.`); return; }
-        if (!hasItems(recipe.ingredients)) { addLog(`You don't have the required ingredients.`); return; }
-
-        setActiveCraftingAction({
-            recipeId,
-            recipeType: 'spinning',
-            totalQuantity: quantity,
-            completedQuantity: 0,
-            successfulQuantity: 0,
-            startTime: Date.now(),
-            duration: 1200,
-        });
-    }, [skills, hasItems, addLog, setActiveCraftingAction, isInCombat]);
-
-    const handleStokeBonfire = useCallback((logId: string, bonfireId: string) => {
-        if (isInCombat) { addLog("You cannot do that while in combat."); return; }
-        const recipe = FIREMAKING_RECIPES.find(r => r.logId === logId);
-        if (!recipe) { addLog("You can't burn that."); return; }
-        const firemakingLevel = skills.find(s => s.name === SkillName.Firemaking)?.currentLevel ?? 1;
-        if (firemakingLevel < recipe.level) { addLog(`You need a Firemaking level of ${recipe.level} to stoke with these logs.`); return; }
-        
-        const logCount = inventory.reduce((acc, slot) => slot?.itemId === logId ? acc + slot.quantity : acc, 0);
-        if (logCount === 0) { addLog("You don't have any of those logs."); return; }
-        
-        setActiveCraftingAction({
-            recipeId: logId,
-            recipeType: 'firemaking-stoke',
-            totalQuantity: logCount,
-            completedQuantity: 0,
-            successfulQuantity: 0,
-            startTime: Date.now(),
-            duration: 4200, // 7 ticks
-            payload: { bonfireId }
-        });
-
-    }, [skills, inventory, addLog, setActiveCraftingAction, isInCombat]);
-
-    const handleCrafting = useCallback((recipeId: string, quantity: number = 1) => {
-        if (isInCombat) { addLog("You cannot do that while in combat."); return; }
-        const leatherRecipe = CRAFTING_RECIPES.find(r => r.itemId === recipeId);
-        const jewelryRecipe = JEWELRY_CRAFTING_RECIPES.find(r => r.itemId === recipeId);
-        const doughRecipe = DOUGH_RECIPES.find(r => r.itemId === recipeId);
-
-        if (doughRecipe) {
-            const recipe = doughRecipe;
-            const cookingLevel = skills.find(s => s.name === SkillName.Cooking)?.currentLevel ?? 1;
-            if (recipe.level && cookingLevel < recipe.level) { addLog(`You need a Cooking level of ${recipe.level} to make this.`); return; }
-            if (!hasItems(recipe.ingredients)) { addLog(`You don't have the required ingredients.`); return; }
-    
-            setActiveCraftingAction({
-                recipeId,
-                recipeType: 'dough-making',
-                totalQuantity: quantity,
-                completedQuantity: 0,
-                successfulQuantity: 0,
-                startTime: Date.now(),
-                duration: 200, // Very short duration
-            });
-        } else if (leatherRecipe) {
-            const recipe = leatherRecipe;
-            const craftingLevel = skills.find(s => s.name === SkillName.Crafting)?.currentLevel ?? 1;
-            if (recipe.level && craftingLevel < recipe.level) { addLog(`You need a Crafting level of ${recipe.level} to make this.`); return; }
-
-            if (recipe.requiredSkills) {
-                for (const req of recipe.requiredSkills) {
-                    const playerSkill = skills.find(s => s.name === req.skill);
-                    if (!playerSkill || playerSkill.currentLevel < req.level) {
-                        addLog(`You need a ${req.skill} level of ${req.level} to make this.`);
-                        return;
-                    }
-                }
-            }
-            if (!hasItems(recipe.ingredients)) { addLog(`You don't have the required ingredients.`); return; }
-
-            setActiveCraftingAction({
-                recipeId,
-                recipeType: 'crafting',
-                totalQuantity: quantity,
-                completedQuantity: 0,
-                successfulQuantity: 0,
-                startTime: Date.now(),
-                duration: 1800,
-            });
-        } else if (jewelryRecipe) {
-            const recipe = jewelryRecipe;
-            const craftingLevel = skills.find(s => s.name === SkillName.Crafting)?.currentLevel ?? 1;
-            if (craftingLevel < recipe.level) { addLog(`You need a Crafting level of ${recipe.level} to make this.`); return; }
-            
-            const requiredItems = [{ itemId: recipe.barType, quantity: recipe.barsRequired }, { itemId: recipe.mouldId, quantity: 1 }];
-            if (!hasItems(requiredItems)) { addLog(`You don't have the required ingredients.`); return; }
-
-            setActiveCraftingAction({
-                recipeId,
-                recipeType: 'jewelry',
-                totalQuantity: quantity,
-                completedQuantity: 0,
-                successfulQuantity: 0,
-                startTime: Date.now(),
-                duration: 1800,
-            });
-        } else {
-            addLog("You don't know how to craft that.");
-        }
-    }, [skills, hasItems, addLog, setActiveCraftingAction, isInCombat]);
-
-    const handleGemCutting = useCallback((cutId: string, quantity: number = 1) => {
-        if (isInCombat) { addLog("You cannot do that while in combat."); return; }
-        const recipe = GEM_CUTTING_RECIPES.find(r => r.cutId === cutId);
-        if (!recipe) { addLog("You don't know how to cut that gem."); return; }
-        const craftingLevel = skills.find(s => s.name === SkillName.Crafting)?.currentLevel ?? 1;
-        if (craftingLevel < recipe.level) { addLog(`You need a Crafting level of ${recipe.level} to do this.`); return; }
-        if (!inventory.some(i => i && i.itemId === 'chisel')) { addLog("You need a chisel to cut gems."); return; }
-        if (!hasItems([{ itemId: recipe.uncutId, quantity: 1}])) { addLog("You don't have any uncut gems of that type."); return; }
-        
-        setActiveCraftingAction({
-            recipeId: cutId,
-            recipeType: 'gem-cutting',
-            totalQuantity: quantity,
-            completedQuantity: 0,
-            successfulQuantity: 0,
-            startTime: Date.now(),
-            duration: 1200,
-            payload: { uncutId: recipe.uncutId }
-        });
-    }, [skills, inventory, hasItems, addLog, setActiveCraftingAction, isInCombat]);
-
-    const handleCooking = useCallback((recipeId: string, quantity: number = 1) => {
-        if (isInCombat) { addLog("You cannot do that while in combat."); return; }
-        const recipe = COOKING_RECIPES.find(r => r.itemId === recipeId);
-        if (!recipe) { addLog("You don't know how to cook that."); return; }
-        const cookingLevel = skills.find(s => s.name === SkillName.Cooking)?.currentLevel ?? 1;
-        if (cookingLevel < recipe.level) { addLog(`You need a Cooking level of ${recipe.level} to cook this.`); return; }
-        if (!hasItems(recipe.ingredients)) { addLog(`You don't have the ingredients.`); return; }
-        
-        setActiveCraftingAction({
-            recipeId,
-            recipeType: 'cooking',
-            totalQuantity: quantity,
-            completedQuantity: 0,
-            successfulQuantity: 0,
-            startTime: Date.now(),
-            duration: 1200,
-        });
-
-    }, [skills, hasItems, addLog, setActiveCraftingAction, isInCombat]);
-
-    // FIX: Add 'gold_bar' to the union type for barType to allow smelting gold bars.
-    const handleSmelting = useCallback((barType: 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'silver_bar' | 'gold_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar', quantity: number = 1) => {
-        if (isInCombat) { addLog("You cannot do that while in combat."); return; }
-        const smithingLevel = skills.find(s => s.name === SkillName.Smithing)?.currentLevel ?? 1;
-        let requirements: { itemId: string; quantity: number; }[] = [];
-        let levelReq = 1;
-
-        switch(barType) {
-            case 'bronze_bar': requirements = [{itemId: 'copper_ore', quantity: 1}, {itemId: 'tin_ore', quantity: 1}]; levelReq = 1; break;
-            case 'iron_bar': requirements = [{itemId: 'iron_ore', quantity: 1}]; levelReq = 15; break;
-            case 'silver_bar': requirements = [{itemId: 'silver_ore', quantity: 1}]; levelReq = 20; break;
-            case 'steel_bar': requirements = [{itemId: 'iron_ore', quantity: 1}, {itemId: 'coal', quantity: 2}]; levelReq = 30; break;
-            case 'gold_bar': requirements = [{itemId: 'gold_ore', quantity: 1}]; levelReq = 40; break;
-            case 'mithril_bar': requirements = [{itemId: 'mithril_ore', quantity: 1}, {itemId: 'coal', quantity: 4}]; levelReq = 50; break;
-            case 'adamantite_bar': requirements = [{itemId: 'adamantite_ore', quantity: 1}, {itemId: 'coal', quantity: 6}]; levelReq = 65; break;
-            case 'runic_bar': requirements = [{itemId: 'titanium_ore', quantity: 1}, {itemId: 'coal', quantity: 8}]; levelReq = 80; break;
-            default: addLog("You don't know how to smelt that."); return;
-        }
-        
-        if (smithingLevel < levelReq) { addLog(`You need a Smithing level of ${levelReq} to smelt this.`); return; }
-        if (!hasItems(requirements)) { addLog("You don't have the required ores."); return; }
-
-        setActiveCraftingAction({
-            recipeId: barType,
-            recipeType: 'smithing-bar',
-            totalQuantity: quantity,
-            completedQuantity: 0,
-            successfulQuantity: 0,
-            startTime: Date.now(),
-            duration: 1200,
-            payload: { barType }
-        });
-    }, [skills, hasItems, addLog, setActiveCraftingAction, isInCombat]);
-    
-    const handleSmithItem = useCallback((itemId: string, quantity: number = 1) => {
-        if (isInCombat) { addLog("You cannot do that while in combat."); return; }
-        const recipe = SMITHING_RECIPES.find(r => r.itemId === itemId);
-        if (!recipe) { addLog("You don't know how to smith that item."); return; }
-        if (!inventory.some(i => i && i.itemId === 'hammer')) {
-            addLog("You need a hammer to smith items at an anvil.");
-            return;
-        }
-        const smithingLevel = skills.find(s => s.name === SkillName.Smithing)?.currentLevel ?? 1;
-        if (recipe.level && smithingLevel < recipe.level) { addLog(`You need a Smithing level of ${recipe.level} to make this.`); return; }
-        const requirements = [{itemId: recipe.barType, quantity: recipe.barsRequired}];
-        if (!hasItems(requirements)) { addLog(`You don't have enough bars.`); return; }
-
-        setActiveCraftingAction({
-            recipeId: itemId,
-            recipeType: 'smithing-item',
-            totalQuantity: quantity,
-            completedQuantity: 0,
-            successfulQuantity: 0,
-            startTime: Date.now(),
-            duration: 1800,
-        });
-    }, [skills, hasItems, addLog, setActiveCraftingAction, inventory, isInCombat]);
-
-    const handleFletching = useCallback((action: { type: 'carve'; payload: any }, quantity: number) => {
-        if (isInCombat) { addLog("You cannot do that while in combat."); return; }
-        const fletchingLevel = skills.find(s => s.name === SkillName.Fletching)?.currentLevel ?? 1;
-        
-        if (action.type === 'carve') {
-            const { logId, outputItemId } = action.payload;
-            const recipe = FLETCHING_RECIPES.carving[logId]?.find(r => r.itemId === outputItemId);
-            if (!recipe) { addLog("You can't make that."); return; }
-            if (recipe.level && fletchingLevel < recipe.level) { addLog(`You need a Fletching level of ${recipe.level}.`); return; }
-            if (!hasItems([{ itemId: logId, quantity: 1 }])) { addLog("You don't have the required logs."); return; }
-            
-            let duration = 1800;
-            if (recipe.itemId === 'arrow_shaft') duration = 600;
-
-            setActiveCraftingAction({
-                recipeId: outputItemId,
-                recipeType: 'fletching-carve',
-                totalQuantity: quantity,
-                completedQuantity: 0,
-                successfulQuantity: 0,
-                startTime: Date.now(),
-                duration,
-                payload: { logId }
-            });
-        }
-    }, [skills, hasItems, addLog, setActiveCraftingAction, isInCombat]);
-    
-    const handleInstantRunecrafting = useCallback((runeId: string) => {
-        if (isInCombat) { addLog("You cannot do that while in combat."); return; }
-        const recipe = RUNECRAFTING_RECIPES.find(r => r.runeId === runeId);
-        if (!recipe) {
-            addLog("You don't know how to craft that rune.");
-            return;
-        }
-    
-        const runecraftingSkill = skills.find(s => s.name === SkillName.Runecrafting);
-        const runecraftingLevel = runecraftingSkill?.currentLevel ?? 1;
-        if (runecraftingLevel < recipe.level) {
-            addLog(`You need a Runecrafting level of ${recipe.level} to craft this.`);
-            return;
-        }
-    
-        const tiara = equipment.head ? ITEMS[equipment.head.itemId] : null;
-        const hasTalismanOrTiara = inventory.some(i => i?.itemId === recipe.talismanId) || (tiara?.equipment?.runeType === recipe.runeId);
-        if (!hasTalismanOrTiara) {
-            addLog(`You need a ${ITEMS[recipe.talismanId].name} or a corresponding tiara to craft these runes.`);
-            return;
-        }
-    
-        const essenceCount = inventory.reduce((acc, slot) => (slot?.itemId === 'rune_essence' ? acc + slot.quantity : acc), 0);
-        if (essenceCount < 1) {
-            addLog("You have no rune essence to bind.");
-            return;
-        }
-    
-        // Calculation logic
-        const levelDifference = runecraftingLevel - recipe.level;
-        const bonusTiers = Math.floor(levelDifference / 8);
-        const cappedBonusTiers = Math.min(6, bonusTiers);
-        const runesPerEssence = 1 + cappedBonusTiers;
-        const xpBonusPercentage = cappedBonusTiers * 0.20;
-        
-        const boostedXpPerEssence = recipe.xp * (1 + xpBonusPercentage);
-        let totalRunesMade = essenceCount * runesPerEssence;
-        const totalXpGained = Math.floor(essenceCount * boostedXpPerEssence);
-
-        // New Binding necklace logic
-        const necklace = equipment.necklace;
-        if (necklace?.itemId === 'necklace_of_binding' && (necklace.charges ?? 0) > 0) {
-            totalRunesMade += essenceCount; // Add one extra rune per essence
-            const newCharges = (necklace.charges ?? 1) - 1;
-
-            if (newCharges > 0) {
-                setEquipment(prev => ({ ...prev, necklace: { ...necklace, charges: newCharges } }));
-            } else {
-                addLog("Your Necklace of Binding has run out of charges and crumbles into dust.");
-                setEquipment(prev => ({ ...prev, necklace: null }));
-            }
-        }
-        
-        // Modify inventory and XP
-        modifyItem('rune_essence', -essenceCount, true);
-        modifyItem(recipe.runeId, totalRunesMade, true, undefined, { bypassAutoBank: true });
-        addXp(SkillName.Runecrafting, totalXpGained);
-    
-        addLog(`You bind the essence into ${totalRunesMade} ${ITEMS[recipe.runeId].name}s.`);
-    
-    }, [skills, equipment, inventory, addLog, modifyItem, addXp, setEquipment, isInCombat]);
+    const { skills, hasItems, addLog, setActiveCraftingAction, inventory, modifyItem, addXp, checkQuestProgressOnSpin, checkQuestProgressOnSmith, checkQuestProgressOnOffer, activeCraftingAction, advanceTutorial, closeCraftingView, setWindmillFlour, equipment, setEquipment, worldState, setWorldState, onCreateBonfire, onRefreshBonfire, isInCombat, currentPrayer, setCurrentPrayer } = props;
 
     const completeCraftingItem = useCallback((action: ActiveCraftingAction): { success: boolean; wasItemMade: boolean; logMessage?: string } => {
         let recipe: any;
@@ -333,6 +42,12 @@ export const useCrafting = (props: UseCraftingProps) => {
         let xp = { skill: SkillName.Crafting, amount: 0 };
         let levelReq = { skill: SkillName.Crafting, level: 1 };
         const ring = equipment.ring;
+
+        const getItemCount = (itemId: string): number => {
+            return inventory.reduce((total, slot) => {
+                return slot && slot.itemId === itemId ? total + slot.quantity : total;
+            }, 0);
+        };
 
         // Special handling for Iron Bar smelting with 50% success rate
         if (action.recipeType === 'smithing-bar' && action.payload?.barType === 'iron_bar') {
@@ -344,7 +59,7 @@ export const useCrafting = (props: UseCraftingProps) => {
             modifyItem('iron_ore', -1, true);
     
             if (Math.random() < 0.5) { // 50% success chance
-                modifyItem('iron_bar', 1, true, undefined, { bypassAutoBank: true });
+                modifyItem('iron_bar', 1, true, { bypassAutoBank: true });
                 addXp(SkillName.Smithing, 12.5); // Full XP on success
                 checkQuestProgressOnSmith('iron_bar', 1);
                 return { success: true, wasItemMade: true };
@@ -355,6 +70,84 @@ export const useCrafting = (props: UseCraftingProps) => {
         }
 
         switch(action.recipeType) {
+            case 'paste-making': {
+                if (!hasItems([{ itemId: 'anointing_oil', quantity: 1 }, { itemId: 'sacred_dust', quantity: 1 }])) {
+                    return { success: false, wasItemMade: false, logMessage: "You ran out of ingredients." };
+                }
+                const dustCount = getItemCount('sacred_dust');
+                const dustToUse = Math.min(5, dustCount);
+            
+                modifyItem('anointing_oil', -1, true);
+                modifyItem('sacred_dust', -dustToUse, true);
+                modifyItem('holy_paste', dustToUse, false, { bypassAutoBank: true });
+            
+                return { success: true, wasItemMade: true };
+            }
+            case 'offering': {
+                if (!hasItems([{ itemId: 'holy_paste', quantity: 1 }])) {
+                    return { success: false, wasItemMade: false, logMessage: "You ran out of holy paste." };
+                }
+                if (!hasItems([{ itemId: 'tinderbox', quantity: 1 }])) {
+                    return { success: false, wasItemMade: false, logMessage: "You need a tinderbox to light the offering." };
+                }
+
+                const pasteCount = getItemCount('holy_paste');
+                const totalItems = action.payload?.totalItems ?? (action.totalQuantity * 5); // Fallback if totalItems isn't passed
+                const itemsAlreadyProcessed = action.completedQuantity * 5; // Assumes each previous batch was a full 5
+                const itemsLeftToProcess = totalItems - itemsAlreadyProcessed;
+
+                const pasteToUse = Math.min(5, pasteCount, itemsLeftToProcess);
+
+                if (pasteToUse <= 0) {
+                    return { success: false, wasItemMade: false, logMessage: "You ran out of holy paste." };
+                }
+            
+                modifyItem('holy_paste', -pasteToUse, true);
+                addXp(SkillName.Prayer, pasteToUse * 3);
+                checkQuestProgressOnOffer('holy_paste', pasteToUse);
+                
+                return { success: true, wasItemMade: true };
+            }
+            case 'consecration': {
+                const prayerCost = action.payload?.prayerCost;
+                if (prayerCost === undefined) {
+                    return { success: false, wasItemMade: false, logMessage: "Error: Prayer cost not defined for consecration." };
+                }
+                // The check for total prayer points happens in useItemActions before the loop starts.
+                // We re-check here on each iteration in case of other drains.
+                if (currentPrayer < prayerCost) {
+                    return { success: false, wasItemMade: false, logMessage: "You don't have enough prayer points to continue." };
+                }
+                
+                setCurrentPrayer(prev => prev - prayerCost);
+
+                const boneItem = ITEMS[action.recipeId];
+                const consecratedId = `consecrated_${action.recipeId}`;
+                if (!boneItem?.buryable || !ITEMS[consecratedId]) {
+                    return { success: false, wasItemMade: false, logMessage: "Cannot consecrate this item." };
+                }
+                modifyItem(action.recipeId, -1, true);
+                modifyItem(consecratedId, 1, false, { bypassAutoBank: true });
+                addXp(SkillName.Prayer, boneItem.buryable.prayerXp / 2);
+                return { success: true, wasItemMade: true };
+            }
+            case 'grinding': {
+                const consecratedBoneId = action.recipeId;
+                let dustAmount = 0;
+                let xpAmount = 0;
+                if (consecratedBoneId === 'consecrated_bones') { dustAmount = 5; xpAmount = 5; }
+                else if (consecratedBoneId === 'consecrated_big_bones') { dustAmount = 20; xpAmount = 20; }
+                else if (consecratedBoneId === 'consecrated_dragon_bones') { dustAmount = 100; xpAmount = 100; }
+
+                if (dustAmount === 0) {
+                    return { success: false, wasItemMade: false, logMessage: "Cannot grind this item." };
+                }
+
+                modifyItem(consecratedBoneId, -1, true);
+                modifyItem('sacred_dust', dustAmount, false, { bypassAutoBank: true });
+                addXp(SkillName.Prayer, xpAmount);
+                return { success: true, wasItemMade: true };
+            }
             case 'milling': {
                 if (!hasItems([{ itemId: 'wheat', quantity: 1 }])) {
                     return { success: false, wasItemMade: false, logMessage: "You ran out of wheat." };
@@ -363,14 +156,6 @@ export const useCrafting = (props: UseCraftingProps) => {
                 setWindmillFlour(f => f + 1);
                 return { success: true, wasItemMade: true };
             }
-            case 'dough-making':
-                recipe = DOUGH_RECIPES.find(r => r.itemId === action.recipeId);
-                if (recipe) {
-                    ingredients = recipe.ingredients;
-                    xp = { skill: SkillName.Cooking, amount: recipe.xp };
-                    levelReq = { skill: SkillName.Cooking, level: recipe.level };
-                }
-                break;
             case 'firemaking-light': {
                 const logId = action.recipeId;
                 const recipe = FIREMAKING_RECIPES.find(r => r.logId === logId);
@@ -408,7 +193,7 @@ export const useCrafting = (props: UseCraftingProps) => {
                 addXp(SkillName.Firemaking, recipe.xp);
 
                 if (Math.random() < 0.25) { // 25% chance for ashes
-                    modifyItem('ashes', 1, false, undefined, { bypassAutoBank: true });
+                    modifyItem('ashes', 1, false, { bypassAutoBank: true });
                 }
                 if (Math.random() < 0.25) { // 25% chance for HP boost
                     const boostAmount = recipe.tier;
@@ -443,7 +228,7 @@ export const useCrafting = (props: UseCraftingProps) => {
                     xp = { skill: SkillName.Smithing, amount: recipe.xp };
                     levelReq = { skill: SkillName.Smithing, level: recipe.level };
                     if (ITEMS[action.recipeId].stackable) {
-                        product.quantity = 15;
+                        product.quantity = 10;
                     }
                 }
                 break;
@@ -454,6 +239,9 @@ export const useCrafting = (props: UseCraftingProps) => {
                         return { success: false, wasItemMade: false, logMessage: "You need the correct mould." };
                     }
                     ingredients = [{itemId: recipe.barType, quantity: recipe.barsRequired}];
+                    if (recipe.gemId) {
+                        ingredients.push({ itemId: recipe.gemId, quantity: 1 });
+                    }
                     xp = { skill: SkillName.Crafting, amount: recipe.xp };
                     levelReq = { skill: SkillName.Crafting, level: recipe.level };
                 }
@@ -467,10 +255,29 @@ export const useCrafting = (props: UseCraftingProps) => {
                     levelReq = { skill: SkillName.Fletching, level: recipe.level };
                 }
                 break;
+            case 'fletching-stock':
+                recipe = FLETCHING_RECIPES.stocks.find(r => r.stockId === action.recipeId);
+                if (recipe) {
+                    ingredients = [{ itemId: recipe.logId, quantity: 1 }];
+                    product.itemId = recipe.stockId;
+                    xp = { skill: SkillName.Fletching, amount: recipe.xp };
+                    levelReq = { skill: SkillName.Fletching, level: recipe.level };
+                }
+                break;
+            case 'fletching-assembly':
+                recipe = FLETCHING_RECIPES.assembly.find(r => r.unstrungId === action.recipeId);
+                if (recipe) {
+                    ingredients = [{ itemId: recipe.limbsId, quantity: 1 }, { itemId: recipe.stockId, quantity: 1 }];
+                    product.itemId = recipe.unstrungId;
+                    xp = { skill: SkillName.Fletching, amount: recipe.xp };
+                    levelReq = { skill: SkillName.Fletching, level: recipe.level };
+                }
+                break;
              case 'fletching-string':
                 recipe = FLETCHING_RECIPES.stringing.find(r => r.strungId === action.recipeId);
                 if (recipe) {
-                    ingredients = [{itemId: 'bow_string', quantity: 1}, {itemId: recipe.unstrungId, quantity: 1}];
+                    const stringType = recipe.unstrungId.includes('crossbow') ? 'crossbow_string' : 'bow_string';
+                    ingredients = [{itemId: stringType, quantity: 1}, {itemId: recipe.unstrungId, quantity: 1}];
                     xp = { skill: SkillName.Fletching, amount: recipe.xp };
                     levelReq = { skill: SkillName.Fletching, level: recipe.level };
                 }
@@ -490,6 +297,16 @@ export const useCrafting = (props: UseCraftingProps) => {
                     xp = { skill: SkillName.Fletching, amount: recipe.xpPer * 15 };
                     levelReq = { skill: SkillName.Fletching, level: recipe.level };
                  }
+                break;
+            case 'fletching-feather':
+                recipe = FLETCHING_RECIPES.feathering.find(r => r.boltsId === action.recipeId);
+                if (recipe) {
+                    ingredients = [{ itemId: 'feathers', quantity: 10 }, { itemId: recipe.unfBoltsId, quantity: 10 }];
+                    product.itemId = recipe.boltsId;
+                    product.quantity = 10;
+                    xp = { skill: SkillName.Fletching, amount: recipe.xpPer };
+                    levelReq = { skill: SkillName.Fletching, level: recipe.level };
+                }
                 break;
             case 'gem-cutting':
                 recipe = GEM_CUTTING_RECIPES.find(r => r.cutId === action.recipeId);
@@ -569,10 +386,10 @@ export const useCrafting = (props: UseCraftingProps) => {
 
                 const successChance = Math.min(0.95, 0.5 + (cookingLevel - recipe.level) * 0.02);
                 if (Math.random() < successChance) {
-                    modifyItem(recipe.itemId, 1, true, undefined, { bypassAutoBank: true });
+                    modifyItem(recipe.itemId, 1, true, { bypassAutoBank: true });
                     addXp(SkillName.Cooking, recipe.xp);
                 } else {
-                    modifyItem(recipe.burntItemId, 1, true, undefined, { bypassAutoBank: true });
+                    modifyItem(recipe.burntItemId, 1, true, { bypassAutoBank: true });
                     addXp(SkillName.Cooking, 5); // Small XP for trying
                 }
                 return { success: true, wasItemMade: true };
@@ -621,21 +438,14 @@ export const useCrafting = (props: UseCraftingProps) => {
         // Account for empty containers being returned
         for (const ing of ingredients) {
             const itemData = ITEMS[ing.itemId];
-            if (itemData?.emptyable) {
-                const isMakingFinishedPotion = action.recipeType === 'herblore-finished';
-                const isUnfinishedPotionIngredient = itemData.id.endsWith('_unf');
-
-                if (!(isMakingFinishedPotion && isUnfinishedPotionIngredient)) {
-                    const emptyItemData = ITEMS[itemData.emptyable.emptyItemId];
-                    if (emptyItemData.stackable) {
-                        // It only takes a new slot if there isn't a stack already
-                        if (!inventory.some(s => s && s.itemId === emptyItemData.id)) {
-                            slotsGained++;
-                        }
-                    } else {
-                        // Not stackable, so each one takes a slot
-                        slotsGained += ing.quantity;
+            if (itemData?.emptyable && !productData.id.includes('potion')) {
+                const emptyItemData = ITEMS[itemData.emptyable.emptyItemId];
+                if (emptyItemData.stackable) {
+                    if (!inventory.some(s => s && s.itemId === emptyItemData.id)) {
+                        slotsGained++;
                     }
+                } else {
+                    slotsGained += ing.quantity;
                 }
             }
         }
@@ -666,19 +476,17 @@ export const useCrafting = (props: UseCraftingProps) => {
                 if (ing.quantity > 0) {
                     const itemData = ITEMS[ing.itemId];
                     modifyItem(ing.itemId, -ing.quantity, true);
-
-                    // Special check for Herblore: don't return an empty vial from an unfinished potion
-                    const isMakingFinishedPotion = action.recipeType === 'herblore-finished';
-                    const isUnfinishedPotionIngredient = itemData.id.endsWith('_unf');
-
-                    if (itemData?.emptyable && !(isMakingFinishedPotion && isUnfinishedPotionIngredient)) {
-                        modifyItem(itemData.emptyable.emptyItemId, ing.quantity, true, undefined, { bypassAutoBank: true });
+        
+                    const productData = ITEMS[action.recipeId];
+                    // Don't return an empty container if the product is a potion.
+                    if (itemData?.emptyable && !productData.id.includes('potion')) {
+                        modifyItem(itemData.emptyable.emptyItemId, ing.quantity, true, { bypassAutoBank: true });
                     }
                 }
             });
         }
         
-        modifyItem(product.itemId, product.quantity, true, productData.initialDoses, { bypassAutoBank: true });
+        modifyItem(product.itemId, product.quantity, true, { doses: productData.initialDoses, charges: productData.charges, bypassAutoBank: true });
 
         if (xp.amount > 0) {
             let totalXp = xp.amount;
@@ -733,7 +541,7 @@ export const useCrafting = (props: UseCraftingProps) => {
         }
 
         return { success: true, wasItemMade: true };
-    }, [hasItems, modifyItem, addXp, inventory, checkQuestProgressOnSpin, checkQuestProgressOnSmith, advanceTutorial, closeCraftingView, setWindmillFlour, equipment, skills, setEquipment, setWorldState, onCreateBonfire, onRefreshBonfire]);
+    }, [hasItems, modifyItem, addXp, inventory, checkQuestProgressOnSpin, checkQuestProgressOnSmith, advanceTutorial, closeCraftingView, setWindmillFlour, equipment, skills, setEquipment, setWorldState, onCreateBonfire, onRefreshBonfire, checkQuestProgressOnOffer, currentPrayer, setCurrentPrayer]);
 
     const completeCraftingItemRef = useRef(completeCraftingItem);
     useEffect(() => {
@@ -782,6 +590,18 @@ export const useCrafting = (props: UseCraftingProps) => {
                     return; // Early return for special case
                 }
 
+                if (activeCraftingAction.recipeType === 'paste-making') {
+                    addLog(`You finish creating the Holy Paste.`);
+                    setActiveCraftingAction(null);
+                    return;
+                }
+
+                if (activeCraftingAction.recipeType === 'offering') {
+                    addLog(`You complete your offerings to the altar.`);
+                    setActiveCraftingAction(null);
+                    return;
+                }
+
                 const finalItem = ITEMS[nextAction.recipeId];
                 const successfulCount = nextAction.successfulQuantity ?? 0;
                 
@@ -790,14 +610,21 @@ export const useCrafting = (props: UseCraftingProps) => {
                         let totalItemsMade = successfulCount;
                         const action = activeCraftingAction;
 
-                        // Check for recipes that produce items in batches of 15
-                        if (
-                            (action.recipeType === 'fletching-carve' && action.recipeId === 'arrow_shaft') ||
-                            action.recipeType === 'fletching-headless' ||
-                            action.recipeType === 'fletching-tip' ||
-                            (action.recipeType === 'smithing-item' && action.recipeId.endsWith('_arrowtips'))
-                        ) {
-                            totalItemsMade *= 15;
+                        // Check for recipes that produce items in batches
+                        const batchRecipes = [
+                            'fletching-carve', 'fletching-headless', 'fletching-tip', 'fletching-feather',
+                            'smithing-item'
+                        ];
+                        
+                        if (batchRecipes.includes(action.recipeType)) {
+                            if (action.recipeId.includes('arrowtips')) totalItemsMade *= 15;
+                            else if (action.recipeId === 'arrow_shaft') {
+                                const carvingRecipe = FLETCHING_RECIPES.carving[action.payload?.logId!]?.find(r => r.itemId === 'arrow_shaft');
+                                totalItemsMade *= carvingRecipe?.quantity ?? 15;
+                            } else if (action.recipeId === 'headless_arrow') totalItemsMade *= 15;
+                            else if (action.recipeType === 'fletching-tip') totalItemsMade *= 15;
+                            else if (action.recipeType === 'fletching-feather') totalItemsMade *= 10;
+                            else if (action.recipeType === 'smithing-item' && action.recipeId.endsWith('_bolts_unf')) totalItemsMade *= 10;
                         }
 
                         const quantityText = (finalItem.doseable && finalItem.initialDoses && finalItem.initialDoses > 1) ? "" : `${totalItemsMade.toLocaleString()}x `;
@@ -819,8 +646,148 @@ export const useCrafting = (props: UseCraftingProps) => {
         return () => clearTimeout(handle);
     }, [activeCraftingAction, addLog, setActiveCraftingAction, closeCraftingView]);
 
+    const createTimedAction = useCallback((
+        recipeId: string,
+        recipeType: ActiveCraftingAction['recipeType'],
+        totalQuantity: number,
+        duration: number,
+        payload?: ActiveCraftingAction['payload']
+    ) => {
+        if (isInCombat) {
+            addLog("You cannot do that while in combat.");
+            return;
+        }
+        setActiveCraftingAction({
+            recipeId,
+            recipeType,
+            totalQuantity,
+            completedQuantity: 0,
+            successfulQuantity: 0,
+            startTime: Date.now(),
+            duration,
+            payload,
+        });
+    }, [isInCombat, addLog, setActiveCraftingAction]);
+
+    const handleCrafting = useCallback((itemId: string, quantity: number) => {
+        createTimedAction(itemId, 'crafting', quantity, 1800);
+    }, [createTimedAction]);
+    
+    const handleJewelryCrafting = useCallback((itemId: string, quantity: number) => {
+        createTimedAction(itemId, 'jewelry', quantity, 1800);
+    }, [createTimedAction]);
+
+    const handleDoughMaking = useCallback((recipeId: string, quantity: number) => {
+        createTimedAction(recipeId, 'dough-making', quantity, 200);
+    }, [createTimedAction]);
+
+    const handleSpinning = useCallback((itemId: string, quantity: number) => {
+        createTimedAction(itemId, 'spinning', quantity, 1200);
+    }, [createTimedAction]);
+
+    const handleCooking = useCallback((recipeId: string, quantity: number = 1) => {
+        createTimedAction(recipeId, 'cooking', quantity, 1200);
+    }, [createTimedAction]);
+
+    const handleSmelting = useCallback((barType: BarType, quantity: number) => {
+        const duration = barType === 'iron_bar' ? 1800 : 1200;
+        createTimedAction(barType, 'smithing-bar', quantity, duration, { barType });
+    }, [createTimedAction]);
+
+    const handleSmithItem = useCallback((itemId: string, quantity: number) => {
+        createTimedAction(itemId, 'smithing-item', quantity, 1800);
+    }, [createTimedAction]);
+
+    const handleGemCutting = useCallback((cutId: string, quantity: number) => {
+        createTimedAction(cutId, 'gem-cutting', quantity, 1200);
+    }, [createTimedAction]);
+
+    const handleStokeBonfire = useCallback((logId: string, bonfireId: string) => {
+        createTimedAction(logId, 'firemaking-stoke', 1, 1800, { bonfireId });
+    }, [createTimedAction]);
+
+    const handleFletching = useCallback((
+        action: { type: 'carve' | 'stock'; payload: any },
+        quantity: number
+    ) => {
+        if (isInCombat) {
+            addLog("You cannot do that while in combat.");
+            return;
+        }
+        const fletchingLevel = skills.find(s => s.name === SkillName.Fletching)?.currentLevel ?? 1;
+
+        if (action.type === 'carve') {
+            const { logId, outputItemId } = action.payload;
+            const recipe = FLETCHING_RECIPES.carving[logId]?.find(r => r.itemId === outputItemId);
+            if (!recipe) { addLog("You can't make that."); return; }
+            if (fletchingLevel < recipe.level) { addLog(`You need a Fletching level of ${recipe.level}.`); return; }
+            if (!hasItems([{ itemId: logId, quantity: 1 }])) { addLog("You don't have the required logs."); return; }
+            
+            let duration = 1800;
+            if (recipe.itemId === 'arrow_shaft') duration = 600;
+
+            createTimedAction(outputItemId, 'fletching-carve', quantity, duration, { logId });
+        } else if (action.type === 'stock') {
+            const { logId, outputItemId } = action.payload;
+            const recipe = FLETCHING_RECIPES.stocks.find(r => r.logId === logId && r.stockId === outputItemId);
+            if (!recipe) { addLog("You can't make that."); return; }
+            if (fletchingLevel < recipe.level) { addLog(`You need a Fletching level of ${recipe.level}.`); return; }
+            if (!hasItems([{ itemId: logId, quantity: 1 }])) { addLog("You don't have the required logs."); return; }
+            
+            createTimedAction(outputItemId, 'fletching-stock', quantity, 1800, { logId });
+        }
+    }, [skills, hasItems, addLog, createTimedAction, isInCombat]);
+    
+    const handleInstantRunecrafting = useCallback((runeId: string) => {
+        if (isInCombat) {
+            addLog("You cannot do that while in combat.");
+            return;
+        }
+
+        const recipe = RUNECRAFTING_RECIPES.find(r => r.runeId === runeId);
+        if (!recipe) {
+            addLog("You can't craft those runes here.");
+            return;
+        }
+
+        const rcLevel = skills.find(s => s.name === SkillName.Runecrafting)?.currentLevel ?? 1;
+        if (rcLevel < recipe.level) {
+            addLog(`You need a Runecrafting level of ${recipe.level} to craft these runes.`);
+            return;
+        }
+        
+        const tiara = Object.values(ITEMS).find(i => i.equipment?.slot === 'Head' && i.equipment.runeType === runeId);
+        const hasTiara = tiara && equipment.head?.itemId === tiara.id;
+        const hasTalisman = hasItems([{ itemId: recipe.talismanId, quantity: 1 }]) || equipment.necklace?.itemId === recipe.talismanId;
+
+        if (!hasTalisman && !hasTiara) {
+            addLog(`You need a ${ITEMS[recipe.talismanId].name} or a corresponding tiara to craft these runes.`);
+            return;
+        }
+
+        const essenceCount = inventory.reduce((total, slot) => slot?.itemId === 'rune_essence' ? total + slot.quantity : total, 0);
+        if (essenceCount === 0) {
+            addLog("You don't have any rune essence.");
+            return;
+        }
+
+        modifyItem('rune_essence', -essenceCount, true);
+        
+        const multiplier = 1 + Math.floor(rcLevel / 11);
+        
+        const runesCrafted = essenceCount * multiplier;
+        const totalXp = essenceCount * recipe.xp;
+
+        modifyItem(recipe.runeId, runesCrafted, false, { bypassAutoBank: true });
+        addXp(SkillName.Runecrafting, totalXp);
+        addLog(`You craft ${runesCrafted} ${ITEMS[recipe.runeId].name}s and gain ${totalXp} XP.`);
+
+    }, [isInCombat, addLog, skills, hasItems, inventory, modifyItem, addXp, equipment]);
+
+
     return {
         handleCrafting,
+        handleJewelryCrafting,
         handleSpinning,
         handleCooking,
         handleSmelting,
@@ -829,5 +796,6 @@ export const useCrafting = (props: UseCraftingProps) => {
         handleGemCutting,
         handleInstantRunecrafting,
         handleStokeBonfire,
+        handleDoughMaking,
     };
 };
