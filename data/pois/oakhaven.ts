@@ -42,7 +42,7 @@ export const oakhavenPois: Record<string, POI> = {
         id: 'oakhaven_square',
         name: 'Oakhaven Square',
         description: 'The center of the crafting town. A serene-looking wishing well sits in the middle of the square. Roads lead to the gates and various districts.',
-        connections: ['oakhaven_north_gate', 'oakhaven_market', 'oakhaven_crafting_district', 'oakhaven_tavern_street', 'oakhaven_bank'],
+        connections: ['oakhaven_north_gate', 'oakhaven_market', 'oakhaven_crafting_district', 'oakhaven_tavern_street', 'oakhaven_bank', 'oakhaven_chapel'],
         activities: [
             { type: 'wishing_well' },
             { type: 'water_source', name: 'Collect Water' },
@@ -64,6 +64,18 @@ export const oakhavenPois: Record<string, POI> = {
                 startNode: 'start',
                 dialogueType: 'random'
             },
+        ],
+        regionId: 'oakhaven',
+        x: 250, y: 160,
+        type: 'internal',
+    },
+
+    oakhaven_chapel: {
+        id: 'oakhaven_chapel',
+        name: 'Oakhaven Chapel',
+        description: 'A modest wooden chapel. The scent of incense hangs in the air.',
+        connections: ['oakhaven_square'],
+        activities: [
             {
                 type: 'npc',
                 name: 'Altar',
@@ -83,7 +95,7 @@ export const oakhavenPois: Record<string, POI> = {
             }
         ],
         regionId: 'oakhaven',
-        x: 250, y: 160,
+        x: 280, y: 100,
         type: 'internal',
     },
 

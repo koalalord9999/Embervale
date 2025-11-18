@@ -58,6 +58,7 @@ export const elemental: Monster[] = [
             { itemId: 'cave_slime_globule', chance: "1/2", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'aqua_rune', chance: "1/10", minQuantity: 1, maxQuantity: 3 },
             { itemId: 'uncut_sapphire', chance: "1/100", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'grimy_spore_spud', chance: "1/8", minQuantity: 1, maxQuantity: 1 }
         ],
         types: [MonsterType.Elemental], attackSpeed: 5, respawnTime: 25000, aggressive: false, attackStyle: 'crush',
         specialAttacks: [{ name: 'Poison Gas', chance: 0.1, effect: 'poison', damage: 3, poisonChance: 0.75 }]

@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { ActiveStatModifier, ActiveBuff, SkillName } from '../../types';
 import { SKILL_ICONS, getSkillColorClass } from '../../constants';
@@ -105,7 +106,14 @@ const BuffBar: React.FC<BuffBarProps> = ({ statModifiers, activeBuffs }) => {
 
         // 2. Process activeBuffs (spells, debuffs, etc.)
         activeBuffs.forEach(buff => {
-            const expiresAt = Date.now() + buff.durationRemaining;
+            let expiresAt = Date.now() + buff.durationRemaining;
+            
+            // Specific logic for Poison
+            // Instead of using durationRemaining (which is infinite), we use the next tick time for the countdown
+            if (buff.type === 'poison') {
+                expiresAt = buff.nextTickTimestamp ?? (Date.now() + 15000);
+            }
+
             switch (buff.type) {
                 case 'stat_boost':
                     if (buff.statBoost) {
@@ -205,11 +213,12 @@ const BuffBar: React.FC<BuffBarProps> = ({ statModifiers, activeBuffs }) => {
                 case 'poison':
                      buffs.push({
                         id: buff.id,
-                        iconUrl: 'https://api.iconify.design/game-icons:poison-gas.svg',
+                        iconUrl: 'https://api.iconify.design/game-icons:boiling-bubbles.svg',
                         value: `${buff.value}`,
                         valueColor: 'text-green-500',
                         expiresAt,
-                        iconClassName: 'opacity-80'
+                        iconClassName: 'opacity-80',
+                        colorClass: 'bg-green-700'
                     });
                     break;
                 case 'dehydration' as any: // Cast as any to handle custom type from Game.tsx

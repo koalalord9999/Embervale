@@ -1,5 +1,6 @@
 
 
+
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Monster, SkillName, PlayerSkill, InventorySlot, Equipment, Item, POIActivity, ActiveBuff, ThievingContainerState, WorldState } from '../types';
 import { ITEMS, rollOnLootTable, LootRollResult, THIEVING_POCKET_TARGETS, THIEVING_CONTAINER_TARGETS, THIEVING_STALL_TARGETS } from '../constants';
@@ -124,20 +125,37 @@ export const useThieving = (
         }
     
         const bestLockpick = inventory.map(s => s ? ITEMS[s.itemId] : null).filter((item): item is Item => !!(item && item.lockpick)).sort((a, b) => (b.lockpick!.power) - (a.lockpick!.power))[0];
-        if (!bestLockpick && !activity.lootTableId.includes('_dusty')) {
+        
+        // Only check for lockpick if the container is NOT unlocked and NOT a "dusty" tier (level <= 12)
+        // The 'unlocked' flag is used for things like Coin Purses.
+        if (!containerData.unlocked && !bestLockpick && !activity.lootTableId.includes('_dusty')) {
             addLog("You need a lockpick to attempt this.");
             return;
         }
     
-        addLog(`You attempt to pick the lock...`);
+        if (containerData.unlocked) {
+            addLog(`You open the ${activity.targetName}...`);
+        } else {
+            addLog(`You attempt to pick the lock...`);
+        }
     
         activeTimeoutRef.current = window.setTimeout(() => {
             const { skills: currentSkills, addXp, addLog: log, modifyItem, setPlayerHp, currentHp, onPlayerDeath, startCombat, worldState, setWorldState, equipment } = depsRef.current;
-            const lockpickPower = bestLockpick?.lockpick?.power ?? 0;
-            const successChance = Math.max(5, Math.min(95, 30 + (currentSkills.find(s => s.name === SkillName.Thieving)!.currentLevel - containerData.level) * 1.5 + (lockpickPower)));
+            
+            let successChance = 0;
+
+            if (containerData.unlocked) {
+                successChance = 100;
+            } else {
+                const lockpickPower = bestLockpick?.lockpick?.power ?? 0;
+                successChance = Math.max(5, Math.min(95, 30 + (currentSkills.find(s => s.name === SkillName.Thieving)!.currentLevel - containerData.level) * 1.5 + (lockpickPower)));
+            }
     
             if (Math.random() * 100 < successChance) {
-                log("The lock clicks open.");
+                if (!containerData.unlocked) {
+                    log("The lock clicks open.");
+                }
+                
                 addXp(SkillName.Thieving, containerData.xp);
     
                 if (containerData.trap?.mimicChance && Math.random() < containerData.trap.mimicChance) {
@@ -146,49 +164,52 @@ export const useThieving = (
                 } else {
                     const isPilfering = worldState.activePilferingSession && activity.id.startsWith('pilfer_');
                     
-                    if (isPilfering && (activity.lootTableId.includes('_cabinet_') || activity.lootTableId.includes('_chest_'))) {
-                        const isCabinet = activity.lootTableId.includes('_cabinet_');
-                        const numRolls = isCabinet ? 2 : 3;
-    
-                        const loots: LootRollResult[] = [];
-                        for (let i = 0; i < numRolls; i++) {
-                            const lootResult = rollOnLootTable(activity.lootTableId);
-                            if (lootResult) {
-                                let loot = typeof lootResult === 'string' ? { itemId: lootResult, quantity: 1, noted: false } : lootResult;
-                                loots.push(loot);
-                            }
-                        }
-    
-                        if (loots.length > 0) {
-                            loots.forEach(loot => {
-                                modifyItem(loot.itemId, loot.quantity, false, { bypassAutoBank: true, noted: loot.noted });
-                            });
-                        } else {
-                            const fallbackCoins: Record<string, number> = {
-                                'thieving_house_cabinet_dusty': 5, 'thieving_house_chest_dusty': 20,
-                                'thieving_house_cabinet_locked': 30, 'thieving_house_chest_locked': 100,
-                                'thieving_house_cabinet_pristine': 120, 'thieving_house_chest_pristine': 150,
-                                'thieving_house_cabinet_ornate': 200, 'thieving_house_chest_ornate': 500,
-                                'thieving_house_cabinet_gilded': 400, 'thieving_house_chest_gilded': 1000,
-                                'thieving_house_cabinet_royal': 800, 'thieving_house_chest_royal': 2000,
-                            };
-                            const coinAmount = fallbackCoins[activity.lootTableId];
-                            if (coinAmount) {
-                                let finalAmount = coinAmount;
-                                modifyItem('coins', finalAmount, false, { bypassAutoBank: true });
-                                log(`You find only ${finalAmount} coins.`);
-                            } else {
-                                log("You find nothing of interest.");
-                            }
-                        }
-                    } else { // Standard single roll for everything else
+                    // Strongboxes get 5 rolls
+                    const isStrongbox = activity.lootTableId.includes('_strongbox_');
+                    const isCabinet = activity.lootTableId.includes('_cabinet_');
+                    
+                    let numRolls = 1;
+                    if (isPilfering) {
+                        if (isStrongbox) numRolls = 5;
+                        else if (isCabinet) numRolls = 2;
+                        else if (activity.lootTableId.includes('_chest_')) numRolls = 3;
+                    }
+
+                    const loots: LootRollResult[] = [];
+                    for (let i = 0; i < numRolls; i++) {
                         const lootResult = rollOnLootTable(activity.lootTableId);
                         if (lootResult) {
                             let loot = typeof lootResult === 'string' ? { itemId: lootResult, quantity: 1, noted: false } : lootResult;
-                            modifyItem(loot.itemId, loot.quantity, false, { bypassAutoBank: true, noted: loot.noted });
-                        } else {
-                             log("You find nothing of interest.");
+                            loots.push(loot);
                         }
+                    }
+
+                    if (loots.length > 0) {
+                        loots.forEach(loot => {
+                            modifyItem(loot.itemId, loot.quantity, false, { bypassAutoBank: true, noted: loot.noted });
+                        });
+                    } else if (isPilfering) {
+                        // Fallback coins logic (simplified for brevity, covers main types)
+                         const fallbackCoins: Record<string, number> = {
+                            'thieving_house_cabinet_dusty': 5, 'thieving_house_chest_dusty': 20,
+                            'thieving_house_cabinet_locked': 30, 'thieving_house_chest_locked': 100,
+                            'thieving_house_cabinet_pristine': 120, 'thieving_house_chest_pristine': 150,
+                            'thieving_house_cabinet_ornate': 200, 'thieving_house_chest_ornate': 500,
+                            'thieving_house_cabinet_gilded': 400, 'thieving_house_chest_gilded': 1000,
+                            'thieving_house_cabinet_royal': 800, 'thieving_house_chest_royal': 2000,
+                        };
+                        // Add strongbox fallback logic if needed, but loot tables should handle it.
+                        
+                        const coinAmount = fallbackCoins[activity.lootTableId];
+                        if (coinAmount) {
+                            let finalAmount = coinAmount;
+                            modifyItem('coins', finalAmount, false, { bypassAutoBank: true });
+                            log(`You find only ${finalAmount} coins.`);
+                        } else {
+                            if (!isStrongbox) log("You find nothing of interest.");
+                        }
+                    } else {
+                         log("You find nothing of interest.");
                     }
     
                     if (activity.id.startsWith('pilfer_')) {

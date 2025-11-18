@@ -1,4 +1,6 @@
 
+
+
 import { useEffect, useCallback, useRef } from 'react';
 import { WorldState, PlayerSkill, SkillName, POIActivity, ActivePilferingSession, InventorySlot, Item } from '../types';
 import { THIEVING_CONTAINER_TARGETS, HOUSE_TIERS, PILFERING_DURATION, ITEMS } from '../constants';
@@ -125,7 +127,7 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
         
         const weightedTiers: { tierId: string, level: number, weight: number }[] = HOUSE_TIERS.map(tier => ({
             ...tier,
-            weight: tier.id === targetTier?.id ? 70 : 10,
+            weight: tier.id === targetTier?.id ? 75 : 25,
         }));
         const totalWeight = weightedTiers.reduce((sum, tier) => sum + tier.weight, 0);
         
@@ -137,17 +139,28 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
             for (const tier of weightedTiers) {
                 roll -= tier.weight;
                 if (roll <= 0) {
-                    const numContainers = Math.floor(Math.random() * 3) + 3; // 3 to 5
+                    // Increased spawn count: 3 to 7
+                    const numContainers = Math.floor(Math.random() * 5) + 3; 
                     const newActivities: POIActivity[] = [];
                     const baseTierId = tier.tierId.replace('thieving_house_drawer_', '');
 
                     for (let i = 0; i < numContainers; i++) {
-                        const containerRoll = Math.random() * 32;
-                        let containerType: 'chest' | 'cabinet' | 'drawer';
+                        // Expanded logic for new container types
+                        // Coin purse = 10%
+                        // Drawer = 35%
+                        // Cabinet = 30%
+                        // Vanity = 12%
+                        // Chest = 8%
+                        // Strongbox = 5%
+                        const containerRoll = Math.random() * 1000;
+                        let containerType: 'coin_purse' | 'drawer' | 'cabinet' | 'vanity' | 'chest' | 'strongbox';
 
-                        if (containerRoll < 1) { containerType = 'chest'; }
-                        else if (containerRoll < 4) { containerType = 'cabinet'; }
-                        else { containerType = 'drawer'; }
+                        if (containerRoll < 100) { containerType = 'coin_purse'; }
+                        else if (containerRoll < 450) { containerType = 'drawer'; }
+                        else if (containerRoll < 750) { containerType = 'cabinet'; }
+                        else if (containerRoll < 870) { containerType = 'vanity'; }
+                        else if (containerRoll < 950) { containerType = 'chest'; }
+                        else { containerType = 'strongbox'; }
                         
                         const lootTableId = `thieving_house_${containerType}_${baseTierId}`;
                         const containerData = THIEVING_CONTAINER_TARGETS[lootTableId];

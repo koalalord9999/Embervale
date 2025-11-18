@@ -177,8 +177,8 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         { type: 'combat', monsterId: 'deep_lurker' }
     ],
     regionId: 'sunken_labyrinth',
-    x: -44,
-    y: 2027
+    x: 0,
+    y: 2000
 },
     laby_flooded_intersection: {
     id: 'laby_flooded_intersection',
@@ -411,7 +411,7 @@ export const sunkenLabyrinthPois: Record<string, POI> = {
         { type: 'combat', monsterId: 'hydra_hatchling' }
     ],
     regionId: 'sunken_labyrinth',
-    x: 453,
+    x: 433,
     y: 2510
 },
     laby_scriptorium: {

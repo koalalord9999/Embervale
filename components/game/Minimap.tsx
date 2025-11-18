@@ -1,10 +1,12 @@
-import React from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { POIS, REGIONS } from '../../constants';
 // FIX: Import 'ContextMenuOption' from its source file to resolve export issue.
 import { ContextMenuState, useUIState } from '../../hooks/useUIState';
 import { ContextMenuOption } from '../common/ContextMenu';
 import { useLongPress } from '../../hooks/useLongPress';
 import { useIsTouchDevice } from '../../hooks/useIsTouchDevice';
+import HitSplat from '../common/HitSplat'; // Import external component
 
 interface MinimapProps {
     currentPoiId: string;
@@ -22,6 +24,8 @@ interface MinimapProps {
     showMinimapHealth: boolean;
     isPoisoned: boolean;
     onCurePoison: () => void;
+    isInCombat: boolean;
+    poisonEvent: { damage: number, timestamp: number } | null;
 }
 
 const HpOrb: React.FC<{
@@ -121,11 +125,21 @@ const PrayerOrb: React.FC<{ currentPrayer: number, maxPrayer: number }> = ({ cur
 };
 
 
-const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, currentPrayer, maxPrayer, ui, isTouchSimulationEnabled, onNavigate, unlockedPois, addLog, isDevMode, onToggleDevPanel, showMinimapHealth, isPoisoned, onCurePoison }) => {
+const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, currentPrayer, maxPrayer, ui, isTouchSimulationEnabled, onNavigate, unlockedPois, addLog, isDevMode, onToggleDevPanel, showMinimapHealth, isPoisoned, onCurePoison, isInCombat, poisonEvent }) => {
     const currentPoi = POIS[currentPoiId];
     const isTouchDevice = useIsTouchDevice(isTouchSimulationEnabled);
+    const [hitSplats, setHitSplats] = useState<{ id: number; damage: number }[]>([]);
 
     const currentRegion = currentPoi ? REGIONS[currentPoi.regionId] : null;
+
+    // Handle poison damage hitsplats when out of combat
+    useEffect(() => {
+        if (poisonEvent && !isInCombat) {
+            const id = Date.now() + Math.random();
+            setHitSplats(prev => [...prev, { id, damage: poisonEvent.damage }]);
+            setTimeout(() => setHitSplats(prev => prev.filter(splat => splat.id !== id)), 1500);
+        }
+    }, [poisonEvent, isInCombat]);
 
     const handleMapOpen = () => {
         if (currentRegion && (currentRegion.type === 'city' || currentRegion.type === 'underground')) {
@@ -178,7 +192,7 @@ const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, curre
                     
                     {/* Center dot for player */}
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-yellow-400 rounded-full border-2 border-black" />
-
+                    
                     {/* Connection POI dots */}
                     {currentPoi.connections.map(connId => {
                         const connPoi = POIS[connId];
@@ -224,16 +238,22 @@ const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, curre
                 </div>
 
                 {/* HP Orb Overlay - Placed in the top-left corner of the panel */}
-                <div className="absolute z-10 top-px left-px">
-                    <HpOrb
-                        currentHp={currentHp}
-                        maxHp={maxHp}
-                        showHealthNumbers={showMinimapHealth}
-                        isPoisoned={isPoisoned}
-                        onCurePoison={onCurePoison}
-                        setContextMenu={ui.setContextMenu}
-                        isTouchDevice={isTouchDevice}
-                    />
+                <div className="absolute z-10 top-px left-px pointer-events-none">
+                    <div className="pointer-events-auto">
+                        <HpOrb
+                            currentHp={currentHp}
+                            maxHp={maxHp}
+                            showHealthNumbers={showMinimapHealth}
+                            isPoisoned={isPoisoned}
+                            onCurePoison={onCurePoison}
+                            setContextMenu={ui.setContextMenu}
+                            isTouchDevice={isTouchDevice}
+                        />
+                    </div>
+                    {/* Hitsplats over HP Orb */}
+                    {hitSplats.map(splat => (
+                        <HitSplat key={splat.id} damage={splat.damage} isPoison={true} />
+                    ))}
                 </div>
 
                  {/* Prayer Orb Overlay */}

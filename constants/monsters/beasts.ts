@@ -1,3 +1,4 @@
+
 import { Monster, MonsterType, SkillName } from '@/types';
 
 export const beasts: Monster[] = [
@@ -339,6 +340,26 @@ export const beasts: Monster[] = [
             { itemId: 'gust_talisman', chance: 0.0625, minQuantity: 1, maxQuantity: 1 },
         ],
         types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 35000, aggressive: false, attackStyle: 'crush',
+    },
+    {
+        id: 'gloom_weaver', name: 'Gloom Weaver', level: 54, maxHp: 65, attack: 1, magic: 50, strength: 25, defence: 40,
+        stabDefence: 35, slashDefence: 35, crushDefence: 35, rangedDefence: 40, magicDefence: 40,
+        iconUrl: 'https://api.iconify.design/game-icons:spider-face.svg',
+        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 30000, aggressive: true, attackStyle: 'magic',
+        poisonsOnHit: { chance: 0.25, damage: 6 },
+        guaranteedDrops: [
+            { itemId: 'bones', minQuantity: 1, maxQuantity: 1 },
+        ],
+        mainDrops: [
+            { itemId: 'spider_eye', chance: '1/5', minQuantity: 1, maxQuantity: 2 },
+            { itemId: 'spider_silk', chance: '1/3', minQuantity: 2, maxQuantity: 5, noted: true },
+            { itemId: 'mithril_sword', chance: '1/32' },
+            { itemId: 'mithril_kiteshield', chance: '1/40' },
+            { itemId: 'adamantite_dagger', chance: '1/64' },
+            { itemId: 'adamantite_scimitar', chance: '1/100' },
+            { itemId: 'verdant_rune', chance: '1/10', minQuantity: 5, maxQuantity: 15 },
+        ],
+        alwaysDrops: true,
     },
     {
         id: 'harpy', name: 'Harpy', level: 22, maxHp: 35, attack: 1, ranged: 20, strength: 10, defence: 20,

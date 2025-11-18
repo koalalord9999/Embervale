@@ -104,7 +104,7 @@ export const meadowdalePois: Record<string, POI> = {
         id: 'meadowdale_square',
         name: 'Meadowdale Square',
         description: 'The bustling heart of town. The central fountain gurgles pleasantly. Roads lead out towards the gates, and a grand building to the west houses the bank.',
-        connections: ['north_meadow_street', 'east_meadow_street', 'south_meadow_street', 'west_meadow_street', 'meadowdale_bank'],
+        connections: ['north_meadow_street', 'east_meadow_street', 'south_meadow_street', 'west_meadow_street', 'meadowdale_bank', 'meadowdale_chapel'],
         activities: [
             { type: 'thieving_stall', id: 'meadowdale_square_bakery_stall', name: 'Steal from Bakery Stall', lootTableId: 'thieving_stall_bakery' },
             { type: 'shop', shopId: 'general_store' },
@@ -130,6 +130,17 @@ export const meadowdalePois: Record<string, POI> = {
             { type: 'npc', name: 'Man', icon: 'https://api.iconify.design/game-icons:person.svg', dialogue: { start: { npcName: 'Man', npcIcon: 'https://api.iconify.design/game-icons:person.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man', pickpocket: { lootTableId: 'pickpocket_man_woman_table' } },
             { type: 'npc', name: 'Woman', icon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', dialogue: { start: { npcName: 'Woman', npcIcon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'woman', pickpocket: { lootTableId: 'pickpocket_man_woman_table' } },
             { type: 'npc', name: 'Use Blight Ward Potion', icon: 'https://api.iconify.design/game-icons:sprout.svg', questCondition: { questId: 'petunia_problems', stages: [3] }, startNode: 'petunia_use_potion' },
+        ],
+        regionId: 'meadowdale',
+        x: 250, y: 250,
+        type: 'internal',
+    },
+    meadowdale_chapel: {
+        id: 'meadowdale_chapel',
+        name: 'Meadowdale Chapel',
+        description: 'A small but well-maintained place of worship. It is quiet and peaceful here.',
+        connections: ['meadowdale_square'],
+        activities: [
             {
                 type: 'npc',
                 name: 'Altar',
@@ -149,7 +160,7 @@ export const meadowdalePois: Record<string, POI> = {
             }
         ],
         regionId: 'meadowdale',
-        x: 250, y: 250,
+        x: 300, y: 300,
         type: 'internal',
     },
     // BUILDINGS

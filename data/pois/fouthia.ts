@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 import { CIVILLIAN_DIALOGUE } from '../../constants/dialogue';
 import { BANKER_ZAHRA_DIALOGUE, BARKEEP_ZALE_DIALOGUE, KHALID_DIALOGUE, ZAFIRA_DIALOGUE, CAPTAIN_OMAR_DIALOGUE } from '../dialogues/fouthiaDialogues';
@@ -66,10 +67,20 @@ export const fouthiaPois: Record<string, POI> = {
         id: 'fouthia_square',
         name: 'Fouthia Square',
         description: 'The heart of the town, centered around a deep stone well. It is surprisingly busy, a hub of activity in the desolate wastes.',
-        connections: ['fouthia_main_street', 'fouthia_bazaar', 'fouthia_garrison_road', 'fouthia_back_alleys', 'fouthia_bank', 'fouthia_general_store'],
+        connections: ['fouthia_main_street', 'fouthia_bazaar', 'fouthia_garrison_road', 'fouthia_back_alleys', 'fouthia_bank', 'fouthia_general_store', 'fouthia_shrine'],
         activities: [
             { type: 'water_source', name: 'Draw Water from Well' },
             { type: 'npc', name: 'Townsfolk', icon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', dialogue: { start: { npcName: 'Townsfolk', npcIcon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', text: CIVILLIAN_DIALOGUE.fouthia.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'woman', pickpocket: { lootTableId: 'pickpocket_man_woman_table' } },
+        ],
+        regionId: 'fouthia',
+        x: 250, y: 250, type: 'internal',
+    },
+    fouthia_shrine: {
+        id: 'fouthia_shrine',
+        name: 'Desert Shrine',
+        description: 'A small, humble shrine made of sandstone, dedicated to the spirits of the desert.',
+        connections: ['fouthia_square'],
+        activities: [
             {
                 type: 'npc',
                 name: 'Altar',
@@ -89,7 +100,7 @@ export const fouthiaPois: Record<string, POI> = {
             }
         ],
         regionId: 'fouthia',
-        x: 250, y: 250, type: 'internal',
+        x: 200, y: 200, type: 'internal',
     },
     fouthia_bazaar: {
         id: 'fouthia_bazaar',

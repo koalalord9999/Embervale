@@ -5,14 +5,16 @@ import { PlayerRepeatableQuest, GeneratedRepeatableQuest, RepeatableQuestsState,
 import { REPEATABLE_QUEST_POOL, MONSTERS, ITEMS, XP_TABLE, TELEPORT_UNLOCK_THRESHOLD } from '../constants';
 import { POIS } from '../data/pois';
 
-const BOARD_IDS = ['the_rusty_flagon', 'the_carved_mug', 'tutorial_tavern', 'the_barnacles_bite', 'the_gilded_goblet'];
+const BOARD_IDS = ['the_rusty_flagon', 'the_carved_mug', 'tutorial_tavern', 'the_barnacles_bite', 'the_gilded_goblet', 'the_sand_serpent_inn', 'sanctity_inn'];
 const BOARD_RESET_INTERVAL = 30 * 60 * 1000; // 30 minutes
 
-const getTownForBoard = (boardId: string): 'meadowdale' | 'oakhaven' | 'isle_of_whispers' | 'silverhaven' => {
+const getTownForBoard = (boardId: string): 'meadowdale' | 'oakhaven' | 'isle_of_whispers' | 'silverhaven' | 'fouthia' | 'sanctity' => {
     if (boardId === 'the_rusty_flagon') return 'meadowdale';
     if (boardId === 'the_carved_mug') return 'oakhaven';
     if (boardId === 'the_barnacles_bite') return 'isle_of_whispers';
     if (boardId === 'the_gilded_goblet') return 'silverhaven';
+    if (boardId === 'the_sand_serpent_inn') return 'fouthia';
+    if (boardId === 'sanctity_inn') return 'sanctity';
     return 'meadowdale'; // Default for tutorial or others
 };
 

@@ -196,4 +196,5 @@ export interface ActiveBuff {
         value: number;
     };
     ticksApplied?: number;
+    nextTickTimestamp?: number;
 }

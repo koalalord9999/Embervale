@@ -124,7 +124,7 @@ export interface RepeatableQuest {
     type: 'gather' | 'interact' | 'kill';
     title: string;
     description: string;
-    location: 'meadowdale' | 'oakhaven' | 'general' | 'isle_of_whispers' | 'silverhaven';
+    location: 'meadowdale' | 'oakhaven' | 'general' | 'isle_of_whispers' | 'silverhaven' | 'fouthia' | 'sanctity';
     locationPoiId?: string; // For 'interact' type
     target: {
         itemId?: string; // For 'gather' type

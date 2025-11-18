@@ -1,3 +1,4 @@
+
 import { Item } from '../../types';
 
 export const misc_two: Item[] = [
@@ -30,4 +31,5 @@ export const misc_two: Item[] = [
     { id: 'golem_shard', name: 'Golem Shard', description: 'A shard of animated rock from a golem.', stackable: false, value: 300, iconUrl: 'https://api.iconify.design/game-icons:crystal-shard.svg', material: 'rune-stone' },
     { id: 'dryad_branch', name: 'Dryad Branch', description: 'A small, living branch that hums with the life of the forest.', stackable: false, value: 250, iconUrl: 'https://api.iconify.design/game-icons:birch-trees.svg', material: 'wood-willow' },
     { id: 'arachnid_chitin', name: 'Arachnid Chitin', description: 'A hard piece of chitin from a large spider or scorpion.', stackable: false, value: 180, iconUrl: 'https://api.iconify.design/game-icons:insect-jaws.svg', material: 'bronze' },
+    { id: 'spider_eye', name: 'Spider Eye', description: 'A glistening, multi-faceted eye from a large spider.', stackable: false, value: 50, iconUrl: 'https://api.iconify.design/game-icons:eye-target.svg', material: 'uncut-ruby' },
 ];

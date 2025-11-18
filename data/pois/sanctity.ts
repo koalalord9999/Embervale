@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 import { CIVILLIAN_DIALOGUE } from '../../constants/dialogue';
 import { BROTHER_THADDEUS_DIALOGUE, LIBRARIAN_ANYA_DIALOGUE, INNKEEPER_PHOEBE_DIALOGUE, ARTISAN_KAEL_DIALOGUE, GUARD_CASSIA_DIALOGUE } from '../dialogues/sanctityDialogues';
@@ -100,23 +101,6 @@ export const sanctityPois: Record<string, POI> = {
         activities: [
             { type: 'water_source', name: 'Gather from Holy Fountain', isHoly: true },
             { type: 'npc', name: 'Worshipper', icon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', dialogue: { start: { npcName: 'Worshipper', npcIcon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', text: CIVILLIAN_DIALOGUE.sanctity.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random' },
-            {
-                type: 'npc',
-                name: 'Altar',
-                icon: 'https://api.iconify.design/game-icons:altar.svg',
-                dialogue: {
-                    start: {
-                        npcName: 'Altar',
-                        npcIcon: 'https://api.iconify.design/game-icons:altar.svg',
-                        text: 'You feel a divine presence. Your prayer may be answered here.',
-                        responses: [
-                            { text: 'Pray', actions: [{ type: 'restore_prayer' }] },
-                            { text: 'Leave' }
-                        ]
-                    }
-                },
-                startNode: 'start'
-            }
         ],
         regionId: 'sanctity',
         x: 250, y: 250, type: 'internal',

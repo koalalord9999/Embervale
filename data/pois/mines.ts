@@ -12,6 +12,8 @@ export const minePois: Record<string, POI> = {
             { type: 'skilling', id: 'stonebreak_tin_1', name: 'Mine Tin Rock', skill: SkillName.Mining, requiredLevel: 1, loot: [{ itemId: 'tin_ore', chance: 1, xp: 18 }], resourceCount: { min: 1, max: 1 }, respawnTime: 5000, gatherTime: 2500 },
             { type: 'skilling', id: 'stonebreak_large_copper_1', name: 'Mine Large Copper Rock', skill: SkillName.Mining, requiredLevel: 15, loot: [{ itemId: 'copper_ore', chance: 1, xp: 18 }], resourceCount: { min: 4, max: 10 }, respawnTime: 15000, gatherTime: 2500 },
             { type: 'skilling', id: 'stonebreak_large_tin_1', name: 'Mine Large Tin Rock', skill: SkillName.Mining, requiredLevel: 15, loot: [{ itemId: 'tin_ore', chance: 1, xp: 18 }], resourceCount: { min: 4, max: 10 }, respawnTime: 15000, gatherTime: 2500 },
+            { type: 'combat', monsterId: 'goblin' },
+            { type: 'combat', monsterId: 'goblin' },
             { type: 'combat', monsterId: 'goblin' }
         ],
         regionId: 'wilderness',
@@ -23,6 +25,8 @@ export const minePois: Record<string, POI> = {
         description: 'Deeper into the earth, the air grows cold. A crude tunnel has been dug into one of the walls.',
         connections: ['stonebreak_mine', 'crystal_cavern', 'warrens_entrance', 'dwarven_outpost_entrance', 'rune_essence_mine'],
         activities: [
+            { type: 'combat', monsterId: 'cave_slime' },
+            { type: 'combat', monsterId: 'cave_slime' },
             { type: 'combat', monsterId: 'cave_slime' },
             { type: 'skilling', id: 'mine_depths_iron_1', name: 'Mine Iron Rock', skill: SkillName.Mining, requiredLevel: 15, loot: [{ itemId: 'iron_ore', chance: 1, xp: 35 }], resourceCount: { min: 1, max: 1 }, respawnTime: 8000, gatherTime: 3000 },
             { type: 'skilling', id: 'mine_depths_large_iron_1', name: 'Mine Large Iron Rock', skill: SkillName.Mining, requiredLevel: 30, loot: [{ itemId: 'iron_ore', chance: 1, xp: 35 }], resourceCount: { min: 4, max: 10 }, respawnTime: 20000, gatherTime: 3000 },

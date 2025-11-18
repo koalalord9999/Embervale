@@ -7,6 +7,7 @@ export interface LockpickContainer {
     xp: number;
     respawnTime: number; // in ms
     loot: WeightedDrop[];
+    unlocked?: boolean; // If true, requires no lockpick and cannot fail
     trap?: {
         type: 'damage' | 'teleport' | 'fire';
         damage?: number;
@@ -16,7 +17,12 @@ export interface LockpickContainer {
 }
 
 export const THIEVING_CONTAINER_TARGETS: Record<string, LockpickContainer> = {
-    // TIER 1 - Dusty (Level 12)
+    // --- TIER 1: DUSTY (Level 12) ---
+    thieving_house_coin_purse_dusty: {
+        name: 'Dusty Coin Purse',
+        level: 12, xp: 10, respawnTime: 30000, unlocked: true,
+        loot: [{ itemId: 'coins', chance: 1, minQuantity: 20, maxQuantity: 50 }]
+    },
     thieving_house_drawer_dusty: {
         name: 'Dusty Drawer',
         level: 12, xp: 15, respawnTime: 50000,
@@ -26,6 +32,7 @@ export const THIEVING_CONTAINER_TARGETS: Record<string, LockpickContainer> = {
             { itemId: 'needle', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'fishing_bait', chance: "1/10", minQuantity: 1, maxQuantity: 10 },
             { itemId: 'bobby_pin', chance: "1/7", minQuantity: 1, maxQuantity: 2 },
+            { itemId: 'spider_eggs', chance: "1/15", minQuantity: 1, maxQuantity: 3 },
         ],
         trap: { type: 'damage', damage: 1 }
     },
@@ -37,6 +44,17 @@ export const THIEVING_CONTAINER_TARGETS: Record<string, LockpickContainer> = {
             { itemId: 'bucket', chance: "3/25", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'shears', chance: "2/25", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'bobby_pin', chance: "1/5", minQuantity: 1, maxQuantity: 2 },
+            { itemId: 'cave_slime_globule', chance: "1/15", minQuantity: 1, maxQuantity: 2 },
+        ],
+        trap: { type: 'damage', damage: 1 }
+    },
+    thieving_house_vanity_dusty: {
+        name: 'Dusty Vanity',
+        level: 12, xp: 25, respawnTime: 60000,
+        loot: [
+            { itemId: 'uncut_sapphire', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'silver_ring', chance: "1/15", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'bobby_pin', chance: "1/5", minQuantity: 1, maxQuantity: 1 },
         ],
         trap: { type: 'damage', damage: 1 }
     },
@@ -49,11 +67,27 @@ export const THIEVING_CONTAINER_TARGETS: Record<string, LockpickContainer> = {
             { itemId: 'bronze_bar', chance: "4/25", minQuantity: 1, maxQuantity: 2, noted: true },
             { itemId: 'iron_ore', chance: "1/5", minQuantity: 1, maxQuantity: 5, noted: true },
             { itemId: 'bobby_pin', chance: "1/5", minQuantity: 3, maxQuantity: 3 },
+            { tableId: 'global_gem_and_key_table', chance: "1/32" },
         ],
         trap: { type: 'damage', damage: 2 }
     },
+    thieving_house_strongbox_dusty: {
+        name: 'Dusty Strongbox',
+        level: 12, xp: 60, respawnTime: 120000,
+        loot: [
+            { itemId: 'coins', chance: "1/1", minQuantity: 5, maxQuantity: 15 },
+            { itemId: 'bronze_bar', chance: "1/5", minQuantity: 1, maxQuantity: 1, noted: true },
+            { itemId: 'uncut_sapphire', chance: "1/20", minQuantity: 1, maxQuantity: 1 },
+        ],
+        trap: { type: 'damage', damage: 4 }
+    },
 
-    // TIER 2 - Locked (Level 26)
+    // --- TIER 2: LOCKED (Level 26) ---
+    thieving_house_coin_purse_locked: {
+        name: 'Locked Coin Purse',
+        level: 26, xp: 20, respawnTime: 40000, unlocked: true,
+        loot: [{ itemId: 'coins', chance: 1, minQuantity: 100, maxQuantity: 250 }]
+    },
     thieving_house_drawer_locked: {
         name: 'Locked Drawer',
         level: 26, xp: 35, respawnTime: 80000,
@@ -63,6 +97,7 @@ export const THIEVING_CONTAINER_TARGETS: Record<string, LockpickContainer> = {
             { itemId: 'leather_gloves', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'uncut_sapphire', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'bobby_pin', chance: "1/10", minQuantity: 1, maxQuantity: 3 },
+            { itemId: 'redwater_kelp', chance: "1/20", minQuantity: 1, maxQuantity: 2 },
         ],
         trap: { type: 'damage', damage: 3 }
     },
@@ -74,6 +109,17 @@ export const THIEVING_CONTAINER_TARGETS: Record<string, LockpickContainer> = {
             { itemId: 'bronze_bar', chance: "2/25", minQuantity: 1, maxQuantity: 1, noted: true },
             { itemId: 'iron_bar', chance: "1/25", minQuantity: 1, maxQuantity: 1, noted: true },
             { itemId: 'lockpick', chance: "1/12", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'spider_eggs', chance: "1/15", minQuantity: 2, maxQuantity: 4 },
+        ],
+        trap: { type: 'damage', damage: 3 }
+    },
+    thieving_house_vanity_locked: {
+        name: 'Locked Vanity',
+        level: 26, xp: 60, respawnTime: 100000,
+        loot: [
+            { itemId: 'uncut_sapphire', chance: "1/5", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'uncut_emerald', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'silver_necklace', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
         ],
         trap: { type: 'damage', damage: 3 }
     },
@@ -86,11 +132,28 @@ export const THIEVING_CONTAINER_TARGETS: Record<string, LockpickContainer> = {
             { itemId: 'coal', chance: "4/25", minQuantity: 8, maxQuantity: 18, noted: true },
             { itemId: 'uncut_emerald', chance: "2/25", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'lockpick', chance: "3/16", minQuantity: 1, maxQuantity: 2 },
+            { tableId: 'global_gem_and_key_table', chance: "1/32" },
         ],
         trap: { type: 'damage', damage: 4 }
     },
+    thieving_house_strongbox_locked: {
+        name: 'Locked Strongbox',
+        level: 26, xp: 130, respawnTime: 180000,
+        loot: [
+            { itemId: 'coins', chance: "1/1", minQuantity: 10, maxQuantity: 40 },
+            { itemId: 'iron_bar', chance: "1/5", minQuantity: 1, maxQuantity: 2, noted: true },
+            { itemId: 'steel_bar', chance: "1/10", minQuantity: 1, maxQuantity: 1, noted: true },
+            { itemId: 'uncut_emerald', chance: "1/20", minQuantity: 1, maxQuantity: 1 },
+        ],
+        trap: { type: 'damage', damage: 8 }
+    },
 
-    // TIER 3 - Pristine (Level 40)
+    // --- TIER 3: PRISTINE (Level 40) ---
+    thieving_house_coin_purse_pristine: {
+        name: 'Pristine Coin Purse',
+        level: 40, xp: 35, respawnTime: 50000, unlocked: true,
+        loot: [{ itemId: 'coins', chance: 1, minQuantity: 300, maxQuantity: 600 }]
+    },
     thieving_house_drawer_pristine: {
         name: 'Pristine Drawer',
         level: 40, xp: 60, respawnTime: 110000,
@@ -100,6 +163,7 @@ export const THIEVING_CONTAINER_TARGETS: Record<string, LockpickContainer> = {
             { itemId: 'silver_necklace', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'uncut_emerald', chance: "1/5", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'lockpick', chance: "1/10", minQuantity: 1, maxQuantity: 2 },
+            { itemId: 'glimmerhorn_dust', chance: "1/20", minQuantity: 1, maxQuantity: 2 },
         ],
         trap: { type: 'damage', damage: 4 }
     },
@@ -112,6 +176,17 @@ export const THIEVING_CONTAINER_TARGETS: Record<string, LockpickContainer> = {
             { itemId: 'uncut_ruby', chance: "2/25", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'cooked_tuna', chance: "4/25", minQuantity: 1, maxQuantity: 2, noted: true },
             { itemId: 'lockpick', chance: "1/10", minQuantity: 1, maxQuantity: 2 },
+            { itemId: 'bloodroot_tendril', chance: "1/25", minQuantity: 1, maxQuantity: 1 },
+        ],
+        trap: { type: 'damage', damage: 5 }
+    },
+    thieving_house_vanity_pristine: {
+        name: 'Pristine Vanity',
+        level: 40, xp: 90, respawnTime: 150000,
+        loot: [
+            { itemId: 'uncut_emerald', chance: "1/5", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'uncut_ruby', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'gold_necklace', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
         ],
         trap: { type: 'damage', damage: 5 }
     },
@@ -124,11 +199,29 @@ export const THIEVING_CONTAINER_TARGETS: Record<string, LockpickContainer> = {
             { itemId: 'coal', chance: "4/25", minQuantity: 15, maxQuantity: 30, noted: true },
             { itemId: 'uncut_ruby', chance: "4/25", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'lockpick', chance: "1/10", minQuantity: 1, maxQuantity: 3 },
+            { tableId: 'global_gem_and_key_table', chance: "1/32" },
         ],
         trap: { type: 'damage', damage: 5 }
     },
+    thieving_house_strongbox_pristine: {
+        name: 'Pristine Strongbox',
+        level: 40, xp: 210, respawnTime: 220000,
+        loot: [
+            { itemId: 'coins', chance: "1/1", minQuantity: 40, maxQuantity: 100 },
+            { itemId: 'steel_bar', chance: "1/5", minQuantity: 1, maxQuantity: 2, noted: true },
+            { itemId: 'mithril_bar', chance: "1/20", minQuantity: 1, maxQuantity: 1, noted: true },
+            { itemId: 'uncut_ruby', chance: "1/20", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'stone_rune', chance: "1/10", minQuantity: 10, maxQuantity: 20 },
+        ],
+        trap: { type: 'damage', damage: 10 }
+    },
 
-    // TIER 4 - Ornate (Level 54)
+    // --- TIER 4: ORNATE (Level 54) ---
+    thieving_house_coin_purse_ornate: {
+        name: 'Ornate Coin Purse',
+        level: 54, xp: 55, respawnTime: 60000, unlocked: true,
+        loot: [{ itemId: 'coins', chance: 1, minQuantity: 800, maxQuantity: 1200 }]
+    },
     thieving_house_drawer_ornate: {
         name: 'Ornate Drawer',
         level: 54, xp: 100, respawnTime: 130000,
@@ -138,6 +231,7 @@ export const THIEVING_CONTAINER_TARGETS: Record<string, LockpickContainer> = {
             { itemId: 'uncut_ruby', chance: "1/5", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'mithril_bar', chance: "1/5", minQuantity: 1, maxQuantity: 1, noted: true },
             { itemId: 'lockpick', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'mithril_arrowtips', chance: "1/15", minQuantity: 10, maxQuantity: 20 },
         ],
         trap: { type: 'damage', damage: 6 }
     },
@@ -149,6 +243,18 @@ export const THIEVING_CONTAINER_TARGETS: Record<string, LockpickContainer> = {
             { itemId: 'uncut_diamond', chance: "1/25", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'cooked_lobster', chance: "4/25", minQuantity: 1, maxQuantity: 3, noted: true },
             { itemId: 'diamond_lockpick', chance: "1/25", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'mithril_ore', chance: "1/10", minQuantity: 3, maxQuantity: 5, noted: true },
+            { itemId: 'grimy_cinderbloom', chance: "1/20", minQuantity: 1, maxQuantity: 2 },
+        ],
+        trap: { type: 'damage', damage: 6 }
+    },
+    thieving_house_vanity_ornate: {
+        name: 'Ornate Vanity',
+        level: 54, xp: 170, respawnTime: 170000,
+        loot: [
+            { itemId: 'uncut_ruby', chance: "1/5", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'uncut_diamond', chance: "1/20", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'sapphire_ring', chance: "1/15", minQuantity: 1, maxQuantity: 1 },
         ],
         trap: { type: 'damage', damage: 6 }
     },
@@ -161,11 +267,31 @@ export const THIEVING_CONTAINER_TARGETS: Record<string, LockpickContainer> = {
             { itemId: 'adamantite_bar', chance: "4/25", minQuantity: 1, maxQuantity: 3, noted: true },
             { itemId: 'uncut_diamond', chance: "2/25", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'diamond_lockpick', chance: "3/25", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'mithril_platelegs', chance: "1/50", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'verdant_rune', chance: "1/10", minQuantity: 10, maxQuantity: 20 },
+            { tableId: 'global_gem_and_key_table', chance: "1/32" },
         ],
         trap: { type: 'damage', damage: 6 }
     },
+    thieving_house_strongbox_ornate: {
+        name: 'Ornate Strongbox',
+        level: 54, xp: 380, respawnTime: 250000,
+        loot: [
+            { itemId: 'coins', chance: "1/1", minQuantity: 100, maxQuantity: 250 },
+            { itemId: 'mithril_bar', chance: "1/5", minQuantity: 1, maxQuantity: 1, noted: true },
+            { itemId: 'adamantite_bar', chance: "1/20", minQuantity: 1, maxQuantity: 1, noted: true },
+            { itemId: 'uncut_diamond', chance: "1/40", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'verdant_rune', chance: "1/10", minQuantity: 10, maxQuantity: 20 },
+        ],
+        trap: { type: 'damage', damage: 12 }
+    },
 
-    // TIER 5 - Gilded (Level 66)
+    // --- TIER 5: GILDED (Level 66) ---
+    thieving_house_coin_purse_gilded: {
+        name: 'Gilded Coin Purse',
+        level: 66, xp: 80, respawnTime: 75000, unlocked: true,
+        loot: [{ itemId: 'coins', chance: 1, minQuantity: 1500, maxQuantity: 2500 }]
+    },
     thieving_house_drawer_gilded: {
         name: 'Gilded Drawer',
         level: 66, xp: 170, respawnTime: 150000,
@@ -175,6 +301,8 @@ export const THIEVING_CONTAINER_TARGETS: Record<string, LockpickContainer> = {
             { itemId: 'uncut_diamond', chance: "1/5", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'runic_bar', chance: "1/5", minQuantity: 1, maxQuantity: 1, noted: true },
             { itemId: 'diamond_lockpick', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'adamantite_arrowtips', chance: "1/15", minQuantity: 10, maxQuantity: 20 },
+            { itemId: 'grimy_duskshade', chance: "1/20", minQuantity: 1, maxQuantity: 2 },
         ],
         trap: { type: 'damage', damage: 7 }
     },
@@ -186,6 +314,18 @@ export const THIEVING_CONTAINER_TARGETS: Record<string, LockpickContainer> = {
             { itemId: 'runic_bar', chance: "1/25", minQuantity: 1, maxQuantity: 1, noted: true },
             { itemId: 'cooked_swordfish', chance: "4/25", minQuantity: 1, maxQuantity: 3, noted: true },
             { itemId: 'diamond_lockpick', chance: "3/25", minQuantity: 1, maxQuantity: 2 },
+            { itemId: 'magic_potion', chance: "1/20", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'adamantite_ore', chance: "1/10", minQuantity: 2, maxQuantity: 5, noted: true },
+        ],
+        trap: { type: 'damage', damage: 7 }
+    },
+    thieving_house_vanity_gilded: {
+        name: 'Gilded Vanity',
+        level: 66, xp: 280, respawnTime: 190000,
+        loot: [
+            { itemId: 'uncut_diamond', chance: "1/5", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'emerald_ring', chance: "1/20", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'ruby_amulet', chance: "1/30", minQuantity: 1, maxQuantity: 1 },
         ],
         trap: { type: 'damage', damage: 7 }
     },
@@ -198,12 +338,34 @@ export const THIEVING_CONTAINER_TARGETS: Record<string, LockpickContainer> = {
             { itemId: 'runic_bar', chance: "4/25", minQuantity: 1, maxQuantity: 3, noted: true },
             { itemId: 'uncut_diamond', chance: "2/25", minQuantity: 1, maxQuantity: 2 },
             { itemId: 'skeleton_key', chance: "1/62500" },
+            { itemId: 'grimy_duskshade', chance: "1/20", minQuantity: 1, maxQuantity: 2 },
             { itemId: 'diamond_lockpick', chance: "3/25", minQuantity: 1, maxQuantity: 2 },
+            { itemId: 'adamantite_full_helm', chance: "1/50", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'astral_rune', chance: "1/10", minQuantity: 10, maxQuantity: 25 },
+            { itemId: 'nexus_rune', chance: "1/10", minQuantity: 10, maxQuantity: 25 },
+            { tableId: 'global_gem_and_key_table', chance: "1/32" },
         ],
         trap: { type: 'damage', damage: 7, mimicChance: 0.005 }
     },
-    
-    // TIER 6 - Royal (Level 78)
+    thieving_house_strongbox_gilded: {
+        name: 'Gilded Strongbox',
+        level: 66, xp: 650, respawnTime: 300000,
+        loot: [
+            { itemId: 'coins', chance: "1/1", minQuantity: 250, maxQuantity: 500 },
+            { itemId: 'adamantite_bar', chance: "1/5", minQuantity: 1, maxQuantity: 1, noted: true },
+            { itemId: 'runic_bar', chance: "1/25", minQuantity: 1, maxQuantity: 1, noted: true },
+            { itemId: 'uncut_diamond', chance: "1/15", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'nexus_rune', chance: "1/10", minQuantity: 10, maxQuantity: 20 },
+        ],
+        trap: { type: 'damage', damage: 14 }
+    },
+
+    // --- TIER 6: ROYAL (Level 78) ---
+    thieving_house_coin_purse_royal: {
+        name: 'Royal Coin Purse',
+        level: 78, xp: 120, respawnTime: 90000, unlocked: true,
+        loot: [{ itemId: 'coins', chance: 1, minQuantity: 3000, maxQuantity: 5000 }]
+    },
     thieving_house_drawer_royal: {
         name: 'Royal Drawer',
         level: 78, xp: 280, respawnTime: 180000,
@@ -211,8 +373,11 @@ export const THIEVING_CONTAINER_TARGETS: Record<string, LockpickContainer> = {
             { itemId: 'coins', chance: "2/5", minQuantity: 600, maxQuantity: 1200 },
             { itemId: 'diamond_ring', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'uncut_diamond', chance: "1/5", minQuantity: 1, maxQuantity: 2 },
-            { itemId: 'runic_bar', chance: "1/5", minQuantity: 1, maxQuantity: 1, noted: true },
-            { itemId: 'diamond_lockpick', chance: "1/5", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'runic_bar', chance: "1/10", minQuantity: 1, maxQuantity: 1, noted: true },
+            { itemId: 'diamond_lockpick', chance: "1/25", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'grimy_stonebloom', chance: "1/15", minQuantity: 1, maxQuantity: 2 },
+            { itemId: 'runic_arrowtips', chance: "1/8", minQuantity: 5, maxQuantity: 15 },
+            { itemId: 'super_antipoison', chance: "1/20", minQuantity: 1, maxQuantity: 1 },
         ],
         trap: { type: 'damage', damage: 8 }
     },
@@ -222,8 +387,21 @@ export const THIEVING_CONTAINER_TARGETS: Record<string, LockpickContainer> = {
         loot: [
             { itemId: 'runic_bar', chance: "4/25", minQuantity: 1, maxQuantity: 3, noted: true },
             { itemId: 'cooked_shark', chance: "4/25", minQuantity: 1, maxQuantity: 3, noted: true },
-            { itemId: 'diamond_lockpick', chance: "3/25", minQuantity: 1, maxQuantity: 2 },
+            { itemId: 'diamond_lockpick', chance: "1/25", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'skeleton_key', chance: "1/62500" },
+            { itemId: 'mystic_page', chance: "1/20", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'super_magic_potion', chance: "1/30", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'yew_logs', chance: "1/5", minQuantity: 3, maxQuantity: 8, noted: true },
+        ],
+        trap: { type: 'damage', damage: 8 }
+    },
+    thieving_house_vanity_royal: {
+        name: 'Royal Vanity',
+        level: 78, xp: 450, respawnTime: 240000,
+        loot: [
+            { itemId: 'uncut_diamond', chance: "3/10", minQuantity: 1, maxQuantity: 2 },
+            { itemId: 'diamond_necklace', chance: "1/20", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'ruby_ring', chance: "1/20", minQuantity: 1, maxQuantity: 1 },
         ],
         trap: { type: 'damage', damage: 8 }
     },
@@ -237,8 +415,26 @@ export const THIEVING_CONTAINER_TARGETS: Record<string, LockpickContainer> = {
             { itemId: 'uncut_diamond', chance: "2/25", minQuantity: 2, maxQuantity: 3 },
             { itemId: 'skeleton_key', chance: "1/62500" },
             { itemId: 'diamond_lockpick', chance: "3/25", minQuantity: 1, maxQuantity: 3 },
+            { itemId: 'runic_platelegs', chance: "1/50", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'aether_rune', chance: "1/10", minQuantity: 10, maxQuantity: 30 },
+            { itemId: 'anima_rune', chance: "1/10", minQuantity: 10, maxQuantity: 30 },
+            { itemId: 'dragon_bones', chance: "1/15", minQuantity: 2, maxQuantity: 5, noted: true },
+            { itemId: 'tome_of_the_arcane', chance: "1/256", minQuantity: 1, maxQuantity: 1 },
+            { tableId: 'global_gem_and_key_table', chance: "1/32" },
         ],
         trap: { type: 'damage', damage: 8, mimicChance: 0.01 }
+    },
+    thieving_house_strongbox_royal: {
+        name: 'Royal Strongbox',
+        level: 78, xp: 1100, respawnTime: 400000,
+        loot: [
+            { itemId: 'coins', chance: "1/1", minQuantity: 500, maxQuantity: 1000 },
+            { itemId: 'runic_bar', chance: "1/5", minQuantity: 1, maxQuantity: 1, noted: true },
+            { itemId: 'uncut_diamond', chance: "1/10", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'anima_rune', chance: "1/10", minQuantity: 10, maxQuantity: 20 },
+            { itemId: 'aether_rune', chance: "1/10", minQuantity: 5, maxQuantity: 10 },
+        ],
+        trap: { type: 'damage', damage: 16 }
     },
 
     // TIER 1 - Dungeon Chest (Low) (Level 25+)

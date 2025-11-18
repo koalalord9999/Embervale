@@ -1,5 +1,4 @@
 
-
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { PlayerSkill, SkillName, CombatStance, Spell, WorldState, Prayer, PrayerType, ActiveStatModifier, ActiveBuff } from '../types';
 import { XP_TABLE, PRAYERS } from '../constants';
@@ -13,6 +12,7 @@ interface CharacterCallbacks {
     addLog: (message: string) => void;
     onXpGain: (skillName: SkillName, amount: number) => void;
     onLevelUp: (skillName: SkillName, newLevel: number) => void;
+    onPoisonDamage?: (damage: number) => void;
 }
 
 export const useCharacter = (
@@ -27,7 +27,7 @@ export const useCharacter = (
     activePrayers: string[],
     onPrayerDepleted: () => void
 ) => {
-    const { addLog, onXpGain, onLevelUp } = callbacks;
+    const { addLog, onXpGain, onLevelUp, onPoisonDamage } = callbacks;
     const [skills, setSkills] = useState<PlayerSkill[]>(initialData.skills);
     const [combatStance, setCombatStance] = useState<CombatStance>(initialData.combatStance);
     const [currentHp, _setCurrentHp] = useState<number>(initialData.currentHp);
@@ -254,75 +254,103 @@ export const useCharacter = (
         return () => clearInterval(timer);
     }, [addLog]);
 
+    // Use a ref to track active buffs so we can use it inside setInterval without re-triggering the effect on every change
+    const activeBuffsRef = useRef(activeBuffs);
     useEffect(() => {
-        const interval = setInterval(() => {
-            setActiveBuffs(prev => {
-                const updatedBuffs = prev.map(b => ({
-                    ...b,
-                    durationRemaining: b.durationRemaining - 1000
-                }));
-                
-                const active = updatedBuffs.filter(b => b.durationRemaining > 0);
-                
-                if (active.length < prev.length) {
-                    const expiredBuffs = prev.filter(p => !active.some(a => a.id === p.id));
-                    expiredBuffs.forEach(buff => {
-                        if (buff.type === 'stat_boost' && buff.statBoost) {
-                            addLog(`Your magical ${buff.statBoost.skill} boost has worn off.`);
-                        } else if (buff.type !== 'stun') {
-                            addLog("A magical effect has worn off.");
-                        }
-                    });
-                }
-                return active;
-            });
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [addLog]);
+        activeBuffsRef.current = activeBuffs;
+    }, [activeBuffs]);
+    
+    // Use a ref for the callback to avoid stale closures in the interval
+    const onPoisonDamageRef = useRef(onPoisonDamage);
+    useEffect(() => {
+        onPoisonDamageRef.current = onPoisonDamage;
+    }, [onPoisonDamage]);
 
     useEffect(() => {
-        const poisonTickInterval = 15000; // Poison ticks every 6 seconds for the player
-    
-        const timer = setInterval(() => {
-            const poisonBuff = activeBuffs.find(b => b.type === 'poison');
-            if (!poisonBuff || poisonBuff.durationRemaining <= 0 || poisonBuff.value <= 0) {
-                return;
-            }
-    
-            // Deal damage
-            setCurrentHp(prev => {
-                const newHp = prev - poisonBuff.value;
-                if (newHp > 0) {
-                    addLog(`You take ${poisonBuff.value} poison damage.`);
-                }
-                return newHp;
-            });
-    
-            // Update the buff state for decay
-            setActiveBuffs(prevBuffs => {
-                return prevBuffs.map(b => {
-                    if (b.id === poisonBuff.id) {
-                        const newBuff = { ...b };
-                        const ticks = (newBuff.ticksApplied ?? 0) + 1;
-                        if (ticks >= 2) {
-                            newBuff.value -= 1;
-                            newBuff.ticksApplied = 0;
-                            if (newBuff.value <= 0) {
-                                addLog("The poison's effects have worn off.");
-                                newBuff.durationRemaining = 0; // End the poison
-                            }
-                        } else {
-                            newBuff.ticksApplied = ticks;
-                        }
-                        return newBuff;
+        const interval = setInterval(() => {
+            const now = Date.now();
+            const currentBuffs = activeBuffsRef.current;
+            let poisonDamageTotal = 0;
+            let poisonWoreOff = false;
+            const expiredBuffIds: number[] = [];
+
+            const updatedBuffs = currentBuffs.map(b => {
+                // 1. Handle standard time-based buffs
+                if (b.type !== 'poison') {
+                    const newDuration = b.durationRemaining - 1000;
+                    if (newDuration <= 0) {
+                        expiredBuffIds.push(b.id);
+                        return null;
                     }
-                    return b;
-                });
+                    return { ...b, durationRemaining: newDuration };
+                } 
+                
+                // 2. Handle Poison Logic separately
+                // Poison uses nextTickTimestamp for damage ticks, not durationRemaining for expiration
+                if (b.type === 'poison') {
+                    if (now >= (b.nextTickTimestamp ?? 0)) {
+                        poisonDamageTotal += b.value;
+                        
+                        const nextTick = now + 15000;
+                        const ticks = (b.ticksApplied ?? 0) + 1;
+                        
+                        // Poison decay logic (every 2 ticks, reduce damage)
+                        if (ticks >= 2) {
+                            const newDamage = b.value - 1;
+                            if (newDamage <= 0) {
+                                poisonWoreOff = true;
+                                return null; // Remove buff
+                            }
+                            return { ...b, value: newDamage, ticksApplied: 0, nextTickTimestamp: nextTick };
+                        }
+                        return { ...b, ticksApplied: ticks, nextTickTimestamp: nextTick };
+                    }
+                }
+                return b;
+            }).filter((b): b is ActiveBuff => b !== null);
+
+            // --- Side Effects (Logs and HP Updates) ---
+            // These are now performed *outside* the state updater to avoid side-effects-in-render issues.
+
+            // Log expired buffs
+            currentBuffs.forEach(buff => {
+                if (expiredBuffIds.includes(buff.id)) {
+                    if (buff.type === 'stat_boost' && buff.statBoost) {
+                        addLog(`Your magical ${buff.statBoost.skill} boost has worn off.`);
+                    } else if (buff.type !== 'stun') {
+                         addLog("A magical effect has worn off.");
+                    }
+                }
             });
-        }, poisonTickInterval);
-    
-        return () => clearInterval(timer);
-    }, [activeBuffs, setCurrentHp, addLog]);
+
+            if (poisonWoreOff) {
+                addLog("The poison's effects have worn off.");
+            }
+
+            // Apply Poison Damage
+            if (poisonDamageTotal > 0) {
+                setCurrentHp(prevHp => {
+                    const newHp = Math.max(0, prevHp - poisonDamageTotal);
+                    if (newHp > 0) {
+                         addLog(`You take ${poisonDamageTotal} poison damage.`);
+                         // Trigger callback for visual effects
+                         if (onPoisonDamageRef.current) {
+                             onPoisonDamageRef.current(poisonDamageTotal);
+                         }
+                    }
+                    return newHp;
+                });
+            }
+
+            // Update State
+            // We only update if something actually changed to prevent unnecessary renders, 
+            // though duration changes every second anyway.
+            setActiveBuffs(updatedBuffs);
+
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [addLog, setCurrentHp]);
+
 
     const addXp = useCallback((skillName: SkillName, amount: number) => {
         if (amount <= 0) return;
@@ -443,12 +471,44 @@ export const useCharacter = (
             }
         }
 
-        const newBuff: ActiveBuff = {
-            ...buff,
-            id: Date.now() + Math.random(),
-            durationRemaining: buff.duration,
-        };
-        setActiveBuffs(prev => [...prev.filter(b => b.type !== buff.type), newBuff]);
+        setActiveBuffs(prev => {
+            if (buff.type === 'poison') {
+                const existingPoison = prev.find(b => b.type === 'poison');
+                if (existingPoison) {
+                    // Re-application logic:
+                    // 1. Maximize damage (highest of old vs new)
+                    // 2. Reset decay ticks (ticksApplied = 0)
+                    // 3. Maintain existing tick timer (nextTickTimestamp)
+                    const newBuff: ActiveBuff = {
+                        ...buff,
+                        id: Date.now() + Math.random(),
+                        durationRemaining: buff.duration,
+                        value: Math.max(existingPoison.value, buff.value),
+                        ticksApplied: 0,
+                        nextTickTimestamp: existingPoison.nextTickTimestamp
+                    };
+                    return [...prev.filter(b => b.type !== 'poison'), newBuff];
+                }
+                
+                // New poison application
+                const newBuff: ActiveBuff = {
+                    ...buff,
+                    id: Date.now() + Math.random(),
+                    durationRemaining: buff.duration,
+                    nextTickTimestamp: Date.now() + 15000,
+                    ticksApplied: 0
+                };
+                return [...prev.filter(b => b.type !== 'poison'), newBuff];
+            }
+
+            // Standard buff application
+            const newBuff: ActiveBuff = {
+                ...buff,
+                id: Date.now() + Math.random(),
+                durationRemaining: buff.duration,
+            };
+            return [...prev.filter(b => b.type !== buff.type), newBuff];
+        });
         
         let buffMessage = "You feel a surge of power!";
         if (buff.type === 'recoil') buffMessage = "Your skin hardens and feels prickly.";
@@ -462,7 +522,9 @@ export const useCharacter = (
         if (buff.type === 'damage_reduction') buffMessage = "Your skin feels as hard as stone.";
         if (buff.type === 'antifire') buffMessage = "You feel a sudden coolness, resisting extreme heat.";
         if (buff.type === 'stun') buffMessage = "You have been stunned!";
-        if (buff.type === 'poison') buffMessage = "You have been poisoned!";
+        if (buff.type === 'poison') {
+             buffMessage = "You have been poisoned!";
+        }
         addLog(buffMessage);
 
     }, [addLog, activeBuffs]);

@@ -72,6 +72,8 @@ export const galeSweptPeaksPois: Record<string, POI> = {
         activities: [
             { type: 'skilling', id: 'glittering_tunnels_silver_1', name: 'Mine Silver Ore', skill: SkillName.Mining, requiredLevel: 40, loot: [{ itemId: 'silver_ore', chance: 1, xp: 60 }], resourceCount: { min: 3, max: 6 }, respawnTime: 18000, gatherTime: 4000 },
             { type: 'combat', monsterId: 'cave_slime' },
+            { type: 'combat', monsterId: 'cave_slime' },
+            { type: 'combat', monsterId: 'cave_slime' }
         ],
         regionId: 'gale_swept_peaks',
         x: 760, y: 380
@@ -130,6 +132,8 @@ export const galeSweptPeaksPois: Record<string, POI> = {
         description: 'A dark opening in the mountainside, from which a low growl can be heard. This path offers an alternative route, but it is likely dangerous.',
         connections: ['goat_trail', 'inner_caverns'],
         activities: [
+            { type: 'combat', monsterId: 'cave_slime' },
+            { type: 'combat', monsterId: 'cave_slime' },
             { type: 'combat', monsterId: 'cave_slime' }
         ],
         regionId: 'gale_swept_peaks',

@@ -9,6 +9,7 @@ import { ActiveBuff } from '../../types';
 import AttackAnimationEngine from '../game/AttackAnimationEngine';
 import { useInventory } from '../../hooks/useInventory';
 import { useUIState } from '../../hooks/useUIState';
+import HitSplat from '../common/HitSplat'; // Import external component
 
 interface CombatViewProps {
     monsterQueue: string[];
@@ -45,6 +46,7 @@ interface CombatViewProps {
     showEnemyHealthNumbers: boolean;
     showHitsplats: boolean;
     activePrayers: string[];
+    poisonEvent: { damage: number, timestamp: number } | null;
 }
 
 interface MonsterStatusEffect {
@@ -52,40 +54,6 @@ interface MonsterStatusEffect {
     damagePerTick: number;
     ticksApplied: number;
 }
-
-const HitSplat: React.FC<{ damage: number | 'miss', isMaxHit?: boolean, isPoison?: boolean, isMagic?: boolean, isDragonfire?: boolean }> = ({ damage, isMaxHit = false, isPoison = false, isMagic = false, isDragonfire = false }) => {
-    const isMiss = damage === 'miss' || damage === 0;
-    const text = isMiss ? '0' : String(damage);
-
-    // Prioritize max hit color, then miss, then others.
-    const splatColorClass = useMemo(() => {
-        if (isMaxHit) return 'hitsplat-orange';
-        if (isMiss) return 'hitsplat-blue';
-        if (isPoison) return 'hitsplat-green';
-        if (isDragonfire) return 'hitsplat-dragonfire';
-        // Normal hits are just red. Magic damage will be a red splat.
-        return 'hitsplat-red';
-    }, [isMiss, isMaxHit, isPoison, isDragonfire]);
-
-    const [style, setStyle] = useState({ top: '50%', left: '50%', opacity: 0, transform: 'translate(-50%, -50%) scale(0.5)' });
-
-    useEffect(() => {
-        const top = `${Math.random() * 60 + 20}%`;
-        const left = `${Math.random() * 60 + 20}%`;
-        setStyle({ top, left, opacity: 1, transform: 'translate(-50%, -50%) scale(1)' });
-        const timer = setTimeout(() => {
-            setStyle(s => ({ ...s, opacity: 0, transform: 'translate(-50%, -70%) scale(0.8)' }));
-        }, 800); // slightly shorter lifespan
-        return () => clearTimeout(timer);
-    }, []);
-
-    return (
-        <div className="hitsplat-container" style={style}>
-            <div className={`hitsplat-splat ${splatColorClass}`}></div>
-            <span className="hitsplat-text">{text}</span>
-        </div>
-    );
-};
 
 const SmoothCombatCooldownBar: React.FC<{ label: string, nextAttackTime: number, attackSpeedTicks: number, combatSpeedMultiplier: number, color: string }> = ({ label, nextAttackTime, attackSpeedTicks, combatSpeedMultiplier, color }) => {
     const [progress, setProgress] = useState(0);
@@ -353,7 +321,7 @@ const playerAttack = (
     }
 };
 
-const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, playerSkills, playerHp, equipment, combatStance, setCombatStance, setPlayerHp, onCombatEnd, onFlee, addXp, addLoot, onDropLoot, isAutoBankOn, addLog, onPlayerDeath, onKill, onEncounterWin, onConsumeAmmo, activeBuffs, combatSpeedMultiplier, advanceTutorial, autocastSpell, inv, ui, killTrigger, applyStatModifier, isStunned, addBuff, showPlayerHealthNumbers, showEnemyHealthNumbers, showHitsplats, activePrayers }) => {
+const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, playerSkills, playerHp, equipment, combatStance, setCombatStance, setPlayerHp, onCombatEnd, onFlee, addXp, addLoot, onDropLoot, isAutoBankOn, addLog, onPlayerDeath, onKill, onEncounterWin, onConsumeAmmo, activeBuffs, combatSpeedMultiplier, advanceTutorial, autocastSpell, inv, ui, killTrigger, applyStatModifier, isStunned, addBuff, showPlayerHealthNumbers, showEnemyHealthNumbers, showHitsplats, activePrayers, poisonEvent }) => {
     const [currentMonsterIndex, setCurrentMonsterIndex] = useState(0);
     const currentInstanceId = monsterQueue[currentMonsterIndex];
     const monsterId = currentInstanceId.split(':')[1];
@@ -407,6 +375,19 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
         }
         return { speed: 4, type: WeaponType.Unarmed };
     }, [equipment.weapon]);
+
+    const addHitSplat = useCallback((damage: number | 'miss', target: 'player' | 'monster', options: { isPoison?: boolean, isMagic?: boolean, isDragonfire?: boolean, isMaxHit?: boolean } = {}) => {
+        const id = Date.now() + Math.random();
+        setHitSplats(splats => [...splats, { id, damage, target, ...options }]);
+        setTimeout(() => setHitSplats(splats => splats.filter(splat => splat.id !== id)), 1500);
+    }, []);
+
+    // Effect to handle poison damage display
+    useEffect(() => {
+        if (poisonEvent) {
+            addHitSplat(poisonEvent.damage, 'player', { isPoison: true });
+        }
+    }, [poisonEvent, addHitSplat]);
 
     useEffect(() => {
         const weaponType = playerWeapon.type;
@@ -661,11 +642,6 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
         return totals;
     }, [equipment]);
     
-    const addHitSplat = useCallback((damage: number | 'miss', target: 'player' | 'monster', options: { isPoison?: boolean, isMagic?: boolean, isDragonfire?: boolean, isMaxHit?: boolean } = {}) => {
-        const id = Date.now() + Math.random();
-        setHitSplats(splats => [...splats, { id, damage, target, ...options }]);
-        setTimeout(() => setHitSplats(splats => splats.filter(splat => splat.id !== id)), 1500);
-    }, []);
 
     const handleMonsterDefeated = useCallback((attackStyle: 'melee' | 'ranged' | 'magic') => {
         setIsCombatEnding(true);

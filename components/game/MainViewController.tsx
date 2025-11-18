@@ -1,3 +1,4 @@
+
 import React, { useCallback, useMemo } from 'react';
 import { useUIState } from '../../hooks/useUIState';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -15,7 +16,7 @@ import { useSkilling } from '../../hooks/useSkilling';
 import { useInteractQuest } from '../../hooks/useInteractQuest';
 import { useGameSession } from '../../hooks/useGameSession';
 import { useItemActions } from '../../hooks/useItemActions';
-import { SkillName, InventorySlot, CombatStance, POIActivity, GroundItem, Spell, BonfireActivity, DialogueCheckRequirement, DialogueAction, BankTab, WorldState, PlayerRepeatableQuest, ActiveBuff, DialogueResponse, Monster, MonsterType, SpellElement, PlayerType, POI } from '../../types';
+import { SkillName, InventorySlot, CombatStance, POIActivity, GroundItem, Spell, BonfireActivity, DialogueCheckRequirement, DialogueAction, BankTab, WorldState, PlayerRepeatableQuest, ActiveBuff, DialogueResponse, Monster, MonsterType, SpellElement, PlayerType, POI, Equipment } from '../../types';
 import { POIS } from '../../data/pois';
 import CraftingProgressView from '../views/crafting/CraftingProgressView';
 import CombatView from '../views/CombatView';
@@ -114,6 +115,8 @@ interface MainViewControllerProps {
     poi: POI | null;
     activePrayers: string[];
     onJewelryCraft: (itemId: string, quantity: number) => void;
+    setEquipment: React.Dispatch<React.SetStateAction<Equipment>>;
+    poisonEvent: { damage: number, timestamp: number } | null;
 }
 
 const MainViewController: React.FC<MainViewControllerProps> = (props) => {
@@ -140,6 +143,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
         poi,
         activePrayers,
         onJewelryCraft,
+        poisonEvent
     } = props;
 
     const handleTeleport = useCallback((toBoardId: string) => {
@@ -194,6 +198,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 showEnemyHealthNumbers={ui.showCombatEnemyHealth}
                 showHitsplats={ui.showHitsplats}
                 activePrayers={activePrayers}
+                poisonEvent={poisonEvent}
             />;
         }
         if (ui.activeTeleportBoardId) {
