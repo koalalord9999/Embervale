@@ -33,6 +33,7 @@ export interface QuestCondition {
 
 export type POIActivity =
   | { type: 'skilling'; id: string; name?: string; skill: SkillName; requiredLevel: number; loot: { itemId: string; chance: number; xp: number; requiredLevel?: number }[]; resourceCount: { min: number, max: number }; respawnTime: number; gatherTime: number; harvestBoost?: number; requiredTool?: ToolType; treeHardness?: number; questCondition?: QuestCondition; }
+  | { type: 'ground_item'; id: string; itemId: string; resourceCount: number; respawnTimer: number; questCondition?: QuestCondition; }
   | { type: 'cut_cactus'; id: string; name: string; }
   | { type: 'combat'; monsterId: string }
   | { type: 'shop'; shopId: string }

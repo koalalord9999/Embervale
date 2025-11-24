@@ -68,6 +68,23 @@ export const useGroundItems = (initialGroundItems: Record<string, GroundItem[]>,
         });
     }, [session.currentPoiId]);
 
+    const moveItems = useCallback((fromPoiId: string, toPoiId: string) => {
+        setGroundItems(prev => {
+            const itemsToMove = prev[fromPoiId];
+            if (!itemsToMove || itemsToMove.length === 0) return prev;
+
+            const newItems = { ...prev };
+            // Remove from source
+            delete newItems[fromPoiId];
+            
+            // Add to destination
+            const destItems = [...(newItems[toPoiId] || []), ...itemsToMove];
+            newItems[toPoiId] = destItems;
+
+            return newItems;
+        });
+    }, []);
+
     const handlePickUpItem = useCallback((uniqueId: number) => {
         const inv = invRef.current;
         if (!inv) {
@@ -300,5 +317,6 @@ export const useGroundItems = (initialGroundItems: Record<string, GroundItem[]>,
         handleTakeAllLoot,
         clearAllItemsAtPoi,
         clearDeathPileItemsAtPoi,
+        moveItems,
     };
 };

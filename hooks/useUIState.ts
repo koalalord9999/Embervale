@@ -149,7 +149,6 @@ export const useUIState = () => {
         activeSkillGuide,
         activeCraftingAction,
         activeQuestDetail,
-        isEquipmentStatsViewOpen,
         itemsOnDeathData,
         priceCheckerInventory,
         isAtlasViewOpen,

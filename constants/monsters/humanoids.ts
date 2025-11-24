@@ -57,7 +57,7 @@ export const humanoids: Monster[] = [
         iconUrl: 'https://api.iconify.design/game-icons:overlord-helm.svg',
         guaranteedDrops: [
             { itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 },
-            { itemId: 'stolen_caravan_goods', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'stolen_caravan_goods', minQuantity: 1, maxQuantity: 1, questReq: {questId: 'missing_shipment', status: 'not_started'} },
         ],
         mainDrops: [
             { itemId: 'flux_rune', chance: "19/50", minQuantity: 15, maxQuantity: 30 },
@@ -307,7 +307,7 @@ export const humanoids: Monster[] = [
             { tableId: 'herb_table', chance: "1/5", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'ember_rune', chance: "1/5", minQuantity: 3, maxQuantity: 10 },
             { itemId: 'grimy_coin_pouch', chance: "3/25", minQuantity: 1, maxQuantity: 2 },
-            { itemId: 'lost_heirloom', chance: "1/200", minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'lost_heirloom', chance: "1/200", minQuantity: 1, maxQuantity: 1, questReq: {questId: 'lost_heirloom', status: 'not_started'}  },
         ],
         types: [MonsterType.Humanoid], attackSpeed: 3, respawnTime: 60000, aggressive: true, attackStyle: 'slash',
     },

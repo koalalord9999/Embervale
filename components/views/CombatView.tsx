@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Monster, PlayerSkill, SkillName, Equipment, CombatStance, WeaponType, MonsterType, InventorySlot, WeightedDrop, Spell, MonsterSpecialAttack, SpellElement, Item } from '../../types';
 import { MONSTERS, ITEMS, rollOnLootTable, REGIONS, LootRollResult, getIconClassName, AMMO_TIER_LEVELS, QUESTS, POIS } from '../../constants';
@@ -47,6 +46,9 @@ interface CombatViewProps {
     showHitsplats: boolean;
     activePrayers: string[];
     poisonEvent: { damage: number, timestamp: number } | null;
+    getEffectiveLevel: (skill: SkillName) => number;
+    // FIX: Explicitly type playerQuests here as it is passed from MainViewController
+    playerQuests?: any[]; 
 }
 
 interface MonsterStatusEffect {
@@ -114,7 +116,6 @@ const calculateAccuracy = (attackStat: number, defenceStat: number, accuracyBoos
 };
 
 const playerAttack = (
-    playerSkills: (PlayerSkill & { currentLevel: number })[],
     playerStats: any,
     combatStance: CombatStance,
     playerMaxHit: number,
@@ -136,7 +137,8 @@ const playerAttack = (
     addLog: (message: string) => void,
     combatSpeedMultiplier: number,
     showHitsplats: boolean,
-    onConsumeAmmo: () => void
+    onConsumeAmmo: () => void,
+    getEffectiveLevel: (skill: SkillName) => number
 ) => {
     let playerDamage = 0;
     let successfulHit = false;
@@ -173,7 +175,7 @@ const playerAttack = (
         
         onConsumeAmmo();
         attackStyle = 'ranged';
-        let effectiveRanged = playerSkills.find(s => s.name === SkillName.Ranged)?.currentLevel ?? 1;
+        let effectiveRanged = getEffectiveLevel(SkillName.Ranged);
         if (combatStance === CombatStance.RangedAccurate) effectiveRanged += 3;
         const accuracyBuff = activeBuffs.find(b => b.type === 'accuracy_boost' && (b.style === 'ranged' || b.style === 'all'));
         const totalRangedAttack = effectiveRanged + playerStats.rangedAttack;
@@ -190,7 +192,7 @@ const playerAttack = (
         playerDamage = Math.min(potentialDamage, monsterHp);
     } else { // Melee
         attackStyle = 'melee';
-        let effectiveAttack = playerSkills.find(s => s.name === SkillName.Attack)?.currentLevel ?? 1;
+        let effectiveAttack = getEffectiveLevel(SkillName.Attack);
         if (combatStance === CombatStance.Accurate) effectiveAttack += 3;
 
         let playerAttackStyle: 'stab' | 'slash' | 'crush' = 'crush';
@@ -240,6 +242,9 @@ const playerAttack = (
     if (damageOnHitBuff && successfulHit) {
         playerDamage += damageOnHitBuff.value;
     }
+
+    // Clamp damage again after flat bonuses to ensure no overkill
+    playerDamage = Math.min(playerDamage, monsterHp);
 
     const isMax = successfulHit && playerDamage > 0 && playerDamage === playerMaxHit;
 
@@ -321,7 +326,7 @@ const playerAttack = (
     }
 };
 
-const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, playerSkills, playerHp, equipment, combatStance, setCombatStance, setPlayerHp, onCombatEnd, onFlee, addXp, addLoot, onDropLoot, isAutoBankOn, addLog, onPlayerDeath, onKill, onEncounterWin, onConsumeAmmo, activeBuffs, combatSpeedMultiplier, advanceTutorial, autocastSpell, inv, ui, killTrigger, applyStatModifier, isStunned, addBuff, showPlayerHealthNumbers, showEnemyHealthNumbers, showHitsplats, activePrayers, poisonEvent }) => {
+const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, playerSkills, playerHp, equipment, combatStance, setCombatStance, setPlayerHp, onCombatEnd, onFlee, addXp, addLoot, onDropLoot, isAutoBankOn, addLog, onPlayerDeath, onKill, onEncounterWin, onConsumeAmmo, activeBuffs, combatSpeedMultiplier, advanceTutorial, autocastSpell, inv, ui, killTrigger, applyStatModifier, isStunned, addBuff, showPlayerHealthNumbers, showEnemyHealthNumbers, showHitsplats, activePrayers, poisonEvent, getEffectiveLevel, playerQuests = [] }) => {
     const [currentMonsterIndex, setCurrentMonsterIndex] = useState(0);
     const currentInstanceId = monsterQueue[currentMonsterIndex];
     const monsterId = currentInstanceId.split(':')[1];
@@ -430,6 +435,22 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
     const handleLootDistribution = useCallback(() => {
         if (!monster) return;
 
+        // Helper to check quest requirements
+        const checkDropRequirement = (drop: { questReq?: any }) => {
+            if (!drop.questReq) return true;
+            const { questId, status, stage } = drop.questReq;
+            const quest = playerQuests.find(q => q.questId === questId);
+
+            if (status === 'not_started') return !quest;
+            if (status === 'completed') return quest?.isComplete ?? false;
+            if (status === 'in_progress') {
+                if (!quest || quest.isComplete) return false;
+                if (stage !== undefined) return quest.currentStage === stage;
+                return true;
+            }
+            return true;
+        };
+
         const processLootResult = (lootResult: LootRollResult | string | null) => {
             if (lootResult) {
                 const drop: LootRollResult = typeof lootResult === 'string'
@@ -451,6 +472,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
     
         // 1. Guaranteed Drops
         monster.guaranteedDrops?.forEach(drop => {
+            if (!checkDropRequirement(drop)) return;
             const quantity = Math.floor(Math.random() * (drop.maxQuantity - drop.minQuantity + 1)) + drop.minQuantity;
             if (drop.itemId) {
                 const dropData: LootRollResult = { itemId: drop.itemId, quantity, noted: drop.noted ?? false };
@@ -460,51 +482,56 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
     
         // 2. Main Drops
         if (monster.mainDrops && monster.mainDrops.length > 0) {
+            // Filter drops based on quest requirements
+            const validDrops = monster.mainDrops.filter(checkDropRequirement);
             let finalDrop: WeightedDrop | null = null;
     
-            if (monster.useWeightedMainDrops) {
-                const totalWeight = monster.mainDrops.reduce((sum, item) => sum + parseChance(item.chance), 0);
-                if (totalWeight > 0) {
-                    let roll = Math.random() * totalWeight;
-                    for (const drop of monster.mainDrops) {
-                        roll -= parseChance(drop.chance);
-                        if (roll <= 0) {
-                            finalDrop = drop;
-                            break;
-                        }
-                    }
-                }
-            } else {
-                const successfulDrops: WeightedDrop[] = [];
-                for (const drop of monster.mainDrops) {
-                    if (Math.random() < parseChance(drop.chance)) {
-                        successfulDrops.push(drop);
-                    }
-                }
-        
-                if (successfulDrops.length > 0) {
-                    let rarestChance = Infinity;
-                    successfulDrops.forEach(drop => {
-                        const parsed = parseChance(drop.chance);
-                        if (parsed < rarestChance) {
-                            rarestChance = parsed;
-                        }
-                    });
-                    const potentialRarestDrops = successfulDrops.filter(d => parseChance(d.chance) === rarestChance);
-                    finalDrop = potentialRarestDrops[Math.floor(Math.random() * potentialRarestDrops.length)];
-                } else if (monster.alwaysDrops) {
-                    const totalWeight = monster.mainDrops.reduce((sum, item) => sum + parseChance(item.chance), 0);
+            if (validDrops.length > 0) {
+                if (monster.useWeightedMainDrops) {
+                    const totalWeight = validDrops.reduce((sum, item) => sum + parseChance(item.chance), 0);
                     if (totalWeight > 0) {
                         let roll = Math.random() * totalWeight;
-                        for (const drop of monster.mainDrops) {
+                        for (const drop of validDrops) {
                             roll -= parseChance(drop.chance);
                             if (roll <= 0) {
                                 finalDrop = drop;
                                 break;
                             }
                         }
-                    } else if (monster.mainDrops.length > 0) {
-                        finalDrop = monster.mainDrops[Math.floor(Math.random() * monster.mainDrops.length)];
+                    }
+                } else {
+                    const successfulDrops: WeightedDrop[] = [];
+                    for (const drop of validDrops) {
+                        if (Math.random() < parseChance(drop.chance)) {
+                            successfulDrops.push(drop);
+                        }
+                    }
+            
+                    if (successfulDrops.length > 0) {
+                        let rarestChance = Infinity;
+                        successfulDrops.forEach(drop => {
+                            const parsed = parseChance(drop.chance);
+                            if (parsed < rarestChance) {
+                                rarestChance = parsed;
+                            }
+                        });
+                        const potentialRarestDrops = successfulDrops.filter(d => parseChance(d.chance) === rarestChance);
+                        finalDrop = potentialRarestDrops[Math.floor(Math.random() * potentialRarestDrops.length)];
+                    } else if (monster.alwaysDrops) {
+                         // Only fallback to always drops if no successful drops occurred from the VALID list
+                        const totalWeight = validDrops.reduce((sum, item) => sum + parseChance(item.chance), 0);
+                        if (totalWeight > 0) {
+                            let roll = Math.random() * totalWeight;
+                            for (const drop of validDrops) {
+                                roll -= parseChance(drop.chance);
+                                if (roll <= 0) {
+                                    finalDrop = drop;
+                                    break;
+                                }
+                            }
+                        } else if (validDrops.length > 0) {
+                            finalDrop = validDrops[Math.floor(Math.random() * validDrops.length)];
+                        }
                     }
                 }
             }
@@ -530,6 +557,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
     
         // 3. Tertiary Drops
         monster.tertiaryDrops?.forEach(drop => {
+            if (!checkDropRequirement(drop)) return;
             if (Math.random() < drop.chance) {
                 if (drop.itemId) {
                     const quantity = Math.floor(Math.random() * (drop.maxQuantity - drop.minQuantity + 1)) + drop.minQuantity;
@@ -576,7 +604,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
             }
         }
 
-    }, [monster, isAutoBankOn, addLoot, onDropLoot, addLog, currentInstanceId, ui.activeQuestDetail, equipment.ring, equipment.necklace]);
+    }, [monster, isAutoBankOn, addLoot, onDropLoot, addLog, currentInstanceId, ui.activeQuestDetail, equipment.ring, equipment.necklace, playerQuests]);
 
     useEffect(() => {
         const monsterData = MONSTERS[monsterId];
@@ -667,7 +695,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
         // Ranged
         const weaponType = playerWeapon.type;
         if (weaponType === WeaponType.Bow || weaponType === WeaponType.Crossbow) {
-            let effectiveRanged = playerSkills.find(s => s.name === SkillName.Ranged)?.currentLevel ?? 1;
+            let effectiveRanged = getEffectiveLevel(SkillName.Ranged);
             if (combatStance === CombatStance.RangedAccurate) effectiveRanged += 3;
             const rangedStrengthBonus = playerStats.rangedStrength;
             return Math.ceil(0.5 + effectiveRanged * ((rangedStrengthBonus + 64) / 640));
@@ -677,16 +705,18 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
         const spell = queuedSpell || (autocastSpell && (combatStance === CombatStance.Autocast || combatStance === CombatStance.DefensiveAutocast) ? autocastSpell : null);
         if (spell) {
              const baseMaxHit = spell.maxHit ?? 0;
-             const bonus = 1 + (playerStats.magicDamageBonus / 100);
+             const magicBuff = activeBuffs.find(b => b.type === 'magic_damage_boost');
+             const buffBonus = magicBuff ? (magicBuff.value / 100) : 0;
+             const bonus = 1 + (playerStats.magicDamageBonus / 100) + buffBonus;
              return Math.floor(baseMaxHit * bonus);
         }
 
         // Melee
-        let effectiveStrength = playerSkills.find(s => s.name === SkillName.Strength)?.currentLevel ?? 1;
+        let effectiveStrength = getEffectiveLevel(SkillName.Strength);
         if (combatStance === CombatStance.Aggressive) effectiveStrength += 3;
         const equipmentStrengthBonus = playerStats.strengthBonus;
         return Math.ceil(0.5 + effectiveStrength * ((equipmentStrengthBonus + 64) / 640));
-    }, [playerSkills, combatStance, playerStats, autocastSpell, queuedSpell, playerWeapon.type]);
+    }, [getEffectiveLevel, combatStance, playerStats, autocastSpell, queuedSpell, playerWeapon.type, activeBuffs]);
 
     const monsterMaxHit = useMemo(() => {
         if (!monster) return 0;
@@ -732,7 +762,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
         const xpGains: Partial<Record<SkillName, number>> = {};
         xpGains[SkillName.Magic] = (xpGains[SkillName.Magic] || 0) + spell.xp;
 
-        let effectiveMagic = playerSkills.find(s => s.name === SkillName.Magic)?.currentLevel ?? 1;
+        let effectiveMagic = getEffectiveLevel(SkillName.Magic);
         let totalMagicAttack = (effectiveMagic * 2) + playerStats.magicAttack;
         let damageMultiplier = 1.0;
         
@@ -748,13 +778,21 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
         let potentialPlayerDamage = 0;
         if (Math.random() < accuracy) { 
             const baseMaxHit = spell.maxHit ?? 0;
-            const bonus = 1 + (playerStats.magicDamageBonus / 100);
+            const magicBuff = activeBuffs.find(b => b.type === 'magic_damage_boost');
+            const buffBonus = magicBuff ? (magicBuff.value / 100) : 0;
+            const bonus = 1 + (playerStats.magicDamageBonus / 100) + buffBonus;
             const maxHit = Math.floor(baseMaxHit * bonus * damageMultiplier);
             potentialPlayerDamage = Math.floor(Math.random() * (maxHit + 1));
         }
         
-        const playerDamage = Math.min(potentialPlayerDamage, monsterHp);
-        const maxHitWithoutCrit = Math.floor((spell.maxHit ?? 0) * (1 + (playerStats.magicDamageBonus / 100)));
+        let playerDamage = Math.min(potentialPlayerDamage, monsterHp);
+        
+        // FIX: Clamp magic damage to monster HP to prevent overkill (e.g. from buffs)
+        playerDamage = Math.min(playerDamage, monsterHp);
+        
+        const magicBuff = activeBuffs.find(b => b.type === 'magic_damage_boost');
+        const buffBonus = magicBuff ? (magicBuff.value / 100) : 0;
+        const maxHitWithoutCrit = Math.floor((spell.maxHit ?? 0) * (1 + (playerStats.magicDamageBonus / 100) + buffBonus));
         const isMax = playerDamage > 0 && playerDamage === maxHitWithoutCrit;
 
         const spellTier = spell.level > 80 ? 5 : spell.level > 60 ? 4 : spell.level > 40 ? 3 : spell.level > 20 ? 2 : 1;
@@ -783,7 +821,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
             setNextPlayerAttackTime(Date.now() + castTimeTicks * gameTickMs);
         }
 
-    }, [monster, equipment.weapon, invRef, addLog, playerSkills, playerStats, monsterHp, addXp, isStunned, currentElementalWeakness, gameTickMs, handleMonsterDefeated]);
+    }, [monster, equipment.weapon, invRef, addLog, getEffectiveLevel, playerStats, monsterHp, addXp, isStunned, currentElementalWeakness, gameTickMs, handleMonsterDefeated, activeBuffs]);
 
     const handleManualCast = useCallback((spell: Spell) => {
         if (isStunned) {
@@ -852,6 +890,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                 if (isAutocasting) {
                     let attackStyle: 'melee' | 'ranged' | 'magic' = 'magic';
                     const spell = autocastSpell!;
+                    // Use VISIBLE level for requirement check (playerSkills)
                     const magicLevel = playerSkills.find(s => s.name === SkillName.Magic)?.currentLevel ?? 1;
 
                     if (magicLevel < spell.level) {
@@ -873,7 +912,8 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                             const xpGains: Partial<Record<SkillName, number>> = {};
                             xpGains[SkillName.Magic] = (xpGains[SkillName.Magic] || 0) + spell.xp;
 
-                            let effectiveMagic = playerSkills.find(s => s.name === SkillName.Magic)?.currentLevel ?? 1;
+                            // Use EFFECTIVE level for accuracy
+                            let effectiveMagic = getEffectiveLevel(SkillName.Magic);
                             let totalMagicAttack = (effectiveMagic * 2) + playerStats.magicAttack;
                             let damageMultiplier = 1.0;
 
@@ -890,13 +930,19 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                             let successfulHit = false; // Reset just in case
                             if (Math.random() < accuracy) { 
                                 const baseMaxHit = spell.maxHit ?? 0;
-                                const bonus = 1 + (playerStats.magicDamageBonus / 100);
+                                const magicBuff = activeBuffs.find(b => b.type === 'magic_damage_boost');
+                                const buffBonus = magicBuff ? (magicBuff.value / 100) : 0;
+                                const bonus = 1 + (playerStats.magicDamageBonus / 100) + buffBonus;
                                 const maxHit = Math.floor(baseMaxHit * bonus * damageMultiplier);
                                 potentialDamage = Math.floor(Math.random() * (maxHit + 1));
                                 successfulHit = true;
                             }
 
-                            const playerDamage = Math.min(potentialDamage, monsterHp);
+                            let playerDamage = Math.min(potentialDamage, monsterHp);
+                            
+                            // FIX: Clamp autocast magic damage to monster HP to prevent overkill
+                            playerDamage = Math.min(playerDamage, monsterHp);
+
                             const isMax = successfulHit && playerDamage > 0 && playerDamage === playerMaxHit;
 
                             const spellTier = spell.level > 80 ? 5 : spell.level > 60 ? 4 : spell.level > 40 ? 3 : spell.level > 20 ? 2 : 1;
@@ -959,12 +1005,12 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                 if (!attackPerformedThisTick) {
                     setLastSpellCast(null);
                     playerAttack(
-                        playerSkills, playerStats, combatStance, playerMaxHit, monster, monsterHp, activeBuffs,
+                        playerStats, combatStance, playerMaxHit, monster, monsterHp, activeBuffs,
                         (damage, options) => showHitsplats && addHitSplat(damage, 'monster', options),
                         setMonsterHp, handleMonsterDefeated, addXp, setAnimationTriggers,
                         equipment.weapon, equipment.ammo, autocastSpell, lastSpellCast, playerWeapon,
                         setMonsterStatus, monsterStatus, addLog, combatSpeedMultiplier, showHitsplats,
-                        onConsumeAmmo
+                        onConsumeAmmo, getEffectiveLevel
                     );
                 }
                 
@@ -1027,7 +1073,8 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                                 break;
                             case 'magic_bypass_defence':
                                 isMagicAttack = true;
-                                const effectiveDefence = playerSkills.find(s => s.name === SkillName.Magic)?.level ?? 1;
+                                // Use EFFECTIVE defence for resistance
+                                const effectiveDefence = getEffectiveLevel(SkillName.Magic);
                                 const monsterAttackStat = monster.magic ?? monster.attack;
                                 const monsterAccuracy = calculateAccuracy(monsterAttackStat, effectiveDefence);
                                 if (Math.random() < monsterAccuracy) {
@@ -1083,31 +1130,48 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                             monsterDamage = Math.floor(Math.random() * (dragonfireMaxHit + 1));
                             addLog(`The ${monster.name} unleashes a blast of dragonfire!`);
                             
-                            const antiFirePotionActive = activeBuffs.some(b => b.type === 'antifire');
+                            // Check for antifire potion buff specifically
+                            const antiFireBuff = activeBuffs.find(b => b.type === 'antifire');
                             const dragonfireResistance = equipment.shield ? ITEMS[equipment.shield.itemId]?.equipment?.resistsDragonfire : undefined;
 
-                            if (dragonfireResistance !== undefined && antiFirePotionActive) {
+                            let reductionPercentage = 0;
+                            if (antiFireBuff) {
+                                reductionPercentage += (antiFireBuff.value / 100);
+                            }
+                            if (dragonfireResistance) {
+                                // dragonfireResistance is damage multiplier (e.g., 0.2 means take 20% damage, resist 80%)
+                                // Convert to reduction percentage: 1 - 0.2 = 0.8 (80% reduction)
+                                reductionPercentage += (1 - dragonfireResistance);
+                            }
+                            
+                            // Cap reduction at 100%
+                            reductionPercentage = Math.min(1, reductionPercentage);
+                            
+                            if (reductionPercentage >= 1) {
                                 monsterDamage = 0;
-                                const shieldName = ITEMS[equipment.shield!.itemId].name;
-                                addLog(`Your ${shieldName} and antifire potion completely negate the dragonfire!`);
-                            } else if (dragonfireResistance !== undefined) {
-                                monsterDamage = Math.floor(monsterDamage * dragonfireResistance);
-                                const shieldName = ITEMS[equipment.shield!.itemId].name;
-                                addLog(`Your ${shieldName} absorbs a large portion of the fiery breath!`);
-                            } else if (antiFirePotionActive) {
-                                monsterDamage = Math.floor(monsterDamage * 0.5);
-                                addLog("Your antifire potion protects you from the worst of the heat.");
+                                const shieldName = equipment.shield ? ITEMS[equipment.shield.itemId].name : '';
+                                addLog(`Your ${shieldName ? shieldName + " and " : ""}antifire potion completely negate the dragonfire!`);
+                            } else if (reductionPercentage > 0) {
+                                monsterDamage = Math.floor(monsterDamage * (1 - reductionPercentage));
+                                const shieldName = equipment.shield ? ITEMS[equipment.shield.itemId].name : '';
+                                if (shieldName && antiFireBuff) {
+                                     addLog(`Your ${shieldName} and antifire potion protect you from the worst of the heat.`);
+                                } else if (shieldName) {
+                                     addLog(`Your ${shieldName} absorbs a large portion of the fiery breath!`);
+                                } else {
+                                     addLog("Your antifire potion protects you from some of the heat.");
+                                }
                             }
 
                         } else {
                             let effectiveDefence: number;
                             if (monster.attackStyle === 'magic') {
-                                effectiveDefence = playerSkills.find(s => s.name === SkillName.Magic)?.currentLevel ?? 1;
+                                effectiveDefence = getEffectiveLevel(SkillName.Magic);
                                 if (combatStance === CombatStance.DefensiveAutocast) {
                                     effectiveDefence += 3;
                                 }
                             } else {
-                                effectiveDefence = playerSkills.find(s => s.name === SkillName.Defence)?.currentLevel ?? 1;
+                                effectiveDefence = getEffectiveLevel(SkillName.Defence);
                                 if ([CombatStance.Defensive, CombatStance.RangedDefence].includes(combatStance)) {
                                     effectiveDefence += 3;
                                 }
@@ -1227,7 +1291,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
         currentMonsterIndex, nextPlayerAttackTime, nextMonsterAttackTime, activeBuffs, monsterStatus,
         handleLootDistribution, autocastSpell, inv, ui, onPlayerDeath, applyStatModifier, isStunned, addBuff,
         currentElementalWeakness, handleMonsterDefeated, playerMaxHit, lastSpellCast,
-        combatSpeedMultiplier, showHitsplats, activePrayers
+        combatSpeedMultiplier, showHitsplats, activePrayers, getEffectiveLevel
     ]);
     
     useEffect(() => {

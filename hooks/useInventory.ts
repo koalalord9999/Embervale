@@ -29,31 +29,41 @@ const addToBank = (
         // Deep copy to prevent state mutation issues.
         const newBank = JSON.parse(JSON.stringify(prevBank)) as BankTab[];
         
-        let mainTab = newBank.find(t => t.id === 0);
-        if (!mainTab) {
-            if (newBank.length > 0) {
-                mainTab = newBank[0];
-            } else {
-                mainTab = { id: 0, name: 'Main', icon: null, items: [] };
-                newBank.push(mainTab);
+        // Find which tab the item should go into.
+        // Priority: 
+        // 1. Any tab that already contains the item.
+        // 2. The main tab (ID 0).
+        
+        let targetTab = newBank.find(tab => tab.items.some((i: InventorySlot | null) => i?.itemId === itemId));
+        
+        if (!targetTab) {
+            targetTab = newBank.find(t => t.id === 0);
+            if (!targetTab) {
+                // Fallback if main tab doesn't exist (shouldn't happen)
+                if (newBank.length > 0) {
+                    targetTab = newBank[0];
+                } else {
+                    targetTab = { id: 0, name: 'Main', icon: null, items: [] };
+                    newBank.push(targetTab);
+                }
             }
         }
         
         let itemsAdded = 0;
         // In the bank, all items are treated as stackable.
-        const existingStackIndex = mainTab.items.findIndex((i: InventorySlot | null) => i?.itemId === itemId);
+        const existingStackIndex = targetTab.items.findIndex((i: InventorySlot | null) => i?.itemId === itemId);
 
         if (existingStackIndex > -1) {
-            mainTab.items[existingStackIndex]!.quantity += quantity;
+            targetTab.items[existingStackIndex]!.quantity += quantity;
             itemsAdded = quantity;
         } else {
             const totalBankedItems = newBank.reduce((total: number, tab: BankTab) => total + tab.items.filter((item: InventorySlot | null) => item !== null && item.quantity > 0).length, 0);
             if (totalBankedItems < BANK_CAPACITY) {
-                const emptySlotIndex = mainTab.items.findIndex((slot: InventorySlot | null) => slot === null);
+                const emptySlotIndex = targetTab.items.findIndex((slot: InventorySlot | null) => slot === null);
                 if (emptySlotIndex > -1) {
-                    mainTab.items[emptySlotIndex] = { itemId, quantity };
+                    targetTab.items[emptySlotIndex] = { itemId, quantity };
                 } else {
-                    mainTab.items.push({ itemId, quantity });
+                    targetTab.items.push({ itemId, quantity });
                 }
                 itemsAdded = quantity;
             }

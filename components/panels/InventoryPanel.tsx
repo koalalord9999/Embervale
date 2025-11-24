@@ -75,8 +75,33 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
         setDragOverIndex(null);
     };
 
+    // Mobile Touch Drag Handling
+    const handleTouchStart = (e: React.TouchEvent) => {
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        
+        // Find the inventory slot element
+        let currentElement = target;
+        while (currentElement) {
+            const indexStr = currentElement.getAttribute('data-inventory-index');
+            if (indexStr) {
+                const index = parseInt(indexStr, 10);
+                // Only allow start if there's an item or if we want to allow empty drags?
+                // Typically we only drag items.
+                if (inventory[index]) {
+                     setDraggingIndex(index);
+                }
+                break;
+            }
+            currentElement = currentElement.parentElement;
+        }
+    };
+
     const handleTouchMove = (e: React.TouchEvent) => {
         if (draggingIndex === null) return;
+        
+        // Prevent scrolling while dragging an item
+        if (e.cancelable) e.preventDefault();
         
         const touch = e.touches[0];
         const overElement = document.elementFromPoint(touch.clientX, touch.clientY);
@@ -121,6 +146,7 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
     return (
         <div 
             className={`flex flex-col h-full text-gray-300 ${itemToUse || spellToCast ? 'cursor-crosshair' : ''}`}
+            onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
         >

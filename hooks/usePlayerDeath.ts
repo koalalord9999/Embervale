@@ -1,3 +1,4 @@
+
 import React, { useCallback } from 'react';
 import { useSkilling } from './useSkilling';
 import { useInteractQuest } from './useInteractQuest';
@@ -29,10 +30,11 @@ interface PlayerDeathDependencies {
     repeatableQuests: ReturnType<typeof useRepeatableQuests>;
     setDynamicActivities: (activities: POIActivity[] | null) => void;
     onResetGame: () => void;
+    setActivePrayers: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
-    const { skilling, interactQuest, ui, session, char, inv, addLog, playerQuests, onItemDropped, setWorldState, playerType, slotId, onReturnToMenu, repeatableQuests, setDynamicActivities, worldState, onResetGame } = deps;
+    const { skilling, interactQuest, ui, session, char, inv, addLog, playerQuests, onItemDropped, setWorldState, playerType, slotId, onReturnToMenu, repeatableQuests, setDynamicActivities, worldState, onResetGame, setActivePrayers } = deps;
 
     const handlePlayerDeath = useCallback(async (currentState: any) => {
         skilling.stopSkilling();
@@ -47,6 +49,8 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
             const respawnPoi = 'tutorial_entrance';
             session.setCurrentPoiId(respawnPoi);
             char.setCurrentHp(char.maxHp);
+            char.setCurrentPrayer(char.maxPrayer);
+            setActivePrayers([]);
             addLog("You have been defeated! Don't worry, you've been safely returned. In the main world, death is more costly.");
             return;
         }
@@ -61,6 +65,7 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
         // Clear all boosts on death
         char.clearStatModifiers();
         char.clearBuffs();
+        setActivePrayers([]);
         setWorldState(ws => ({ ...ws, hpBoost: null }));
 
         // --- Normal/Cheats Death Mechanics ---
@@ -220,9 +225,10 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
 
         session.setCurrentPoiId(respawnPoiId);
         char.setCurrentHp(char.maxHp);
+        char.setCurrentPrayer(char.maxPrayer);
         addLog(`You have died! Your 3 most valuable items have been kept. The rest, including ${lostCoins.toLocaleString()} coins, have been dropped at ${POIS[dropPoiId].name}. You have 10 minutes of in-game time to retrieve them.`);
 
-    }, [skilling, interactQuest, ui, session, char, inv, addLog, playerQuests, onItemDropped, setWorldState, playerType, slotId, onReturnToMenu, repeatableQuests, setDynamicActivities, worldState, onResetGame]);
+    }, [skilling, interactQuest, ui, session, char, inv, addLog, playerQuests, onItemDropped, setWorldState, playerType, slotId, onReturnToMenu, repeatableQuests, setDynamicActivities, worldState, onResetGame, setActivePrayers]);
 
     return { handlePlayerDeath };
 };

@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 
 export const goblinDungeonPois: Record<string, POI> = {
@@ -33,6 +34,7 @@ export const goblinDungeonPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'goblin' },
 // FIX: Removed redundant level, xp, and respawnTime properties.
             { type: 'thieving_lockpick', id: 'gb_barracks_chest_1', targetName: 'Grimy Chest', lootTableId: 'thieving_dungeon_chest_low' },
+            { type: 'ground_item', id: 'gb_barracks_mail', itemId: 'goblin_mail', resourceCount: 1, respawnTimer: 600000 },
         ],
         regionId: 'goblin_dungeon',
         x: 1640, y: 880

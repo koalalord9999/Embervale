@@ -1,5 +1,4 @@
 
-
 import React, { useCallback } from 'react';
 import { DialogueAction, DialogueCheckRequirement, WorldState, InventorySlot, BankTab, ActivePanel, POIActivity, DialogueResponse, SkillName } from '../types';
 import { INVENTORY_CAPACITY, QUESTS, ITEMS } from '../constants';
@@ -14,11 +13,15 @@ import { useUIState } from './useUIState';
 import { POIS } from '../data/pois';
 import { useGameSession } from './useGameSession';
 
-const TANNING_RECIPES: Record<string, { leatherId: string; cost: number; xp: number }> = {
-    'cowhide': { leatherId: 'leather', cost: 5, xp: 2 },
-    'boar_hide': { leatherId: 'boar_leather', cost: 8, xp: 4 },
-    'wolf_pelt': { leatherId: 'wolf_leather', cost: 15, xp: 8 },
-    'bear_pelt': { leatherId: 'bear_leather', cost: 25, xp: 12 },
+const TANNING_RECIPES: Record<string, { leatherId: string; cost: number }> = {
+    'cowhide': { leatherId: 'leather', cost: 5 },
+    'boar_hide': { leatherId: 'boar_leather', cost: 8 },
+    'wolf_pelt': { leatherId: 'wolf_leather', cost: 15 },
+    'bear_pelt': { leatherId: 'bear_leather', cost: 25 },
+    'grove_hide': { leatherId: 'grove_hide_leather', cost: 40 },
+    'frost_hide': { leatherId: 'frost_hide_leather', cost: 60 },
+    'emberscale_hide': { leatherId: 'emberscale_hide_leather', cost: 80 },
+    'deathscythe_hide': { leatherId: 'deathscythe_hide_leather', cost: 100 },
 };
 
 interface DialogueActionDependencies {
@@ -182,7 +185,7 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                 }
                 case 'tan_all_hides': {
                     let totalCost = 0;
-                    const hidesToTan: { hideId: string; quantity: number; leatherId: string; xp: number }[] = [];
+                    const hidesToTan: { hideId: string; quantity: number; leatherId: string }[] = [];
 
                     for (const hideId in TANNING_RECIPES) {
                         const count = inv.inventory.reduce((acc, slot) => 

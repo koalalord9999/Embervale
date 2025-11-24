@@ -1,4 +1,6 @@
 
+
+
 import { POI, SkillName } from '../../types';
 
 export const minePois: Record<string, POI> = {
@@ -14,7 +16,8 @@ export const minePois: Record<string, POI> = {
             { type: 'skilling', id: 'stonebreak_large_tin_1', name: 'Mine Large Tin Rock', skill: SkillName.Mining, requiredLevel: 15, loot: [{ itemId: 'tin_ore', chance: 1, xp: 18 }], resourceCount: { min: 4, max: 10 }, respawnTime: 15000, gatherTime: 2500 },
             { type: 'combat', monsterId: 'goblin' },
             { type: 'combat', monsterId: 'goblin' },
-            { type: 'combat', monsterId: 'goblin' }
+            { type: 'combat', monsterId: 'goblin' },
+            { type: 'ground_item', id: 'stonebreak_dull_rock', itemId: 'dull_rock', resourceCount: 1, respawnTimer: 120000 },
         ],
         regionId: 'wilderness',
         x: 1300, y: 1000

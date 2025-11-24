@@ -117,11 +117,11 @@ const getPotionEffect = (potionId: string): Item['consumable'] | undefined => {
         case 'hunters_brew':
              return { statModifiers: [{ skill: SkillName.Ranged, percent: 0.05, base: 1, duration: 180000 }, { skill: SkillName.Slayer, percent: 0.05, base: 1, duration: 180000 }] };
         case 'antifire_potion_weak':
-            return { potionEffect: { description: 'Provides minor resistance to dragonfire.'} };
-        case 'extended_antifire':
-             return { potionEffect: { description: 'Provides extended resistance to dragonfire.'} };
+            return { buffs: [{ type: 'antifire', value: 30, duration: 180000 }] };
         case 'antifire_potion':
-             return { potionEffect: { description: 'Provides strong resistance to dragonfire.'} };
+             return { buffs: [{ type: 'antifire', value: 45, duration: 180000 }] };
+        case 'extended_antifire':
+             return { buffs: [{ type: 'antifire', value: 45, duration: 420000 }] };
         case 'overload_potion_weak':
              return { potionEffect: { description: 'A weak but dangerous combat potion.'} };
         case 'spiketoad_potion':

@@ -1,4 +1,6 @@
 
+
+
 import { POI, SkillName, ToolType } from '../../types';
 
 export const theFeywoodPois: Record<string, POI> = {
@@ -19,7 +21,10 @@ export const theFeywoodPois: Record<string, POI> = {
         description: 'The ground is covered in moss that glows with a soft, pulsating light. Tiny, winged creatures flit between the trees.',
         connections: ['feywood_entrance', 'sprite_circle', 'whispering_pond'],
         activities: [
-            { type: 'combat', monsterId: 'fey_sprite' }
+            { type: 'combat', monsterId: 'fey_sprite' },
+            { type: 'ground_item', id: 'fey_berry_1', itemId: 'red_berries', resourceCount: 1, respawnTimer: 60000 },
+            { type: 'ground_item', id: 'fey_berry_2', itemId: 'red_berries', resourceCount: 1, respawnTimer: 60000 },
+            { type: 'ground_item', id: 'fey_berry_3', itemId: 'red_berries', resourceCount: 1, respawnTimer: 60000 },
         ],
         regionId: 'feywood',
         x: 1320, y: 560
@@ -58,6 +63,7 @@ export const theFeywoodPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'fey_sprite' },
             { type: 'combat', monsterId: 'fey_sprite' },
             { type: 'combat', monsterId: 'fey_sprite' },
+            { type: 'ground_item', id: 'sprite_circle_dust', itemId: 'fey_dust', resourceCount: 1, respawnTimer: 300000 },
         ],
         regionId: 'feywood',
         x: 1380, y: 520
@@ -65,7 +71,7 @@ export const theFeywoodPois: Record<string, POI> = {
     whispering_pond: {
         id: 'whispering_pond',
         name: 'Whispering Pond',
-        description: 'A perfectly still pond that reflects the glowing canopy above. Faint whispers seem to rise from its surface.',
+        description: 'A perfectly still pond that reflects the glowing canopy above. Faint whispers seem to rise from the surface.',
         connections: ['shimmering_path', 'moonlit_clearing'],
         activities: [
             { 
@@ -91,7 +97,11 @@ export const theFeywoodPois: Record<string, POI> = {
         name: 'Moonlit Clearing',
         description: 'A beautiful, open clearing that seems to be perpetually bathed in moonlight, regardless of the time of day.',
         connections: ['whispering_pond', 'aqua_altar'],
-        activities: [],
+        activities: [
+            { type: 'ground_item', id: 'fey_berry_4', itemId: 'red_berries', resourceCount: 1, respawnTimer: 60000 },
+            { type: 'ground_item', id: 'fey_berry_5', itemId: 'red_berries', resourceCount: 1, respawnTimer: 60000 },
+            { type: 'ground_item', id: 'fey_berry_6', itemId: 'red_berries', resourceCount: 1, respawnTimer: 60000 },
+        ],
         regionId: 'feywood',
         x: 1280, y: 460
     },

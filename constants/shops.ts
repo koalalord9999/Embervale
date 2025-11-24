@@ -1,3 +1,4 @@
+
 import { Shop } from '../types';
 
 export const SHOPS: Record<string, Shop> = {
@@ -21,19 +22,25 @@ export const SHOPS: Record<string, Shop> = {
             { itemId: 'wooden_shield', quantity: 10, priceModifier: 1.1},
             { itemId: 'leather_body', quantity: 5, priceModifier: 1.1},
             { itemId: 'vial', quantity: 1000, priceModifier: 1.0 },
-            { itemId: 'staff', quantity: 10, priceModifier: 1.2 },
+            // New Ingredients
+            { itemId: 'flour', quantity: 100, priceModifier: 1.0 },
+            { itemId: 'tomato', quantity: 50, priceModifier: 1.5 },
+            { itemId: 'cheese', quantity: 50, priceModifier: 2.0 },
+            { itemId: 'pineapple', quantity: 20, priceModifier: 4.0 },
+            { itemId: 'red_berries', quantity: 50, priceModifier: 1.2 },
         ]
     },
     meadowdale_fishing: {
         id: 'meadowdale_fishing',
         name: "Angler's Repose",
         inventory: [
-            { itemId: 'small_fishing_net', quantity: 10, priceModifier: 1.1 },
-            { itemId: 'fishing_rod', quantity: 10, priceModifier: 1.1 },
-            { itemId: 'fly_fishing_rod', quantity: 5, priceModifier: 1.2 },
+            { itemId: 'small_fishing_net', quantity: 10, priceModifier: 2.0 },
+            { itemId: 'fishing_rod', quantity: 5, priceModifier: 3.0 },
+            { itemId: 'fly_fishing_rod', quantity: 5, priceModifier: 3.0 },
             { itemId: 'fishing_bait', quantity: 1000, priceModifier: 1.0 },
             { itemId: 'feathers', quantity: 1000, priceModifier: 1.0 },
-            { itemId: 'basket_trap', quantity: 5, priceModifier: 1.2 },
+            { itemId: 'basket_trap', quantity: 5, priceModifier: 3.0 },
+            { itemId: 'raw_anchovy', quantity: 50, priceModifier: 1.2 },
         ]
     },
     dwarven_pickaxes: {
@@ -44,6 +51,8 @@ export const SHOPS: Record<string, Shop> = {
             { itemId: 'iron_pickaxe', quantity: 5, priceModifier: 1.4 },
             { itemId: 'steel_pickaxe', quantity: 5, priceModifier: 1.8 },
             { itemId: 'mithril_pickaxe', quantity: 5, priceModifier: 2.0 },
+            { itemId: 'adamantite_pickaxe', quantity: 3, priceModifier: 2.0 },
+            { itemId: 'runic_pickaxe', quantity: 1, priceModifier: 2.0 },
         ]
     },
     oakhaven_general: {
@@ -60,7 +69,6 @@ export const SHOPS: Record<string, Shop> = {
             { itemId: 'bronze_pickaxe', quantity: 10, priceModifier: 1.1 },
             { itemId: 'bronze_sword', quantity: 10, priceModifier: 1.1},
             { itemId: 'wooden_shield', quantity: 10, priceModifier: 1.1},
-            { itemId: 'vial', quantity: 100, priceModifier: 1.0 },
         ]
     },
     oakhaven_crafting: {
@@ -83,7 +91,8 @@ export const SHOPS: Record<string, Shop> = {
         inventory: [
             { itemId: 'pestle_and_mortar', quantity: 10, priceModifier: 1.0 },
             { itemId: 'vial_of_water', quantity: 1000, priceModifier: 1.0 },
-            { itemId: 'spider_eggs', quantity: 5, priceModifier: 1.2 },
+            { itemId: 'vial', quantity: 1000, priceModifier: 1.0 },
+            { itemId: 'spider_eggs', quantity: 5, priceModifier: 10 },
         ]
     },
     meadowdale_magic: {
@@ -96,6 +105,7 @@ export const SHOPS: Record<string, Shop> = {
             { itemId: 'wizard_robe_top', quantity: 10, priceModifier: 1.4 },
             { itemId: 'wizard_robe_skirt', quantity: 10, priceModifier: 1.4 },
             { itemId: 'wizard_boots', quantity: 10, priceModifier: 1.4 },
+            { itemId: 'wizard_gloves', quantity: 10, priceModifier: 1.4 },
             { itemId: 'staff', quantity: 10, priceModifier: 1.4 },
         ]
     },
@@ -219,6 +229,7 @@ export const SHOPS: Record<string, Shop> = {
             { itemId: 'oak_shortbow', quantity: 3, priceModifier: 1.2 },
             { itemId: 'steel_arrow', quantity: 500, priceModifier: 1.1 },
             { itemId: 'cooked_beef', quantity: 50, priceModifier: 1.0 },
+            { itemId: 'pineapple', quantity: 10, priceModifier: 5.0 },
         ]
     },
     fouthia_armorer: {
@@ -247,4 +258,4 @@ export const SHOPS: Record<string, Shop> = {
             { itemId: 'glimmerhorn_dust', quantity: 10, priceModifier: 1.2 },
         ]
     },
-}
+};

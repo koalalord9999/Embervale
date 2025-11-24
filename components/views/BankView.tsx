@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { InventorySlot, Item, BankTab } from '../../types';
 import { ITEMS, BANK_CAPACITY, getIconClassName, MAX_BANK_TABS } from '../../constants';
@@ -120,6 +121,7 @@ const BankSlot: React.FC<BankSlotProps> = (props) => {
 
     return (
         <div {...combinedHandlers}
+            data-bank-index={index}
             onMouseEnter={(e) => {
                 if (item && slot) {
                     const content = isPlaceholder ? null : <p className="text-sm mt-1 text-gray-400">Quantity: {slot.quantity.toLocaleString()}</p>;
@@ -185,6 +187,7 @@ const BankView: React.FC<BankViewProps> = (props) => {
 
     const totalBankedItems = bank.reduce((total, tab) => total + tab.items.filter(item => item !== null && item.quantity > 0).length, 0);
 
+    // --- Mouse Drag Handlers ---
     const handleDragStart = (e: React.DragEvent, index: number, tabId: number) => {
         setTooltip(null);
         e.dataTransfer.setData('application/json', JSON.stringify({ index, tabId }));
@@ -220,6 +223,58 @@ const BankView: React.FC<BankViewProps> = (props) => {
         } catch (error) { console.error("Tab drop failed:", error); }
     };
     
+    // --- Touch Drag Handlers ---
+    const handleTouchStart = (e: React.TouchEvent) => {
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        
+        // Find the bank slot element
+        let currentElement = target;
+        while (currentElement) {
+            const indexStr = currentElement.getAttribute('data-bank-index');
+            if (indexStr) {
+                const index = parseInt(indexStr, 10);
+                // Check if slot has item
+                if (itemsToDisplay[index]) {
+                    setDraggingIndex({ index, tabId: activeBankTabId });
+                }
+                break;
+            }
+            currentElement = currentElement.parentElement;
+        }
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (!draggingIndex) return;
+        
+        // Prevent scrolling while dragging an item
+        if (e.cancelable) e.preventDefault();
+        
+        const touch = e.touches[0];
+        const overElement = document.elementFromPoint(touch.clientX, touch.clientY);
+        
+        let targetIndex: number | null = null;
+        let currentElement = overElement;
+        while (currentElement) {
+            const indexStr = currentElement.getAttribute('data-bank-index');
+            if (indexStr) {
+                targetIndex = parseInt(indexStr, 10);
+                break;
+            }
+            currentElement = currentElement.parentElement;
+        }
+        
+        setDragOverIndex(targetIndex);
+    };
+
+    const handleTouchEnd = () => {
+        if (draggingIndex && dragOverIndex !== null && draggingIndex.index !== dragOverIndex && draggingIndex.tabId === activeBankTabId) {
+             onMoveItem(draggingIndex.index, dragOverIndex, activeBankTabId);
+        }
+        setDraggingIndex(null);
+        setDragOverIndex(null);
+    };
+
     const handleTabContextMenu = (e: React.MouseEvent, tab: BankTab) => {
         e.preventDefault();
         setContextMenu({
@@ -298,7 +353,12 @@ const BankView: React.FC<BankViewProps> = (props) => {
                 )}
             </div>
 
-            <div className="h-40 md:flex-grow bg-black/40 p-2 rounded-lg border-2 border-gray-600 border-t-0 rounded-t-none pr-1 min-h-0">
+            <div 
+                className="flex-grow min-h-[300px] bg-black/40 p-2 rounded-lg border-2 border-gray-600 border-t-0 rounded-t-none pr-1"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+            >
                 <div className="bank-grid h-full">
                     {itemsToDisplay.map((slot, index) => {
                         let slotClasses = '';

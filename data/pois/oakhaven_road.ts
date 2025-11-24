@@ -1,4 +1,5 @@
-import { POI, SkillName } from '../../types';
+
+import { POI, SkillName, ToolType } from '../../types';
 
 export const oakhavenRoadPois: Record<string, POI> = {
     oakhaven_road_1: {
@@ -91,5 +92,18 @@ export const oakhavenRoadPois: Record<string, POI> = {
         activities: [],
         regionId: 'wilderness',
         x: 700, y: 1800
+    },
+    silver_river_crossing: {
+        id: 'silver_river_crossing',
+        name: 'Silver River Crossing',
+        description: 'A sturdy, wooden bridge spans the wide, fast-flowing Silver River. The air on the far side is noticeably drier and carries the tang of salt.',
+        connections: ['silverhaven_outskirts', 'salt_flats_entrance'],
+        activities: [
+            { type: 'skilling', id: 'silver_river_bait_fishing', name: 'Bait Fish', skill: SkillName.Fishing, requiredLevel: 5, loot: [{ itemId: 'raw_sardine', chance: 1, xp: 20 }, { itemId: 'raw_herring', chance: 0.5, xp: 30, requiredLevel: 10 }, { itemId: 'raw_pike', chance: 0.1, xp: 80, requiredLevel: 25 }], resourceCount: { min: 5, max: 10 }, respawnTime: 8000, gatherTime: 1800, requiredTool: ToolType.FishingRod },
+            { type: 'water_source', name: 'Collect Water' }
+        ],
+        regionId: 'wilderness',
+        x: 567,
+        y: 1793
     },
 };

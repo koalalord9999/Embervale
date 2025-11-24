@@ -188,7 +188,8 @@ export const sanctityPois: Record<string, POI> = {
                     }
                 },
                 startNode: 'start'
-            }
+            },
+            { type: 'ground_item', id: 'sanctity_chapel_vial', itemId: 'vial', resourceCount: 1, respawnTimer: 60000 },
         ],
         regionId: 'sanctity',
         x: 200, y: 100, type: 'internal',

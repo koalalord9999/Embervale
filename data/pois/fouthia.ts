@@ -132,6 +132,7 @@ export const fouthiaPois: Record<string, POI> = {
         activities: [
             { type: 'thieving_pilfer', id: 'fouthia_house_1', name: 'Locked House' },
             { type: 'thieving_pilfer', id: 'fouthia_house_2', name: 'Locked House' },
+            { type: 'ground_item', id: 'fouthia_alleys_knife', itemId: 'knife', resourceCount: 1, respawnTimer: 300000 },
         ],
         regionId: 'fouthia',
         x: 150, y: 250, type: 'internal',

@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { ActiveStatModifier, ActiveBuff, SkillName } from '../../types';
 import { SKILL_ICONS, getSkillColorClass } from '../../constants';
@@ -229,6 +227,16 @@ const BuffBar: React.FC<BuffBarProps> = ({ statModifiers, activeBuffs }) => {
                         valueColor: 'text-orange-400',
                         expiresAt: Infinity,
                         iconClassName: 'opacity-80'
+                    });
+                    break;
+                case 'magic_damage_boost' as any:
+                    buffs.push({
+                        id: buff.id,
+                        iconUrl: 'https://api.iconify.design/game-icons:magic-swirl.svg',
+                        value: `+${buff.value}%`,
+                        valueColor: 'text-purple-400',
+                        expiresAt,
+                        colorClass: 'bg-purple-900/50'
                     });
                     break;
             }

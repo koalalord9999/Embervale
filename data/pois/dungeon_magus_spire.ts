@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 
 export const magusSpirePois: Record<string, POI> = {
@@ -55,6 +56,7 @@ export const magusSpirePois: Record<string, POI> = {
             { type: 'combat', monsterId: 'spire_sentry' },
 // FIX: Removed redundant level, xp, and respawnTime properties.
             { type: 'thieving_lockpick', id: 'ms_chest_1', targetName: 'Arcane Lectern', lootTableId: 'thieving_dungeon_chest_high' },
+            { type: 'ground_item', id: 'ms_f1_library_page', itemId: 'mystic_page', resourceCount: 1, respawnTimer: 600000 },
         ],
         regionId: 'magus_spire',
         x: 2048, y: 680,

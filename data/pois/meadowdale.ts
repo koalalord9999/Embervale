@@ -95,6 +95,8 @@ export const meadowdalePois: Record<string, POI> = {
             { type: 'thieving_pilfer', id: 'meadowdale_house_1', name: 'Locked House' },
             { type: 'thieving_pilfer', id: 'meadowdale_house_2', name: 'Locked House' },
             { type: 'thieving_pilfer', id: 'meadowdale_house_3', name: 'Locked House' },
+            { type: 'ground_item', id: 'west_meadow_bobby_pin', itemId: 'bobby_pin', resourceCount: 1, respawnTimer: 300000 },
+            { type: 'ground_item', id: 'west_meadow_empty_jug', itemId: 'empty_jug', resourceCount: 1, respawnTimer: 120000 },
         ],
         regionId: 'meadowdale',
         x: 150, y: 250,
@@ -130,6 +132,7 @@ export const meadowdalePois: Record<string, POI> = {
             { type: 'npc', name: 'Man', icon: 'https://api.iconify.design/game-icons:person.svg', dialogue: { start: { npcName: 'Man', npcIcon: 'https://api.iconify.design/game-icons:person.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man', pickpocket: { lootTableId: 'pickpocket_man_woman_table' } },
             { type: 'npc', name: 'Woman', icon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', dialogue: { start: { npcName: 'Woman', npcIcon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'woman', pickpocket: { lootTableId: 'pickpocket_man_woman_table' } },
             { type: 'npc', name: 'Use Blight Ward Potion', icon: 'https://api.iconify.design/game-icons:sprout.svg', questCondition: { questId: 'petunia_problems', stages: [3] }, startNode: 'petunia_use_potion' },
+            { type: 'ground_item', id: 'meadowdale_square_coins', itemId: 'coins', resourceCount: 1, respawnTimer: 60000 },
         ],
         regionId: 'meadowdale',
         x: 250, y: 250,
@@ -186,7 +189,7 @@ export const meadowdalePois: Record<string, POI> = {
                     
                     // ART OF THE WARHAMMER
                     { text: "You should probably return to Bronn, now that you've crafted the hammer.", check: { requirements: [{ type: 'quest', questId: 'art_of_the_warhammer', status: 'in_progress', stage: 2 }] } },
-                    { text: "Bronn sent you about a warhammer, did he? That old fool. He thinks no one knows how to smith properly anymore. Let's see if you're worthy of the lesson.", check: { requirements: [{ type: 'quest', questId: 'art_of_the_warhammer', status: 'in_progress', stage: 0 }] } },
+                    { text: "Hello adventurer... you look familiar? Bah! it matters not, how can the forge be of assistance?", check: { requirements: [{ type: 'quest', questId: 'art_of_the_warhammer', status: 'in_progress', stage: 0 }] } },
                     { text: "How's that hammer holding up? A fine piece of work, if I do say so myself.", check: { requirements: [{ type: 'quest', questId: 'art_of_the_warhammer', status: 'completed' }] } },
 
                     // A SMITH'S APPRENTICE
@@ -330,7 +333,8 @@ export const meadowdalePois: Record<string, POI> = {
                     }
                 },
                 startNode: 'start',
-            }
+            },
+            { type: 'ground_item', id: 'rusty_flagon_burnt_food', itemId: 'burnt_food', resourceCount: 1, respawnTimer: 300000 },
         ],
         regionId: 'meadowdale',
         x: 350, y: 300,
@@ -423,7 +427,8 @@ completed "How goes the Runecrafting research?", check: { requirements: [{ type:
                         responses: []
                     }
                 }
-            }
+            },
+            { type: 'ground_item', id: 'town_hall_cloth', itemId: 'tattered_cloth', resourceCount: 1, respawnTimer: 300000 },
         ],
         regionId: 'meadowdale',
         x: 300, y: 150,
@@ -478,6 +483,8 @@ completed "How goes the Runecrafting research?", check: { requirements: [{ type:
         connections: ['north_meadow_street'],
         activities: [
             { type: 'shop', shopId: 'meadowdale_magic' },
+            { type: 'ground_item', id: 'magic_shop_gust', itemId: 'gust_rune', resourceCount: 5, respawnTimer: 60000 },
+            { type: 'ground_item', id: 'magic_shop_binding', itemId: 'binding_rune', resourceCount: 5, respawnTimer: 60000 },
         ],
         regionId: 'meadowdale',
         x: 203, y: 106,

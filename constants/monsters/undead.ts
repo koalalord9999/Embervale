@@ -8,7 +8,7 @@ export const undead: Monster[] = [
         iconUrl: 'https://api.iconify.design/game-icons:reaper-scythe.svg',
         guaranteedDrops: [
             { itemId: 'big_bones', minQuantity: 2, maxQuantity: 2 },
-            { itemId: 'pregais_shield', minQuantity: 1, maxQuantity: 1 },
+            { itemId: 'pregais_shield', minQuantity: 1, maxQuantity: 1, questReq: {questId: 'an_echo_of_battle', status: 'in_progress', stage: 6 },
         ],
         mainDrops: [
             { itemId: 'adamantite_battleaxe', chance: "1/32", minQuantity: 1, maxQuantity: 1 },

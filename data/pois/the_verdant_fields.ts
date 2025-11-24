@@ -63,6 +63,7 @@ export const theVerdantFieldsPois: Record<string, POI> = {
             { type: 'skilling', id: 'sheep_pen_sheep_3', name: 'Shear Sheep', skill: SkillName.Crafting, requiredLevel: 1, loot: [{ itemId: 'wool', chance: 1, xp: 0 }], resourceCount: { min: 1, max: 1 }, respawnTime: 20000, gatherTime: 1800 },
             { type: 'skilling', id: 'sheep_pen_sheep_4', name: 'Shear Sheep', skill: SkillName.Crafting, requiredLevel: 1, loot: [{ itemId: 'wool', chance: 1, xp: 0 }], resourceCount: { min: 1, max: 1 }, respawnTime: 20000, gatherTime: 1800 },
             { type: 'skilling', id: 'sheep_pen_sheep_5', name: 'Shear Sheep', skill: SkillName.Crafting, requiredLevel: 1, loot: [{ itemId: 'wool', chance: 1, xp: 0 }], resourceCount: { min: 1, max: 1 }, respawnTime: 20000, gatherTime: 1800 },
+            { type: 'ground_item', id: 'sheep_pen_shears', itemId: 'shears', resourceCount: 1, respawnTimer: 300000 },
         ],
         regionId: 'the_verdant_fields',
         x: 760, y: 1160
@@ -95,6 +96,7 @@ export const theVerdantFieldsPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'chicken' },
             { type: 'combat', monsterId: 'chicken' },
             { type: 'combat', monsterId: 'chicken' },
+            { type: 'ground_item', id: 'chicken_coop_feathers', itemId: 'feathers', resourceCount: 5, respawnTimer: 60000 },
         ],
         regionId: 'the_verdant_fields',
         x: 840, y: 1240
@@ -105,7 +107,10 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         name: "McGregor's Fields",
         description: "The path from the ranch opens into vast, rolling green fields. The air is fresh and smells of rich soil.",
         connections: ['mcgregors_ranch', 'wheat_field', 'winding_brook_north', 'windmill', 'flax_field', 'verdant_crossroads'],
-        activities: [],
+        activities: [
+            { type: 'ground_item', id: 'farm_tomato_1', itemId: 'tomato', resourceCount: 1, respawnTimer: 45000 },
+            { type: 'ground_item', id: 'farm_tomato_2', itemId: 'tomato', resourceCount: 1, respawnTimer: 45000 },
+        ],
         regionId: 'the_verdant_fields',
         x: 700, y: 1200
     },
@@ -116,6 +121,11 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         connections: ['mcgregor_fields', 'old_mill_path'],
         activities: [
             { type: 'skilling', id: 'wheat_field_1', name: 'Harvest Wheat', skill: SkillName.Cooking, requiredLevel: 1, loot: [{ itemId: 'wheat', chance: 1, xp: 0 }], resourceCount: { min: 1, max: 1 }, respawnTime: 4000, gatherTime: 600 },
+            { type: 'skilling', id: 'wheat_field_2', name: 'Harvest Wheat', skill: SkillName.Cooking, requiredLevel: 1, loot: [{ itemId: 'wheat', chance: 1, xp: 0 }], resourceCount: { min: 1, max: 1 }, respawnTime: 4000, gatherTime: 600 },
+            { type: 'skilling', id: 'wheat_field_3', name: 'Harvest Wheat', skill: SkillName.Cooking, requiredLevel: 1, loot: [{ itemId: 'wheat', chance: 1, xp: 0 }], resourceCount: { min: 1, max: 1 }, respawnTime: 4000, gatherTime: 600 },
+            { type: 'skilling', id: 'wheat_field_4', name: 'Harvest Wheat', skill: SkillName.Cooking, requiredLevel: 1, loot: [{ itemId: 'wheat', chance: 1, xp: 0 }], resourceCount: { min: 1, max: 1 }, respawnTime: 4000, gatherTime: 600 },
+            { type: 'skilling', id: 'wheat_field_5', name: 'Harvest Wheat', skill: SkillName.Cooking, requiredLevel: 1, loot: [{ itemId: 'wheat', chance: 1, xp: 0 }], resourceCount: { min: 1, max: 1 }, respawnTime: 4000, gatherTime: 600 },
+            { type: 'skilling', id: 'wheat_field_6', name: 'Harvest Wheat', skill: SkillName.Cooking, requiredLevel: 1, loot: [{ itemId: 'wheat', chance: 1, xp: 0 }], resourceCount: { min: 1, max: 1 }, respawnTime: 4000, gatherTime: 600 },
         ],
         regionId: 'the_verdant_fields',
         x: 640, y: 1240
@@ -138,6 +148,8 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         connections: ['tanglewood_edge'],
         activities: [
             { type: 'combat', monsterId: 'wild_boar' },
+            { type: 'combat', monsterId: 'wild_boar' },
+            { type: 'combat', monsterId: 'wild_boar' },
             { type: 'skilling', id: 'boar_woods_edge_tree', name: 'Chop Tree', skill: SkillName.Woodcutting, requiredLevel: 1, loot: [{ itemId: 'logs', chance: 1, xp: 25 }], resourceCount: { min: 2, max: 4 }, respawnTime: 12000, gatherTime: 2000 },
         ],
         regionId: 'the_verdant_fields',
@@ -146,10 +158,10 @@ export const theVerdantFieldsPois: Record<string, POI> = {
     winding_brook_north: {
         id: 'winding_brook_north',
         name: 'Winding Brook (North)',
-        description: 'A shallow brook gurgles peacefully as it winds its way south.',
+        description: 'A shallow brook gurgles pleasantly as it winds its way south.',
         connections: ['mcgregor_fields', 'winding_brook_south', 'old_mill_path'],
         activities: [
-            { type: 'skilling', id: 'winding_brook_north_fishing', name: 'Net Shrimp', skill: SkillName.Fishing, requiredLevel: 1, loot: [{ itemId: 'raw_shrimp', chance: 1, xp: 10 }, { itemId: 'raw_sardine', chance: 0.4, xp: 20, requiredLevel: 5 }], resourceCount: { min: 4, max: 8 }, respawnTime: 8000, gatherTime: 1800 },
+            { type: 'skilling', id: 'winding_brook_north_fishing', name: 'Net Shrimp', skill: SkillName.Fishing, requiredLevel: 1, loot: [{ itemId: 'raw_shrimp', chance: 1, xp: 10 }, { itemId: 'raw_anchovy', chance: 0.4, xp: 20, requiredLevel: 5 }], resourceCount: { min: 4, max: 8 }, respawnTime: 8000, gatherTime: 1800, requiredTool: ToolType.FishingNet, },
             { type: 'water_source', name: 'Collect Water' }
         ],
         regionId: 'the_verdant_fields',
@@ -161,7 +173,8 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         description: 'The brook continues its journey south, passing by a small, sleepy hamlet. A smaller stream flows in from the west.',
         connections: ['winding_brook_north', 'brookside_hamlet', 'clearwater_stream'],
         activities: [
-            { type: 'skilling', id: 'winding_brook_south_fishing', name: 'Net Shrimp', skill: SkillName.Fishing, requiredLevel: 1, loot: [{ itemId: 'raw_shrimp', chance: 1, xp: 10 }, { itemId: 'raw_sardine', chance: 0.4, xp: 20, requiredLevel: 5 }], resourceCount: { min: 4, max: 8 }, respawnTime: 8000, gatherTime: 1800 },
+            { type: 'skilling', id: 'winding_brook_south_fishing', name: 'Net Shrimp', skill: SkillName.Fishing, requiredLevel: 1, loot: [{ itemId: 'raw_shrimp', chance: 1, xp: 10 }, { itemId: 'raw_anchovy', chance: 0.4, xp: 20, requiredLevel: 5 }], resourceCount: { min: 4, max: 8 }, respawnTime: 8000, gatherTime: 1800, requiredTool: ToolType.FishingNet, },
+            { type: 'skilling', id: 'winding_brook_south_bait_fishing', name: 'Bait Fish', skill: SkillName.Fishing, requiredLevel: 5, loot: [{ itemId: 'raw_sardine', chance: 1, xp: 20 }, { itemId: 'raw_herring', chance: 0.5, xp: 30, requiredLevel: 10 }], resourceCount: { min: 4, max: 8 }, respawnTime: 8000, gatherTime: 1800, requiredTool: ToolType.FishingRod },
             { type: 'water_source', name: 'Collect Water' }
         ],
         regionId: 'the_verdant_fields',
@@ -193,7 +206,7 @@ export const theVerdantFieldsPois: Record<string, POI> = {
     verdant_crossroads: {
         id: 'verdant_crossroads',
         name: 'Verdant Crossroads',
-        description: 'A central point in the fields. A path leads north into some hills, west deeper into the woods, and east back towards the ranch.',
+        description: 'A central point in the fields. A path leads north into the hills, west deeper into the woods, and east back towards the ranch.',
         connections: ['mcgregor_fields', 'grassy_knoll', 'tanglewood_edge'],
         activities: [],
         regionId: 'the_verdant_fields',
@@ -203,7 +216,7 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         id: 'grassy_knoll',
         name: 'Grassy Knoll',
         description: 'A gentle, sloping hill offering a fine view of the surrounding fields. Strange, shimmering stags graze peacefully here.',
-        connections: ['verdant_crossroads', 'rocky_highlands'],
+        connections: ['verdant_crossroads', 'rocky_highlands', 'clearwater_ford'],
         activities: [
             { type: 'combat', monsterId: 'glimmerhorn_stag' },
             { type: 'skilling', id: 'grassy_knoll_iron', name: 'Mine Iron Rock', skill: SkillName.Mining, requiredLevel: 15, loot: [{ itemId: 'iron_ore', chance: 1, xp: 35 }], resourceCount: { min: 1, max: 2 }, respawnTime: 8000, gatherTime: 3000 },
@@ -254,8 +267,13 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         id: 'tanglewood_edge',
         name: 'Tanglewood Edge',
         description: 'The open fields give way to a dense, dark forest. The sounds of heavy beasts can be heard from within.',
-        connections: ['verdant_crossroads', 'boar_woods_edge', 'wolf_pack_den', 'bear_cave'],
-        activities: [ { type: 'combat', monsterId: 'bear' } ],
+        connections: ['verdant_crossroads', 'boar_woods_edge', 'wolf_pack_den', 'bear_cave', 'clearwater_ford'],
+        activities: [
+            { type: 'combat', monsterId: 'boar' },
+            { type: 'ground_item', id: 'verdant_berry_1', itemId: 'red_berries', resourceCount: 1, respawnTimer: 60000 },
+            { type: 'ground_item', id: 'verdant_berry_2', itemId: 'red_berries', resourceCount: 1, respawnTimer: 60000 },
+            { type: 'ground_item', id: 'verdant_berry_3', itemId: 'red_berries', resourceCount: 1, respawnTimer: 60000 },
+        ],
         regionId: 'the_verdant_fields',
         x: 500, y: 1200
     },
@@ -264,7 +282,14 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         name: 'Wolf Pack Den',
         description: 'A shallow cave littered with bones. The growls of a large wolf pack echo from the darkness.',
         connections: ['tanglewood_edge'],
-        activities: [ { type: 'combat', monsterId: 'wolf' }, { type: 'combat', monsterId: 'wolf' }, { type: 'combat', monsterId: 'wolf' } ],
+        activities: [ 
+            { type: 'combat', monsterId: 'wolf' }, 
+            { type: 'combat', monsterId: 'wolf' }, 
+            { type: 'combat', monsterId: 'wolf' },
+            { type: 'ground_item', id: 'wolf_den_bones_1', itemId: 'bones', resourceCount: 1, respawnTimer: 60000 },
+            { type: 'ground_item', id: 'wolf_den_bones_2', itemId: 'bones', resourceCount: 1, respawnTimer: 60000 },
+            { type: 'ground_item', id: 'wolf_den_beef', itemId: 'raw_beef', resourceCount: 1, respawnTimer: 120000 },
+        ],
         regionId: 'the_verdant_fields',
         x: 450, y: 1150
     },
@@ -273,7 +298,11 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         name: 'Bear Cave',
         description: 'A large, dark cave entrance. A low growl from within suggests it is occupied.',
         connections: ['tanglewood_edge', 'overgrown_ruins'],
-        activities: [ { type: 'combat', monsterId: 'bear' } ],
+        activities: [
+             { type: 'combat', monsterId: 'bear' },
+             { type: 'combat', monsterId: 'bear' },
+             { type: 'combat', monsterId: 'bear' }
+            ],
         regionId: 'the_verdant_fields',
         x: 400, y: 1200
     },
@@ -293,6 +322,7 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         connections: ['overgrown_ruins', 'stag_clearing'],
         activities: [
             { type: 'thieving_lockpick', id: 'tvf_hunter_chest_1', targetName: 'Abandoned Pack', lootTableId: 'thieving_dungeon_chest_low' },
+            { type: 'ground_item', id: 'hunters_ashes', itemId: 'ashes', resourceCount: 1, respawnTimer: 300000 },
         ],
         regionId: 'the_verdant_fields',
         x: 300, y: 1200
@@ -321,7 +351,7 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         description: 'A shallow point in the river, allowing passage between the woods and the hills.',
         connections: ['tanglewood_edge', 'grassy_knoll', 'river_rapids'],
         activities: [
-             { type: 'skilling', id: 'clearwater_ford_fishing', name: 'Fish for Pike', skill: SkillName.Fishing, requiredLevel: 30, loot: [{itemId: 'raw_pike', xp: 70, chance: 1}], resourceCount: {min: 4, max: 8}, respawnTime: 18000, gatherTime: 2500 },
+             { type: 'skilling', id: 'clearwater_ford_fishing', name: 'Fish for Pike', skill: SkillName.Fishing, requiredLevel: 30, loot: [{itemId: 'raw_pike', xp: 70, chance: 1}], resourceCount: {min: 4, max: 8}, respawnTime: 18000, gatherTime: 2500, requiredTool: ToolType.FishingRod },
         ],
         regionId: 'the_verdant_fields',
         x: 550, y: 1150
@@ -331,7 +361,7 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         name: 'River Rapids',
         description: 'The river flows faster here, churning over smooth stones.',
         connections: ['clearwater_ford', 'secluded_pond'],
-        activities: [ { type: 'skilling', id: 'river_rapids_fishing', name: 'Fish for Trout', skill: SkillName.Fishing, requiredLevel: 20, loot: [{itemId: 'raw_trout', xp: 50, chance: 1}], resourceCount: {min: 6, max: 12}, respawnTime: 15000, gatherTime: 2200 } ],
+        activities: [ { type: 'skilling', id: 'river_rapids_fishing', name: 'Fly Fish Trout', skill: SkillName.Fishing, requiredLevel: 20, loot: [{itemId: 'raw_trout', xp: 50, chance: 1}], resourceCount: {min: 6, max: 12}, respawnTime: 15000, gatherTime: 2200, requiredTool: ToolType.FlyFishingRod } ],
         regionId: 'the_verdant_fields',
         x: 500, y: 1100
     },
@@ -340,7 +370,7 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         name: 'Secluded Pond',
         description: 'A quiet, peaceful pond fed by the river. An excellent fishing spot.',
         connections: ['river_rapids', 'waterfall_ledge'],
-        activities: [ { type: 'skilling', id: 'secluded_pond_fishing', name: 'Fish for Pike', skill: SkillName.Fishing, requiredLevel: 30, loot: [{itemId: 'raw_pike', xp: 70, chance: 1}], resourceCount: {min: 8, max: 16}, respawnTime: 18000, gatherTime: 2500 } ],
+        activities: [ { type: 'skilling', id: 'secluded_pond_fishing', name: 'Fish for Pike', skill: SkillName.Fishing, requiredLevel: 30, loot: [{itemId: 'raw_pike', xp: 70, chance: 1}], resourceCount: {min: 8, max: 16}, respawnTime: 18000, gatherTime: 2500, requiredTool: ToolType.FishingRod } ],
         regionId: 'the_verdant_fields',
         x: 450, y: 1050
     },
@@ -394,7 +424,7 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         connections: ['ancient_standing_stones'],
         activities: [
             { type: 'npc', name: 'Examine Seal', icon: 'https://api.iconify.design/game-icons:locked-fortress.svg', questCondition: { questId: 'an_echo_of_battle', stages: [0] }, startNode: 'aeb_barrow_seal' },
-            { type: 'ladder', name: 'Enter the Barrow', questCondition: { questId: 'an_echo_of_battle', stages: [6,7,8], visibleAfterCompletion: true }, direction: 'down', toPoiId: `barrow_entrance_hall` },
+            { type: 'ladder', name: 'Enter the Barrow', questCondition: { questId: 'an_echo_of_battle', stages: [6, 7, 8], visibleAfterCompletion: true }, direction: 'down', toPoiId: `barrow_entrance_hall` },
             { type: 'npc', name: 'Use Reforged Key', icon: 'https://api.iconify.design/game-icons:key-skeleton.svg', questCondition: { questId: 'an_echo_of_battle', stages: [5] }, startNode: 'aeb_barrow_door_puzzle_start' }
         ],
         regionId: 'the_verdant_fields',

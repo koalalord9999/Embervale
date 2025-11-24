@@ -1,8 +1,10 @@
+
 import React, { useCallback } from 'react';
 import { InventorySlot, PlayerSkill, SkillName, Spell, Equipment, WeaponType } from '../types';
 import { ITEMS } from '../constants';
 import { useUIState } from './useUIState';
 import { POIS } from '../data/pois';
+import { useCharacter } from './useCharacter';
 
 const BANK_POI_IDS = Object.values(POIS)
     .filter(poi => poi.activities.some(act => act.type === 'bank' || (act.type === 'npc' && act.actions?.some(a => a.action === 'open_bank'))))
@@ -18,6 +20,8 @@ interface SpellActionDependencies {
     equipment: Equipment;
     currentPoiId: string;
     setInventory: React.Dispatch<React.SetStateAction<(InventorySlot | null)[]>>;
+    char: ReturnType<typeof useCharacter>;
+    combatSpeedMultiplier: number;
 }
 
 const ENCHANTMENT_MAP: Record<string, string> = {
@@ -39,10 +43,16 @@ const ENCHANTMENT_MAP: Record<string, string> = {
 };
 
 export const useSpellActions = (deps: SpellActionDependencies) => {
-    const { addLog, addXp, modifyItem, hasItems, skills, ui, equipment, currentPoiId, setInventory } = deps;
+    const { addLog, addXp, modifyItem, hasItems, skills, ui, equipment, currentPoiId, setInventory, char, combatSpeedMultiplier } = deps;
 
     const handleSpellOnItem = useCallback((spell: Spell, target: { item: InventorySlot, index: number }) => {
+        // Check global cooldown
+        if (Date.now() < char.globalActionCooldown) {
+             return;
+        }
+
         ui.setSpellToCast(null);
+        ui.setActivePanel('spellbook');
 
         const isTargetValid = spell.targetItems?.includes(target.item.itemId) || spell.targetItems?.includes('all');
         if (!isTargetValid) {
@@ -59,6 +69,11 @@ export const useSpellActions = (deps: SpellActionDependencies) => {
             return;
         }
 
+        // Set Cooldown based on fixed tick time (600ms)
+        const tickMs = 600;
+        const cooldownMs = (spell.castTime ?? 5) * tickMs;
+        char.setGlobalActionCooldown(Date.now() + cooldownMs);
+
         if (spell.id === 'enchant_sunstone') {
             const itemData = ITEMS[target.item.itemId];
             const maxCharges = itemData.charges;
@@ -69,11 +84,14 @@ export const useSpellActions = (deps: SpellActionDependencies) => {
                 
                 if (!BANK_POI_IDS.includes(currentPoiId)) {
                     addLog("You can only recharge this item at a bank.");
+                    // Refund cooldown since action failed logic
+                    char.setGlobalActionCooldown(0); 
                     return;
                 }
 
                 if (maxCharges !== undefined && (target.item.charges ?? 0) >= maxCharges) {
                     addLog(`Your ${itemData.name} is already fully charged.`);
+                    char.setGlobalActionCooldown(0);
                     return;
                 }
 
@@ -105,10 +123,12 @@ export const useSpellActions = (deps: SpellActionDependencies) => {
             ) => {
                 if (smithingLevel < levelReq) {
                     addLog(`You need a Smithing level of ${levelReq} to do that.`);
+                    char.setGlobalActionCooldown(0);
                     return;
                 }
                 if (!hasItems(ingredients)) {
                     addLog("You don't have the required ores.");
+                    char.setGlobalActionCooldown(0);
                     return;
                 }
 
@@ -152,6 +172,7 @@ export const useSpellActions = (deps: SpellActionDependencies) => {
                     break;
                 default:
                     addLog("This spell can only be cast on ore.");
+                    char.setGlobalActionCooldown(0);
                     return;
             }
         } else if (spell.type === 'utility-enchant') {
@@ -164,11 +185,13 @@ export const useSpellActions = (deps: SpellActionDependencies) => {
                 addLog(`You enchant the ${ITEMS[target.item.itemId].name}.`);
             } else {
                 addLog(`You cannot enchant this item with ${spell.name}.`);
+                char.setGlobalActionCooldown(0);
             }
         } else if (spell.type === 'utility-alchemy') {
             const itemData = ITEMS[target.item.itemId];
             if (!itemData || itemData.value === 0) {
                 addLog("This item cannot be transmuted.");
+                char.setGlobalActionCooldown(0);
                 return;
             }
             
@@ -181,7 +204,7 @@ export const useSpellActions = (deps: SpellActionDependencies) => {
             modifyItem('coins', coinValue, true);
             addLog(`You transmute the ${itemData.name} into ${coinValue} coins.`);
         }
-    }, [addLog, addXp, modifyItem, hasItems, skills, ui, equipment, currentPoiId, setInventory]);
+    }, [addLog, addXp, modifyItem, hasItems, skills, ui, equipment, currentPoiId, setInventory, char, combatSpeedMultiplier]);
 
     return { handleSpellOnItem };
 };

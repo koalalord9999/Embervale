@@ -3,12 +3,20 @@ import { Item, EquipmentSlot, WeaponType } from '../../types';
 
 export const misc: Item[] = [
     // Currency
-    { id: 'coins', name: 'Coins', description: 'Shiny gold coins.', stackable: true, value: 1, iconUrl: 'https://api.iconify.design/game-icons:coins.svg' },
+    { id: 'coins', name: 'Coins', description: 'Shiny gold coins.', stackable: true, value: 1, iconUrl: 'https://api.iconify.design/game-icons:coins.svg', material: 'gold'},
     { id: 'beer_glass', name: 'Beer Glass', description: 'An empty beer glass.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:beer-stein.svg' },
     { id: 'ashes', name: 'Ashes', description: 'A pile of ashes.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:powder.svg' },
     { id: 'fishing_bait', name: 'Fishing Bait', description: 'A wriggling worm, perfect for catching fish.', stackable: true, value: 1, iconUrl: 'https://api.iconify.design/game-icons:worms.svg' },
     { id: 'seeds', name: 'Seeds', description: "A random assortment of seeds, maybe I can turn them in somewhere? (But not yet)", stackable: true, value: 10, iconUrl: 'https://api.iconify.design/game-icons:plant-seed.svg' },
     { id: 'waterskin', name: 'Waterskin', description: 'A skin for carrying water. Can be filled at a water source or from a cactus.', stackable: false, value: 15, iconUrl: 'https://api.iconify.design/game-icons:waterskin.svg', material: 'leather', consumable: { healAmount: 1 }, doseable: true, maxDoses: 4 },
+    
+    // Food Ingredients & Containers
+    { id: 'apple', name: 'Apple', description: 'A crisp red apple.', stackable: false, value: 3, iconUrl: 'https://api.iconify.design/game-icons:apple-maggot.svg', consumable: { healAmount: 2 }, material: 'raw-meat' },
+    { id: 'tomato', name: 'Tomato', description: 'A ripe red tomato.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:tomato.svg', material: 'raw-meat' },
+    { id: 'cheese', name: 'Cheese', description: 'A wheel of cheese.', stackable: false, value: 10, iconUrl: 'https://api.iconify.design/game-icons:cheese-wedge.svg', consumable: { healAmount: 3 }, material: 'raw-fish' },
+    { id: 'red_berries', name: 'Red Berries', description: 'A handful of mixed berries.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:berries-bowl.svg', consumable: { healAmount: 2 }, material: 'raw-meat' },
+    { id: 'pineapple', name: 'Pineapple', description: 'A prickly tropical fruit.', stackable: false, value: 20, iconUrl: 'https://api.iconify.design/game-icons:pineapple.svg', material: 'gold' },
+    { id: 'pineapple_chunks', name: 'Pineapple Chunks', description: 'Sliced pineapple, ready for cooking.', stackable: false, value: 20, iconUrl: 'https://api.iconify.design/game-icons:pineapple.svg', consumable: { healAmount: 2 }, material: 'gold' },
     
     // Quest & Key Items
     { id: 'frostfang_key', name: 'Frostfang Key', description: 'A key made of enchanted ice that radiates a biting cold. It is used to unlock the Frozen Gate in the Frostfang Peaks.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:key-skeleton.svg', material: 'aquatite' },
@@ -89,10 +97,10 @@ export const misc: Item[] = [
     { id: 'magus_spire_map', name: 'Magus Spire Map', description: 'A map drawn on shimmering crystal film, showing the layout of the spire.', stackable: false, value: 2500, iconUrl: 'https://api.iconify.design/game-icons:treasure-map.svg', mappable: { regionId: 'magus_spire', mapTitle: 'Magus Spire' } },
     
     // Thieving Items
-    { id: 'bobby_pin', name: 'Bobby Pin', description: 'A thin piece of metal, suitable for simple locks.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:safety-pin.svg', lockpick: { level: 1, breakChance: 0.5, power: 5 } },
-    { id: 'lockpick', name: 'Lockpick', description: 'A sturdy iron lockpick for more complex locks.', stackable: false, value: 50, iconUrl: 'https://api.iconify.design/game-icons:lockpicks.svg', lockpick: { level: 20, breakChance: 0.2, power: 10 } },
-    { id: 'diamond_lockpick', name: 'Diamond Lockpick', description: 'A masterfully crafted lockpick with a diamond tip. Very durable.', stackable: false, value: 5000, iconUrl: 'https://api.iconify.design/game-icons:lockpicks.svg', material: 'diamond', lockpick: { level: 50, breakChance: 0.05, power: 20 } },
-    { id: 'skeleton_key', name: 'Skeleton Key', description: 'An ancient, unbreakable key said to open any lock.', stackable: false, value: 100000, iconUrl: 'https://api.iconify.design/game-icons:skeleton-key.svg', lockpick: { level: 80, breakChance: 0, unbreakable: true, power: 40 } },
+    { id: 'bobby_pin', name: 'Bobby Pin', description: 'A thin piece of metal, suitable for simple locks.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:safety-pin.svg', lockpick: { level: 1, breakChance: 0.5, power: 0} },
+    { id: 'lockpick', name: 'Lockpick', description: 'A sturdy iron lockpick for more complex locks.', stackable: false, value: 50, iconUrl: 'https://api.iconify.design/game-icons:lockpicks.svg', lockpick: { level: 20, breakChance: 0.2, power: 5 } },
+    { id: 'diamond_lockpick', name: 'Diamond Lockpick', description: 'A masterfully crafted lockpick with a diamond tip. Very durable.', stackable: false, value: 5000, iconUrl: 'https://api.iconify.design/game-icons:lockpicks.svg', material: 'diamond', lockpick: { level: 50, breakChance: 0.05, power: 10 } },
+    { id: 'skeleton_key', name: 'Skeleton Key', description: 'An ancient, unbreakable key said to open any lock.', stackable: false, value: 100000, iconUrl: 'https://api.iconify.design/game-icons:skeleton-key.svg', lockpick: { level: 80, breakChance: 0, unbreakable: true, power: 15 } },
 
     // NEW QUEST ITEMS
     { id: 'blighted_soil', name: 'Blighted Soil', description: "A sample of soil from near Fitzwilliam's petunias. It feels unnaturally cold.", stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:ground-sprout.svg' },

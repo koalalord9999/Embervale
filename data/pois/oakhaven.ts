@@ -218,6 +218,17 @@ export const oakhavenPois: Record<string, POI> = {
                 name: 'Tanner Sven',
                 icon: '/assets/npcChatHeads/tanner_sven.png',
                 startNode: 'start',
+                dialogue: {
+                    start: {
+                        npcName: 'Tanner Sven',
+                        npcIcon: '/assets/npcChatHeads/tanner_sven.png',
+                        text: "You bring the hide, I'll make it leather. For a price, of course. Got anything for me?",
+                        responses: [
+                            { text: "Tan all hides in inventory.", actions: [{ type: 'tan_all_hides' }] },
+                            { text: "I'll come back later." }
+                        ]
+                    }
+                }
             }
         ],
         regionId: 'oakhaven',
@@ -316,7 +327,8 @@ export const oakhavenPois: Record<string, POI> = {
                     { text: "The barrow seal is weakening. I knew it. What are you waiting for? Take the key to Valerius!", check: { requirements: [{ type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 2 }] } },
                     { text: "Have you reforged the key yet?", check: { requirements: [{ type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 3 }] } },
                     { text: "You have the reforged key? Then what are you doing here? Get to the barrow!", check: { requirements: [{ type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 5 }] } },
-                    { text: "You've returned, what news do you have?", check: { requirements: [{ type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 6 }] } },
+                    { text: "The seal is broken? Don't keep it waiting. End this.", check: { requirements: [{ type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 6 }] } },
+                    { text: "You've returned, what news do you have?", check: { requirements: [{ type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 7 }] } },
                     
                     // ART OF THE WARHAMMER (LOWER PRIORITY)
                     { text: "Still here? Valerius isn't getting any younger. You'll find him at the smithy in Meadowdale.", check: { requirements: [{ type: 'quest', questId: 'art_of_the_warhammer', status: 'in_progress', stage: 0 }] } },

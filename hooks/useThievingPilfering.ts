@@ -1,6 +1,4 @@
 
-
-
 import { useEffect, useCallback, useRef } from 'react';
 import { WorldState, PlayerSkill, SkillName, POIActivity, ActivePilferingSession, InventorySlot, Item } from '../types';
 import { THIEVING_CONTAINER_TARGETS, HOUSE_TIERS, PILFERING_DURATION, ITEMS } from '../constants';
@@ -20,12 +18,13 @@ interface PilferingDependencies {
     inventory: (InventorySlot | null)[];
     modifyItem: (itemId: string, quantity: number, quiet?: boolean, slotOverrides?: Partial<Omit<InventorySlot, 'itemId' | 'quantity'>> & { bypassAutoBank?: boolean; }) => void;
     isInCombat: boolean;
+    moveItems: (fromPoiId: string, toPoiId: string) => void;
 }
 
 const HOUSE_RESET_INTERVAL = 30 * 60 * 1000; // 30 minutes
 
 export const useThievingPilfering = (deps: PilferingDependencies) => {
-    const { worldState, setWorldState, char, navigation, addLog, setDynamicActivities, session } = deps;
+    const { worldState, setWorldState, char, navigation, addLog, setDynamicActivities, session, moveItems } = deps;
     const activeTimeoutRef = useRef<number | null>(null);
     const prevPoiIdRef = useRef(session.currentPoiId);
 
@@ -91,10 +90,13 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
     }, []);
 
     const leaveHouse = useCallback(() => {
-        const { worldState, setWorldState, navigation, addLog, setDynamicActivities } = depsRef.current;
+        const { worldState, setWorldState, navigation, addLog, setDynamicActivities, moveItems } = depsRef.current;
         const session = worldState.activePilferingSession;
 
         if (session) {
+            // Move any dropped items from the house to the street
+            moveItems('pilfering_house_instance', session.entryPoiId);
+
             // Perform cleanup first, then navigate. This makes the action atomic.
             setWorldState(ws => ({
                 ...ws,
@@ -145,21 +147,23 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
                     const baseTierId = tier.tierId.replace('thieving_house_drawer_', '');
 
                     for (let i = 0; i < numContainers; i++) {
-                        // Expanded logic for new container types
+                        // Expanded logic for new container types including Medicine Cabinet
                         // Coin purse = 10%
-                        // Drawer = 35%
-                        // Cabinet = 30%
-                        // Vanity = 12%
-                        // Chest = 8%
-                        // Strongbox = 5%
+                        // Drawer = 30%
+                        // Cabinet = 25%
+                        // Medicine Cabinet = 15%
+                        // Vanity = 10%
+                        // Chest = 6%
+                        // Strongbox = 4%
                         const containerRoll = Math.random() * 1000;
-                        let containerType: 'coin_purse' | 'drawer' | 'cabinet' | 'vanity' | 'chest' | 'strongbox';
+                        let containerType: 'coin_purse' | 'drawer' | 'cabinet' | 'medicine_cabinet' | 'vanity' | 'chest' | 'strongbox';
 
                         if (containerRoll < 100) { containerType = 'coin_purse'; }
-                        else if (containerRoll < 450) { containerType = 'drawer'; }
-                        else if (containerRoll < 750) { containerType = 'cabinet'; }
-                        else if (containerRoll < 870) { containerType = 'vanity'; }
-                        else if (containerRoll < 950) { containerType = 'chest'; }
+                        else if (containerRoll < 400) { containerType = 'drawer'; }
+                        else if (containerRoll < 650) { containerType = 'cabinet'; }
+                        else if (containerRoll < 800) { containerType = 'medicine_cabinet'; }
+                        else if (containerRoll < 900) { containerType = 'vanity'; }
+                        else if (containerRoll < 960) { containerType = 'chest'; }
                         else { containerType = 'strongbox'; }
                         
                         const lootTableId = `thieving_house_${containerType}_${baseTierId}`;
@@ -231,6 +235,9 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
     
         if (wasInHouse && !isNowInHouse) {
             if (depsRef.current.worldState.activePilferingSession) {
+                // Move items when leaving via teleport/etc as well
+                depsRef.current.moveItems('pilfering_house_instance', depsRef.current.worldState.activePilferingSession.entryPoiId);
+
                 depsRef.current.setWorldState(ws => {
                     const houseId = ws.activePilferingSession?.housePoiId;
                     if (houseId && !(ws.depletedHouses || []).includes(houseId)) {
@@ -259,7 +266,7 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
         const timeLeft = PILFERING_DURATION - elapsed;
     
         const timer = setTimeout(() => {
-            const { worldState: currentWorldState, addLog, char, navigation, setWorldState, setDynamicActivities } = depsRef.current;
+            const { worldState: currentWorldState, addLog, char, navigation, setWorldState, setDynamicActivities, moveItems } = depsRef.current;
             const session = currentWorldState.activePilferingSession;
             
             // Check if the session is still the same one this timer was set for.
@@ -271,6 +278,9 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
                 addLog(`You take ${damage} damage in the commotion.`);
     
                 if (newHp > 0) {
+                    // Move items before leaving
+                    moveItems('pilfering_house_instance', session.entryPoiId);
+
                     // Perform the same atomic cleanup-then-navigate logic as the manual "Leave House" button.
                     const entryPoiId = session.entryPoiId;
                     setWorldState(ws => ({

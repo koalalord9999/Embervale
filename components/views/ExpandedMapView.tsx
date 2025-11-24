@@ -256,6 +256,25 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
         dragStart.current = { x: e.clientX - view.x, y: e.clientY - view.y };
         if (e.currentTarget instanceof HTMLElement) e.currentTarget.style.cursor = 'grabbing';
     };
+    
+    // --- TOUCH HANDLING ---
+    const onTouchStart = (e: React.TouchEvent) => {
+        // Prevent default to stop page scrolling while dragging map
+        // e.preventDefault(); // Removed to allow pinch zoom if implemented later, checking target
+        if (e.target instanceof HTMLElement && e.target.closest('[data-draggable="true"]')) return;
+        
+        setIsDragging(true);
+        const touch = e.touches[0];
+        dragStart.current = { x: touch.clientX - view.x, y: touch.clientY - view.y };
+    };
+
+    const onTouchMove = (e: React.TouchEvent) => {
+        if (isDragging) {
+            e.preventDefault(); // Stop scrolling
+            const touch = e.touches[0];
+            setView(v => ({ ...v, x: touch.clientX - dragStart.current.x, y: touch.clientY - dragStart.current.y }));
+        }
+    };
 
     const onMouseUpOrLeave = (e: React.MouseEvent | React.TouchEvent) => {
         if(isDragging) {
@@ -370,6 +389,10 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                     onMouseDown={onMapMouseDown}
                     onMouseUp={onMouseUpOrLeave}
                     onMouseLeave={onMouseUpOrLeave}
+                    // Mobile drag support
+                    onTouchStart={onTouchStart}
+                    onTouchMove={onTouchMove}
+                    onTouchEnd={onMouseUpOrLeave}
                 >
                     <div className="absolute inset-0 bg-black/50" />
 

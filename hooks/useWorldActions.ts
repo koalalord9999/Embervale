@@ -1,3 +1,4 @@
+
 import React, { useCallback } from 'react';
 import { POIActivity, SkillName, InventorySlot, PlayerSkill, SkillRequirement, PlayerQuestState, ActiveCraftingAction, WorldState, WeaponType, Equipment } from '../types';
 import { ITEMS, INVENTORY_CAPACITY, rollOnLootTable, LootRollResult, FIREMAKING_RECIPES } from '../constants';
@@ -264,6 +265,46 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
         }
     }, [inventory, addLog, setMakeXPrompt, setActiveCraftingAction]);
 
+    const handleChurn = useCallback(() => {
+        const milkCount = inventory.filter(s => s?.itemId === 'bucket_of_milk').length;
+        if (milkCount === 0) {
+            addLog("You don't have any buckets of milk.");
+            return;
+        }
+
+        const cookingSkill = skills.find(s => s.name === SkillName.Cooking);
+        if (!cookingSkill || cookingSkill.currentLevel < 26) {
+            addLog("You need a Cooking level of 26 to churn dairy.");
+            return;
+        }
+
+        const onConfirm = (quantity: number) => {
+            const actualQuantity = Math.min(quantity, milkCount);
+            if (actualQuantity > 0) {
+                addLog("You begin churning the milk into cheese...");
+                setActiveCraftingAction({
+                    recipeId: 'cheese',
+                    recipeType: 'crafting', // Reusing generic crafting type for simplicity
+                    totalQuantity: actualQuantity,
+                    completedQuantity: 0,
+                    successfulQuantity: 0,
+                    startTime: Date.now(),
+                    duration: 1800, // 1.8s per cheese
+                });
+            }
+        };
+
+        if (milkCount === 1) {
+            onConfirm(1);
+        } else {
+            setMakeXPrompt({
+                title: 'Churn Cheese',
+                max: milkCount,
+                onConfirm
+            });
+        }
+    }, [inventory, skills, addLog, setActiveCraftingAction, setMakeXPrompt]);
+
     const handleOpenAncientChest = useCallback(() => {
         if (!hasItems([{ itemId: 'strange_key', quantity: 1 }])) {
             addLog("The chest is locked. It seems to require a strange, ornate key.");
@@ -317,6 +358,7 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
         handleCollectWater,
         handleCollectFlour,
         handleMillWheat,
+        handleChurn, // Export new function
         handleOpenAncientChest,
         handleCutCactus,
     };

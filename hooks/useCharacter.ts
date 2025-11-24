@@ -36,6 +36,7 @@ export const useCharacter = (
     const [autocastSpell, setAutocastSpell] = useState<Spell | null>(initialData.autocastSpell ?? null);
     
     const [rawCurrentPrayer, _setRawCurrentPrayer] = useState<number>(initialData.currentPrayer);
+    const [globalActionCooldown, setGlobalActionCooldown] = useState<number>(0);
 
     const [godModeHp, setGodModeHp] = useState(999); // Invisible HP
     const [godModePrayer, setGodModePrayer] = useState(999); // Invisible Prayer
@@ -446,13 +447,14 @@ export const useCharacter = (
         });
     }, [addLog]);
 
-    const applySpellStatBuff = useCallback((skill: SkillName, value: number, duration: number) => {
+    const applySpellStatBuff = useCallback((skill: SkillName, value: number, duration: number, source?: string) => {
         const newBuff: ActiveBuff = {
             id: Date.now() + Math.random(),
             type: 'stat_boost',
             value: value,
             duration: duration,
             durationRemaining: duration,
+            source: source,
             statBoost: {
                 skill,
                 value
@@ -550,27 +552,15 @@ export const useCharacter = (
         setActiveBuffs(prev => prev.filter(b => b.type === 'stat_boost'));
     }, []);
 
+    // VISIBLE LEVEL Calculation (Base + Potions)
     const skillsWithCurrentLevels = useMemo(() => {
         return skills.map(skill => {
             let currentLevel = skill.level;
     
-            // Apply prayer boosts FIRST
-            const prayerBoosts = activePrayers
-                .map(id => PRAYERS.find(p => p.id === id))
-                .filter((p): p is Prayer => !!p && p.type === PrayerType.STAT_BOOST && p.boost?.skill === skill.name);
+            // Note: Prayers and Spell Buffs are now considered "Effective" levels (invisible)
+            // and are not included here. Only Potions (statModifiers) affect the visible level.
             
-            if (prayerBoosts.length > 0) {
-                const highestBoost = Math.max(...prayerBoosts.map(p => p.boost!.percent));
-                currentLevel += Math.floor(skill.level * (highestBoost / 100));
-            }
-    
-            // Then, apply fixed-duration spell buffs
-            const spellBuff = activeBuffs.find(b => b.type === 'stat_boost' && b.statBoost?.skill === skill.name);
-            if (spellBuff && spellBuff.statBoost) {
-                currentLevel += spellBuff.statBoost.value;
-            }
-            
-            // Finally, apply decaying potion/monster modifiers
+            // Apply decaying potion/monster modifiers
             const decayModifier = statModifiers.find(m => m.skill === skill.name);
             if (decayModifier) {
                 const modifiedLevel = currentLevel + decayModifier.currentValue;
@@ -579,8 +569,34 @@ export const useCharacter = (
     
             return { ...skill, currentLevel: currentLevel };
         });
-    }, [skills, statModifiers, activeBuffs, activePrayers]);
+    }, [skills, statModifiers]);
     
+    // EFFECTIVE LEVEL Calculation (Visible + Prayers + Spells)
+    // This is used for combat math (accuracy, damage).
+    const getEffectiveLevel = useCallback((skillName: SkillName) => {
+        const skill = skillsWithCurrentLevels.find(s => s.name === skillName);
+        if (!skill) return 1;
+        let level = skill.currentLevel; // Start with Visible Level
+
+        // Add Spell Buffs (Invisible flat boost)
+        const spellBuff = activeBuffs.find(b => b.type === 'stat_boost' && b.statBoost?.skill === skillName);
+        if (spellBuff && spellBuff.statBoost) {
+            level += spellBuff.statBoost.value;
+        }
+
+        // Multiply by Prayer (Invisible percentage boost)
+        const prayerBoosts = activePrayers
+            .map(id => PRAYERS.find(p => p.id === id))
+            .filter((p): p is Prayer => !!p && p.type === PrayerType.STAT_BOOST && p.boost?.skill === skillName);
+
+        if (prayerBoosts.length > 0) {
+            const highestBoost = Math.max(...prayerBoosts.map(p => p.boost!.percent));
+            // Standard formula: Effective = Floor(Current * Multiplier)
+            level = Math.floor(level * (1 + highestBoost / 100));
+        }
+
+        return level;
+    }, [skillsWithCurrentLevels, activeBuffs, activePrayers]);
 
     const setSkillLevel = useCallback((skillName: SkillName, level: number) => {
         const clampedLevel = Math.max(1, Math.min(99, level));
@@ -603,6 +619,7 @@ export const useCharacter = (
 
     return {
         skills: skillsWithCurrentLevels, 
+        getEffectiveLevel,
         setSkills, 
         combatStance, 
         setCombatStance, 
@@ -628,5 +645,7 @@ export const useCharacter = (
         setSkillLevel,
         isStunned,
         isPoisoned,
+        globalActionCooldown,
+        setGlobalActionCooldown,
     };
 };

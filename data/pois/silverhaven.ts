@@ -359,7 +359,8 @@ export const silverhavenPois: Record<string, POI> = {
                         responses: [],
                     }
                 }
-            }
+            },
+            { type: 'ground_item', id: 'silverhaven_docks_bait', itemId: 'fishing_bait', resourceCount: 3, respawnTimer: 60000 },
         ],
         regionId: 'silverhaven',
         x: 307, y: 394,
@@ -371,7 +372,8 @@ export const silverhavenPois: Record<string, POI> = {
         description: 'Fishermen hawk their latest catches. The ground is slick with seawater.',
         connections: ['silverhaven_docks'],
         activities: [
-            { type: 'shop', shopId: 'silverhaven_fishing' }
+            { type: 'shop', shopId: 'silverhaven_fishing' },
+            { type: 'ground_item', id: 'silverhaven_market_kelp', itemId: 'redwater_kelp', resourceCount: 1, respawnTimer: 180000 },
         ],
         regionId: 'silverhaven',
         x: 307, y: 370,

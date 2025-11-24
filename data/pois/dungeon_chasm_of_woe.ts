@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 
 export const chasmOfWoePois: Record<string, POI> = {
@@ -40,7 +41,8 @@ export const chasmOfWoePois: Record<string, POI> = {
             { type: 'ladder', name: 'Climb back to Outpost', direction: 'up', toPoiId: 'chasm_of_woe_entrance' },
             { type: 'combat', monsterId: 'chasm_crawler' },
             { type: 'skilling', id: 'chasm_ledge_gold_1', name: 'Mine Gold Rock', skill: SkillName.Mining, requiredLevel: 40, loot: [{ itemId: 'gold_ore', chance: 1, xp: 65 }], resourceCount: { min: 1, max: 2 }, respawnTime: 60000, gatherTime: 4500 },
-            { type: 'thieving_lockpick', id: 'cwoe_chest_1', targetName: 'Miner\'s Satchel', lootTableId: 'thieving_dungeon_chest_mid' }
+            { type: 'thieving_lockpick', id: 'cwoe_chest_1', targetName: 'Miner\'s Satchel', lootTableId: 'thieving_dungeon_chest_mid' },
+            { type: 'ground_item', id: 'chasm_ledge_rope', itemId: 'rope', resourceCount: 1, respawnTimer: 600000 },
         ],
         regionId: 'chasm_of_woe',
         x: 826,

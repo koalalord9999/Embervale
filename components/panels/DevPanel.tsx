@@ -34,7 +34,7 @@ const GameManagerComponent: React.FC<GameManagerProps> = ({
             <div>
                 <label className="block text-sm font-semibold mb-1">Reset Quest</label>
                 <div className="flex gap-2">
-                    <select value={questToReset} onChange={e => setQuestToReset(e.target.value)} className="w-full p-1 text-xs bg-gray-800 border border-gray-600 rounded">
+                    <select value={questToReset} onChange={e => setQuestToReset(e.target.value)} className="w-full p-1 text-base bg-gray-800 border border-gray-600 rounded">
                         <option value="">-- Select Quest --</option>
                         {Object.values(QUESTS).sort((a,b) => a.name.localeCompare(b.name)).map(q => <option key={q.id} value={q.id}>{q.name}</option>)}
                     </select>
@@ -126,7 +126,7 @@ const CheatsComponent: React.FC<CheatsComponentProps> = ({
             <div>
                 <label className="block text-sm font-semibold mb-1">Add Coins</label>
                 <div className="flex gap-2">
-                    <input type="number" value={coinAmount} onChange={e => setCoinAmount(parseInt(e.target.value, 10) || 0)} className="w-full p-1 text-xs bg-gray-800 border border-gray-600 rounded text-center"/>
+                    <input type="number" value={coinAmount} onChange={e => setCoinAmount(parseInt(e.target.value, 10) || 0)} className="w-full p-1 text-base bg-gray-800 border border-gray-600 rounded text-center"/>
                     <Button size="sm" onClick={() => onAddCoins(coinAmount)}>Add</Button>
                 </div>
             </div>
@@ -135,11 +135,11 @@ const CheatsComponent: React.FC<CheatsComponentProps> = ({
             <div>
                 <label className="block text-sm font-semibold mb-1">Set Skill Level</label>
                 <div className="flex gap-2">
-                    <select value={skillToSet} onChange={e => setSkillToSet(e.target.value as SkillName | '')} className="w-full p-1 text-xs bg-gray-800 border border-gray-600 rounded">
+                    <select value={skillToSet} onChange={e => setSkillToSet(e.target.value as SkillName | '')} className="w-full p-1 text-base bg-gray-800 border border-gray-600 rounded">
                         <option value="">Select Skill</option>
                         {ALL_SKILLS.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
                     </select>
-                    <input type="number" min="1" max="99" value={levelToSet} onChange={e => setLevelToSet(parseInt(e.target.value, 10) || 1)} className="w-20 p-1 text-xs bg-gray-800 border border-gray-600 rounded text-center"/>
+                    <input type="number" min="1" max="99" value={levelToSet} onChange={e => setLevelToSet(parseInt(e.target.value, 10) || 1)} className="w-20 p-1 text-base bg-gray-800 border border-gray-600 rounded text-center"/>
                     <Button size="sm" onClick={() => { if (skillToSet) { onSetSkillLevel(skillToSet, levelToSet); } }} disabled={!skillToSet}>Set</Button>
                 </div>
             </div>
@@ -177,7 +177,7 @@ const CheatsComponent: React.FC<CheatsComponentProps> = ({
                     <button onClick={() => setIsInstantRespawnOn(!isInstantRespawnOn)} className={`flex-1 py-1 text-xs rounded font-bold transition-colors ${isInstantRespawnOn ? 'bg-green-600 hover:bg-green-500' : 'bg-red-700 hover:bg-red-600'}`}>
                         {isInstantRespawnOn ? 'ON' : 'OFF'}
                     </button>
-                    <input type="number" placeholder="Count" disabled={!isInstantRespawnOn} value={instantRespawnCounter ?? ''} onChange={e => setInstantRespawnCounter(e.target.value ? parseInt(e.target.value, 10) : null)} className="w-20 p-1 text-xs bg-gray-800 border border-gray-600 rounded disabled:opacity-50 text-center" />
+                    <input type="number" placeholder="Count" disabled={!isInstantRespawnOn} value={instantRespawnCounter ?? ''} onChange={e => setInstantRespawnCounter(e.target.value ? parseInt(e.target.value, 10) : null)} className="w-20 p-1 text-base bg-gray-800 border border-gray-600 rounded disabled:opacity-50 text-center" />
                 </div>
             </div>
             {/* God Mode */}
@@ -270,7 +270,7 @@ const ItemSpawnerComponent: React.FC<ItemSpawnerProps> = ({ inv, setTooltip, sea
 
     return (
         <div className="p-2 flex flex-col h-full">
-            <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search for items..." className="w-full p-1 mb-2 bg-gray-800 border border-gray-600 rounded text-center" />
+            <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search for items..." className="w-full p-1 mb-2 bg-gray-800 border border-gray-600 rounded text-center text-base" />
             <div className="flex-grow overflow-y-auto border-2 border-gray-700 rounded-md bg-black/20 p-1">
                 <div className="grid grid-cols-7 gap-1">
                     {filteredItems.map(item => (
@@ -292,7 +292,7 @@ const ItemSpawnerComponent: React.FC<ItemSpawnerProps> = ({ inv, setTooltip, sea
                     <div className="flex flex-col items-center gap-2">
                         <input type="range" min="1" max={maxQty} value={quantity} step={selectedItem.stackable ? 1000 : 1} onChange={e => setQuantity(parseInt(e.target.value))} className="w-full" />
                         <div className="flex items-center gap-2">
-                            <input type="number" value={quantity} onChange={e => handleQuantityChange(e.target.value)} className="w-24 p-1 text-center bg-gray-900 border border-gray-600 rounded" />
+                            <input type="number" value={quantity} onChange={e => handleQuantityChange(e.target.value)} className="w-24 p-1 text-center bg-gray-900 border border-gray-600 rounded text-base" />
                             <span className="text-gray-400">/ {maxQty.toLocaleString()}</span>
                         </div>
                         <div className="flex gap-2 w-full">
@@ -337,7 +337,7 @@ const TeleportComponent: React.FC<{
         <div className="p-2 space-y-4">
             <div>
                 <label htmlFor="region-select" className="block text-sm font-semibold mb-1">Region</label>
-                <select id="region-select" value={selectedRegionId} onChange={e => setSelectedRegionId(e.target.value)} className="w-full p-2 bg-gray-800 border border-gray-600 rounded">
+                <select id="region-select" value={selectedRegionId} onChange={e => setSelectedRegionId(e.target.value)} className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-base">
                     <option value="">-- Select Region --</option>
                     {regions.map(region => (
                         <option key={region.id} value={region.id}>{region.name}</option>
@@ -346,7 +346,7 @@ const TeleportComponent: React.FC<{
             </div>
             <div>
                 <label htmlFor="poi-select" className="block text-sm font-semibold mb-1">Point of Interest</label>
-                <select id="poi-select" value={selectedPoiId} onChange={e => setSelectedPoiId(e.target.value)} disabled={!selectedRegionId} className="w-full p-2 bg-gray-800 border border-gray-600 rounded disabled:opacity-50">
+                <select id="poi-select" value={selectedPoiId} onChange={e => setSelectedPoiId(e.target.value)} disabled={!selectedRegionId} className="w-full p-2 bg-gray-800 border border-gray-600 rounded disabled:opacity-50 text-base">
                     <option value="">-- Select POI --</option>
                     {poisInRegion.map(poi => (
                         <option key={poi.id} value={poi.id}>{poi.name}</option>

@@ -1,3 +1,4 @@
+
 import { Quest, SkillName } from '../../types';
 
 export const anEchoOfBattle: Quest = {
@@ -12,7 +13,8 @@ export const anEchoOfBattle: Quest = {
         "Valerius can reforge the key, but he needs a magical binding agent: Glimmerhorn Dust. I can get this from Glimmerhorn Stags.", // 3
         "I have the Glimmerhorn Dust. I should return to Valerius in Meadowdale.", // 4
         "I have the reforged key. I must return to the Forgotten Barrow and solve the puzzle of the three comrades to enter.", // 5
-        "I defeated the Revenant Lord and retrieved the shield of Bronn's fallen comrade. I should return it to Bronn in Oakhaven." // 6
+        "I have broken the seal on the crypt. I need to find out what killed Bronn's comrade.", // 6
+        "I defeated the Revenant Lord and retrieved the shield of Bronn's fallen comrade. I should return it to Bronn in Oakhaven." // 7
     ],
     completionSummary: "I helped Bronn the retired adventurer confront his past. After reforging a key with Valerius's help and solving a puzzle, I entered a forgotten barrow and defeated a powerful Revenant Lord. I returned the shield from the battle to Bronn, finally giving him peace.",
     stages: [
@@ -35,6 +37,10 @@ export const anEchoOfBattle: Quest = {
         {
             description: "Return to Valerius with the Glimmerhorn Dust.",
             requirement: { type: 'talk', poiId: 'meadowdale_smithy', npcName: 'Valerius the Master Smith' }
+        },
+        {
+            description: "Solve the puzzle to open the Forgotten Barrow.",
+            requirement: { type: 'talk', poiId: 'forgotten_barrow', npcName: 'Use Reforged Key' }
         },
         {
             description: "Enter the Forgotten Barrow and defeat the Grave Revenant Lord.",
@@ -60,10 +66,12 @@ export const anEchoOfBattle: Quest = {
         { npcName: 'Bronn the Retired Adventurer', response: { text: "What should I do with this key?", check: { requirements: [ { type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 2 } ], successNode: 'aeb_bronn_remind_valerius', failureNode: '' } } },
         //AFTER ACCEPTING THE PART FROM VALERIUS
         { npcName: 'Bronn the Retired Adventurer', response: { text: "Where can I find Glimmerhorn Dust?", check: { requirements: [ { type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 3 } ], successNode: 'aeb_bronn_remind_dust', failureNode: '' } } },
-        //AFTER REFORGING THE KEY, BEFORE KILLING REV LORD
+        //AFTER REFORGING THE KEY, BEFORE OPENING
         { npcName: 'Bronn the Retired Adventurer', response: { text: "Sorry, I just forgot what I needed to do..", check: { requirements: [ { type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 5 } ], successNode: 'aeb_bronn_remind_barrow', failureNode: '' } } },
+        //AFTER OPENING THE SEAL (OPTIONAL)
+        { npcName: 'Bronn the Retired Adventurer', response: { text: "I managed to break the seal.", check: { requirements: [ { type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 6 } ], successNode: 'aeb_bronn_seal_broken', failureNode: '' } } },
         //AFTER KILLING REV LORD
-        { npcName: 'Bronn the Retired Adventurer', response: { text: "I think I found the monster that killed your comrade.", check: { requirements: [ { type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 6 } ], successNode: 'aeb_bronn_complete_check', failureNode: '' } } },
+        { npcName: 'Bronn the Retired Adventurer', response: { text: "I think I found the monster that killed your comrade.", check: { requirements: [ { type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 7 } ], successNode: 'aeb_bronn_complete_check', failureNode: '' } } },
 
         //VALERIUS ENTRY POINTS
         { npcName: 'Valerius the Master Smith', response: { text: "I have a broken key from Bronn.", check: { requirements: [ { type: 'quest', questId: 'an_echo_of_battle', status: 'in_progress', stage: 2 } ], successNode: 'aeb_valerius_intro', failureNode: '' } } },
@@ -199,6 +207,12 @@ export const anEchoOfBattle: Quest = {
             npcIcon: '/assets/npcChatHeads/bronn_the_retired_adventurer.png',
             text: "It's okay lad, just hurry back to the Forgotten Barrow in the Verdant Fields. The door has a puzzle... a memory of my old comrades. Ensure the threat in the barrow is dealt with.",
             responses: []
+        },
+        aeb_bronn_seal_broken: {
+            npcName: 'Bronn the Retired Adventurer',
+            npcIcon: '/assets/npcChatHeads/bronn_the_retired_adventurer.png',
+            text: "You did? I knew you could do it. The way is open then. Be careful in there. That Revenant Lord is no ordinary foe. Strike true.",
+            responses: [ { text: "I will." } ]
         },
         aeb_bronn_complete_check: {
             npcName: 'Bronn the Retired Adventurer',

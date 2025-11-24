@@ -1,3 +1,4 @@
+
 import { CookingRecipe, CraftingRecipe, JewelryRecipe, SkillName } from '../types';
 
 export const SMITHING_RECIPES = [
@@ -111,25 +112,38 @@ export const SMELTING_RECIPES = [
 ] as const;
 
 export const COOKING_RECIPES: CookingRecipe[] = [
+    // Basic
     { itemId: 'bread', level: 1, xp: 30, ingredients: [{ itemId: 'bread_dough', quantity: 1 }], burntItemId: 'burnt_food',},
     { itemId: 'scrambled_eggs', level: 1, xp: 30, ingredients: [{ itemId: 'eggs', quantity: 1 }], burntItemId: 'burnt_food',},
     { itemId: 'cooked_shrimp', level: 1, xp: 30, ingredients: [{ itemId: 'raw_shrimp', quantity: 1 }], burntItemId: 'burnt_food',},
     { itemId: 'rat_kebab_cooked', level: 1, xp: 30, ingredients: [{ itemId: 'rat_kebab_uncooked', quantity: 1 }], burntItemId: 'burnt_food',},
+    { itemId: 'cooked_chicken', level: 3, xp: 40, ingredients: [{ itemId: 'raw_chicken', quantity: 1 }], burntItemId: 'burnt_food',},
     { itemId: 'cooked_sardine', level: 5, xp: 40, ingredients: [{ itemId: 'raw_sardine', quantity: 1 }], burntItemId: 'burnt_food',},
+    { itemId: 'cooked_beef', level: 5, xp: 45, ingredients: [{ itemId: 'raw_beef', quantity: 1 }], burntItemId: 'burnt_food',},
     { itemId: 'cooked_crab_meat', level: 8, xp: 55, ingredients: [{ itemId: 'giant_crab_meat', quantity: 1 }], burntItemId: 'burnt_food',},
     { itemId: 'cooked_herring', level: 10, xp: 50, ingredients: [{ itemId: 'raw_herring', quantity: 1 }], burntItemId: 'burnt_food',},
-    { itemId: 'cooked_chicken', level: 3, xp: 40, ingredients: [{ itemId: 'raw_chicken', quantity: 1 }], burntItemId: 'burnt_food',},
-    { itemId: 'cooked_beef', level: 5, xp: 45, ingredients: [{ itemId: 'raw_beef', quantity: 1 }], burntItemId: 'burnt_food',},
     { itemId: 'cooked_boar_meat', level: 10, xp: 60, ingredients: [{ itemId: 'raw_boar_meat', quantity: 1 }], burntItemId: 'burnt_food',},
+    { itemId: 'cooked_anchovy', level: 15, xp: 40, ingredients: [{ itemId: 'raw_anchovy', quantity: 1 }], burntItemId: 'burnt_food',},
     { itemId: 'cooked_trout', level: 20, xp: 70, ingredients: [{ itemId: 'raw_trout', quantity: 1 }], burntItemId: 'burnt_food',},
     { itemId: 'cooked_pike', level: 30, xp: 80, ingredients: [{ itemId: 'raw_pike', quantity: 1 }], burntItemId: 'burnt_food',},
-    { itemId: 'cake', level: 35, xp: 120, ingredients: [{ itemId: 'cake_batter', quantity: 1 }], burntItemId: 'burnt_food',},
     { itemId: 'cooked_eel', level: 38, xp: 95, ingredients: [{ itemId: 'raw_eel', quantity: 1 }], burntItemId: 'burnt_food',},
     { itemId: 'cooked_tuna', level: 40, xp: 100, ingredients: [{ itemId: 'raw_tuna', quantity: 1 }], burntItemId: 'burnt_food',},
     { itemId: 'cooked_lobster', level: 50, xp: 120, ingredients: [{ itemId: 'raw_lobster', quantity: 1 }], burntItemId: 'burnt_lobster',},
+    { itemId: 'serpent_omelet_cooked', level: 50, xp: 200, ingredients: [{ itemId: 'serpents_egg', quantity: 1 }, { itemId: 'eggs', quantity: 1 }], burntItemId: 'burnt_food',},
     { itemId: 'cooked_swordfish', level: 62, xp: 140, ingredients: [{ itemId: 'raw_swordfish', quantity: 1 }], burntItemId: 'burnt_swordfish',},
     { itemId: 'cooked_shark', level: 76, xp: 210, ingredients: [{ itemId: 'raw_shark', quantity: 1 }], burntItemId: 'burnt_shark',},
-    { itemId: 'serpent_omelet_cooked', level: 50, xp: 200, ingredients: [{ itemId: 'serpents_egg', quantity: 1 }, { itemId: 'eggs', quantity: 1 }], burntItemId: 'burnt_food',}
+
+    // Cakes
+    { itemId: 'cake', level: 40, xp: 180, ingredients: [{ itemId: 'uncooked_cake', quantity: 1 }], burntItemId: 'burnt_cake',},
+
+    // Pies
+    { itemId: 'berry_pie', level: 10, xp: 60, ingredients: [{ itemId: 'uncooked_berry_pie', quantity: 1 }], burntItemId: 'burnt_pie',},
+    { itemId: 'apple_pie', level: 30, xp: 130, ingredients: [{ itemId: 'uncooked_apple_pie', quantity: 1 }], burntItemId: 'burnt_pie',},
+    { itemId: 'meat_pie', level: 20, xp: 110, ingredients: [{ itemId: 'uncooked_meat_pie', quantity: 1 }], burntItemId: 'burnt_pie',},
+    { itemId: 'fish_pie', level: 47, xp: 164, ingredients: [{ itemId: 'uncooked_fish_pie', quantity: 1 }], burntItemId: 'burnt_pie',},
+
+    // Pizzas
+    { itemId: 'plain_pizza', level: 35, xp: 143, ingredients: [{ itemId: 'uncooked_pizza', quantity: 1 }], burntItemId: 'burnt_pizza',},
 ];
 
 export const SPINNING_RECIPES: CraftingRecipe[] = [
@@ -141,8 +155,8 @@ export const SPINNING_RECIPES: CraftingRecipe[] = [
 
 export const DOUGH_RECIPES: CraftingRecipe[] = [
     { itemId: 'bread_dough', level: 1, xp: 0, ingredients: [{ itemId: 'flour', quantity: 1 }, { itemId: 'bucket_of_water', quantity: 1 }] },
-    { itemId: 'pie_dough', level: 1, xp: 0, ingredients: [{ itemId: 'flour', quantity: 1 }, { itemId: 'bucket_of_water', quantity: 1 }, { itemId: 'pie_dish', quantity: 1 }] },
-    { itemId: 'pizza_dough', level: 1, xp: 0, ingredients: [{ itemId: 'flour', quantity: 1 }, { itemId: 'bucket_of_water', quantity: 1 }] },
+    { itemId: 'pie_dough', level: 1, xp: 0, ingredients: [{ itemId: 'flour', quantity: 1 }, { itemId: 'bucket_of_water', quantity: 1 }] },
+    { itemId: 'pizza_base', level: 1, xp: 0, ingredients: [{ itemId: 'flour', quantity: 1 }, { itemId: 'bucket_of_water', quantity: 1 }] },
 ];
 
 export const CRAFTING_RECIPES: CraftingRecipe[] = [

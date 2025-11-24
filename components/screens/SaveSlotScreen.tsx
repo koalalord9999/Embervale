@@ -1,6 +1,7 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Slot, PlayerType, PlayerSkill, SkillName } from '../../types';
-import { SKILL_ICONS, SKILL_DISPLAY_ORDER, XP_TABLE } from '../../constants';
+import { SKILL_ICONS, SKILL_DISPLAY_ORDER, XP_TABLE, getSkillColorClass } from '../../constants';
 import Button from '../common/Button';
 import DeadCharacterView from './DeadCharacterView';
 import { TooltipState } from '../../hooks/useUIState';
@@ -76,7 +77,19 @@ const SkillDisplay: React.FC<{
             onMouseEnter={handleMouseEnter}
             onMouseLeave={() => setTooltip(null)}
         >
-            <img src={SKILL_ICONS[skill.name]} alt={skill.name} className="w-6 h-6 filter invert flex-shrink-0" />
+            <div
+                className={`w-6 h-6 flex-shrink-0 ${getSkillColorClass(skill.name)}`}
+                style={{
+                    maskImage: `url(${SKILL_ICONS[skill.name]})`,
+                    maskSize: 'contain',
+                    maskRepeat: 'no-repeat',
+                    maskPosition: 'center',
+                    WebkitMaskImage: `url(${SKILL_ICONS[skill.name]})`,
+                    WebkitMaskSize: 'contain',
+                    WebkitMaskRepeat: 'no-repeat',
+                    WebkitMaskPosition: 'center',
+                }}
+            />
             <div className="flex-1 text-right leading-none">
                 <span className="text-base font-bold align-super text-white">{skill.level}</span>
             </div>

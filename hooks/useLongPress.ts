@@ -1,3 +1,4 @@
+
 import React, { useCallback, useRef, useEffect } from 'react';
 
 interface LongPressOptions {
@@ -37,9 +38,17 @@ export const useLongPress = ({ onLongPress, onClick, delay = 400, isOneClickMode
     const handlePressStart = useCallback((event: React.MouseEvent | React.TouchEvent) => {
         if ('button' in event && event.button !== 0) return;
 
+        // FIX: If it's a mouse event (not touch) and One-Click Mode is OFF,
+        // do not start the timer. This prevents "Click+Hold to Drag" from triggering
+        // the context menu on desktop.
+        const isTouchEvent = 'touches' in event;
+        if (!isTouchEvent && !isOneClickMode) {
+            return;
+        }
+
         cleanup();
         
-        const point = 'touches' in event ? event.touches[0] : event;
+        const point = isTouchEvent ? event.touches[0] : (event as React.MouseEvent);
         pressStartPos.current = { x: point.clientX, y: point.clientY };
         
         timeout.current = setTimeout(() => {
@@ -48,11 +57,11 @@ export const useLongPress = ({ onLongPress, onClick, delay = 400, isOneClickMode
                 onLongPressRef.current(event);
             }
         }, delay);
-    }, [delay, cleanup]);
+    }, [delay, cleanup, isOneClickMode]);
 
     const handlePressEnd = useCallback((event: React.MouseEvent | React.TouchEvent) => {
         if (event.type === 'touchend') {
-            event.preventDefault();
+            // event.preventDefault(); // Removed to allow click propagation if needed
         }
 
         if ('button' in event && event.button !== 0) {

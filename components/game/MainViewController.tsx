@@ -37,6 +37,7 @@ import PilferingTimer from './PilferingTimer';
 type LockpickActivity = Extract<POIActivity, { type: 'thieving_lockpick' }>;
 type PickpocketData = NonNullable<Extract<POIActivity, { type: 'npc' }>['pickpocket']>;
 type StallActivity = Extract<POIActivity, { type: 'thieving_stall' }>;
+type GroundItemActivity = Extract<POIActivity, { type: 'ground_item' }>;
 
 
 interface MainViewControllerProps {
@@ -199,6 +200,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 showHitsplats={ui.showHitsplats}
                 activePrayers={activePrayers}
                 poisonEvent={poisonEvent}
+                getEffectiveLevel={char.getEffectiveLevel}
             />;
         }
         if (ui.activeTeleportBoardId) {
@@ -300,6 +302,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 resourceNodeStates={skilling.resourceNodeStates}
                 activeSkillingNodeId={skilling.activeSkillingNodeId}
                 onToggleSkilling={skilling.handleToggleSkilling}
+                onPickupGroundItem={skilling.handlePickupGroundItem}
                 initializeNodeState={skilling.initializeNodeState}
                 skillingTick={skilling.skillingTick}
                 getSuccessChance={skilling.getSuccessChance}

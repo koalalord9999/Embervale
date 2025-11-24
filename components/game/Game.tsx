@@ -188,7 +188,8 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
         handlePickUpItem, 
         handleTakeAllLoot, 
         clearAllItemsAtPoi, 
-        clearDeathPileItemsAtPoi 
+        clearDeathPileItemsAtPoi,
+        moveItems
     } = useGroundItems(initialState.groundItems, { session, invRef, addLog, ui, worldState, setWorldState });
 
     const [bank, setBank] = useState<BankTab[]>(initialState.bank);
@@ -243,6 +244,7 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
         inventory: inv.inventory,
         modifyItem: inv.modifyItem,
         isInCombat,
+        moveItems,
     });
 
     const thieving = useThieving(initialState.thievingContainerStates || {}, {
@@ -264,6 +266,7 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
         setWorldState,
         navigation,
         worldState,
+        onItemDropped,
     });
     
     const poi = useMemo(() => {
@@ -316,7 +319,7 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
         }
     }, [devMode, addLog]);
 
-    const playerDeath = usePlayerDeath({ skilling, interactQuest, ui, session, char, inv, addLog, playerQuests: quests.playerQuests, onItemDropped, setWorldState, playerType: initialState.playerType, slotId, onReturnToMenu, repeatableQuests, setDynamicActivities, worldState, onResetGame });
+    const playerDeath = usePlayerDeath({ skilling, interactQuest, ui, session, char, inv, addLog, playerQuests: quests.playerQuests, onItemDropped, setWorldState, playerType: initialState.playerType, slotId, onReturnToMenu, repeatableQuests, setDynamicActivities, worldState, onResetGame, setActivePrayers: prayer.setActivePrayers });
     
     const gameState = useMemo(() => ({
         username: initialState.username,
@@ -440,7 +443,19 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
         navigation
     });
     
-    const spellActions = useSpellActions({ addLog, addXp: char.addXp, modifyItem: inv.modifyItem, hasItems: inv.hasItems, skills: char.skills, ui, equipment: inv.equipment, currentPoiId: session.currentPoiId, setInventory: inv.setInventory });
+    const spellActions = useSpellActions({ 
+        addLog, 
+        addXp: char.addXp, 
+        modifyItem: inv.modifyItem, 
+        hasItems: inv.hasItems, 
+        skills: char.skills, 
+        ui, 
+        equipment: inv.equipment, 
+        currentPoiId: session.currentPoiId, 
+        setInventory: inv.setInventory,
+        char,
+        combatSpeedMultiplier
+    });
 
     const sceneInteractions = useSceneInteractions(session.currentPoiId, {
         playerQuests: quests.playerQuests,
@@ -455,7 +470,15 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
     const handleKill = useCallback((id: string, style?: 'melee' | 'ranged' | 'magic') => { killHandler.handleKill(id, style); }, [killHandler]);
     const handleEncounterWin = useCallback((ids: string[]) => { killHandler.handleEncounterWin(ids); }, [killHandler]);
     
-    const spellcasting = useSpellcasting({ char, inv, addLog, navigation, ui, isStunned: char.isStunned });
+    const spellcasting = useSpellcasting({ 
+        char, 
+        inv, 
+        addLog, 
+        navigation, 
+        ui, 
+        isStunned: char.isStunned,
+        combatSpeedMultiplier
+    });
     
     useSaveGame(gameState, slotId);
     
@@ -641,6 +664,9 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
         } else if (activity.type === 'npc' && activity.name === 'Leave House') {
             thievingPilfering.leaveHouse();
             return;
+        } else if (activity.type === 'npc' && activity.name === 'Altar') {
+            dialogueActions.handleDialogueAction([{ type: 'restore_prayer' }]);
+            return;
         } else if (activity.type === 'npc') {
             sceneInteractions.handleActivityClick(activity);
         } else {
@@ -677,7 +703,8 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
         else if (activity.type === 'thieving_stall') thieving.handleStealFromStall(activity);
         else if (activity.type === 'thieving_pilfer') thievingPilfering.handlePilfer(activity);
         else if (activity.type === 'cut_cactus') worldActions.handleCutCactus();
-    }, [char, addLog, ui, slayer, worldActions, crafting, navigation, session, thieving, thievingPilfering]);
+        else if (activity.type === 'ground_item') skilling.handlePickupGroundItem(activity); // Added handler
+    }, [char, addLog, ui, slayer, worldActions, crafting, navigation, session, thieving, thievingPilfering, skilling]);
 
     useEffect(() => { if (ui.activePanel === null) ui.setActivePanel('inventory'); }, [ui]);
 
@@ -690,6 +717,17 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
     const handleAddCoins = (amount: number) => inv.modifyItem('coins', amount, false);
     const handleSetSkillLevel = (skill: SkillName, level: number) => char.setSkillLevel(skill, level);
     const handleResetQuest = (questId: string) => quests.resetQuest(questId, addLog);
+
+    // FIX: Updated handleToggleDevPanel to scroll .game-container instead of window
+    const handleToggleDevPanel = useCallback(() => {
+        ui.setIsDevPanelOpen(true);
+        const container = document.querySelector('.game-container');
+        if (container) {
+            container.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, [ui]);
 
     const handleLogout = useCallback(() => {
         onReturnToMenu(gameState);
@@ -772,7 +810,7 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
             <div className="w-full md:w-4/5 flex flex-col gap-2 relative">
                 <BuffBar statModifiers={char.statModifiers} activeBuffs={buffsForDisplay} />
                 <div className="bg-black/70 border-2 border-gray-600 rounded-lg p-4 flex-grow min-h-0 relative overflow-y-auto md:overflow-visible">
-                    <MainViewController {...{itemActions, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath: () => handlePlayerDeath(gameState), handleKill, onWinCombat, onFleeFromCombat, onResponse, handleDialogueCheck, combatSpeedMultiplier: devMode.combatSpeedMultiplier, activeCombatStyleHighlight: null, isTouchSimulationEnabled: devMode.isTouchSimulationEnabled, isMapManagerEnabled: false, poiCoordinates: undefined, regionCoordinates: undefined, onUpdatePoiCoordinate: undefined, poiConnections: undefined, addLog, ui, initialState, showAllPois: devMode.showAllPois, groundItemsForCurrentPoi, onPickUpItem: handlePickUpItem, onTakeAllLoot: handleTakeAllLoot, onItemDropped, isAutoBankOn: devMode.isAutoBankOn, handleCombatXpGain: char.addXp, poiImmunityTimeLeft, killTrigger, bankPlaceholders: worldState.bankPlaceholders ?? false, handleToggleBankPlaceholders, bonfires: bonfires.filter(b => b.uniqueId.startsWith(session.currentPoiId)), onStokeBonfire: crafting.handleStokeBonfire, isStunned: char.isStunned, addBuff: char.addBuff, isDevMode: devMode.isDevMode, onToggleDevPanel: () => ui.setIsDevPanelOpen(true), onToggleTouchSimulation: devMode.onToggleTouchSimulation, onDepositEquipment: () => bankLogic.handleDepositEquipment(ui.activeBankTabId), deathMarker: worldState.deathMarker, activeRepeatableQuest: repeatableQuests.activePlayerQuest, onActivity: handleActivityClickWrapper, onResetGame, onImportGame, onExportGame, isOneClickMode: ui.isOneClickMode, poi, thievingContainerStates: thieving.containerStates, onPickpocket: thieving.handlePickpocket, onLockpick: thieving.handleLockpick, onPilfer: thievingPilfering.handlePilfer, onStealFromStall: thieving.handleStealFromStall, worldState, onStartCombat: onStartSingleCombat, onEncounterWin: handleEncounterWin, activePrayers: prayer.activePrayers, onJewelryCraft: crafting.handleJewelryCrafting, setEquipment: inv.setEquipment, poisonEvent }} />
+                    <MainViewController {...{itemActions, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath: () => handlePlayerDeath(gameState), handleKill, onWinCombat, onFleeFromCombat, onResponse, handleDialogueCheck, combatSpeedMultiplier: devMode.combatSpeedMultiplier, activeCombatStyleHighlight: null, isTouchSimulationEnabled: devMode.isTouchSimulationEnabled, isMapManagerEnabled: false, poiCoordinates: undefined, regionCoordinates: undefined, onUpdatePoiCoordinate: undefined, poiConnections: undefined, addLog, ui, initialState, showAllPois: devMode.showAllPois, groundItemsForCurrentPoi, onPickUpItem: handlePickUpItem, onTakeAllLoot: handleTakeAllLoot, onItemDropped, isAutoBankOn: devMode.isAutoBankOn, handleCombatXpGain: char.addXp, poiImmunityTimeLeft, killTrigger, bankPlaceholders: worldState.bankPlaceholders ?? false, handleToggleBankPlaceholders, bonfires: bonfires.filter(b => b.uniqueId.startsWith(session.currentPoiId)), onStokeBonfire: crafting.handleStokeBonfire, isStunned: char.isStunned, addBuff: char.addBuff, isDevMode: devMode.isDevMode, onToggleDevPanel: handleToggleDevPanel, onToggleTouchSimulation: devMode.onToggleTouchSimulation, onDepositEquipment: () => bankLogic.handleDepositEquipment(ui.activeBankTabId), deathMarker: worldState.deathMarker, activeRepeatableQuest: repeatableQuests.activePlayerQuest, onActivity: handleActivityClickWrapper, onResetGame, onImportGame, onExportGame, isOneClickMode: ui.isOneClickMode, poi, thievingContainerStates: thieving.containerStates, onPickpocket: thieving.handlePickpocket, onLockpick: thieving.handleLockpick, onPilfer: thievingPilfering.handlePilfer, onStealFromStall: thieving.handleStealFromStall, worldState, onStartCombat: onStartSingleCombat, onEncounterWin: handleEncounterWin, activePrayers: prayer.activePrayers, onJewelryCraft: crafting.handleJewelryCrafting, setEquipment: inv.setEquipment, poisonEvent }} />
                         {levelUpInfo && <LevelUpAnimation skill={levelUpInfo.skill} level={levelUpInfo.level} />}
                         <LootButtonOverlay groundItems={groundItemsForCurrentPoi} onOpenLootView={() => ui.setIsLootViewOpen(true)} />
                 </div>
@@ -782,7 +820,45 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
                 </div>
             </div>
             <div className="w-full md:w-1/5 flex flex-col">
-                <SidePanel {...{ui, initialState, char, inv, quests, repeatableQuests, slayer, onReturnToMenu: handleLogout, isDevMode: devMode.isDevMode, isTouchSimulationEnabled: devMode.isTouchSimulationEnabled, onToggleTouchSimulation: devMode.onToggleTouchSimulation, itemActions, isBusy, handleExamine: itemActions.handleExamine, session, addLog, activeCombatStyleHighlight: null, onNavigate: navigation.handleNavigate, unlockedPois: navigation.reachablePois, isBankOpen, isShopOpen, onDeposit: (inventoryIndex, quantity) => bankLogic.handleDeposit(inventoryIndex, quantity, ui.activeBankTabId), onCastSpell: spellcasting.onCastSpell, onSpellOnItem: spellActions.handleSpellOnItem, isEquipmentStatsOpen: !!ui.isEquipmentStatsViewOpen, activePrayers: prayer.activePrayers, onTogglePrayer: (prayerId: string) => prayer.togglePrayer(prayerId, char.skills, quests.playerQuests, char.rawCurrentPrayer), isPoisoned: char.isPoisoned, onCurePoison: itemActions.handleCurePoisonFromOrb, poisonEvent }} />
+                <SidePanel 
+                    {...{
+                        ui, 
+                        initialState, 
+                        char, 
+                        inv, 
+                        quests, 
+                        repeatableQuests, 
+                        slayer, 
+                        onReturnToMenu: handleLogout, 
+                        isDevMode: devMode.isDevMode, 
+                        isTouchSimulationEnabled: devMode.isTouchSimulationEnabled, 
+                        onToggleTouchSimulation: devMode.onToggleTouchSimulation, 
+                        itemActions, 
+                        isBusy, 
+                        handleExamine: itemActions.handleExamine, 
+                        session, 
+                        addLog, 
+                        activeCombatStyleHighlight: null, 
+                        onNavigate: navigation.handleNavigate, 
+                        unlockedPois: navigation.reachablePois, 
+                        isBankOpen, 
+                        isShopOpen, 
+                        onDeposit: (inventoryIndex, quantity) => bankLogic.handleDeposit(inventoryIndex, quantity, ui.activeBankTabId), 
+                        onCastSpell: spellcasting.onCastSpell, 
+                        onSpellOnItem: spellActions.handleSpellOnItem, 
+                        isEquipmentStatsOpen: !!ui.isEquipmentStatsViewOpen, 
+                        activePrayers: prayer.activePrayers, 
+                        onTogglePrayer: (prayerId: string) => prayer.togglePrayer(prayerId, char.skills, quests.playerQuests, char.rawCurrentPrayer), 
+                        isPoisoned: char.isPoisoned, 
+                        onCurePoison: itemActions.handleCurePoisonFromOrb, 
+                        poisonEvent, 
+                        onToggleDevPanel: handleToggleDevPanel 
+                    }}
+                    isPermAggroOn={ui.isPermAggroOn}
+                    onTogglePermAggro={handleTogglePermAggro}
+                    isGodModeOn={devMode.isGodModeOn}
+                    onToggleGodMode={() => devMode.setIsGodModeOn(!devMode.isGodModeOn)}
+                />
             </div>
             {ui.showXpDrops && <XpTracker drops={xpDrops} onRemoveDrop={removeXpDrop} />}
             {ui.isDevPanelOpen && (
@@ -845,7 +921,7 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
                     onImportGame={onImportGame}
                     onResetGame={onResetGame}
                     isDevMode={isDevMode}
-                    onToggleDevPanel={() => ui.setIsDevPanelOpen(true)}
+                    onToggleDevPanel={handleToggleDevPanel}
                     isTouchSimulationEnabled={devMode.isTouchSimulationEnabled}
                     onToggleTouchSimulation={devMode.onToggleTouchSimulation}
                     ui={ui}

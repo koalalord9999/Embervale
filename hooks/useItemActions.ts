@@ -59,6 +59,19 @@ interface UseItemActionsProps {
     navigation: ReturnType<typeof useNavigation>;
 }
 
+const MULTI_BITE_FOODS: Record<string, string> = {
+    'cake': '2_3_cake',
+    '2_3_cake': 'slice_of_cake',
+    'berry_pie': 'half_berry_pie',
+    'apple_pie': 'half_apple_pie',
+    'meat_pie': 'half_meat_pie',
+    'fish_pie': 'half_fish_pie',
+    'plain_pizza': 'half_plain_pizza',
+    'meat_pizza': 'half_meat_pizza',
+    'anchovy_pizza': 'half_anchovy_pizza',
+    'pineapple_pizza': 'half_pineapple_pizza',
+};
+
 export const useItemActions = (props: UseItemActionsProps) => {
     // FIX: Added setEquipment to destructuring.
     const { addLog, currentHp, maxHp, setCurrentHp, currentPrayer, maxPrayer, setCurrentPrayer, applyStatModifier, setInventory, setEquipment, skills, inventory, activeCraftingAction, setActiveCraftingAction, hasItems, modifyItem, addXp, openCraftingView, itemToUse, setItemToUse, addBuff, curePoison, setMakeXPrompt, startQuest, currentPoiId, playerQuests, isStunned, setActiveDungeonMap, confirmValuableDrops, valuableDropThreshold, ui, equipment, onResponse, handleDialogueCheck, crafting, isBusy, navigation } = props;
@@ -227,6 +240,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
         if (itemData.consumable.healAmount && currentHp < maxHp) {
             const healAmount = itemData.consumable.healAmount;
             setCurrentHp(prev => Math.min(maxHp, prev + healAmount));
+            addLog(`You eat the ${itemData.name}.`);
         }
         if (itemData.consumable.potionEffect) {
             if (itemId === 'prayer_potion') {
@@ -280,9 +294,11 @@ export const useItemActions = (props: UseItemActionsProps) => {
 
                 if (currentDoses > 1) {
                     newInv[inventoryIndex] = { ...slot, doses: currentDoses - 1 };
+                    addLog(`You have ${currentDoses - 1} doses of ${itemData.name} left.`);
                 } else {
                     if (itemData.emptyable) {
                         newInv[inventoryIndex] = { itemId: itemData.emptyable.emptyItemId, quantity: 1 };
+                        addLog(`You have finished the ${itemData.name}.`);
                     } else {
                         newInv[inventoryIndex] = { ...slot, doses: 0 };
                     }
@@ -292,19 +308,31 @@ export const useItemActions = (props: UseItemActionsProps) => {
             return;
         }
         
+        // Logic for standard items and Multi-bite food
         setInventory(prev => {
             const newInv = [...prev];
             const itemSlot = newInv[inventoryIndex];
     
             if (!itemSlot) return prev;
-    
-            if (itemData.stackable && itemSlot.quantity > 1) {
+
+            const nextBiteItem = MULTI_BITE_FOODS[itemId];
+            
+            if (nextBiteItem) {
+                 // If it's a multi-bite item, replace it regardless of stack size (these are typically unstackable)
+                 newInv[inventoryIndex] = { itemId: nextBiteItem, quantity: 1 };
+                 if (itemSlot.quantity > 1) {
+                     // Edge case handling: if they somehow have a stack of eatable pies, eject the rest?
+                     // For now, assume non-stackable or consume 1 from stack and replace current slot with bitten version
+                     // This might overwrite the stack if not careful.
+                     // Since pies/cakes are unstackable, this is safe.
+                 }
+            } else if (itemData.stackable && itemSlot.quantity > 1) {
                 newInv[inventoryIndex] = { ...itemSlot, quantity: itemSlot.quantity - 1 };
             } else {
                 newInv[inventoryIndex] = null;
             }
     
-            if (itemData.emptyable) {
+            if (itemData.emptyable && !nextBiteItem) {
                 const emptyItemId = itemData.emptyable.emptyItemId;
                 const emptyItemData = ITEMS[emptyItemId];
     
@@ -315,7 +343,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
                     } else {
                         const emptySlotIndex = newInv[inventoryIndex] === null ? inventoryIndex : newInv.findIndex(slot => slot === null);
                         if (emptySlotIndex > -1) {
-                            newInv[inventoryIndex] = { itemId: emptyItemId, quantity: 1 };
+                            newInv[emptySlotIndex] = { itemId: emptyItemId, quantity: 1 };
                         } else {
                             addLog("You drop the empty container as your inventory is full.");
                         }
@@ -323,7 +351,8 @@ export const useItemActions = (props: UseItemActionsProps) => {
                 } else {
                     const emptySlotIndex = newInv[inventoryIndex] === null ? inventoryIndex : newInv.findIndex(slot => slot === null);
                     if (emptySlotIndex > -1) {
-                        newInv[inventoryIndex] = { itemId: emptyItemId, quantity: 1 };
+                         // If we just ate the last bite, replace it with the container
+                        newInv[emptySlotIndex] = { itemId: emptyItemId, quantity: 1 };
                     } else {
                         addLog("You drop the empty container as your inventory is full.");
                     }
@@ -659,6 +688,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
         try {
             const fletchingLevel = skills.find(s => s.name === SkillName.Fletching)?.currentLevel ?? 1;
             const herbloreLevel = skills.find(s => s.name === SkillName.Herblore)?.currentLevel ?? 1;
+            const cookingLevel = skills.find(s => s.name === SkillName.Cooking)?.currentLevel ?? 1;
             const usedId = used.item.itemId;
             const targetId = target.item.itemId;
             const usedItemData = ITEMS[usedId];
@@ -714,6 +744,150 @@ export const useItemActions = (props: UseItemActionsProps) => {
                 }
                 return;
             }
+
+            // --- COOKING PREP LOGIC ---
+
+            // 1. Cake Making (Flour + Cake Tin)
+            const isCakePrep = (usedId === 'flour' && targetId === 'cake_tin') || (targetId === 'flour' && usedId === 'cake_tin');
+            if (isCakePrep) {
+                if (!hasItems([{ itemId: 'eggs', quantity: 1 }, { itemId: 'bucket_of_milk', quantity: 1 }])) {
+                    addLog("You need an egg and a bucket of milk to make a cake.");
+                    return;
+                }
+                
+                // Remove ingredients
+                modifyItem('flour', -1, true);
+                modifyItem('cake_tin', -1, true);
+                modifyItem('eggs', -1, true);
+                modifyItem('bucket_of_milk', -1, true); // Removes milk
+                modifyItem('bucket', 1, false, { bypassAutoBank: true }); // Gives empty bucket back
+                
+                modifyItem('uncooked_cake', 1, false, { bypassAutoBank: true });
+                addLog("You mix the ingredients into the cake tin.");
+                return;
+            }
+
+            // 2. Pie Shell (Pie Dough + Pie Dish)
+            const isPieShell = (usedId === 'pie_dough' && targetId === 'pie_dish') || (targetId === 'pie_dough' && usedId === 'pie_dish');
+            if (isPieShell) {
+                setInventory(prevInv => {
+                    const newInv = [...prevInv];
+                    newInv[used.index] = null;
+                    newInv[target.index] = null;
+                    return newInv;
+                });
+                modifyItem('pie_shell', 1, false, { bypassAutoBank: true });
+                addLog("You press the dough into the dish to make a pie shell.");
+                return;
+            }
+
+            // 3. Uncooked Pie Filling (Fruit/Meat/Fish + Pie Shell)
+            const pieFillings: Record<string, string> = {
+                'red_berries': 'uncooked_berry_pie',
+                'apple': 'uncooked_apple_pie',
+                'cooked_meat': 'uncooked_meat_pie', // Generic cooked meat if available
+                'cooked_beef': 'uncooked_meat_pie',
+                'cooked_chicken': 'uncooked_meat_pie',
+                'cooked_trout': 'uncooked_fish_pie', // Example fish
+                'cooked_salmon': 'uncooked_fish_pie',
+                'cooked_tuna': 'uncooked_fish_pie'
+            };
+            
+            // FIX: Check if one of the items is actually a pie shell before proceeding
+            const isPieShellPresent = usedId === 'pie_shell' || targetId === 'pie_shell';
+
+            if (isPieShellPresent) {
+                const fillingId = usedId === 'pie_shell' ? targetId : usedId;
+                const shellSlot = usedId === 'pie_shell' ? used : target;
+                const fillingSlot = usedId === 'pie_shell' ? target : used;
+    
+                if (pieFillings[fillingId]) {
+                     const resultPieId = pieFillings[fillingId];
+                     
+                     setInventory(prevInv => {
+                        const newInv = [...prevInv];
+                        newInv[shellSlot.index] = null;
+                        // Decrease filling stack
+                        if (fillingSlot.item.quantity > 1) {
+                             newInv[fillingSlot.index] = { ...fillingSlot.item, quantity: fillingSlot.item.quantity - 1 };
+                        } else {
+                             newInv[fillingSlot.index] = null;
+                        }
+                        return newInv;
+                     });
+                     modifyItem(resultPieId, 1, false, { bypassAutoBank: true });
+                     addLog(`You fill the pie shell with ${ITEMS[fillingId].name}.`);
+                     return;
+                }
+            }
+
+            // 4. Incomplete Pizza (Pizza Base + Tomato)
+            const isPizzaBase = (usedId === 'pizza_base' && targetId === 'tomato') || (targetId === 'pizza_base' && usedId === 'tomato');
+            if (isPizzaBase) {
+                 setInventory(prevInv => {
+                    const newInv = [...prevInv];
+                    newInv[used.index] = null;
+                    newInv[target.index] = null;
+                    return newInv;
+                });
+                modifyItem('incomplete_pizza', 1, false, { bypassAutoBank: true }); // Assuming this ID exists or falls back
+                addLog("You add tomato to the pizza base.");
+                return;
+            }
+
+            // 5. Uncooked Pizza (Incomplete Pizza + Cheese)
+            const isIncompletePizza = (usedId === 'incomplete_pizza' && targetId === 'cheese') || (targetId === 'incomplete_pizza' && usedId === 'cheese');
+             if (isIncompletePizza) {
+                 setInventory(prevInv => {
+                    const newInv = [...prevInv];
+                    newInv[used.index] = null;
+                    newInv[target.index] = null;
+                    return newInv;
+                });
+                modifyItem('uncooked_pizza', 1, false, { bypassAutoBank: true });
+                addLog("You add cheese to the pizza.");
+                return;
+            }
+            
+            // 6. Pizza Toppings (Cooked Pizza + Topping)
+            const pizzaToppings: Record<string, { result: string, level: number, xp: number }> = {
+                'cooked_meat': { result: 'meat_pizza', level: 45, xp: 26 },
+                'cooked_beef': { result: 'meat_pizza', level: 45, xp: 26 },
+                'cooked_boar': { result: 'meat_pizza', level: 45, xp: 26 },
+                'cooked_chicken': { result: 'meat_pizza', level: 45, xp: 26 },
+                'cooked_anchovy': { result: 'anchovy_pizza', level: 55, xp: 39 },
+                'pineapple_chunks': { result: 'pineapple_pizza', level: 65, xp: 52 }
+            };
+
+            const toppingId = usedId === 'plain_pizza' ? targetId : usedId;
+            const baseSlot = usedId === 'plain_pizza' ? used : target;
+            const toppingSlot = usedId === 'plain_pizza' ? target : used;
+            
+            if ((usedId === 'plain_pizza' || targetId === 'plain_pizza') && pizzaToppings[toppingId]) {
+                const recipe = pizzaToppings[toppingId];
+                if (cookingLevel < recipe.level) {
+                    addLog(`You need a Cooking level of ${recipe.level} to add this topping.`);
+                    return;
+                }
+                
+                setInventory(prevInv => {
+                    const newInv = [...prevInv];
+                    newInv[baseSlot.index] = null;
+                    if (toppingSlot.item.quantity > 1) {
+                         newInv[toppingSlot.index] = { ...toppingSlot.item, quantity: toppingSlot.item.quantity - 1 };
+                    } else {
+                         newInv[toppingSlot.index] = null;
+                    }
+                    return newInv;
+                 });
+                 
+                 modifyItem(recipe.result, 1, false, { bypassAutoBank: true });
+                 addXp(SkillName.Cooking, recipe.xp);
+                 addLog(`You add ${ITEMS[toppingId].name} to the pizza.`);
+                 return;
+            }
+
+            // --- END COOKING PREP ---
 
 
             if (poisonInfo && weaponSlot) {

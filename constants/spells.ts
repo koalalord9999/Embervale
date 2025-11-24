@@ -1,3 +1,4 @@
+
 import { Spell } from '../types';
 
 export const SPELLS: Spell[] = [
@@ -48,5 +49,14 @@ export const SPELLS: Spell[] = [
     { id: 'enchant_emerald', name: 'Enchant Emerald Jewelry', description: 'Enchants emerald jewelry with magical power.', level: 27, runes: [{ itemId: 'stone_rune', quantity: 3 }, { itemId: 'astral_rune', quantity: 1 }], xp: 37.5, type: 'utility-enchant', targetItems: ['emerald_ring', 'emerald_necklace', 'emerald_amulet'], autocastable: false, castTime: 2 },
     { id: 'enchant_ruby', name: 'Enchant Ruby Jewelry', description: 'Enchants ruby jewelry with magical power.', level: 49, runes: [{ itemId: 'ember_rune', quantity: 5 }, { itemId: 'astral_rune', quantity: 1 }], xp: 59.5, type: 'utility-enchant', targetItems: ['ruby_ring', 'ruby_necklace', 'ruby_amulet'], autocastable: false, castTime: 2 },
     { id: 'enchant_diamond', name: 'Enchant Diamond Jewelry', description: 'Enchants diamond jewelry with magical power.', level: 57, runes: [{ itemId: 'stone_rune', quantity: 10 }, { itemId: 'ember_rune', quantity: 10 }, { itemId: 'astral_rune', quantity: 1 }], xp: 67.5, type: 'utility-enchant', targetItems: ['diamond_ring', 'diamond_necklace', 'diamond_amulet'], autocastable: false, castTime: 2 },
-    { id: 'enchant_sunstone', name: 'Enchant Sunstone', description: 'Enchants sunstone jewelry with magical power. Can also recharge charged sunstone jewelry in a bank.', level: 68, runes: [{ itemId: 'ember_rune', quantity: 25 }, { itemId: 'gust_rune', quantity: 25 }, { itemId: 'astral_rune', quantity: 1}], xp: 85.5, type: 'utility-enchant', targetItems: ['sunstone_ring', 'ring_of_greed', 'sunstone_necklace', 'necklace_of_fortune', 'sunstone_amulet', 'amulet_of_fate'], autocastable: false, castTime: 2,}
-    ];
+    { id: 'enchant_sunstone', name: 'Enchant Sunstone', description: 'Enchants sunstone jewelry with magical power. Can also recharge charged sunstone jewelry in a bank.', level: 68, runes: [{ itemId: 'ember_rune', quantity: 25 }, { itemId: 'gust_rune', quantity: 25 }, { itemId: 'astral_rune', quantity: 1}], xp: 85.5, type: 'utility-enchant', targetItems: ['sunstone_ring', 'ring_of_greed', 'sunstone_necklace', 'necklace_of_fortune', 'sunstone_amulet', 'amulet_of_fate'], autocastable: false, castTime: 2,},
+
+    // Enhancement Spells
+    { id: 'warriors_grace', name: 'Warrior\'s Grace', description: 'Buff to melee stats, including defence.', level: 23, runes: [{ itemId: 'stone_rune', quantity: 3 }, { itemId: 'ember_rune', quantity: 3 }, { itemId: 'binding_rune', quantity: 2 }], xp: 60, type: 'enhancement', autocastable: false, castTime: 3 },
+    { id: 'archers_focus', name: 'Archer\'s Focus', description: 'Buff to ranged stats, including defence.', level: 25, runes: [{ itemId: 'gust_rune', quantity: 3 }, { itemId: 'stone_rune', quantity: 2 }, { itemId: 'binding_rune', quantity: 2 }], xp: 72, type: 'enhancement', autocastable: false, castTime: 3 },
+    { id: 'mystic_insight', name: 'Mystic Insight', description: 'Buff to magic stats, and a small damage boost of 3%.', level: 27, runes: [{ itemId: 'aqua_rune', quantity: 3 }, { itemId: 'gust_rune', quantity: 3 }, { itemId: 'flux_rune', quantity: 2 }], xp: 90, type: 'enhancement', autocastable: false, castTime: 3 },
+    
+    { id: 'warriors_vigour', name: 'Warrior\'s Vigour', description: 'Greatly buffs melee stats, including defence.', level: 56, runes: [{ itemId: 'stone_rune', quantity: 10 }, { itemId: 'ember_rune', quantity: 10 }, { itemId: 'anima_rune', quantity: 5 }], xp: 115, type: 'enhancement', autocastable: false, castTime: 3 },
+    { id: 'archers_precision', name: 'Archer\'s Precision', description: 'Greatly buffs ranged stats, including defence.', level: 58, runes: [{ itemId: 'gust_rune', quantity: 10 }, { itemId: 'stone_rune', quantity: 8 }, { itemId: 'anima_rune', quantity: 5 }], xp: 140, type: 'enhancement', autocastable: false, castTime: 3 },
+    { id: 'mystic_power', name: 'Mystic Power', description: 'Greatly buffs magic stats, and a damage boost of 5%.', level: 60, runes: [{ itemId: 'aqua_rune', quantity: 10 }, { itemId: 'gust_rune', quantity: 10 }, { itemId: 'anima_rune', quantity: 5 }], xp: 180, type: 'enhancement', autocastable: false, castTime: 3 },
+];

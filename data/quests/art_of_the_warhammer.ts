@@ -66,7 +66,7 @@ export const artOfTheWarhammer: Quest = {
         {
             npcName: 'Valerius the Master Smith',
             response: {
-                text: "Bronn sent me to learn about warhammers.",
+                text: "I've been tasked with crafting a weapon, and was told you're the only one who still knows how to craft it?",
                 check: { requirements: [{ type: 'quest', questId: 'art_of_the_warhammer', status: 'in_progress', stage: 0 }], successNode: 'aotw_valerius_intro', failureNode: '' }
             }
         },
@@ -172,10 +172,10 @@ export const artOfTheWarhammer: Quest = {
         aotw_valerius_intro: {
             npcName: 'Valerius the Master Smith',
             npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
-            text: "Bronn sent you? That old coot... Still complaining about modern smithing, is he? And he thinks you're worthy of learning the old ways? Hmph. Have you even learned the basics? Have you helped me before?",
+            text: "Ah! I see, so Bronn asked you to get me to help create a weapon? I can defintely do that, but first... Have you helped me before?",
             responses: [
                 { text: "(Tell him about your apprenticeship)", check: { requirements: [{ type: 'quest', questId: 'a_smiths_apprentice', status: 'completed' }], successNode: 'aotw_valerius_success', failureNode: 'aotw_valerius_fail' } },
-                { text: "Bronn said you were the only one who knows how to smith a real weapon.", check: { requirements: [{ type: 'quest', questId: 'a_smiths_apprentice', status: 'completed' }], successNode: 'aotw_valerius_flattery', failureNode: 'aotw_valerius_fail' } },
+                { text: "Bronn said you were the only one who knows how to smith a real weapon. The warhammer.", check: { requirements: [{ type: 'quest', questId: 'a_smiths_apprentice', status: 'completed' }], successNode: 'aotw_valerius_flattery', failureNode: 'aotw_valerius_fail' } },
                 { text: "He also said your ale tastes like ditchwater.", next: 'aotw_valerius_ale_comment' }
             ]
         },
@@ -184,13 +184,13 @@ export const artOfTheWarhammer: Quest = {
             npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
             text: "Ditchwater?! That ungrateful old goat! I brew that ale myself! After all these years, he still knows how to get under my skin. Figures he'd send a messenger just to insult my brewing. Now, apart from delivering insults, what did that old fool *really* want?",
             responses: [
-                { text: "He wants me to learn how to make a proper warhammer.", next: 'aotw_valerius_intro_after_ale' }
+                { text: "He wants me to learn how to make a proper weapon, like a warhammer.", next: 'aotw_valerius_intro_after_ale' }
             ]
         },
         aotw_valerius_intro_after_ale: {
             npcName: 'Valerius the Master Smith',
             npcIcon: '/assets/npcChatHeads/valerius_the_master_smith.png',
-            text: "A warhammer, eh? Of course. Only a real weapon for a real warrior. And he thinks you're up to the task? Have you learned the basics from me yet?",
+            text: "A warhammer, eh? Of course. Only a real weapon for a real warrior. And he thinks you're up to the task? You didn't tell me earlier, but have you learned the basics from me yet?",
             responses: [
                 { text: "(Tell him about your apprenticeship)", check: { requirements: [{ type: 'quest', questId: 'a_smiths_apprentice', status: 'completed' }], successNode: 'aotw_valerius_success', failureNode: 'aotw_valerius_fail' } },
                 { text: "I'm a fast learner.", check: { requirements: [{ type: 'quest', questId: 'a_smiths_apprentice', status: 'completed' }], successNode: 'aotw_valerius_flattery', failureNode: 'aotw_valerius_fail' } },

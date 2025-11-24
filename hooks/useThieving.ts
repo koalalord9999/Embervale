@@ -1,6 +1,4 @@
 
-
-
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Monster, SkillName, PlayerSkill, InventorySlot, Equipment, Item, POIActivity, ActiveBuff, ThievingContainerState, WorldState } from '../types';
 import { ITEMS, rollOnLootTable, LootRollResult, THIEVING_POCKET_TARGETS, THIEVING_CONTAINER_TARGETS, THIEVING_STALL_TARGETS } from '../constants';
@@ -29,6 +27,7 @@ interface ThievingDependencies {
     setWorldState: React.Dispatch<React.SetStateAction<WorldState>>;
     navigation: ReturnType<typeof useNavigation>;
     worldState: WorldState;
+    onItemDropped: (item: InventorySlot, overridePoiId?: string) => void;
 }
 
 export const useThieving = (
@@ -140,7 +139,7 @@ export const useThieving = (
         }
     
         activeTimeoutRef.current = window.setTimeout(() => {
-            const { skills: currentSkills, addXp, addLog: log, modifyItem, setPlayerHp, currentHp, onPlayerDeath, startCombat, worldState, setWorldState, equipment } = depsRef.current;
+            const { skills: currentSkills, addXp, addLog: log, modifyItem, setPlayerHp, currentHp, onPlayerDeath, startCombat, worldState, setWorldState, equipment, inventory: currentInv, onItemDropped, currentPoiId } = depsRef.current;
             
             let successChance = 0;
 
@@ -167,11 +166,12 @@ export const useThieving = (
                     // Strongboxes get 5 rolls
                     const isStrongbox = activity.lootTableId.includes('_strongbox_');
                     const isCabinet = activity.lootTableId.includes('_cabinet_');
+                    const isMedicine = activity.lootTableId.includes('_medicine_');
                     
                     let numRolls = 1;
                     if (isPilfering) {
                         if (isStrongbox) numRolls = 5;
-                        else if (isCabinet) numRolls = 2;
+                        else if (isCabinet || isMedicine) numRolls = 2;
                         else if (activity.lootTableId.includes('_chest_')) numRolls = 3;
                     }
 
@@ -185,8 +185,30 @@ export const useThieving = (
                     }
 
                     if (loots.length > 0) {
+                        let itemsAdded = 0;
                         loots.forEach(loot => {
-                            modifyItem(loot.itemId, loot.quantity, false, { bypassAutoBank: true, noted: loot.noted });
+                            const itemData = ITEMS[loot.itemId];
+                            const isStackable = itemData.stackable || loot.noted;
+                            let canAdd = false;
+
+                            if (isStackable) {
+                                canAdd = currentInv.some(slot => slot?.itemId === loot.itemId && !!slot.noted === !!loot.noted) || currentInv.some(slot => slot === null);
+                            } else {
+                                const freeSlots = currentInv.filter(slot => slot === null).length;
+                                // Since we are processing loots one by one, this check is approximate for the batch
+                                // But modifyItem handles adding. If it fails, it fails silently. 
+                                // So we check first.
+                                canAdd = freeSlots > 0; // Simple check, not perfect for multiple unstackables in one go
+                            }
+
+                            // Try to add to inventory
+                            if (canAdd) {
+                                modifyItem(loot.itemId, loot.quantity, false, { bypassAutoBank: true, noted: loot.noted });
+                            } else {
+                                // Drop on ground if inventory full
+                                onItemDropped({ itemId: loot.itemId, quantity: loot.quantity, noted: loot.noted }, currentPoiId);
+                                log(`Your inventory is full. The ${itemData.name} falls to the floor.`);
+                            }
                         });
                     } else if (isPilfering) {
                         // Fallback coins logic (simplified for brevity, covers main types)

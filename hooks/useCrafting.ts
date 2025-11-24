@@ -156,6 +156,16 @@ export const useCrafting = (props: UseCraftingProps) => {
                 setWindmillFlour(f => f + 1);
                 return { success: true, wasItemMade: true };
             }
+            case 'dough-making': {
+                 recipe = DOUGH_RECIPES.find(r => r.itemId === action.recipeId);
+                 if (recipe) {
+                     ingredients = recipe.ingredients;
+                     // Dough making doesn't usually give XP in this game's config, but we follow the recipe.
+                     xp = { skill: SkillName.Cooking, amount: recipe.xp ?? 0 };
+                     levelReq = { skill: SkillName.Cooking, level: recipe.level ?? 1 };
+                 }
+                 break;
+            }
             case 'firemaking-light': {
                 const logId = action.recipeId;
                 const recipe = FIREMAKING_RECIPES.find(r => r.logId === logId);
@@ -388,6 +398,15 @@ export const useCrafting = (props: UseCraftingProps) => {
                 if (Math.random() < successChance) {
                     modifyItem(recipe.itemId, 1, true, { bypassAutoBank: true });
                     addXp(SkillName.Cooking, recipe.xp);
+                    
+                    // --- ADD CONTAINER RETURN LOGIC ---
+                    if (recipe.itemId === 'cake') {
+                        modifyItem('cake_tin', 1, false, { bypassAutoBank: true });
+                    } else if (['berry_pie', 'apple_pie', 'meat_pie', 'fish_pie'].includes(recipe.itemId)) {
+                        modifyItem('pie_dish', 1, false, { bypassAutoBank: true });
+                    }
+                    // ----------------------------------
+
                 } else {
                     modifyItem(recipe.burntItemId, 1, true, { bypassAutoBank: true });
                     addXp(SkillName.Cooking, 5); // Small XP for trying
@@ -399,7 +418,7 @@ export const useCrafting = (props: UseCraftingProps) => {
         const skillLevel = skills.find(s => s.name === levelReq.skill)?.currentLevel ?? 1;
         if (skillLevel < levelReq.level) return { success: false, wasItemMade: false, logMessage: "Your level is too low." };
 
-        const completedRecipe = CRAFTING_RECIPES.find(r => r.itemId === action.recipeId) || SPINNING_RECIPES.find(r => r.itemId === action.recipeId);
+        const completedRecipe = CRAFTING_RECIPES.find(r => r.itemId === action.recipeId) || SPINNING_RECIPES.find(r => r.itemId === action.recipeId) || DOUGH_RECIPES.find(r => r.itemId === action.recipeId);
         if (completedRecipe?.requiredSkills) {
             for (const req of completedRecipe.requiredSkills) {
                 const playerSkill = skills.find(s => s.name === req.skill)?.currentLevel ?? 1;

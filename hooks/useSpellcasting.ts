@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { Spell, SkillName, InventorySlot, WeaponType } from '../types';
 import { useCharacter } from './useCharacter';
@@ -13,6 +14,7 @@ interface SpellcastingDependencies {
     navigation: ReturnType<typeof useNavigation>;
     ui: ReturnType<typeof useUIState>;
     isStunned: boolean;
+    combatSpeedMultiplier: number;
 }
 
 const ENCHANTMENT_MAP: Record<string, string> = {
@@ -23,8 +25,8 @@ const ENCHANTMENT_MAP: Record<string, string> = {
     'sunstone_ring': 'ring_of_greed',
     'sapphire_necklace': 'necklace_of_binding',
     'emerald_necklace': 'necklace_of_the_angler',
-    'ruby_necklace': 'necklace_of_passage_ruby',
-    'diamond_necklace': 'necklace_of_passage_diamond',
+    'ruby_necklace': 'necklace_of_pyromancy',
+    'diamond_necklace': 'necklace_of_shadows',
     'sunstone_necklace': 'necklace_of_fortune',
     'sapphire_amulet': 'amulet_of_magic',
     'emerald_amulet': 'amulet_of_ranging',
@@ -34,7 +36,7 @@ const ENCHANTMENT_MAP: Record<string, string> = {
 };
 
 export const useSpellcasting = (deps: SpellcastingDependencies) => {
-    const { char, inv, addLog, navigation, ui, isStunned } = deps;
+    const { char, inv, addLog, navigation, ui, isStunned, combatSpeedMultiplier } = deps;
 
     const getRunesNeeded = useCallback((spell: Spell): {itemId: string, quantity: number}[] => {
         const equippedStaff = inv.equipment.weapon ? ITEMS[inv.equipment.weapon.itemId] : null;
@@ -42,7 +44,13 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
         return spell.runes.filter(r => r.itemId !== providedRune);
     }, [inv.equipment.weapon]);
 
+    // Note: This function is primarily handled by useSpellActions for inventory interactions.
+    // We keep it here for completeness if called directly, but ensure it respects cooldowns if used.
     const onSpellOnItem = useCallback((spell: Spell, target: { item: InventorySlot, index: number }) => {
+        if (Date.now() < char.globalActionCooldown) {
+             return;
+        }
+
         ui.setSpellToCast(null);
 
         const isTargetValid = spell.targetItems?.includes(target.item.itemId) || spell.targetItems?.includes('all');
@@ -62,9 +70,12 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
                 runesNeeded.forEach(rune => inv.modifyItem(rune.itemId, -rune.quantity, true));
                 char.addXp(SkillName.Magic, spell.xp);
                 inv.modifyItem(target.item.itemId, -1, true);
-                // FIX: The `modifyItem` function expects 4 arguments, with the last being an options object. This call had 5 arguments.
                 inv.modifyItem(enchantedItemId, 1, false, { bypassAutoBank: true });
                 addLog(`You enchant the ${ITEMS[target.item.itemId].name}.`);
+                
+                const tickMs = 600;
+                const cooldownMs = (spell.castTime ?? 5) * tickMs;
+                char.setGlobalActionCooldown(Date.now() + cooldownMs);
             } else {
                 addLog(`You cannot enchant this item with ${spell.name}.`);
             }
@@ -80,10 +91,13 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
 
             const coinValue = Math.floor(itemData.value * (spell.id === 'greater_transmutation' ? 0.7 : 0.3));
             
-            // FIX: The `modifyItem` function expects 4 arguments, with the last being an options object. This call had 5 arguments.
             inv.modifyItem(target.item.itemId, -1, true, { noted: target.item.noted });
             inv.modifyItem('coins', coinValue, true);
             addLog(`You transmute the ${itemData.name} into ${coinValue} coins.`);
+            
+            const tickMs = 600;
+            const cooldownMs = (spell.castTime ?? 5) * tickMs;
+            char.setGlobalActionCooldown(Date.now() + cooldownMs);
         }
 
     }, [char, inv, addLog, ui, getRunesNeeded]);
@@ -93,6 +107,20 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
             addLog("You are stunned and cannot cast spells.");
             return;
         }
+        
+        // Check global cooldown
+        if (Date.now() < char.globalActionCooldown) {
+             return;
+        }
+
+        // Check if enhancement buff is already active
+        if (spell.type === 'enhancement') {
+            if (char.activeBuffs.some(b => b.source === spell.id)) {
+                addLog("That spell is already active.");
+                return;
+            }
+        }
+
         if (ui.isBusy && spell.type !== 'utility-teleport') {
             addLog("You are busy.");
             return;
@@ -153,6 +181,11 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
         runesNeeded.forEach(rune => inv.modifyItem(rune.itemId, -rune.quantity, true));
         char.addXp(SkillName.Magic, spell.xp);
     
+        // Set Cooldown using fixed tick time
+        const tickMs = 600;
+        const cooldownMs = (spell.castTime ?? 5) * tickMs;
+        char.setGlobalActionCooldown(Date.now() + cooldownMs);
+
         if (spell.type === 'utility-teleport') {
             let destinationPoiId = '';
             if (spell.id === 'meadowdale_teleport') destinationPoiId = 'meadowdale_square';
@@ -166,24 +199,53 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
                 }, 500);
             }
         } else if (spell.type === 'enhancement') {
-            let skillToBoost: SkillName;
-            let baseStat = 0;
-            if (spell.id === 'clarity_of_thought') {
-                skillToBoost = SkillName.Attack;
-                baseStat = char.skills.find(s => s.name === SkillName.Attack)?.level ?? 1;
-            } else if (spell.id === 'arcane_strength') {
-                skillToBoost = SkillName.Strength;
-                baseStat = char.skills.find(s => s.name === SkillName.Strength)?.level ?? 1;
+            const duration = 300000; // 5 minutes
+            
+            // Use applySpellStatBuff instead of applyStatModifier for invisible buffs, passing spell.id as source
+            if (spell.id === 'warriors_grace') {
+                const attLevel = char.skills.find(s => s.name === SkillName.Attack)?.level ?? 1;
+                const strLevel = char.skills.find(s => s.name === SkillName.Strength)?.level ?? 1;
+                const defLevel = char.skills.find(s => s.name === SkillName.Defence)?.level ?? 1;
+                
+                char.applySpellStatBuff(SkillName.Attack, Math.floor(attLevel * 0.10) + 2, duration, spell.id);
+                char.applySpellStatBuff(SkillName.Strength, Math.floor(strLevel * 0.10) + 2, duration, spell.id);
+                char.applySpellStatBuff(SkillName.Defence, Math.floor(defLevel * 0.10) + 2, duration, spell.id);
+                addLog("You feel a surge of martial prowess.");
+            } else if (spell.id === 'archers_focus') {
+                const rngLevel = char.skills.find(s => s.name === SkillName.Ranged)?.level ?? 1;
+                const defLevel = char.skills.find(s => s.name === SkillName.Defence)?.level ?? 1;
+
+                char.applySpellStatBuff(SkillName.Ranged, Math.floor(rngLevel * 0.10) + 2, duration, spell.id);
+                char.applySpellStatBuff(SkillName.Defence, Math.floor(defLevel * 0.10) + 2, duration, spell.id);
+                addLog("Your senses sharpen.");
+            } else if (spell.id === 'mystic_insight') {
+                const magLevel = char.skills.find(s => s.name === SkillName.Magic)?.level ?? 1;
+                char.applySpellStatBuff(SkillName.Magic, Math.floor(magLevel * 0.10) + 2, duration, spell.id);
+                char.addBuff({ type: 'magic_damage_boost', value: 3, duration: duration, source: spell.id });
+                addLog("Your mind expands, boosting your magical abilities.");
+            } else if (spell.id === 'warriors_vigour') {
+                const attLevel = char.skills.find(s => s.name === SkillName.Attack)?.level ?? 1;
+                const strLevel = char.skills.find(s => s.name === SkillName.Strength)?.level ?? 1;
+                const defLevel = char.skills.find(s => s.name === SkillName.Defence)?.level ?? 1;
+                
+                char.applySpellStatBuff(SkillName.Attack, Math.floor(attLevel * 0.20) + 4, duration, spell.id);
+                char.applySpellStatBuff(SkillName.Strength, Math.floor(strLevel * 0.20) + 4, duration, spell.id);
+                char.applySpellStatBuff(SkillName.Defence, Math.floor(defLevel * 0.20) + 4, duration, spell.id);
+                addLog("You are filled with immense strength and resilience.");
+            } else if (spell.id === 'archers_precision') {
+                const rngLevel = char.skills.find(s => s.name === SkillName.Ranged)?.level ?? 1;
+                const defLevel = char.skills.find(s => s.name === SkillName.Defence)?.level ?? 1;
+
+                char.applySpellStatBuff(SkillName.Ranged, Math.floor(rngLevel * 0.20) + 4, duration, spell.id);
+                char.applySpellStatBuff(SkillName.Defence, Math.floor(defLevel * 0.20) + 4, duration, spell.id);
+                addLog("Your aim becomes unerring.");
+            } else if (spell.id === 'mystic_power') {
+                const magLevel = char.skills.find(s => s.name === SkillName.Magic)?.level ?? 1;
+                char.applySpellStatBuff(SkillName.Magic, Math.floor(magLevel * 0.20) + 4, duration, spell.id);
+                char.addBuff({ type: 'magic_damage_boost', value: 5, duration: duration, source: spell.id });
+                addLog("You channel overwhelming arcane power.");
             } else {
-                return;
-            }
-            // Logic matches super potions: 20% + 6
-            const boostValue = Math.floor(baseStat * 0.20) + 6;
-            if (boostValue > 0) {
-                // Duration of 6 minutes
-                char.applyStatModifier(skillToBoost, boostValue, baseStat);
-            } else {
-                addLog("The spell has no effect at your current level.");
+                addLog("The spell has no effect.");
             }
         } else {
             addLog(`You cast ${spell.name}.`);

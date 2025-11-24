@@ -1,9 +1,16 @@
+export interface DropCondition {
+    questId: string;
+    status: 'not_started' | 'in_progress' | 'completed';
+    stage?: number;
+}
+
 export interface BaseDrop {
     itemId?: string;
     tableId?: string;
     minQuantity?: number;
     maxQuantity?: number;
     noted?: boolean;
+    questReq?: DropCondition;
     multiRoll?: {
         tableId: string;
         maxRolls: number;

@@ -1,5 +1,6 @@
 
 
+
 import { POI, SkillName, ToolType } from '../../types';
 
 export const isleOfWhispersPois: Record<string, POI> = {
@@ -54,7 +55,8 @@ export const isleOfWhispersPois: Record<string, POI> = {
                     }
                 },
                 startNode: 'start'
-            }
+            },
+            { type: 'ground_item', id: 'iow_docks_boot', itemId: 'old_boot', resourceCount: 1, respawnTimer: 300000 },
         ],
         regionId: 'isle_of_whispers',
         x: 400, y: 2400,
@@ -209,6 +211,7 @@ export const isleOfWhispersPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'shipwreck_specter' },
             // FIX: Removed redundant level, xp, and respawnTime properties.
             { type: 'thieving_lockpick', id: 'iow_shipwreck_chest_1', targetName: 'Waterlogged Chest', lootTableId: 'thieving_dungeon_chest_mid' },
+            { type: 'ground_item', id: 'shipwreck_graveyard_logs', itemId: 'driftwood_logs', resourceCount: 1, respawnTimer: 120000 },
         ],
         regionId: 'isle_of_whispers',
         x: 550, y: 2450,
@@ -244,6 +247,8 @@ export const isleOfWhispersPois: Record<string, POI> = {
         connections: ['island_crossroads', 'jungle_heart', 'ancient_monoliths'],
         activities: [
             { type: 'skilling', id: 'jungle_mahogany_1', name: 'Chop Mahogany', skill: SkillName.Woodcutting, requiredLevel: 50, loot: [{ itemId: 'mahogany_logs', chance: 1, xp: 125 }], resourceCount: { min: 2, max: 4 }, respawnTime: 60000, gatherTime: 4500 },
+            { type: 'ground_item', id: 'isle_pineapple_1', itemId: 'pineapple', resourceCount: 1, respawnTimer: 60000 },
+            { type: 'ground_item', id: 'isle_pineapple_2', itemId: 'pineapple', resourceCount: 1, respawnTimer: 60000 },
         ],
         regionId: 'isle_of_whispers',
         x: 550, y: 2350,
@@ -255,7 +260,9 @@ export const isleOfWhispersPois: Record<string, POI> = {
         connections: ['whispering_jungle_edge', 'smugglers_den_entrance'],
         activities: [
             { type: 'combat', monsterId: 'jungle_stalker' },
-            { type: 'combat', monsterId: 'jungle_stalker' }
+            { type: 'combat', monsterId: 'jungle_stalker' },
+            { type: 'ground_item', id: 'isle_pineapple_3', itemId: 'pineapple', resourceCount: 1, respawnTimer: 60000 },
+            { type: 'ground_item', id: 'isle_pineapple_4', itemId: 'pineapple', resourceCount: 1, respawnTimer: 60000 },
         ],
         regionId: 'isle_of_whispers',
         x: 512,

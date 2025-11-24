@@ -26,6 +26,11 @@ interface MinimapProps {
     onCurePoison: () => void;
     isInCombat: boolean;
     poisonEvent: { damage: number, timestamp: number } | null;
+    // New Dev Props
+    isPermAggroOn?: boolean;
+    onTogglePermAggro?: () => void;
+    isGodModeOn?: boolean;
+    onToggleGodMode?: () => void;
 }
 
 const HpOrb: React.FC<{
@@ -125,7 +130,7 @@ const PrayerOrb: React.FC<{ currentPrayer: number, maxPrayer: number }> = ({ cur
 };
 
 
-const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, currentPrayer, maxPrayer, ui, isTouchSimulationEnabled, onNavigate, unlockedPois, addLog, isDevMode, onToggleDevPanel, showMinimapHealth, isPoisoned, onCurePoison, isInCombat, poisonEvent }) => {
+const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, currentPrayer, maxPrayer, ui, isTouchSimulationEnabled, onNavigate, unlockedPois, addLog, isDevMode, onToggleDevPanel, showMinimapHealth, isPoisoned, onCurePoison, isInCombat, poisonEvent, isPermAggroOn, onTogglePermAggro, isGodModeOn, onToggleGodMode }) => {
     const currentPoi = POIS[currentPoiId];
     const isTouchDevice = useIsTouchDevice(isTouchSimulationEnabled);
     const [hitSplats, setHitSplats] = useState<{ id: number; damage: number }[]>([]);
@@ -174,6 +179,45 @@ const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, curre
             });
         },
         onClick: handleMapOpen,
+    });
+    
+    const devButtonLongPress = useLongPress({
+        onLongPress: (e: React.MouseEvent | React.TouchEvent) => {
+            let eventForMenu: React.MouseEvent | React.Touch;
+            if ('touches' in e && e.touches.length > 0) {
+                eventForMenu = e.touches[0];
+            } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+                eventForMenu = e.changedTouches[0];
+            } else {
+                eventForMenu = e as React.MouseEvent;
+            }
+
+            const performAction = (action: () => void) => {
+                action();
+                ui.setContextMenu(null);
+            };
+
+            const options: ContextMenuOption[] = [
+                { label: 'Open Panel', onClick: () => performAction(onToggleDevPanel) },
+                { 
+                    label: <span className={isPermAggroOn ? "text-green-500" : "text-red-500"}>Toggle Aggression</span>, 
+                    onClick: () => performAction(() => onTogglePermAggro?.())
+                },
+                { label: 'Open Bank', onClick: () => performAction(() => ui.setActivePanel('bank')) },
+                { 
+                    label: <span className={isGodModeOn ? "text-green-500" : "text-red-500"}>Toggle God Mode</span>, 
+                    onClick: () => performAction(() => onToggleGodMode?.())
+                },
+            ];
+
+            ui.setContextMenu({
+                options,
+                triggerEvent: eventForMenu,
+                isTouchInteraction: 'touches' in e || 'changedTouches' in e,
+                title: "Developer Options"
+            });
+        },
+        onClick: onToggleDevPanel
     });
 
     if (!currentPoi) return null;
@@ -263,7 +307,7 @@ const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, curre
                 
                 {isDevMode && (
                     <button 
-                        onClick={onToggleDevPanel}
+                        {...devButtonLongPress}
                         className="absolute z-10 w-8 h-8 bg-gray-800 hover:bg-gray-700 border-2 border-gray-500 rounded-full flex items-center justify-center bottom-px left-px"
                         aria-label="Open Dev Panel"
                     >

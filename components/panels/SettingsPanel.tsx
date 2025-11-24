@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Button from '../common/Button';
 import { useUIState } from '../../hooks/useUIState';
@@ -46,6 +47,21 @@ const QualitySelector: React.FC<{ value: string, onChange: (value: 'Low' | 'Medi
             <button key={q} onClick={() => onChange(q)} className={`px-3 py-1 text-xs rounded transition-colors ${value === q ? 'bg-yellow-600 text-white font-bold' : 'bg-gray-700 hover:bg-gray-600'}`}>{q}</button>
         ))}
     </div>
+);
+
+interface TabButtonProps {
+    label: SettingTab;
+    isActive: boolean;
+    onClick: (tab: SettingTab) => void;
+}
+
+const TabButton: React.FC<TabButtonProps> = ({ label, isActive, onClick }) => (
+    <button 
+        onClick={() => onClick(label)} 
+        className={`w-full text-left p-3 rounded-md transition-colors text-sm font-semibold ${isActive ? 'bg-yellow-700/80 text-white' : 'hover:bg-gray-700/50'}`}
+    >
+        {label}
+    </button>
 );
 
 const SettingsView: React.FC<SettingsViewProps> = ({ onResetGame, onExportGame, onImportGame, onClose, isDevMode, onToggleDevPanel, isTouchSimulationEnabled, onToggleTouchSimulation, ui, bankPlaceholders, handleToggleBankPlaceholders }) => {
@@ -158,20 +174,14 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onResetGame, onExportGame, 
         }
     };
 
-    const TabButton: React.FC<{ label: SettingTab }> = ({ label }) => (
-        <button onClick={() => setActiveTab(label)} className={`w-full text-left p-3 rounded-md transition-colors text-sm font-semibold ${activeTab === label ? 'bg-yellow-700/80 text-white' : 'hover:bg-gray-700/50'}`}>
-            {label}
-        </button>
-    );
-
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
             <div className="bg-gray-800 border-4 border-gray-600 rounded-lg shadow-xl w-full max-w-3xl h-full max-h-[600px] flex" onClick={e => e.stopPropagation()}>
                 <div className="w-1/4 bg-black/30 p-2 border-r-2 border-gray-700 flex flex-col gap-1">
-                    <TabButton label="Video" />
-                    <TabButton label="Audio" />
-                    <TabButton label="Gameplay" />
-                    <TabButton label="Account" />
+                    <TabButton label="Video" isActive={activeTab === 'Video'} onClick={setActiveTab} />
+                    <TabButton label="Audio" isActive={activeTab === 'Audio'} onClick={setActiveTab} />
+                    <TabButton label="Gameplay" isActive={activeTab === 'Gameplay'} onClick={setActiveTab} />
+                    <TabButton label="Account" isActive={activeTab === 'Account'} onClick={setActiveTab} />
                 </div>
                 <div className="w-3/4 flex-grow flex flex-col p-6 overflow-y-auto">
                      <div className="flex justify-between items-center mb-6 flex-shrink-0">

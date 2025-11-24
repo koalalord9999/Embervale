@@ -13,6 +13,7 @@ import { useLongPress } from '../../hooks/useLongPress';
 import { useWorldActions } from '../../hooks/useWorldActions';
 
 type SkillingActivity = Extract<POIActivity, { type: 'skilling' }>;
+type GroundItemActivity = Extract<POIActivity, { type: 'ground_item' }>;
 type LockpickActivity = Extract<POIActivity, { type: 'thieving_lockpick' }>;
 type StallActivity = Extract<POIActivity, { type: 'thieving_stall' }>;
 type PickpocketData = NonNullable<Extract<POIActivity, { type: 'npc' }>['pickpocket']>;
@@ -36,7 +37,8 @@ interface SceneViewProps {
     resourceNodeStates: Record<string, ResourceNodeState>;
     activeSkillingNodeId: string | null;
     onToggleSkilling: (activity: SkillingActivity) => void;
-    initializeNodeState: (nodeId: string, activity: SkillingActivity) => void;
+    onPickupGroundItem: (activity: GroundItemActivity) => void;
+    initializeNodeState: (nodeId: string, activity: SkillingActivity | GroundItemActivity) => void;
     skillingTick: number;
     getSuccessChance: (activity: SkillingActivity) => number;
     activeRepeatableQuest: PlayerRepeatableQuest | null;
@@ -206,7 +208,7 @@ const ActionableButton: React.FC<{
         case 'spinning_wheel': text = 'Use Spinning Wheel'; break;
         case 'water_source': text = activity.name; break;
         case 'milking': text = 'Milk a Cow'; break;
-        case 'windmill': text = 'Collect Flour'; break;
+        case 'windmill': text = 'Windmill Actions'; break;
         case 'ancient_chest': text = activity.name; break;
         case 'ladder': text = activity.name; break;
         case 'cut_cactus': text = activity.name; break;
@@ -235,8 +237,14 @@ const ActionableButton: React.FC<{
 
         if (activity.type === 'npc') {
             const isBanker = activity.actions && activity.actions.some(a => a.action === 'open_bank');
-            if (!isBanker) {
+            const isAltar = activity.name === 'Altar';
+
+            if (!isBanker && !isAltar) {
                 options.push({ label: 'Talk to', onClick: () => { handleActivityClick(activity); setContextMenu(null); } });
+            }
+            
+            if (isAltar) {
+                 options.push({ label: 'Pray', onClick: () => { handleActivityClick(activity); setContextMenu(null); } });
             }
 
             if (activity.pickpocket) {
@@ -281,6 +289,7 @@ const ActionableButton: React.FC<{
             options = [
                 { label: 'Collect Flour', onClick: () => { worldActions.handleCollectFlour(); setContextMenu(null); } },
                 { label: 'Mill Wheat', onClick: () => { worldActions.handleMillWheat(); setContextMenu(null); } },
+                { label: 'Churn Cheese', onClick: () => { worldActions.handleChurn(); setContextMenu(null); } }, // New Action
             ];
         }
         
@@ -386,7 +395,7 @@ const BonfireButton: React.FC<{
     });
 
     const formatTime = (ms: number) => {
-        const totalSeconds = Math.floor(ms / 1000);
+        const totalSeconds = Math.max(0, Math.floor(ms / 1000));
         const minutes = Math.floor(totalSeconds / 60);
         const seconds = totalSeconds % 60;
         return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
@@ -411,7 +420,7 @@ const BonfireButton: React.FC<{
 
 
 const SceneView: React.FC<SceneViewProps> = (props) => {
-    const { poi, unlockedPois, onNavigate, onActivity, onStartCombat, playerQuests, inventory, setContextMenu, setMakeXPrompt, setTooltip, addLog, startQuest, hasItems, resourceNodeStates, activeSkillingNodeId, onToggleSkilling, initializeNodeState, skillingTick, getSuccessChance, activeRepeatableQuest, activeCleanup, onStartInteractQuest, onCancelInteractQuest, clearedSkillObstacles, onClearObstacle, skills, monsterRespawnTimers, setActiveDialogue, handleDialogueCheck, onResponse, onDepositBackpack, onDepositEquipment, ui, isTouchSimulationEnabled, worldActions, bonfires, onStokeBonfire, isOneClickMode, onPickpocket, onLockpick, onPilfer, thievingContainerStates, onStealFromStall, worldState, groundItemsForCurrentPoi, handleCutCactus, equipment } = props;
+    const { poi, unlockedPois, onNavigate, onActivity, onStartCombat, playerQuests, inventory, setContextMenu, setMakeXPrompt, setTooltip, addLog, startQuest, hasItems, resourceNodeStates, activeSkillingNodeId, onToggleSkilling, onPickupGroundItem, initializeNodeState, skillingTick, getSuccessChance, activeRepeatableQuest, activeCleanup, onStartInteractQuest, onCancelInteractQuest, clearedSkillObstacles, onClearObstacle, skills, monsterRespawnTimers, setActiveDialogue, handleDialogueCheck, onResponse, onDepositBackpack, onDepositEquipment, ui, isTouchSimulationEnabled, worldActions, bonfires, onStokeBonfire, isOneClickMode, onPickpocket, onLockpick, onPilfer, thievingContainerStates, onStealFromStall, worldState, groundItemsForCurrentPoi, handleCutCactus, equipment } = props;
     const { depletedNodesAnimating } = useSkillingAnimations(resourceNodeStates, poi.activities);
     const [countdown, setCountdown] = useState<Record<string, number>>({});
     const [shakingNodeId, setShakingNodeId] = useState<string | null>(null);
@@ -435,7 +444,7 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
     
     useEffect(() => {
         poi.activities.forEach(activity => {
-            if (activity.type === 'skilling') {
+            if (activity.type === 'skilling' || activity.type === 'ground_item') {
                 initializeNodeState(activity.id, activity);
             }
         });
@@ -530,7 +539,7 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
     }, [poi, clearedSkillObstacles]);
 
     const getActivityButton = (activity: POIActivity, index: number) => {
-        if ((activity.type === 'npc' || activity.type === 'skilling' || activity.type === 'runecrafting_altar' || activity.type === 'ladder' || activity.type === 'quest_board') && activity.questCondition) {
+        if ((activity.type === 'npc' || activity.type === 'skilling' || activity.type === 'runecrafting_altar' || activity.type === 'ladder' || activity.type === 'quest_board' || activity.type === 'ground_item') && activity.questCondition) {
             const questCond = activity.questCondition;
             const isRepeatableQuestActive = activeRepeatableQuest?.questId === questCond.questId;
     
@@ -681,6 +690,42 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
                     {buttonText}
                 </Button>
             );
+        }
+        
+        if (activity.type === 'ground_item') {
+            const nodeState = resourceNodeStates[activity.id];
+            const isDepleted = nodeState?.resources <= 0;
+            const respawnTimeSec = nodeState ? Math.ceil(nodeState.respawnTimer / 1000) : 0;
+            const itemData = ITEMS[activity.itemId];
+            const quantityText = activity.resourceCount > 1 ? ` (${activity.resourceCount})` : '';
+            
+            let buttonText = `Take ${itemData ? itemData.name : 'Item'}${quantityText}`;
+            if (isDepleted) {
+                buttonText = `Respawning (${respawnTimeSec}s)`;
+            }
+
+            const handleMouseEnter = (e: React.MouseEvent) => {
+                if (isDepleted) return;
+                 const tooltipContent = (
+                    <div>
+                        <p className="font-bold text-yellow-300">{itemData?.name}</p>
+                        {itemData?.description && <p className="text-sm text-gray-300">{itemData.description}</p>}
+                    </div>
+                );
+                setTooltip({ content: tooltipContent, position: { x: e.clientX, y: e.clientY } });
+            }
+
+            return (
+                <Button
+                    key={activity.id}
+                    onClick={() => { onPickupGroundItem(activity); setTooltip(null); }}
+                    disabled={isDepleted}
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={() => setTooltip(null)}
+                >
+                    {buttonText}
+                </Button>
+            )
         }
 
         if (activity.type === 'skilling') {

@@ -1,4 +1,6 @@
 
+
+
 import { POI, SkillName } from '../../types';
 
 export const dwarvenOutpostPois: Record<string, POI> = {
@@ -50,7 +52,8 @@ export const dwarvenOutpostPois: Record<string, POI> = {
                         responses: []
                     }
                 }
-             }
+             },
+             { type: 'ground_item', id: 'dwarven_forge_nail', itemId: 'rusty_nail', resourceCount: 1, respawnTimer: 180000 },
         ],
         regionId: 'dwarven_outpost',
         x: 250, y: 600,

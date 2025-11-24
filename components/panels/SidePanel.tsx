@@ -52,6 +52,12 @@ interface SidePanelProps {
     isPoisoned: boolean;
     onCurePoison: () => void;
     poisonEvent: { damage: number, timestamp: number } | null;
+    onToggleDevPanel: () => void;
+    // New Props
+    isPermAggroOn?: boolean;
+    onTogglePermAggro?: () => void;
+    isGodModeOn?: boolean;
+    onToggleGodMode?: () => void;
 }
 
 const PanelIcon: React.FC<{
@@ -108,7 +114,7 @@ const PlaceholderIcon: React.FC = () => (
 
 
 const SidePanel: React.FC<SidePanelProps> = (props) => {
-    const { ui, char, inv, quests, repeatableQuests, slayer, onReturnToMenu, isDevMode, isTouchSimulationEnabled, onToggleTouchSimulation, itemActions, isBusy, handleExamine, session, addLog, activeCombatStyleHighlight, isBankOpen, isShopOpen, onDeposit, onNavigate, unlockedPois, onCastSpell, onSpellOnItem, isEquipmentStatsOpen = false, initialState, activePrayers, onTogglePrayer, isPoisoned, onCurePoison, poisonEvent } = props;
+    const { ui, char, inv, quests, repeatableQuests, slayer, onReturnToMenu, isDevMode, isTouchSimulationEnabled, onToggleTouchSimulation, itemActions, isBusy, handleExamine, session, addLog, activeCombatStyleHighlight, isBankOpen, isShopOpen, onDeposit, onNavigate, unlockedPois, onCastSpell, onSpellOnItem, isEquipmentStatsOpen = false, initialState, activePrayers, onTogglePrayer, isPoisoned, onCurePoison, poisonEvent, onToggleDevPanel, isPermAggroOn, onTogglePermAggro, isGodModeOn, onToggleGodMode } = props;
     const { activePanel, setActivePanel } = ui;
 
     const inventoryPanelProps = {
@@ -189,12 +195,16 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     unlockedPois={unlockedPois}
                     addLog={addLog}
                     isDevMode={isDevMode}
-                    onToggleDevPanel={() => ui.setIsDevPanelOpen(true)}
+                    onToggleDevPanel={onToggleDevPanel}
                     showMinimapHealth={ui.showMinimapHealth}
                     isPoisoned={isPoisoned}
                     onCurePoison={onCurePoison}
                     isInCombat={ui.combatQueue.length > 0}
                     poisonEvent={poisonEvent}
+                    isPermAggroOn={isPermAggroOn}
+                    onTogglePermAggro={onTogglePermAggro}
+                    isGodModeOn={isGodModeOn}
+                    onToggleGodMode={onToggleGodMode}
                 />
                 {/* Top row */}
                 <div className="grid grid-cols-7 gap-1 p-1 bg-black/30 border-b-2 border-gray-600">

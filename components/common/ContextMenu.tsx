@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 export interface ContextMenuOption {
-    label: string;
+    label: React.ReactNode;
     onClick: () => boolean | void;
     disabled?: boolean;
 }
