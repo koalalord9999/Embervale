@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { Slot, PlayerType, PlayerSkill, SkillName } from '../../types';
 import { SKILL_ICONS, SKILL_DISPLAY_ORDER, XP_TABLE, getSkillColorClass } from '../../constants';
@@ -99,7 +98,23 @@ const SkillDisplay: React.FC<{
 
 
 const SaveSlotScreen: React.FC<SaveSlotScreenProps> = ({ slots, onSelectSlot, onCreateNew, onDelete, onExport, onImport, assets, setTooltip }) => {
-    const [selectedSlotId, setSelectedSlotId] = useState<number>(0);
+    // Initialize selectedSlotId with the most recently played slot
+    const [selectedSlotId, setSelectedSlotId] = useState<number>(() => {
+        let mostRecentSlotId = 0;
+        let maxTimestamp = 0;
+
+        slots.forEach(slot => {
+            if (slot.data && slot.updatedAt) {
+                const timestamp = new Date(slot.updatedAt).getTime();
+                if (timestamp > maxTimestamp) {
+                    maxTimestamp = timestamp;
+                    mostRecentSlotId = slot.slotId;
+                }
+            }
+        });
+        return mostRecentSlotId;
+    });
+
     const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
     const [confirmDeleteText, setConfirmDeleteText] = useState('');
 

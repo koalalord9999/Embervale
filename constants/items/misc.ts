@@ -11,7 +11,7 @@ export const misc: Item[] = [
     { id: 'waterskin', name: 'Waterskin', description: 'A skin for carrying water. Can be filled at a water source or from a cactus.', stackable: false, value: 15, iconUrl: 'https://api.iconify.design/game-icons:waterskin.svg', material: 'leather', consumable: { healAmount: 1 }, doseable: true, maxDoses: 4 },
     
     // Food Ingredients & Containers
-    { id: 'apple', name: 'Apple', description: 'A crisp red apple.', stackable: false, value: 3, iconUrl: 'https://api.iconify.design/game-icons:apple-maggot.svg', consumable: { healAmount: 2 }, material: 'raw-meat' },
+    { id: 'apple', name: 'Apple', description: 'A crisp green apple.', stackable: false, value: 3, iconUrl: 'https://api.iconify.design/game-icons:shiny-apple.svg', consumable: { healAmount: 2 }, material: 'uncut-emerald' },
     { id: 'tomato', name: 'Tomato', description: 'A ripe red tomato.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:tomato.svg', material: 'raw-meat' },
     { id: 'cheese', name: 'Cheese', description: 'A wheel of cheese.', stackable: false, value: 10, iconUrl: 'https://api.iconify.design/game-icons:cheese-wedge.svg', consumable: { healAmount: 3 }, material: 'raw-fish' },
     { id: 'red_berries', name: 'Red Berries', description: 'A handful of mixed berries.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:berries-bowl.svg', consumable: { healAmount: 2 }, material: 'raw-meat' },
