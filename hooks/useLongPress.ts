@@ -60,8 +60,10 @@ export const useLongPress = ({ onLongPress, onClick, delay = 400, isOneClickMode
     }, [delay, cleanup, isOneClickMode]);
 
     const handlePressEnd = useCallback((event: React.MouseEvent | React.TouchEvent) => {
-        if (event.type === 'touchend') {
-            // event.preventDefault(); // Removed to allow click propagation if needed
+        // FIX: Prevent ghost clicks on touch devices by preventing the default behavior
+        // which generates mousedown/mouseup/click events after touchend.
+        if (event.type === 'touchend' && event.cancelable) {
+            event.preventDefault();
         }
 
         if ('button' in event && event.button !== 0) {
