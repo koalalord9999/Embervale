@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { InventorySlot, Item, BankTab } from '../../types';
 import { ITEMS, BANK_CAPACITY, getIconClassName, MAX_BANK_TABS } from '../../constants';
 import Button from '../common/Button';
@@ -181,6 +181,7 @@ const BankView: React.FC<BankViewProps> = (props) => {
     const [dragOverTabId, setDragOverTabId] = useState<number | null>(null);
     const [withdrawAsNote, setWithdrawAsNote] = useState(false);
     const isTouchDevice = useIsTouchDevice(false);
+    const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     
     const activeTab = bank.find(t => t.id === activeBankTabId) ?? bank[0];
     const itemsToDisplay = activeTab?.items ?? [];
@@ -225,27 +226,39 @@ const BankView: React.FC<BankViewProps> = (props) => {
     
     // --- Touch Drag Handlers ---
     const handleTouchStart = (e: React.TouchEvent) => {
+        if (draggingIndex !== null) return;
+
         const touch = e.touches[0];
         const target = document.elementFromPoint(touch.clientX, touch.clientY);
         
         // Find the bank slot element
         let currentElement = target;
+        let index = -1;
+
         while (currentElement) {
             const indexStr = currentElement.getAttribute('data-bank-index');
             if (indexStr) {
-                const index = parseInt(indexStr, 10);
-                // Check if slot has item
-                if (itemsToDisplay[index]) {
-                    setDraggingIndex({ index, tabId: activeBankTabId });
-                }
+                index = parseInt(indexStr, 10);
                 break;
             }
             currentElement = currentElement.parentElement;
         }
+
+        if (index > -1 && itemsToDisplay[index]) {
+            holdTimer.current = setTimeout(() => {
+                setDraggingIndex({ index, tabId: activeBankTabId });
+            }, 200);
+        }
     };
 
     const handleTouchMove = (e: React.TouchEvent) => {
-        if (!draggingIndex) return;
+        if (!draggingIndex) {
+            if (holdTimer.current) {
+                clearTimeout(holdTimer.current);
+                holdTimer.current = null;
+            }
+            return;
+        }
         
         // Prevent scrolling while dragging an item
         if (e.cancelable) e.preventDefault();
@@ -268,6 +281,11 @@ const BankView: React.FC<BankViewProps> = (props) => {
     };
 
     const handleTouchEnd = () => {
+        if (holdTimer.current) {
+            clearTimeout(holdTimer.current);
+            holdTimer.current = null;
+        }
+
         if (draggingIndex && dragOverIndex !== null && draggingIndex.index !== dragOverIndex && draggingIndex.tabId === activeBankTabId) {
              onMoveItem(draggingIndex.index, dragOverIndex, activeBankTabId);
         }
@@ -354,7 +372,7 @@ const BankView: React.FC<BankViewProps> = (props) => {
             </div>
 
             <div 
-                className="flex-grow min-h-[300px] bg-black/40 p-2 rounded-lg border-2 border-gray-600 border-t-0 rounded-t-none pr-1"
+                className="flex-grow min-h-[300px] max-h-[300px] bg-black/40 p-2 rounded-lg border-2 border-gray-600 border-t-0 rounded-t-none pr-1"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}

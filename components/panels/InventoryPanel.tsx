@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { InventorySlot, PlayerSkill, Item, Spell, Equipment } from '../../types';
 import { INVENTORY_CAPACITY } from '../../constants';
 import { ConfirmationPrompt, ContextMenuState, MakeXPrompt } from '../../hooks/useUIState';
@@ -60,6 +60,7 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
     const { inventory, coins, onMoveItem, itemToUse, setTooltip, spellToCast } = props;
     const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+    const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const handleDrop = (e: React.DragEvent, toIndex: number) => {
         e.preventDefault();
@@ -77,30 +78,44 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
 
     // Mobile Touch Drag Handling
     const handleTouchStart = (e: React.TouchEvent) => {
+        // If already dragging, do nothing
+        if (draggingIndex !== null) return;
+
         const touch = e.touches[0];
         const target = document.elementFromPoint(touch.clientX, touch.clientY);
         
         // Find the inventory slot element
         let currentElement = target;
+        let index = -1;
+        
         while (currentElement) {
             const indexStr = currentElement.getAttribute('data-inventory-index');
             if (indexStr) {
-                const index = parseInt(indexStr, 10);
-                // Only allow start if there's an item or if we want to allow empty drags?
-                // Typically we only drag items.
-                if (inventory[index]) {
-                     setDraggingIndex(index);
-                }
+                index = parseInt(indexStr, 10);
                 break;
             }
             currentElement = currentElement.parentElement;
         }
+
+        if (index > -1 && inventory[index]) {
+            // Start a timer. If the user holds for 200ms without moving significantly, start drag.
+            holdTimer.current = setTimeout(() => {
+                setDraggingIndex(index);
+            }, 200);
+        }
     };
 
     const handleTouchMove = (e: React.TouchEvent) => {
-        if (draggingIndex === null) return;
-        
-        // Prevent scrolling while dragging an item
+        // If not dragging yet, this movement might be a scroll. Cancel the timer.
+        if (draggingIndex === null) {
+            if (holdTimer.current) {
+                clearTimeout(holdTimer.current);
+                holdTimer.current = null;
+            }
+            return;
+        }
+
+        // If we ARE dragging, prevent default to stop scrolling.
         if (e.cancelable) e.preventDefault();
         
         const touch = e.touches[0];
@@ -121,6 +136,12 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
     };
 
     const handleTouchEnd = () => {
+        // Clear timer if it was running
+        if (holdTimer.current) {
+            clearTimeout(holdTimer.current);
+            holdTimer.current = null;
+        }
+
         if (draggingIndex !== null && dragOverIndex !== null && draggingIndex !== dragOverIndex) {
             onMoveItem(draggingIndex, dragOverIndex);
         }
