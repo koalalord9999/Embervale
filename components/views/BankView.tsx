@@ -247,7 +247,7 @@ const BankView: React.FC<BankViewProps> = (props) => {
         if (index > -1 && itemsToDisplay[index]) {
             holdTimer.current = setTimeout(() => {
                 setDraggingIndex({ index, tabId: activeBankTabId });
-            }, 200);
+            }, 100);
         }
     };
 
@@ -326,7 +326,7 @@ const BankView: React.FC<BankViewProps> = (props) => {
                 {bank.map(tab => {
                     let iconContent = null;
                     if (tab.id === 0) {
-                        iconContent = <img src="https://api.iconify.design/game-icons:infinity.svg" alt="Main Tab" className="bank-tab-icon filter invert" />;
+                        iconContent = <img src="https://api.iconify.design/game-icons:infinity.svg" alt="Main Tab" className="bank-tab-icon filter invert w-8 h-8" />;
                     } else {
                         const firstItem = tab.items.find(item => item !== null && item.quantity > 0);
                         if (firstItem) {
@@ -335,7 +335,7 @@ const BankView: React.FC<BankViewProps> = (props) => {
                                 iconContent = <img src={itemData.iconUrl} alt={tab.name} className={`bank-tab-icon ${getIconClassName(itemData)}`} />;
                             }
                         } else {
-                            iconContent = <img src="https://api.iconify.design/game-icons:bank.svg" alt="Empty Tab" className="bank-tab-icon filter invert opacity-50" />;
+                            iconContent = <img src="https://api.iconify.design/game-icons:bank.svg" alt="Empty Tab" className="bank-tab-icon filter invert opacity-50 w-8 h-8 " />;
                         }
                     }
 
@@ -366,13 +366,13 @@ const BankView: React.FC<BankViewProps> = (props) => {
                         onMouseEnter={(e) => setTooltip({ content: 'Add new tab', position: { x: e.clientX, y: e.clientY }})}
                         onMouseLeave={() => setTooltip(null)}
                     >
-                        <img src="https://api.iconify.design/game-icons:health-normal.svg" alt="Add Tab" className="bank-tab-icon filter invert opacity-50" />
+                        <img src="https://api.iconify.design/game-icons:health-normal.svg" alt="Add Tab" className="bank-tab-icon filter invert opacity-50 w-8 h-8" />
                     </button>
                 )}
             </div>
 
             <div 
-                className="flex-grow min-h-[300px] max-h-[300px] bg-black/40 p-2 rounded-lg border-2 border-gray-600 border-t-0 rounded-t-none pr-1"
+                className="flex-grow min-h-[300px] max-h-[400px] bg-black/40 p-2 rounded-lg border-2 border-gray-600 border-t-0 rounded-t-none pr-1"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}

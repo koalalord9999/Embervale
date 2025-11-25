@@ -101,7 +101,7 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
             // Start a timer. If the user holds for 200ms without moving significantly, start drag.
             holdTimer.current = setTimeout(() => {
                 setDraggingIndex(index);
-            }, 200);
+            }, 100);
         }
     };
 
