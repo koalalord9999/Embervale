@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { InventorySlot, Item, BankTab } from '../../types';
 import { ITEMS, BANK_CAPACITY, getIconClassName, MAX_BANK_TABS } from '../../constants';
 import Button from '../common/Button';
@@ -117,7 +117,6 @@ const BankSlot: React.FC<BankSlotProps> = (props) => {
 
     return (
         <div {...combinedHandlers}
-            data-bank-index={index}
             onMouseEnter={(e) => {
                 if (item && slot) {
                     const content = isPlaceholder ? null : <p className="text-sm mt-1 text-gray-400">Quantity: {slot.quantity.toLocaleString()}</p>;
@@ -179,6 +178,7 @@ const BankView: React.FC<BankViewProps> = (props) => {
 
     const isTouchDevice = useIsTouchDevice(false);
     const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const panelRef = useRef<HTMLDivElement>(null);
     
     const activeTab = bank.find(t => t.id === activeBankTabId) ?? bank[0];
 
@@ -307,48 +307,66 @@ const BankView: React.FC<BankViewProps> = (props) => {
             }
             currentElement = currentElement.parentElement;
         }
-        if (index > -1 && itemsToDisplay[index]) {
+        if (index > -1 && itemsToDisplay[index]?.slot) {
             holdTimer.current = setTimeout(() => {
-                setDraggingIndex({ index, tabId: activeBankTabId });
+                const itemInfo = itemsToDisplay[index];
+                setDraggingIndex({ index: itemInfo.index, tabId: itemInfo.tabId });
             }, 100);
         }
     };
 
-    const handleTouchMove = (e: React.TouchEvent) => {
-        if (!draggingIndex) {
-            if (holdTimer.current) {
-                clearTimeout(holdTimer.current);
-                holdTimer.current = null;
-            }
+    const handleTouchMove = useCallback((e: TouchEvent) => {
+        if (draggingIndex === null) {
+            if (holdTimer.current) { clearTimeout(holdTimer.current); holdTimer.current = null; }
             return;
         }
         if (e.cancelable) e.preventDefault();
         const touch = e.touches[0];
         const overElement = document.elementFromPoint(touch.clientX, touch.clientY);
-        let targetIndex: number | null = null;
+        let targetDisplayIndex: number | null = null;
         let currentElement = overElement;
         while (currentElement) {
             const indexStr = currentElement.getAttribute('data-bank-index');
             if (indexStr) {
-                targetIndex = parseInt(indexStr, 10);
+                targetDisplayIndex = parseInt(indexStr, 10);
                 break;
             }
             currentElement = currentElement.parentElement;
         }
-        setDragOverIndex(targetIndex);
-    };
+
+        if (targetDisplayIndex !== null && itemsToDisplay[targetDisplayIndex]) {
+            setDragOverIndex(itemsToDisplay[targetDisplayIndex].index);
+        } else {
+            setDragOverIndex(null);
+        }
+    }, [draggingIndex, itemsToDisplay]);
 
     const handleTouchEnd = () => {
         if (holdTimer.current) {
             clearTimeout(holdTimer.current);
             holdTimer.current = null;
         }
-        if (draggingIndex && dragOverIndex !== null && draggingIndex.index !== dragOverIndex && draggingIndex.tabId === activeBankTabId) {
-             onMoveItem(draggingIndex.index, dragOverIndex, activeBankTabId);
+        if (draggingIndex && dragOverIndex !== null) {
+            const fromIndex = draggingIndex.index;
+            const fromTabId = draggingIndex.tabId;
+            const toIndex = dragOverIndex;
+
+            if (fromTabId === activeBankTabId && fromIndex !== toIndex) {
+                 onMoveItem(fromIndex, toIndex, fromTabId);
+            }
         }
         setDraggingIndex(null);
         setDragOverIndex(null);
     };
+    
+    useEffect(() => {
+        const panel = panelRef.current;
+        if (!panel) return;
+        panel.addEventListener('touchmove', handleTouchMove, { passive: false });
+        return () => {
+            panel.removeEventListener('touchmove', handleTouchMove);
+        };
+    }, [handleTouchMove]);
 
     const handleTabContextMenu = (e: React.MouseEvent, tab: BankTab) => {
         e.preventDefault();
@@ -430,23 +448,24 @@ const BankView: React.FC<BankViewProps> = (props) => {
 
             <div 
                 className="flex-grow min-h-[300px] max-h-[400px] bg-black/40 p-2 rounded-lg border-2 border-gray-600 border-t-0 rounded-t-none pr-1"
+                ref={panelRef}
                 onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
             >
                 <div className="bank-grid h-full pb-8">
                     {itemsToDisplay.map((displayItem, displayIndex) => {
                         const { slot, tabId, index: realIndex } = displayItem;
                         let slotClasses = '';
-                        const isDraggingThis = draggingIndex?.tabId === activeBankTabId && draggingIndex?.index === realIndex;
+                        const isDraggingThis = draggingIndex?.tabId === tabId && draggingIndex?.index === realIndex;
                         
                         if (isDraggingThis) slotClasses = 'opacity-25';
-                        else if (dragOverIndex === realIndex) slotClasses = 'border-green-400 scale-105 bg-green-900/50';
+                        else if (dragOverIndex === realIndex && tabId === activeBankTabId) slotClasses = 'border-green-400 scale-105 bg-green-900/50';
                         else if (slot) slotClasses = 'cursor-pointer hover:border-yellow-400';
 
                         const dragHandlers = {
                             draggable: !!slot && !searchTerm,
-                            onDragStart: (e: React.DragEvent) => handleDragStart(e, realIndex, activeBankTabId),
+                            'data-bank-index': displayIndex,
+                            onDragStart: (e: React.DragEvent) => handleDragStart(e, realIndex, tabId),
                             onDragOver: (e: React.DragEvent) => { e.preventDefault(); if (draggingIndex !== null) setDragOverIndex(realIndex); },
                             onDragLeave: () => setDragOverIndex(null),
                             onDrop: (e: React.DragEvent) => handleDrop(e, realIndex),
