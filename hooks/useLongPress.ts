@@ -90,7 +90,7 @@ export const useLongPress = ({ onLongPress, onClick, delay = 400, isOneClickMode
             const dx = Math.abs(movePoint.clientX - pressStartPos.current.x);
             const dy = Math.abs(movePoint.clientY - pressStartPos.current.y);
 
-            if (dx > 15 || dy > 15) {
+            if (dx > 10 || dy > 10) {
                 isDrag.current = true;
                 if (timeout.current) clearTimeout(timeout.current);
             }

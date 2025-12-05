@@ -1,5 +1,6 @@
 
-import React, { useState, useRef } from 'react';
+
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { InventorySlot, PlayerSkill, Item, Spell, Equipment } from '../../types';
 import { INVENTORY_CAPACITY } from '../../constants';
 import { ConfirmationPrompt, ContextMenuState, MakeXPrompt, useUIState } from '../../hooks/useUIState';
@@ -62,6 +63,7 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
     const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
     const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const panelRef = useRef<HTMLDivElement>(null);
 
     const handleDrop = (e: React.DragEvent, toIndex: number) => {
         e.preventDefault();
@@ -106,7 +108,7 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
         }
     };
 
-    const handleTouchMove = (e: React.TouchEvent) => {
+    const handleTouchMove = useCallback((e: TouchEvent) => {
         // If not dragging yet, this movement might be a scroll. Cancel the timer.
         if (draggingIndex === null) {
             if (holdTimer.current) {
@@ -134,7 +136,20 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
         }
         
         setDragOverIndex(targetIndex);
-    };
+    }, [draggingIndex]);
+
+    useEffect(() => {
+        const panel = panelRef.current;
+        if (!panel) return;
+        
+        // We manually add the event listener here with `passive: false`
+        // to ensure we can call `preventDefault()` and stop the screen from scrolling on mobile.
+        panel.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+        return () => {
+            panel.removeEventListener('touchmove', handleTouchMove);
+        };
+    }, [handleTouchMove]);
 
     const handleTouchEnd = () => {
         // Clear timer if it was running
@@ -167,9 +182,9 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
 
     return (
         <div 
+            ref={panelRef}
             className={`flex flex-col h-full text-gray-300 ${itemToUse || spellToCast ? 'cursor-crosshair' : ''}`}
             onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
         >
             <div className="grid grid-cols-5 gap-1">
@@ -184,7 +199,6 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
                         dragOverIndex={dragOverIndex}
                         setDragOverIndex={setDragOverIndex}
                         onDrop={handleDrop}
-                        // FIX: Explicitly pass the 'ui' prop to satisfy the type checker.
                         ui={props.ui}
                     />
                 ))}
