@@ -1,11 +1,11 @@
 
 import React, { useCallback } from 'react';
 // FIX: Import Equipment type.
-import { InventorySlot, PlayerSkill, SkillName, ActiveCraftingAction, Item, CraftingContext, POIActivity, EquipmentSlot, PlayerQuestState, Spell, Equipment, ActiveBuff, DialogueResponse, DialogueCheckRequirement, WeaponType, EquipmentStats, BonfireActivity } from '../../types';
+import { InventorySlot, PlayerSkill, SkillName, ActiveCraftingAction, Item, CraftingContext, POIActivity, EquipmentSlot, PlayerQuestState, Spell, Equipment, ActiveBuff, DialogueResponse, DialogueCheckRequirement, WeaponType, EquipmentStats, BonfireActivity } from '../types';
 import { ITEMS, FLETCHING_RECIPES, HERBLORE_RECIPES, HERBS, INVENTORY_CAPACITY, rollOnLootTable, LootRollResult, FIREMAKING_RECIPES, QUESTS, COOKING_RECIPES, SMELTING_RECIPES, GEM_CUTTING_RECIPES, REGIONS } from '../../constants';
 import { POIS } from '../../data/pois';
 // FIX: Import ContextMenuOption from its source file instead of re-exporting from useUIState.
-import { MakeXPrompt, useUIState, ConfirmationPrompt } from '../../hooks/useUIState';
+import { MakeXPrompt, useUIState, ConfirmationPrompt } from './useUIState';
 import { useNavigation } from './useNavigation';
 
 type BarType = 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'silver_bar' | 'gold_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar';
