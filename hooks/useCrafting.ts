@@ -64,7 +64,7 @@ export const useCrafting = (props: UseCraftingProps) => {
                 checkQuestProgressOnSmith('iron_bar', 1);
                 return { success: true, wasItemMade: true };
             } else {
-                addXp(SkillName.Smithing, 2); // Consolation XP on failure
+                // No xp for failing to refine
                 return { success: true, wasItemMade: false, logMessage: "You failed to refine the ore and lost it in the heat." };
             }
         }
@@ -409,7 +409,7 @@ export const useCrafting = (props: UseCraftingProps) => {
 
                 } else {
                     modifyItem(recipe.burntItemId, 1, true, { bypassAutoBank: true });
-                    addXp(SkillName.Cooking, 5); // Small XP for trying
+                    // No xp for burning.
                 }
                 return { success: true, wasItemMade: true };
             }

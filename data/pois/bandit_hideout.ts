@@ -1,3 +1,4 @@
+
 import { POI } from '../../types';
 
 export const banditHideoutPois: Record<string, POI> = {
@@ -21,7 +22,6 @@ export const banditHideoutPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'bandit_bruiser' },
             { type: 'combat', monsterId: 'bandit_bruiser' },
             { type: 'combat', monsterId: 'bandit_marksman' },
-// FIX: Removed redundant level, xp, and respawnTime properties.
             { type: 'thieving_lockpick', id: 'bh_main_chest_1', targetName: 'Bandit\'s Chest', lootTableId: 'thieving_dungeon_chest_mid' },
         ],
         regionId: 'wilderness',
@@ -34,7 +34,6 @@ export const banditHideoutPois: Record<string, POI> = {
         connections: ['bandit_hideout_cave_1'],
         activities: [
             { type: 'combat', monsterId: 'bandit_leader' },
-// FIX: Removed redundant level, xp, and respawnTime properties.
             { type: 'thieving_lockpick', id: 'bh_leader_chest_1', targetName: 'Leader\'s Chest', lootTableId: 'thieving_dungeon_chest_high' },
         ],
         regionId: 'wilderness',

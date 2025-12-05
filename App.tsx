@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useUIState } from './hooks/useUIState';
 import { useSaveSlotManager } from './hooks/useSaveSlotManager';
@@ -14,6 +15,7 @@ import ItemsOnDeathView from './components/views/overlays/ItemsOnDeathView';
 import PriceCheckerView from './components/views/overlays/PriceCheckerView';
 import DungeonMapView from './components/views/DungeonMapView';
 import Game from './components/game/Game';
+import TechDemoGame from './prototyping/TechDemoGame';
 import SaveSlotScreen from './components/screens/SaveSlotScreen';
 import GameModeSelection from './components/screens/GameModeSelection';
 import UsernamePrompt from './components/common/UsernamePrompt';
@@ -97,7 +99,13 @@ const App: React.FC = () => {
 
     const handleCreateNew = (slotId: number) => {
         setPendingSlotId(slotId);
-        setAppState('GAME_MODE_SELECTION');
+        // If it's the Tech Demo slot (index 5), skip selection
+        if (slotId === 5) {
+            setPendingPlayerType(PlayerType.TechDemo);
+            setAppState('USERNAME_PROMPT');
+        } else {
+            setAppState('GAME_MODE_SELECTION');
+        }
     };
 
     const handleModeSelected = (playerType: PlayerType) => {
@@ -202,12 +210,29 @@ const App: React.FC = () => {
                 return (
                      <div className="w-full h-full game-container bg-cover bg-top bg-no-repeat md:bg-[length:100%_100%] border-8 border-gray-900 shadow-2xl p-2 md:p-4 flex items-center justify-center relative filter brightness-110 saturate-125" style={gameContainerStyle}>
                         <div className="absolute inset-0 bg-black/30"></div>
-                        <UsernamePrompt onConfirm={handleUsernameConfirm} onCancel={() => setAppState('GAME_MODE_SELECTION')} />
+                        <UsernamePrompt onConfirm={handleUsernameConfirm} onCancel={() => setAppState('SLOT_SELECTION')} />
                      </div>
                 );
             case 'GAME':
             default:
                 if (!loadedAssets || !activeGameState || activeSlotId === null) return null;
+                
+                // --- TECH DEMO CHECK ---
+                if (activeGameState.playerType === PlayerType.TechDemo) {
+                    return (
+                        <div className="w-full h-full game-container border-8 border-gray-900 shadow-2xl relative overflow-hidden">
+                            <TechDemoGame
+                                key={`${activeSlotId}-${gameKey}`}
+                                initialState={activeGameState}
+                                slotId={activeSlotId}
+                                onReturnToMenu={handleReturnToMenu}
+                                ui={ui}
+                            />
+                        </div>
+                    );
+                }
+                // -----------------------
+
                 return (
                     <div className="w-full h-full game-container border-8 border-gray-900 shadow-2xl p-2 flex flex-col md:flex-row gap-2 relative overflow-y-auto md:overflow-hidden">
                         <Game 

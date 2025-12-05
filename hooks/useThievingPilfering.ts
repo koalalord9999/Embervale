@@ -150,17 +150,17 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
                         // Expanded logic for new container types including Medicine Cabinet
                         // Coin purse = 10%
                         // Drawer = 30%
-                        // Cabinet = 25%
+                        // Nightstand = 25%
                         // Medicine Cabinet = 15%
                         // Vanity = 10%
                         // Chest = 6%
                         // Strongbox = 4%
                         const containerRoll = Math.random() * 1000;
-                        let containerType: 'coin_purse' | 'drawer' | 'cabinet' | 'medicine_cabinet' | 'vanity' | 'chest' | 'strongbox';
+                        let containerType: 'coin_purse' | 'drawer' | 'nightstand' | 'medicine_cabinet' | 'vanity' | 'chest' | 'strongbox';
 
                         if (containerRoll < 100) { containerType = 'coin_purse'; }
                         else if (containerRoll < 400) { containerType = 'drawer'; }
-                        else if (containerRoll < 650) { containerType = 'cabinet'; }
+                        else if (containerRoll < 650) { containerType = 'nightstand'; }
                         else if (containerRoll < 800) { containerType = 'medicine_cabinet'; }
                         else if (containerRoll < 900) { containerType = 'vanity'; }
                         else if (containerRoll < 960) { containerType = 'chest'; }

@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 
 export interface ContextMenuOption {
@@ -9,14 +10,14 @@ export interface ContextMenuOption {
 
 interface ContextMenuProps {
     options: ContextMenuOption[];
-    // FIX: Renamed prop to `triggerEvent` to match the state from useUIState.
     triggerEvent: React.MouseEvent | React.Touch;
     onClose: () => void;
     isTouchInteraction: boolean;
     title?: string;
+    content?: React.ReactNode;
 }
 
-const ContextMenu: React.FC<ContextMenuProps> = ({ options, triggerEvent, onClose, isTouchInteraction, title }) => {
+const ContextMenu: React.FC<ContextMenuProps> = ({ options, triggerEvent, onClose, isTouchInteraction, title, content }) => {
     const menuRef = useRef<HTMLDivElement>(null);
     const [style, setStyle] = useState<React.CSSProperties>({ opacity: 0 });
 
@@ -49,16 +50,13 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ options, triggerEvent, onClos
             const gameRect = gameContainer.getBoundingClientRect();
 
             const touchOffset = 20;
-            // FIX: Use the `triggerEvent` prop.
             let x = triggerEvent.clientX + touchOffset;
             let y = triggerEvent.clientY + touchOffset;
 
             if (x + menuWidth > gameRect.right) {
-                // FIX: Use the `triggerEvent` prop.
                 x = triggerEvent.clientX - menuWidth - touchOffset;
             }
             if (y + menuHeight > gameRect.bottom) {
-                // FIX: Use the `triggerEvent` prop.
                 y = triggerEvent.clientY - menuHeight - touchOffset;
             }
             if (x < gameRect.left) x = gameRect.left + 5;
@@ -71,15 +69,14 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ options, triggerEvent, onClos
                 transition: 'opacity 0.1s ease-in',
             });
         }
-        // FIX: Update dependency array to use the `triggerEvent` prop.
-    }, [triggerEvent, title, options]);
+    }, [triggerEvent, title, options, content]);
 
     return (
         <>
             <div className="fixed inset-0 z-[75]" onClick={onClose} onContextMenu={(e) => { e.preventDefault(); onClose(); }} />
             <div
                 ref={menuRef}
-                className="fixed bg-gray-900 border border-gray-600 rounded-md shadow-lg py-1 z-[80]"
+                className="fixed bg-gray-900 border border-gray-600 rounded-md shadow-lg py-1 z-[80] max-h-[80vh] overflow-y-auto"
                 style={style}
             >
                 <ul>
@@ -109,6 +106,14 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ options, triggerEvent, onClos
                             </button>
                         </li>
                     ))}
+                    {content && (
+                        <>
+                            <li className="border-t border-gray-700 my-1" />
+                            <li className="px-4 py-2 text-sm text-gray-200">
+                                {content}
+                            </li>
+                        </>
+                    )}
                 </ul>
             </div>
         </>

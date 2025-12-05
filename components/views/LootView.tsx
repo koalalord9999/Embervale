@@ -139,7 +139,7 @@ const LootView: React.FC<LootViewProps> = ({ items, onPickUp, onTakeAll, onClose
                     <Button onClick={onClose} size="sm">Close</Button>
                 </div>
                 <div className="p-4">
-                    <div className="grid grid-cols-5 gap-2 bg-black/40 p-2 rounded-lg border border-gray-600 min-h-[184px] content-start">
+                    <div className="grid grid-cols-5 gap-1 bg-black/40 p-2 rounded-lg border border-gray-600 min-h-[184px] content-start max-h-[240px] overflow-y-auto">
                         {items.map(gi => (
                             <LootSlot key={gi.uniqueId} groundItem={gi} onPickUp={onPickUp} setTooltip={setTooltip} deathMarker={deathMarker} />
                         ))}

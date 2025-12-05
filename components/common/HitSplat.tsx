@@ -15,12 +15,12 @@ const HitSplat: React.FC<HitSplatProps> = ({ damage, isMaxHit = false, isPoison 
     const text = isMiss ? '0' : String(damage);
 
     const splatColorClass = useMemo(() => {
-        if (isMaxHit) return 'hitsplat-orange';
+        if (isMaxHit && typeof damage === 'number' && damage >= 2) return 'hitsplat-orange';
         if (isMiss) return 'hitsplat-blue';
         if (isPoison) return 'hitsplat-green';
         if (isDragonfire) return 'hitsplat-dragonfire';
         return 'hitsplat-red';
-    }, [isMiss, isMaxHit, isPoison, isDragonfire]);
+    }, [isMiss, isMaxHit, isPoison, isDragonfire, damage]);
 
     const [style, setStyle] = useState<React.CSSProperties>({ 
         top: '50%', 

@@ -1,4 +1,7 @@
-import React, { useState, useCallback, useMemo } from 'react';
+
+
+// FIX: Added useState, useMemo, and useCallback to the import from 'react'.
+import React, { useState, useMemo, useCallback } from 'react';
 import { ActivePanel, SkillName, InventorySlot, ActiveCraftingAction, DialogueNode, CraftingContext, Equipment, PlayerQuestState, Spell, Item, DialogueResponse, DialogueCheckRequirement } from '../types';
 import { ContextMenuOption } from '../components/common/ContextMenu';
 
@@ -22,10 +25,10 @@ export interface TooltipState {
 
 export interface ContextMenuState {
     options: ContextMenuOption[];
-    // Renamed from `event` for clarity and to match component props.
     triggerEvent: React.MouseEvent | React.Touch;
     isTouchInteraction: boolean;
     title?: string;
+    content?: React.ReactNode;
 }
 
 export interface MakeXPrompt {
@@ -58,6 +61,7 @@ export interface ItemsOnDeathData {
     coins: number;
 }
 
+export type WithdrawMode = 1 | 5 | 10 | 'x' | 'all';
 
 export const useUIState = () => {
     const [activePanel, setActivePanel] = useState<ActivePanel>(null);
@@ -108,7 +112,10 @@ export const useUIState = () => {
     const [showHitsplats, setShowHitsplats] = useState<boolean>(true);
     const [isOneClickMode, setIsOneClickMode] = useState<boolean>(false);
 
-    // FIX: Add dev settings state to the UI hook
+    // New state for bank quantity toggles (session-wide)
+    const [activeWithdrawMode, setActiveWithdrawMode] = useState<WithdrawMode>(1);
+    const [customWithdrawAmount, setCustomWithdrawAmount] = useState<number | null>(null);
+
     // Dev Mode settings (session only, not persisted in game state)
     const [xpMultiplier, setXpMultiplier] = useState<number>(1);
     const [combatSpeedMultiplier, setCombatSpeedMultiplier] = useState<number>(1);
@@ -244,7 +251,8 @@ export const useUIState = () => {
         showCombatEnemyHealth, setShowCombatEnemyHealth,
         showHitsplats, setShowHitsplats,
         isOneClickMode, setIsOneClickMode,
-        // FIX: Return dev settings state and setters from the hook.
+        activeWithdrawMode, setActiveWithdrawMode,
+        customWithdrawAmount, setCustomWithdrawAmount,
         xpMultiplier, setXpMultiplier,
         combatSpeedMultiplier, setCombatSpeedMultiplier,
         isPlayerInvisible, setIsPlayerInvisible,

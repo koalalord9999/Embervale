@@ -21,7 +21,7 @@ export const wildernessPois: Record<string, POI> = {
         description: 'The bank of a slow-moving river. The water is murky, but you can see small fish darting about.',
         connections: ['whispering_woods', 'treacherous_ascent', 'windswept_clearing'],
         activities: [
-            { type: 'skilling', id: 'murky_river_fishing', name: 'Net Fish', skill: SkillName.Fishing, requiredLevel: 1, loot: [{ itemId: 'raw_shrimp', chance: 1, xp: 10 }, { itemId: 'raw_anchovy', chance: 0.4, xp: 20}], resourceCount: { min: 5, max: 10 }, respawnTime: 8000, gatherTime: 1800, requiredTool: ToolType.FishingNet },
+            { type: 'skilling', id: 'murky_river_fishing', name: 'Net Fish', skill: SkillName.Fishing, requiredLevel: 1, loot: [{ itemId: 'raw_shrimp', chance: 1, xp: 10 }, { itemId: 'raw_anchovy', chance: 0.4, xp: 20, requiredLevel: 5}], resourceCount: { min: 5, max: 10 }, respawnTime: 8000, gatherTime: 1800, requiredTool: ToolType.FishingNet },
             { type: 'skilling', id: 'murky_river_bait_fishing', name: 'Bait Fish', skill: SkillName.Fishing, requiredLevel: 5, loot: [{ itemId: 'raw_sardine', chance: 1, xp: 20 }, { itemId: 'raw_herring', chance: 0.5, xp: 30, requiredLevel: 10 }], resourceCount: { min: 5, max: 10 }, respawnTime: 8000, gatherTime: 1800, requiredTool: ToolType.FishingRod },
             { type: 'water_source', name: 'Collect Water' },
             { type: 'ground_item', id: 'river_berry_1', itemId: 'red_berries', resourceCount: 1, respawnTimer: 60000 },

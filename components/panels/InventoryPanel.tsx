@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { InventorySlot, PlayerSkill, Item, Spell, Equipment } from '../../types';
 import { INVENTORY_CAPACITY } from '../../constants';
-import { ConfirmationPrompt, ContextMenuState, MakeXPrompt } from '../../hooks/useUIState';
+import { ConfirmationPrompt, ContextMenuState, MakeXPrompt, useUIState } from '../../hooks/useUIState';
 import InventorySlotDisplay from './InventorySlot';
 
 interface InventoryPanelProps {
@@ -38,6 +38,7 @@ interface InventoryPanelProps {
     valuableDropThreshold: number;
     isOneClickMode: boolean;
     onTeleport: (itemSlot: InventorySlot, slotIdentifier: number | keyof Equipment, from: 'inventory' | keyof Equipment, poiId: string) => void;
+    ui: ReturnType<typeof useUIState>;
 }
 
 const formatCoins = (quantity: number): string => {
@@ -178,12 +179,13 @@ const InventoryPanel: React.FC<InventoryPanelProps> = (props) => {
                         index={index}
                         slot={inventory[index] ?? null}
                         {...props}
-                        onDropItem={props.onDropItem}
                         draggingIndex={draggingIndex}
                         setDraggingIndex={setDraggingIndex}
                         dragOverIndex={dragOverIndex}
                         setDragOverIndex={setDragOverIndex}
                         onDrop={handleDrop}
+                        // FIX: Explicitly pass the 'ui' prop to satisfy the type checker.
+                        ui={props.ui}
                     />
                 ))}
             </div>

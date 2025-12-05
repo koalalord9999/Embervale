@@ -176,7 +176,9 @@ const playerAttack = (
         onConsumeAmmo();
         attackStyle = 'ranged';
         let effectiveRanged = getEffectiveLevel(SkillName.Ranged);
+        let effectiveDefence = getEffectiveLevel(SkillName.Defence);
         if (combatStance === CombatStance.RangedAccurate) effectiveRanged += 3;
+        if (combatStance === CombatStance.RangedDefence) effectiveDefence += 3;
         const accuracyBuff = activeBuffs.find(b => b.type === 'accuracy_boost' && (b.style === 'ranged' || b.style === 'all'));
         const totalRangedAttack = effectiveRanged + playerStats.rangedAttack;
         
@@ -193,7 +195,9 @@ const playerAttack = (
     } else { // Melee
         attackStyle = 'melee';
         let effectiveAttack = getEffectiveLevel(SkillName.Attack);
+        let effectiveDefence = getEffectiveLevel(SkillName.Defence);
         if (combatStance === CombatStance.Accurate) effectiveAttack += 3;
+        if (combatStance === CombatStance.Defensive) effectiveDefence += 3;
 
         let playerAttackStyle: 'stab' | 'slash' | 'crush' = 'crush';
         switch (playerWeapon.type) {
@@ -246,7 +250,7 @@ const playerAttack = (
     // Clamp damage again after flat bonuses to ensure no overkill
     playerDamage = Math.min(playerDamage, monsterHp);
 
-    const isMax = successfulHit && playerDamage > 0 && playerDamage === playerMaxHit;
+    const isMax = successfulHit && playerDamage > 0 && playerDamage === playerMaxHit && playerMaxHit >= 2;
 
     if (playerDamage > 0) {
         addXp(SkillName.Hitpoints, Math.round(playerDamage * 1.33));
@@ -793,7 +797,7 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
         const magicBuff = activeBuffs.find(b => b.type === 'magic_damage_boost');
         const buffBonus = magicBuff ? (magicBuff.value / 100) : 0;
         const maxHitWithoutCrit = Math.floor((spell.maxHit ?? 0) * (1 + (playerStats.magicDamageBonus / 100) + buffBonus));
-        const isMax = playerDamage > 0 && playerDamage === maxHitWithoutCrit;
+        const isMax = playerDamage > 0 && playerDamage === maxHitWithoutCrit && maxHitWithoutCrit >= 2;
 
         const spellTier = spell.level > 80 ? 5 : spell.level > 60 ? 4 : spell.level > 40 ? 3 : spell.level > 20 ? 2 : 1;
         setAnimationTriggers(prev => [...prev, { id: Date.now() + Math.random(), type: 'magic', source: 'player', target: 'monster', options: { spellTier, element: spell.element } }]);
@@ -943,7 +947,12 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                             // FIX: Clamp autocast magic damage to monster HP to prevent overkill
                             playerDamage = Math.min(playerDamage, monsterHp);
 
-                            const isMax = successfulHit && playerDamage > 0 && playerDamage === playerMaxHit;
+                            const baseMaxHit = spell.maxHit ?? 0;
+                            const magicBuff = activeBuffs.find(b => b.type === 'magic_damage_boost');
+                            const buffBonus = magicBuff ? (magicBuff.value / 100) : 0;
+                            const bonus = 1 + (playerStats.magicDamageBonus / 100) + buffBonus;
+                            const maxHit = Math.floor(baseMaxHit * bonus * damageMultiplier);
+                            const isMax = successfulHit && playerDamage > 0 && playerDamage === maxHit && maxHit >= 2;
 
                             const spellTier = spell.level > 80 ? 5 : spell.level > 60 ? 4 : spell.level > 40 ? 3 : spell.level > 20 ? 2 : 1;
                             setAnimationTriggers(prev => [...prev, { id: Date.now() + Math.random(), type: 'magic', source: 'player', target: 'monster', options: { spellTier, element: spell.element } }]);

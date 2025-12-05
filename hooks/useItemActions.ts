@@ -1,11 +1,11 @@
 
 import React, { useCallback } from 'react';
 // FIX: Import Equipment type.
-import { InventorySlot, PlayerSkill, SkillName, ActiveCraftingAction, Item, CraftingContext, POIActivity, EquipmentSlot, PlayerQuestState, Spell, Equipment, ActiveBuff, DialogueResponse, DialogueCheckRequirement, WeaponType, EquipmentStats, BonfireActivity } from '../types';
-import { ITEMS, FLETCHING_RECIPES, HERBLORE_RECIPES, HERBS, INVENTORY_CAPACITY, rollOnLootTable, LootRollResult, FIREMAKING_RECIPES, QUESTS, COOKING_RECIPES, SMELTING_RECIPES, GEM_CUTTING_RECIPES, REGIONS } from '../constants';
-import { POIS } from '../data/pois';
+import { InventorySlot, PlayerSkill, SkillName, ActiveCraftingAction, Item, CraftingContext, POIActivity, EquipmentSlot, PlayerQuestState, Spell, Equipment, ActiveBuff, DialogueResponse, DialogueCheckRequirement, WeaponType, EquipmentStats, BonfireActivity } from '../../types';
+import { ITEMS, FLETCHING_RECIPES, HERBLORE_RECIPES, HERBS, INVENTORY_CAPACITY, rollOnLootTable, LootRollResult, FIREMAKING_RECIPES, QUESTS, COOKING_RECIPES, SMELTING_RECIPES, GEM_CUTTING_RECIPES, REGIONS } from '../../constants';
+import { POIS } from '../../data/pois';
 // FIX: Import ContextMenuOption from its source file instead of re-exporting from useUIState.
-import { MakeXPrompt, useUIState, ConfirmationPrompt } from '../hooks/useUIState';
+import { MakeXPrompt, useUIState, ConfirmationPrompt } from '../../hooks/useUIState';
 import { useNavigation } from './useNavigation';
 
 type BarType = 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'silver_bar' | 'gold_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar';
@@ -659,14 +659,16 @@ export const useItemActions = (props: UseItemActionsProps) => {
         if (activity.type === 'furnace') {
             const smeltRecipe = SMELTING_RECIPES.find(r => r.ingredients.some(i => i.itemId === usedItem.itemId));
             if(smeltRecipe) {
-                const maxSmeltable = Math.min(...smeltRecipe.ingredients.map(ing => {
-                    const count = inventory.reduce((total, slot) => slot?.itemId === ing.itemId ? total + slot.quantity : total, 0);
-                    return Math.floor(count / ing.quantity);
-                }));
-                 if (maxSmeltable > 0) {
+                const maxSmelt = Math.min(
+                    ...smeltRecipe.ingredients.map(ing => {
+                        const count = inventory.reduce((total, slot) => slot?.itemId === ing.itemId ? total + slot.quantity : total, 0);
+                        return Math.floor(count / ing.quantity);
+                    })
+                );
+                 if (maxSmelt > 0) {
                     setMakeXPrompt({
                         title: `Smelt ${ITEMS[smeltRecipe.barType].name}`,
-                        max: maxSmeltable,
+                        max: maxSmelt,
                         onConfirm: (quantity) => crafting.handleSmelting(smeltRecipe.barType as BarType, quantity)
                     });
                  } else {
@@ -693,6 +695,37 @@ export const useItemActions = (props: UseItemActionsProps) => {
             const targetId = target.item.itemId;
             const usedItemData = ITEMS[usedId];
             const targetItem = ITEMS[targetId];
+
+            const validMeats: Record<string, number> = {
+                'cooked_crab_meat': 5,
+                'cooked_herring': 5,
+                'cooked_boar_meat': 5,
+                'scrambled_eggs': 4,
+                'cooked_shrimp': 3,
+                'cooked_sardine': 3,
+                'cooked_chicken': 3,
+                'cooked_beef': 3,
+                'rat_kebab_cooked': 3,
+                'cooked_anchovy': 3,
+            };
+    
+            const isSandwichMaking = (usedId === 'bread' && validMeats[targetId]) || (targetId === 'bread' && validMeats[usedId]);
+            if (isSandwichMaking) {
+                const meatSlot = usedId === 'bread' ? target : used;
+                const meatHeal = validMeats[meatSlot.item.itemId];
+    
+                modifyItem('bread', -1, true);
+                modifyItem(meatSlot.item.itemId, -1, true);
+    
+                modifyItem('sandwich', 1, false, { bypassAutoBank: true });
+    
+                const xpGained = meatHeal * 5;
+                addXp(SkillName.Cooking, xpGained);
+    
+                addLog(`You make a sandwich and gain ${xpGained} Cooking XP.`);
+                return;
+            }
+            
 
             const poisons: Record<string, { id: string; suffix: string; level: number; damage: number }> = {
                 'weapon_poison_weak': { id: 'weapon_poison_weak', suffix: '(p)', level: 1, damage: 2 },

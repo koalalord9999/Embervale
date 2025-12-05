@@ -66,7 +66,7 @@ export const beasts: Monster[] = [
             { itemId: 'hex_rune', chance: "1/5", minQuantity: 5, maxQuantity: 12 },
             { itemId: 'astral_rune', chance: "1/20", minQuantity: 2, maxQuantity: 4 },
         ],
-        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 25000, aggressive: true, alwaysAggressive: true, attackStyle: 'stab',
+        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 25000, aggressive: true, attackStyle: 'stab',
     },
     {
         id: 'bog_serpent', name: 'Bog Serpent', level: 40, maxHp: 120, attack: 35, strength: 38, defence: 35,
@@ -86,7 +86,7 @@ export const beasts: Monster[] = [
             { itemId: 'anima_rune', chance: "1/60", minQuantity: 1, maxQuantity: 2 },
             { tableId: 'affinity_robes_table', chance: "1/128", minQuantity: 1, maxQuantity: 1 },
         ],
-        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 90000, aggressive: true, alwaysAggressive: true, attackStyle: 'slash',
+        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 90000, aggressive: true, attackStyle: 'slash',
         specialAttacks: [
             { name: 'Venom Spit', chance: 0.25, effect: 'poison', damage: 6, poisonChance: 0.5 },
         ],
@@ -226,7 +226,7 @@ export const beasts: Monster[] = [
             { itemId: 'runic_bar', chance: "1/64", minQuantity: 1, maxQuantity: 1 },
         ],
         tertiaryDrops: [{ itemId: 'nexus_talisman', chance: 1 / 128, minQuantity: 1, maxQuantity: 1 }],
-        types: [MonsterType.Beast], attackSpeed: 3, respawnTime: 90000, aggressive: true, alwaysAggressive: true, attackStyle: 'slash'
+        types: [MonsterType.Beast], attackSpeed: 3, respawnTime: 90000, aggressive: true, attackStyle: 'slash'
     },
     {
         id: 'giant_clam', name: 'Giant Clam', level: 45, maxHp: 50, attack: 35, strength: 30, defence: 60,
@@ -391,7 +391,7 @@ export const beasts: Monster[] = [
         tertiaryDrops: [
             { itemId: 'nexus_talisman', chance: 0.0078125, minQuantity: 1, maxQuantity: 1 },
         ],
-        types: [MonsterType.Beast, MonsterType.Dragon], attackSpeed: 3, respawnTime: 60000, aggressive: true, alwaysAggressive: true, attackStyle: 'ranged',
+        types: [MonsterType.Beast, MonsterType.Dragon], attackSpeed: 3, respawnTime: 60000, aggressive: true, attackStyle: 'ranged',
     },
     {
         id: 'jungle_stalker', name: 'Jungle Stalker', level: 41, maxHp: 80, attack: 42, strength: 45, defence: 35,
@@ -405,7 +405,7 @@ export const beasts: Monster[] = [
             { itemId: 'nexus_rune', chance: "1/8", minQuantity: 5, maxQuantity: 15 },
             { itemId: 'raw_beef', chance: "1/5", minQuantity: 1, maxQuantity: 1, noted: true },
         ],
-        types: [MonsterType.Beast], attackSpeed: 3, respawnTime: 100000, aggressive: true, alwaysAggressive: true, attackStyle: 'slash',
+        types: [MonsterType.Beast], attackSpeed: 3, respawnTime: 100000, aggressive: true, attackStyle: 'slash',
     },
     {
         id: 'mountain_goat', name: 'Mountain Goat', level: 18, maxHp: 30, attack: 15, strength: 18, defence: 16,
@@ -466,7 +466,7 @@ export const beasts: Monster[] = [
         types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 35000, aggressive: true, attackStyle: 'slash',
     },
     {
-        id: 'swamp_horror', name: 'Swamp Horror', level: 28, maxHp: 60, attack: 22, strength: 25, defence: 25,
+        id: 'swamp_horror', name: 'Swamp Horror', level: 41, maxHp: 60, attack: 22, strength: 25, defence: 25,
         stabDefence: 20, slashDefence: 20, crushDefence: 25, rangedDefence: 15, magicDefence: 10,
         iconUrl: 'https://api.iconify.design/game-icons:lizardman.svg',
         mainDrops: [
@@ -477,7 +477,7 @@ export const beasts: Monster[] = [
             { itemId: 'astral_rune', chance: "1/10", minQuantity: 3, maxQuantity: 7 },
             { tableId: 'affinity_robes_table', chance: "1/256", minQuantity: 1, maxQuantity: 1 },
         ],
-        types: [MonsterType.Beast], attackSpeed: 5, respawnTime: 60000, aggressive: true, alwaysAggressive: true, attackStyle: 'crush',
+        types: [MonsterType.Beast], attackSpeed: 5, respawnTime: 60000, aggressive: true, attackStyle: 'crush',
     },
     {
         id: 'tavern_rat', name: 'Giant Rat', level: 5, maxHp: 7, attack: 3, strength: 4, defence: 3,
@@ -567,7 +567,7 @@ export const beasts: Monster[] = [
         tertiaryDrops: [
             { itemId: 'gust_talisman', chance: 0.03125, minQuantity: 1, maxQuantity: 1 },
         ],
-        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 30000, aggressive: true, alwaysAggressive: true, attackStyle: 'crush',
+        types: [MonsterType.Beast], attackSpeed: 4, respawnTime: 30000, aggressive: true, attackStyle: 'crush',
     },
     {
         id: 'wolf', name: 'Wolf', level: 15, maxHp: 25, attack: 14, strength: 15, defence: 12,
@@ -585,6 +585,6 @@ export const beasts: Monster[] = [
         tertiaryDrops: [
             { itemId: 'gust_talisman', chance: 0.03125, minQuantity: 1, maxQuantity: 1 },
         ],
-        types: [MonsterType.Beast], attackSpeed: 3, respawnTime: 30000, aggressive: true, alwaysAggressive: true, attackStyle: 'slash',
+        types: [MonsterType.Beast], attackSpeed: 3, respawnTime: 30000, aggressive: true, attackStyle: 'slash',
     },
 ];

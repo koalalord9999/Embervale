@@ -75,7 +75,7 @@ const PrayerPanel: React.FC<PrayerPanelProps> = ({ skills, activePrayers, onTogg
     return (
         <div className="flex flex-col h-full text-gray-300">
             <div className="flex-grow overflow-y-auto pr-1">
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-5 gap-1">
                     {sortedPrayers.map(prayer => (
                         <PrayerDisplay
                             key={prayer.id}

@@ -198,7 +198,8 @@ export const meadowdalePois: Record<string, POI> = {
                     { text: "Good to see you again, apprentice. Keep practicing at the anvil.", check: { requirements: [{ type: 'quest', questId: 'a_smiths_apprentice', status: 'completed' }] } },
                     
                     // ANCIENT BLADE (Lowest Priority)
-                    { text: "Have you gathered the iron ore to restore the old blade?", check: { requirements: [{ type: 'quest', questId: 'ancient_blade', status: 'in_progress', stage: 1 }] } },
+                    { text: "Ah, you're back. What do you need?", check: { requirements: [{ type: 'quest', questId: 'ancient_blade', status: 'in_progress', stage: 0 }] } },
+                    { text: "*Valerius is hammering away as you approach* Welcome to the forge adventurer, I'm a little busy right now... Is it something urgent?", check: { requirements: [{ type: 'quest', questId: 'ancient_blade', status: 'not_started' }, { type: 'items', items: [{ itemId: 'rusty_iron_sword', quantity: 1 }] }] } },
                     { text: "That old blade I restored for you... it was a fine piece of history.", check: { requirements: [{ type: 'quest', questId: 'ancient_blade', status: 'completed' }] } },
                 ],
                 dialogue: {

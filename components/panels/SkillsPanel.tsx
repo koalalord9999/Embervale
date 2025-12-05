@@ -1,25 +1,30 @@
+
 import React from 'react';
 import { PlayerSkill, SkillName } from '../../types';
 import { XP_TABLE, SKILL_ICONS, SKILL_DISPLAY_ORDER, getSkillColorClass } from '../../constants';
-import { TooltipState } from '../../hooks/useUIState';
+import { ContextMenuState, TooltipState } from '../../hooks/useUIState';
 import { useLongPress } from '../../hooks/useLongPress';
 import { useIsTouchDevice } from '../../hooks/useIsTouchDevice';
+import { ContextMenuOption } from '../common/ContextMenu';
 
 interface SkillsPanelProps {
     skills: (PlayerSkill & { currentLevel: number })[];
     setTooltip: (tooltip: TooltipState | null) => void;
+    setContextMenu: (menu: ContextMenuState | null) => void;
     onOpenGuide: (skill: SkillName) => void;
     isTouchSimulationEnabled: boolean;
+    isOneClickMode: boolean;
 }
 
 const SkillDisplay: React.FC<{
     skill: PlayerSkill & { currentLevel: number };
     setTooltip: (tooltip: TooltipState | null) => void;
+    setContextMenu: (menu: ContextMenuState | null) => void;
     onOpenGuide: (skill: SkillName) => void;
     isTouchSimulationEnabled: boolean;
-}> = ({ skill, setTooltip, onOpenGuide, isTouchSimulationEnabled }) => {
-    const isTouchDevice = useIsTouchDevice(isTouchSimulationEnabled);
-
+    isOneClickMode: boolean;
+}> = ({ skill, setTooltip, setContextMenu, onOpenGuide, isTouchSimulationEnabled, isOneClickMode }) => {
+    
     const buildTooltipContent = (skill: PlayerSkill) => {
         const isMaxLevel = skill.level >= 99;
         const xpForCurrentLevel = XP_TABLE[skill.level - 1] ?? 0;
@@ -32,7 +37,6 @@ const SkillDisplay: React.FC<{
 
         return (
             <div className="text-left w-56">
-                <p className="font-bold text-yellow-300">{skill.name}</p>
                 <div className="text-xs mt-1 space-y-0.5 text-gray-300">
                     <p>Total XP: <span className="font-semibold text-white">{skill.xp.toLocaleString()}</span></p>
                 </div>
@@ -48,9 +52,6 @@ const SkillDisplay: React.FC<{
                         </div>
                     </>
                 )}
-                <p className="italic text-gray-400 text-xs mt-2">
-                    {isTouchDevice ? 'Tap to open guide, Long-press for details' : 'Click to open guide'}
-                </p>
             </div>
         );
     };
@@ -60,37 +61,40 @@ const SkillDisplay: React.FC<{
         onOpenGuide(skill.name);
     };
 
-    const handleShowTooltip = (event: React.MouseEvent | React.TouchEvent) => {
-        const point = 'touches' in event ? event.touches[0] : event;
-        setTooltip({
-            content: buildTooltipContent(skill),
-            position: { x: point.clientX, y: point.clientY }
+    const handleOpenContextMenu = (event: React.MouseEvent | React.TouchEvent) => {
+        event.preventDefault();
+        const point = 'touches' in event ? event.touches[0] : event as React.MouseEvent;
+
+        const tooltipNode = buildTooltipContent(skill);
+        const menuOptions: ContextMenuOption[] = [
+            {
+                label: "Open Guide",
+                onClick: handleOpenGuide,
+            },
+        ];
+
+        setContextMenu({
+            options: menuOptions,
+            content: tooltipNode,
+            triggerEvent: point,
+            isTouchInteraction: 'touches' in event,
+            title: skill.name,
         });
     };
 
-    const handleHideTooltip = () => {
-        setTooltip(null);
-    };
-
     const longPressHandlers = useLongPress({
-        onLongPress: handleShowTooltip,
+        onLongPress: handleOpenContextMenu,
         onClick: handleOpenGuide,
+        isOneClickMode: isOneClickMode,
     });
-
-    const handlers = isTouchDevice
-        ? longPressHandlers
-        : {
-            onClick: handleOpenGuide,
-            onMouseEnter: handleShowTooltip,
-            onMouseLeave: handleHideTooltip,
-          };
 
     const levelColor = skill.currentLevel < skill.level ? 'text-red-400' : (skill.currentLevel > skill.level ? 'text-green-400' : 'text-white');
 
     return (
         <div
             className="bg-gray-900/50 p-2 h-10 rounded-md flex items-center gap-2 cursor-pointer hover:bg-gray-700/50 transition-colors"
-            {...handlers}
+            {...longPressHandlers}
+            onContextMenu={handleOpenContextMenu}
         >
             <div
                 className={`w-6 h-6 flex-shrink-0 ${getSkillColorClass(skill.name)}`}
@@ -114,7 +118,7 @@ const SkillDisplay: React.FC<{
     );
 };
 
-const SkillsPanel: React.FC<SkillsPanelProps> = ({ skills, setTooltip, onOpenGuide, isTouchSimulationEnabled }) => {
+const SkillsPanel: React.FC<SkillsPanelProps> = ({ skills, setTooltip, setContextMenu, onOpenGuide, isTouchSimulationEnabled, isOneClickMode }) => {
     const sortedSkills = [...skills].sort((a, b) => {
         return SKILL_DISPLAY_ORDER.indexOf(a.name) - SKILL_DISPLAY_ORDER.indexOf(b.name);
     });
@@ -128,8 +132,10 @@ const SkillsPanel: React.FC<SkillsPanelProps> = ({ skills, setTooltip, onOpenGui
                             key={skill.name}
                             skill={skill}
                             setTooltip={setTooltip}
+                            setContextMenu={setContextMenu}
                             onOpenGuide={onOpenGuide}
                             isTouchSimulationEnabled={isTouchSimulationEnabled}
+                            isOneClickMode={isOneClickMode}
                         />
                     ))}
                 </div>

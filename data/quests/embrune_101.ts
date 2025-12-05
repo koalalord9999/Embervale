@@ -34,32 +34,133 @@ export const embrune101: Quest = {
         "I've learned all I can here. I should speak to the Magic Guide to leave the island.", // 24
     ],
     completionSummary: "I've completed my training with all the guides. I've learned about survival, crafting, combat, banking, and even a little magic. I am now ready to explore the world of Embrune.",
+    // FIX: Added the missing 'stages' property to the quest definition.
     stages: [
-        { description: "Speak to the Survival Guide.", requirement: { type: 'talk', poiId: 'tutorial_survival_grounds', npcName: 'Survival Guide' } }, // 0
-        { description: "Cook a Raw Shrimp.", requirement: { type: 'gather', itemId: 'cooked_shrimp', quantity: 1 } }, // 1
-        { description: "Speak to the Survival Guide to complete your training.", requirement: { type: 'talk', poiId: 'tutorial_survival_grounds', npcName: 'Survival Guide' } }, // 2
-        { description: "Speak to the Baker.", requirement: { type: 'talk', poiId: 'tutorial_baking_area', npcName: 'Baker' } }, // 3
-        { description: "Bake a loaf of Bread.", requirement: { type: 'gather', itemId: 'bread', quantity: 1 } }, // 4
-        { description: "Speak to the Baker again.", requirement: { type: 'talk', poiId: 'tutorial_baking_area', npcName: 'Baker' } }, // 5
-        { description: "Speak to the Information Guide.", requirement: { type: 'talk', poiId: 'tutorial_learning_hut', npcName: 'Information Guide' } }, // 6
-        { description: "Speak to the Mining Guide.", requirement: { type: 'talk', poiId: 'tutorial_mine', npcName: 'Mining Guide' } }, // 7
-        { description: "Smith a Bronze Dagger.", requirement: { type: 'gather', itemId: 'bronze_dagger', quantity: 1 } }, // 8
-        { description: "Speak to the Mining Guide.", requirement: { type: 'talk', poiId: 'tutorial_mine', npcName: 'Mining Guide' } }, // 9
-        { description: "Speak to the Weapon Guide.", requirement: { type: 'talk', poiId: 'tutorial_combat_area', npcName: 'Weapon Guide' } }, // 10
-        { description: "Defeat a rat with a melee weapon.", requirement: { type: 'kill', monsterId: 'tutorial_rat', quantity: 1, style: 'melee' } }, // 11
-        { description: "Speak to the Weapon Guide again.", requirement: { type: 'talk', poiId: 'tutorial_combat_area', npcName: 'Weapon Guide' } }, // 12
-        { description: "Defeat a rat with a ranged weapon.", requirement: { type: 'kill', monsterId: 'tutorial_rat', quantity: 1, style: 'ranged' } }, // 13
-        { description: "Speak to the Weapon Guide to finish combat training.", requirement: { type: 'talk', poiId: 'tutorial_combat_area', npcName: 'Weapon Guide' } }, // 14
-        { description: "Speak to the Banker.", requirement: { type: 'talk', poiId: 'tutorial_bank_area', npcName: 'Banker' } }, // 15
-        { description: "Speak to the Money Guide.", requirement: { type: 'talk', poiId: 'tutorial_bank_area', npcName: 'Money Guide' } }, // 16
-        { description: "Speak to the Prayer Guide.", requirement: { type: 'talk', poiId: 'tutorial_chapel_area', npcName: 'Prayer Guide' } }, // 17
-        { description: "Speak to the Tavern Manager.", requirement: { type: 'talk', poiId: 'tutorial_tavern', npcName: 'Tavern Manager' } }, // 18
-        { description: "Accept the 'Magical Pest Control' task from the Quest Board.", requirement: { type: 'accept_repeatable_quest', questId: 'tutorial_magic_rat' } }, // 19
-        { description: "Speak to the Magic Guide.", requirement: { type: 'talk', poiId: 'tutorial_tavern', npcName: 'Magic Guide' } }, // 20
-        { description: "Defeat the rat with magic.", requirement: { type: 'kill', monsterId: 'tutorial_rat', quantity: 1, style: 'magic' } }, // 21
-        { description: "Turn in the task at the Quest Board.", requirement: { type: 'talk', poiId: 'tutorial_tavern', npcName: 'Tavern Manager' } }, // 22
-        { description: "Speak to the Magic Guide for your final lesson.", requirement: { type: 'talk', poiId: 'tutorial_tavern', npcName: 'Magic Guide' } }, // 23
-        { description: "Leave the tutorial island.", requirement: { type: 'talk', poiId: 'tutorial_tavern', npcName: 'Magic Guide' } }, // 24
+        // Stage 0
+        {
+            description: "Speak to Leo the Guide at the Tutorial Entrance.",
+            requirement: { type: 'talk', poiId: 'tutorial_entrance', npcName: 'Leo the Guide' }
+        },
+        // Stage 1
+        {
+            description: "Cook a Raw Shrimp using logs and a tinderbox.",
+            requirement: { type: 'gather', itemId: 'cooked_shrimp', quantity: 1 }
+        },
+        // Stage 2
+        {
+            description: "Show your cooked shrimp to the Survival Guide.",
+            requirement: { type: 'talk', poiId: 'tutorial_survival_grounds', npcName: 'Survival Guide' }
+        },
+        // Stage 3
+        {
+            description: "Find the Baker in the baking area.",
+            requirement: { type: 'talk', poiId: 'tutorial_baking_area', npcName: 'Baker' }
+        },
+        // Stage 4
+        {
+            description: "Bake a loaf of bread.",
+            requirement: { type: 'gather', itemId: 'bread', quantity: 1 }
+        },
+        // Stage 5
+        {
+            description: "Show the bread to the Baker.",
+            requirement: { type: 'talk', poiId: 'tutorial_baking_area', npcName: 'Baker' }
+        },
+        // Stage 6
+        {
+            description: "Visit the Information Guide in the learning hut.",
+            requirement: { type: 'talk', poiId: 'tutorial_learning_hut', npcName: 'Information Guide' }
+        },
+        // Stage 7
+        {
+            description: "Go to the mine and speak to the Mining Guide.",
+            requirement: { type: 'talk', poiId: 'tutorial_mine', npcName: 'Mining Guide' }
+        },
+        // Stage 8
+        {
+            description: "Smith a Bronze Dagger.",
+            requirement: { type: 'smith', itemId: 'bronze_dagger', quantity: 1 }
+        },
+        // Stage 9
+        {
+            description: "Show the Bronze Dagger to the Mining Guide.",
+            requirement: { type: 'talk', poiId: 'tutorial_mine', npcName: 'Mining Guide' }
+        },
+        // Stage 10
+        {
+            description: "Speak with the Weapon Guide in the combat area.",
+            requirement: { type: 'talk', poiId: 'tutorial_combat_area', npcName: 'Weapon Guide' }
+        },
+        // Stage 11
+        {
+            description: "Defeat a rat using a melee attack.",
+            requirement: { type: 'kill', monsterId: 'tutorial_rat', quantity: 1, style: 'melee' }
+        },
+        // Stage 12
+        {
+            description: "Report back to the Weapon Guide.",
+            requirement: { type: 'talk', poiId: 'tutorial_combat_area', npcName: 'Weapon Guide' }
+        },
+        // Stage 13
+        {
+            description: "Defeat a rat using a Ranged attack.",
+            requirement: { type: 'kill', monsterId: 'tutorial_rat', quantity: 1, style: 'ranged' }
+        },
+        // Stage 14
+        {
+            description: "Report back to the Weapon Guide.",
+            requirement: { type: 'talk', poiId: 'tutorial_combat_area', npcName: 'Weapon Guide' }
+        },
+        // Stage 15
+        {
+            description: "Speak to the Banker.",
+            requirement: { type: 'talk', poiId: 'tutorial_bank_area', npcName: 'Banker' }
+        },
+        // Stage 16
+        {
+            description: "Speak to the Money Guide.",
+            requirement: { type: 'talk', poiId: 'tutorial_bank_area', npcName: 'Money Guide' }
+        },
+        // Stage 17
+        {
+            description: "Speak to the Prayer Guide.",
+            requirement: { type: 'talk', poiId: 'tutorial_chapel_area', npcName: 'Prayer Guide' }
+        },
+        // Stage 18
+        {
+            description: "Speak to the Tavern Manager.",
+            requirement: { type: 'talk', poiId: 'tutorial_tavern', npcName: 'Tavern Manager' }
+        },
+        // Stage 19
+        {
+            description: "Accept the task from the Quest Board.",
+            requirement: { type: 'accept_repeatable_quest', questId: 'tutorial_magic_rat' }
+        },
+        // Stage 20
+        {
+            description: "Speak with the Magic Guide.",
+            requirement: { type: 'talk', poiId: 'tutorial_tavern', npcName: 'Magic Guide' }
+        },
+        // Stage 21
+        {
+            description: "Defeat the rat using magic.",
+            requirement: { type: 'kill', monsterId: 'tutorial_rat', quantity: 1, style: 'magic' }
+        },
+        // Stage 22
+        {
+            description: "Report your success to the Tavern Manager.",
+            requirement: { type: 'talk', poiId: 'tutorial_tavern', npcName: 'Tavern Manager' }
+        },
+        // Stage 23
+        {
+            description: "Receive your final lesson from the Magic Guide.",
+            requirement: { type: 'talk', poiId: 'tutorial_tavern', npcName: 'Magic Guide' }
+        },
+        // Stage 24
+        {
+            description: "Speak to the Magic Guide to leave the island.",
+            requirement: { type: 'talk', poiId: 'tutorial_tavern', npcName: 'Magic Guide' }
+        }
     ],
     rewards: {
         xp: [{ skill: SkillName.Attack, amount: 100 }],
@@ -92,9 +193,9 @@ export const embrune101: Quest = {
         in_progress_embrune_101_0: {
             npcName: 'Leo the Guide',
             npcIcon: '/assets/npcChatHeads/leo_the_guide.png',
-            text: "Welcome to Embrune! I'm Leo, your first guide. I'm here to teach you the basics of this world. Let's start with a simple task. Follow the path and speak to the Survival Guide. He'll teach you how to live off the land.",
+            text: "Welcome to Embrune! This is a tutorial area to teach you the basics. To progress, you'll need to speak with the guides in each area. Follow the path and speak to the Survival Guide to begin.",
             responses: [
-                { text: "Got it, I'll go see him now.", actions: [{ type: 'advance_quest', questId: 'embrune_101' }] },
+                { text: "Got it. Talk to the guides.", actions: [{ type: 'advance_quest', questId: 'embrune_101' }] },
                 { text: "I've played games like this before, can I skip the tutorial?", next: 'skip_tutorial_confirm' }
             ]
         },
@@ -116,7 +217,7 @@ export const embrune101: Quest = {
         in_progress_embrune_101_1: {
             npcName: 'Survival Guide',
             npcIcon: '/assets/npcChatHeads/survival_guide.png',
-            text: "Leo sent you, right? Good. Let's not waste time. An adventurer who can't feed themselves is a dead adventurer. Your first task: chop a tree for logs, and catch a raw shrimp from the fishing spot. Come back to me when you have both.",
+            text: "Leo sent you, right? Good. An adventurer who can't feed themselves is a dead adventurer. Your first task: chop a tree for logs, and catch a raw shrimp from the fishing spot. Come back to me when you have both.",
             responses: [],
             conditionalResponses: [
                 { text: "I have the logs and the shrimp. What now?", check: { requirements: [{ type: 'items', items: [{ itemId: 'logs', quantity: 1 }, { itemId: 'raw_shrimp', quantity: 1 }] }], successNode: 'survival_guide_cook', failureNode: 'survival_guide_fail_both' } },
@@ -129,7 +230,7 @@ export const embrune101: Quest = {
             npcIcon: '/assets/npcChatHeads/survival_guide.png',
             text: "Right, you'll need these. Here's an axe for chopping and a tinderbox for making a fire. Your first step is to chop down a tree to get some logs.",
             highlight: 'activity-button-1',
-            responses: [{ text: "So I have to cut down a tree and burn the logs? That's rough, but I must carry on.", actions: [{ type: 'give_item', itemId: 'bronze_axe', quantity: 1 }, { type: 'give_item', itemId: 'tinderbox', quantity: 1 }, { type: 'give_item', itemId: 'small_fishing_net', quantity: 1 }] }]
+            responses: [{ text: "Time to get to work.", actions: [{ type: 'give_item', itemId: 'bronze_axe', quantity: 1 }, { type: 'give_item', itemId: 'tinderbox', quantity: 1 }, { type: 'give_item', itemId: 'small_fishing_net', quantity: 1 }] }]
         },
         survival_guide_has_tools: {
             npcName: 'Survival Guide',
@@ -165,7 +266,7 @@ export const embrune101: Quest = {
         survival_guide_cook: {
             npcName: 'Survival Guide',
             npcIcon: '/assets/npcChatHeads/survival_guide.png',
-            text: "You have everything you need! Now, to make a fire, 'Use' your Tinderbox on your Logs in your inventory. Once the fire is lit, 'Use' the Raw Shrimp on it to cook. Good luck!",
+            text: "Excellent. To make a fire, 'Use' your Tinderbox on your Logs. Then, to cook, 'Use' your Raw Shrimp on the fire. This item-on-item interaction is a key skill to learn. Try it now.",
             highlight: ['inventory-slot-tinderbox', 'inventory-slot-logs'],
             responses: []
         },
@@ -199,7 +300,7 @@ export const embrune101: Quest = {
                 { text: "", check: { requirements: [{ type: 'items', items: [{ itemId: 'wheat', quantity: 1 }] }], successNode: 'baker_hint_mill', failureNode: 'baker_hint_wheat' } },
             ]
         },
-        baker_hint_bake: { npcName: 'Baker', npcIcon: '/assets/npcChatHeads/baker.png', text: "You've made the dough! Just 'Use' it on the 'Cooking Range' to bake it.", responses: [], highlight: ['inventory-slot-bread_dough', 'activity-button-3'] },
+        baker_hint_bake: { npcName: 'Baker', npcIcon: '/assets/npcChatHeads/baker.png', text: "You've made the dough! This next part is another key skill: using an item on an object in the world. Just 'Use' your dough on the 'Cooking Range' to bake it.", responses: [], highlight: ['inventory-slot-bread_dough', 'activity-button-3'] },
         baker_hint_dough: { npcName: 'Baker', npcIcon: '/assets/npcChatHeads/baker.png', text: "Perfect, you have the flour. Now fill your bucket with water from the 'Fill Container' source, then 'Use' the 'Bucket of Water' on your flour in your inventory.", responses: [], highlight: ['inventory-slot-bucket', 'activity-button-4', 'inventory-slot-flour'] },
         baker_hint_collect: { npcName: 'Baker', npcIcon: '/assets/npcChatHeads/baker.png', text: "Great, you've milled the wheat! The flour is in the hopper. Just press the 'Collect Flour' button on the windmill to get it.", responses: [], highlight: 'activity-button-2' },
         baker_hint_mill: { npcName: 'Baker', npcIcon: '/assets/npcChatHeads/baker.png', text: "Excellent, you have the wheat. Now, 'long-press' or 'right-click' the 'Windmill' and select 'Mill Wheat' to grind it into flour.", responses: [], highlight: ['inventory-slot-wheat', 'activity-button-2'] },
@@ -269,23 +370,23 @@ export const embrune101: Quest = {
         info_guide_skills: {
             npcName: 'Information Guide',
             npcIcon: '/assets/npcChatHeads/information_guide.png',
-            text: "This is your Skills panel. Here you can see your progress in all of Embrune's skills. Click on any skill to open a detailed guide about it.",
+            text: "This is your Skills panel. Here you can see your progress. Nearly every action grants you Experience Points, or 'XP', which raises your levels. You can click on any skill to open a detailed guide about what you can do at each level.",
             highlight: 'side-panel-button-skills',
             responses: [{ text: "I see. What's next?", next: 'info_guide_equipment' }]
         },
         info_guide_equipment: {
             npcName: 'Information Guide',
             npcIcon: '/assets/npcChatHeads/information_guide.png',
-            text: "This is your Equipment panel. Here you can see what items you have equipped and view your combat stats. Now, take the ladder down into the mine and find the Mining Guide.",
+            text: "This is your Equipment panel. Here you can see your combat stats. Attack affects accuracy, Strength affects damage, and Defence helps you evade. Now, take the ladder down into the mine and find the Mining Guide.",
             highlight: 'side-panel-button-equipment',
             responses: [{ text: "Down I go!", actions: [{ type: 'advance_quest', questId: 'embrune_101' }] }]
         },
         in_progress_embrune_101_7: {
             npcName: 'Mining Guide',
             npcIcon: '/assets/npcChatHeads/mining_guide.png',
-            text: "So you're the new adventurer everyone's been training up. Good to see some fresh muscle. In my line of work, you make your own tools and your own fortune. To make a simple Bronze Bar, you'll need one Copper Ore and one Tin Ore. Mine them from the rocks here. I've given you a pickaxe to get started.",
+            text: "So you're the new adventurer. Good to see some fresh muscle. To make a simple Bronze Bar, you'll need one Copper Ore and one Tin Ore. Mine them from the rocks here. I've given you a pickaxe to get started.",
             highlight: ['activity-button-1', 'activity-button-2'],
-            responses: [{ text: "Manual labor again? *sigh* I guess I can do that.", actions: [{ type: 'give_item', itemId: 'bronze_pickaxe', quantity: 1 }, { type: 'advance_quest', questId: 'embrune_101' }] }]
+            responses: [{ text: "Time to get my hands dirty.", actions: [{ type: 'give_item', itemId: 'bronze_pickaxe', quantity: 1 }, { type: 'advance_quest', questId: 'embrune_101' }] }]
         },
         in_progress_embrune_101_8: {
             npcName: 'Mining Guide',
@@ -313,14 +414,14 @@ export const embrune101: Quest = {
         in_progress_embrune_101_10: {
             npcName: 'Weapon Guide',
             npcIcon: '/assets/npcChatHeads/weapon_guide.png',
-            text: "The Mining Guide sent you, eh? He said you forged a decent dagger. Let's see if you can use it. A weapon is useless if you don't know how to wield it. First, you must equip it. Open your Equipment panel.",
+            text: "The Mining Guide sent you, eh? He said you forged a decent dagger. Let's see if you can use it. First, open your equipment panel and equip it.",
             highlight: 'side-panel-button-equipment',
             responses: [{ text: "Okay, I see it.", next: 'weapon_guide_explain_stances_10' }]
         },
         weapon_guide_explain_stances_10: {
             npcName: 'Weapon Guide',
             npcIcon: '/assets/npcChatHeads/weapon_guide.png',
-            text: "Now, let's talk about how you fight. Open the Combat Styles panel. Here you can choose your attack style. For now, equip your dagger, pick a style, and defeat one of those rats.",
+            text: "Now, open the Combat Styles panel. Your stance determines how you train. 'Accurate' trains Attack, 'Aggressive' trains Strength, and 'Defensive' trains Defence. All styles train Hitpoints. Now, pick one and defeat a rat.",
             highlight: 'side-panel-button-combat',
             responses: [{ text: "Okay, I'll give it a try.", actions: [{ type: 'advance_quest', questId: 'embrune_101' }] }]
         },
@@ -333,7 +434,7 @@ export const embrune101: Quest = {
         in_progress_embrune_101_12: {
             npcName: 'Weapon Guide',
             npcIcon: '/assets/npcChatHeads/weapon_guide.png',
-            text: "Well done. Melee is straightforward. But what about enemies at a distance? For that, you'll need a bow. I'll give you one, along with some arrows. Your next task is to equip them and defeat another rat using a ranged attack.",
+            text: "Well done. Melee is straightforward. Now for ranged. Take this bow and arrows. To use them, you MUST equip the arrows in your ammo slot on the Equipment panel. Then, take down the other rat.",
             highlight: ['inventory-slot-shortbow', 'inventory-slot-bronze_arrow', 'equipment-slot-ammo'],
             responses: [{ text: "Got it, equip bow and arrows, kill rat. Understood!", actions: [{ type: 'give_item', itemId: 'shortbow', quantity: 1 }, { type: 'give_item', itemId: 'bronze_arrow', quantity: 50 }, { type: 'advance_quest', questId: 'embrune_101' }] }]
         },
@@ -362,7 +463,7 @@ export const embrune101: Quest = {
         in_progress_embrune_101_16: {
             npcName: 'Money Guide',
             npcIcon: '/assets/npcChatHeads/money_guide.png',
-            text: "Finished with the banker, are we? Good. Storing items is one thing, but acquiring wealth is another. In Embrune, coins can be hard to come by. You get them from quests, selling items, or transmutation. But there are other powers besides wealth. Head east to the chapel and speak to the Prayer Guide.",
+            text: "Finished with the banker? Good. Coins are the lifeblood of trade. You can get them from quests or by selling resources. A good way to earn your first hundred is to sell things like cowhides from the ranch, or even just the fish you catch. Every little bit helps! Now, head east to the chapel to learn of other powers.",
             responses: [{ text: "Will do.", actions: [{ type: 'advance_quest', questId: 'embrune_101' }] }]
         },
         in_progress_embrune_101_17: {
@@ -375,23 +476,23 @@ export const embrune101: Quest = {
         in_progress_embrune_101_18: {
             npcName: 'Tavern Manager',
             npcIcon: '/assets/npcChatHeads/barkeep_grimley.png',
-            text: "The Prayer Guide sent you? Bless his heart. Welcome to the tavern, the heart of any adventurer's career! This is where you'll find work, rest, and maybe a bit of trouble. See that board? That's a Quest Board. There's a special one just for you. Go on, check the board.",
+            text: "The Prayer Guide sent you? Bless his heart. Welcome to the tavern, the heart of any adventurer's career! This is where you'll find work. See that board? That's a Quest Board. There's a special task just for you. Go on, check the board.",
             highlight: 'activity-button-2',
             responses: [{ text: "I'll check it out.", actions: [{ type: 'advance_quest', questId: 'embrune_101' }] }]
         },
         in_progress_embrune_101_19: {
             npcName: 'Tavern Manager',
             npcIcon: '/assets/npcChatHeads/barkeep_grimley.png',
-            text: "The board is right over there. Just check the posting. Speak with the Magic guide once you've accepted the quest, he'll supply you with some fancy doo-dads to help kill that rat!",
+            text: "The board is right over there. Just check the posting. Speak with the Magic guide once you've accepted the quest, he'll supply you with what you need.",
             highlight: 'activity-button-2',
             responses: []
         },
         in_progress_embrune_101_20: {
             npcName: 'Magic Guide',
             npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
-            text: "Ah, so you've accepted the pest control task. Good. Some problems require a more... delicate touch than a sword or arrow. Magic is a powerful art, fueled by runes. I will give you what you need. Take these runes and use our most basic combat spell, Gust Dart, to defeat the rat in the corner.",
+            text: "Ah, so you've accepted the pest control task. Good. Magic is a powerful art, fueled by runes. I will give you what you need. Take these runes and use our most basic combat spell, Gust Dart, to defeat the rat in the corner.",
             highlight: ['side-panel-button-spellbook', 'activity-button-3'],
-            responses: [{ text: "Thanks, I'll try to kill that rat with magic now.", actions: [{ type: 'give_item', itemId: 'gust_rune', quantity: 40 }, { type: 'give_item', itemId: 'binding_rune', quantity: 40 }, { type: 'advance_quest', questId: 'embrune_101' }] }]
+            responses: [{ text: "Time to cast some spells.", actions: [{ type: 'give_item', itemId: 'gust_rune', quantity: 40 }, { type: 'give_item', itemId: 'binding_rune', quantity: 40 }, { type: 'advance_quest', questId: 'embrune_101' }] }]
         },
         in_progress_embrune_101_22: {
             npcName: 'Tavern Manager',

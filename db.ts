@@ -40,8 +40,8 @@ db.version(2).stores({
         });
     }
 
-    // Initialize remaining empty slots
-    for (let i = (oldSave ? 1 : 0); i < 5; i++) {
+    // Initialize remaining empty slots (Now 6 slots)
+    for (let i = (oldSave ? 1 : 0); i < 6; i++) {
         const existing = await tx.table('slots').get(i);
         if (!existing) {
             await tx.table('slots').put({
@@ -95,13 +95,14 @@ export const loadAllSlots = async (): Promise<any[]> => {
     try {
         await db.open(); // Ensure DB is open
         const slots = await (db as any).slots.toArray();
-        const allSlots = Array.from({ length: 5 }, (_, i) => {
+        // Ensure we return 6 slots even if DB only has 5 from previous version
+        const allSlots = Array.from({ length: 6 }, (_, i) => {
             return slots.find(s => s.slotId === i) || { slotId: i, data: null, metadata: null };
         });
         return allSlots;
     } catch (error) {
         console.error("Failed to load all slots:", error);
-        return Array.from({ length: 5 }, (_, i) => ({ slotId: i, data: null, metadata: null }));
+        return Array.from({ length: 6 }, (_, i) => ({ slotId: i, data: null, metadata: null }));
     }
 };
 

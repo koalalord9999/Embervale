@@ -1,6 +1,4 @@
 
-
-
 import { POI, SkillName, ToolType } from '../../types';
 
 export const isleOfWhispersPois: Record<string, POI> = {
@@ -44,7 +42,6 @@ export const isleOfWhispersPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Fisherman Brody',
                 icon: '/assets/npcChatHeads/fisherman_brody.png',
-                // FIX: Corrected lootTableId to match level and removed redundant properties.
                 pickpocket: { lootTableId: 'pickpocket_craftsman_table' },
                 dialogue: {
                     start: {
@@ -71,7 +68,6 @@ export const isleOfWhispersPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Elder Maeve',
                 icon: '/assets/npcChatHeads/elder_maeve.png',
-                // FIX: Corrected lootTableId to match level and removed redundant properties.
                 pickpocket: { lootTableId: 'pickpocket_merchant_table' },
                 dialogue: {
                     start: {
@@ -98,7 +94,6 @@ export const isleOfWhispersPois: Record<string, POI> = {
                 type: 'npc',
                 name: 'Salty Sam',
                 icon: 'https://api.iconify.design/game-icons:pirate-captain.svg',
-                // FIX: Corrected lootTableId to match level and removed redundant properties.
                 pickpocket: { lootTableId: 'pickpocket_silverhaven_citizen' },
                 dialogue: {
                     start: {
@@ -160,7 +155,6 @@ export const isleOfWhispersPois: Record<string, POI> = {
         connections: ['port_wreckage_square'],
         activities: [
             { type: 'shop', shopId: 'isle_of_whispers_general' },
-            // FIX: Removed redundant level, xp, and respawnTime properties.
             { type: 'thieving_lockpick', id: 'iow_supplies_chest_1', targetName: 'Supply Crate', lootTableId: 'thieving_house_cabinet_locked' },
         ],
         regionId: 'isle_of_whispers',
@@ -209,7 +203,6 @@ export const isleOfWhispersPois: Record<string, POI> = {
         connections: ['island_crossroads', 'tidal_flats', 'sirens_cove'],
         activities: [
             { type: 'combat', monsterId: 'shipwreck_specter' },
-            // FIX: Removed redundant level, xp, and respawnTime properties.
             { type: 'thieving_lockpick', id: 'iow_shipwreck_chest_1', targetName: 'Waterlogged Chest', lootTableId: 'thieving_dungeon_chest_mid' },
             { type: 'ground_item', id: 'shipwreck_graveyard_logs', itemId: 'driftwood_logs', resourceCount: 1, respawnTimer: 120000 },
         ],

@@ -121,6 +121,7 @@ const SaveSlotScreen: React.FC<SaveSlotScreenProps> = ({ slots, onSelectSlot, on
     const selectedSlot = useMemo(() => slots.find(s => s.slotId === selectedSlotId), [slots, selectedSlotId]);
     const isSelectedEmpty = !selectedSlot?.data;
     const isSelectedDeadHardcore = selectedSlot?.data?.isDead && selectedSlot?.metadata?.playerType === PlayerType.Hardcore;
+    const isTechDemoSlot = selectedSlotId === 5; // Slot 6 is index 5
 
     const handleDelete = () => {
         if (confirmDelete === null || confirmDeleteText !== selectedSlot?.metadata?.username) {
@@ -144,9 +145,12 @@ const SaveSlotScreen: React.FC<SaveSlotScreenProps> = ({ slots, onSelectSlot, on
                         <DeadCharacterView slot={selectedSlot!} onDelete={() => setConfirmDelete(selectedSlotId)} setTooltip={setTooltip} />
                     ) : isSelectedEmpty ? (
                         <div className="flex flex-col items-center gap-4">
-                            <h2 className="text-4xl font-bold text-gray-400">Empty Slot</h2>
-                            <Button onClick={() => onCreateNew(selectedSlotId)} size="md" variant="primary">Create New Character</Button>
-                            <Button onClick={() => onImport(selectedSlotId)} size="md" variant="secondary">Import Save</Button>
+                            <h2 className="text-4xl font-bold text-gray-400">{isTechDemoSlot ? "Proof of Concept" : "Empty Slot"}</h2>
+                            {isTechDemoSlot && <p className="text-yellow-400 mb-4">Warning: This is an experimental Isometric Engine prototype.</p>}
+                            <Button onClick={() => onCreateNew(selectedSlotId)} size="md" variant="primary">
+                                {isTechDemoSlot ? "Enter Simulation" : "Create New Character"}
+                            </Button>
+                            {!isTechDemoSlot && <Button onClick={() => onImport(selectedSlotId)} size="md" variant="secondary">Import Save</Button>}
                             <a
                                 href="https://discord.gg/vFUhYWWafx"
                                 target="_blank"
@@ -188,10 +192,10 @@ const SaveSlotScreen: React.FC<SaveSlotScreenProps> = ({ slots, onSelectSlot, on
                                 <Button onClick={() => onSelectSlot(selectedSlotId)} size="md" variant="primary">Play</Button>
                                 <div className="flex justify-between items-center w-full max-w-xs">
                                     <div className="flex gap-2">
-                                        {selectedSlot.metadata.playerType === PlayerType.Cheats && (
+                                        {(selectedSlot.metadata.playerType === PlayerType.Cheats || selectedSlot.metadata.playerType === PlayerType.TechDemo) && (
                                             <Button onClick={() => onExport(selectedSlotId)} size="sm" variant="secondary">Export</Button>
                                         )}
-                                        {selectedSlot.metadata.playerType === PlayerType.Cheats && (
+                                        {(selectedSlot.metadata.playerType === PlayerType.Cheats) && (
                                             <Button onClick={() => onImport(selectedSlotId)} size="sm" variant="secondary">Import</Button>
                                         )}
                                         <Button onClick={() => setConfirmDelete(selectedSlotId)} size="sm" variant="secondary">Delete</Button>
@@ -217,12 +221,13 @@ const SaveSlotScreen: React.FC<SaveSlotScreenProps> = ({ slots, onSelectSlot, on
                 </div>
 
                 {/* Right Panel - Slot List */}
-                <div className="w-full md:w-1/3 flex flex-col gap-3 px-4">
+                <div className="w-full md:w-1/3 flex flex-col gap-3 px-4 max-h-[60vh] overflow-y-auto">
                     <h3 className="text-2xl font-bold text-yellow-400 text-center mb-2">Save Slots</h3>
                     {slots.map(slot => {
                         const isSelected = slot.slotId === selectedSlotId;
                         const isEmpty = !slot.data;
                         const isDeadHardcore = slot.data?.isDead && slot.metadata?.playerType === PlayerType.Hardcore;
+                        const isTechDemo = slot.slotId === 5;
                         const metadata = slot.metadata;
 
                         return (
@@ -236,8 +241,8 @@ const SaveSlotScreen: React.FC<SaveSlotScreenProps> = ({ slots, onSelectSlot, on
                                     'bg-gray-800/50 border-gray-600 hover:bg-gray-700/50'
                                 }`}
                             >
-                                <p className={`font-bold ${isEmpty ? 'text-gray-500' : isDeadHardcore ? 'text-red-300' : 'text-yellow-300'}`}>
-                                    Slot {slot.slotId + 1}: {metadata?.username || 'Empty Slot'}
+                                <p className={`font-bold ${isTechDemo ? 'text-cyan-400' : isEmpty ? 'text-gray-500' : isDeadHardcore ? 'text-red-300' : 'text-yellow-300'}`}>
+                                    {isTechDemo ? "Proof of Concept" : `Slot ${slot.slotId + 1}: ${metadata?.username || 'Empty Slot'}`}
                                 </p>
                                 {!isEmpty && metadata && (
                                     <div className="text-xs mt-1 text-gray-400 space-y-0.5">

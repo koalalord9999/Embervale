@@ -90,7 +90,7 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         description: "A noisy, dusty coop filled with clucking chickens. There are nesting boxes along one wall.",
         connections: ['mcgregors_ranch'],
         activities: [
-            { type: 'skilling', id: 'chicken_coop_nests', name: 'Collect Eggs', skill: SkillName.Cooking, requiredLevel: 1, loot: [{ itemId: 'eggs', chance: 1, xp: 5 }], resourceCount: { min: 1, max: 1 }, respawnTime: 5000, gatherTime: 600 },
+            { type: 'ground_item', id: 'chicken_coop_nests', itemId: 'eggs', resourceCount: 1, respawnTimer: 5000 },
             { type: 'combat', monsterId: 'chicken' },
             { type: 'combat', monsterId: 'chicken' },
             { type: 'combat', monsterId: 'chicken' },
@@ -269,7 +269,7 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         description: 'The open fields give way to a dense, dark forest. The sounds of heavy beasts can be heard from within.',
         connections: ['verdant_crossroads', 'boar_woods_edge', 'wolf_pack_den', 'bear_cave', 'clearwater_ford'],
         activities: [
-            { type: 'combat', monsterId: 'boar' },
+            { type: 'combat', monsterId: 'wild_boar' },
             { type: 'ground_item', id: 'verdant_berry_1', itemId: 'red_berries', resourceCount: 1, respawnTimer: 60000 },
             { type: 'ground_item', id: 'verdant_berry_2', itemId: 'red_berries', resourceCount: 1, respawnTimer: 60000 },
             { type: 'ground_item', id: 'verdant_berry_3', itemId: 'red_berries', resourceCount: 1, respawnTimer: 60000 },

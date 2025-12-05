@@ -68,7 +68,6 @@ export const tutorialZonePois: Record<string, POI> = {
                 questTopics: ['embrune_101'],
                 conditionalGreetings: [
                     { text: "Remember, chop a tree for logs, and catch a shrimp from the fishing spot. Simple as that.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 1 }] } },
-                    { text: "You've got the raw materials, good. Now light a fire and cook that shrimp! Don't burn it.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 2 }] } },
                 ],
                 dialogue: {
                     survival_default: {
@@ -98,7 +97,6 @@ export const tutorialZonePois: Record<string, POI> = {
                 startNode: 'baker_default',
                 questTopics: ['embrune_101'],
                 conditionalGreetings: [
-                    { text: "Ready to learn the art of baking? First, you'll need a bucket for water and some wheat from the field.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 3 }] } },
                     { text: "Gather the wheat, mill it, collect the flour, add water to make dough, then bake it. Simple, yes?", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 4 }] } },
                     { text: "Wonderful! A perfect loaf. You're a natural. Head to the hut and speak with the Information Guide next.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 5 }] } },
                 ],
@@ -168,7 +166,6 @@ export const tutorialZonePois: Record<string, POI> = {
                 questTopics: ['embrune_101'],
                 conditionalGreetings: [
                     { text: "Ready to work? Grab a pickaxe and get me one copper ore and one tin ore.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 7 }] } },
-                    { text: "You have the ore? Good. Now use the furnace to smelt a bronze bar. Then, use the anvil to smith a dagger.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 8 }] } },
                     { text: "Excellent work! A fine dagger. Now, take it to the Weapon Guide and learn how to use it.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 9 }] } },
                 ],
                 dialogue: {
@@ -342,7 +339,6 @@ export const tutorialZonePois: Record<string, POI> = {
                     { text: "Ready to learn magic? I'll give you the runes. Your task is to defeat the rat in the tavern using a Gust Dart spell.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 20 }] } },
                     { text: "Focus your mind, channel the energy, and release! That rat won't know what hit it.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 21 }] } },
                     { text: "You've learned much. You are ready to venture into the world. When you wish to leave, speak to me again.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 23 }] } },
-                    { text: "Your adventure awaits in Meadowdale. Are you ready to go?", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 24 }] } },
                 ],
                 dialogue: {
                     magic_default: {

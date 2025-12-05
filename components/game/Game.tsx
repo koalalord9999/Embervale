@@ -852,7 +852,7 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
                         isPoisoned: char.isPoisoned, 
                         onCurePoison: itemActions.handleCurePoisonFromOrb, 
                         poisonEvent, 
-                        onToggleDevPanel: handleToggleDevPanel 
+                        onToggleDevPanel: handleToggleDevPanel
                     }}
                     isPermAggroOn={ui.isPermAggroOn}
                     onTogglePermAggro={handleTogglePermAggro}

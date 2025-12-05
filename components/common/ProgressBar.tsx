@@ -33,8 +33,10 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ value, maxValue, color, isHea
         ? `${color} h-full rounded-full`
         : 'h-full rounded-full';
 
+    const borderClass = isHealthBar ? 'border-black' : 'border-gray-900';
+
     return (
-        <div className="w-full bg-gray-700 rounded-full h-4 border-2 border-gray-900 overflow-hidden">
+        <div className={`w-full bg-gray-700 rounded-full h-4 border-2 ${borderClass} overflow-hidden`}>
             <div
                 className={barClassName}
                 style={barStyle}

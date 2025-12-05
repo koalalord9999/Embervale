@@ -197,7 +197,7 @@ const SpellbookPanel: React.FC<SpellbookPanelProps> = ({ skills, inventory, equi
         <div className="flex flex-col h-full text-gray-300">
             {ui.isSelectingAutocastSpell && <h3 className="text-lg font-bold text-center mb-2 text-yellow-400">Select Autocast Spell</h3>}
             <div className="flex-grow overflow-y-auto pr-1">
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-5 gap-1">
                     {spellsToDisplay.map(spell => (
                         <SpellDisplay
                             key={spell.id}

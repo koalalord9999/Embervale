@@ -1,4 +1,5 @@
 
+
 import React, { useCallback, useRef, useEffect } from 'react';
 
 interface LongPressOptions {
@@ -38,9 +39,6 @@ export const useLongPress = ({ onLongPress, onClick, delay = 400, isOneClickMode
     const handlePressStart = useCallback((event: React.MouseEvent | React.TouchEvent) => {
         if ('button' in event && event.button !== 0) return;
 
-        // FIX: If it's a mouse event (not touch) and One-Click Mode is OFF,
-        // do not start the timer. This prevents "Click+Hold to Drag" from triggering
-        // the context menu on desktop.
         const isTouchEvent = 'touches' in event;
         if (!isTouchEvent && !isOneClickMode) {
             return;
@@ -60,8 +58,6 @@ export const useLongPress = ({ onLongPress, onClick, delay = 400, isOneClickMode
     }, [delay, cleanup, isOneClickMode]);
 
     const handlePressEnd = useCallback((event: React.MouseEvent | React.TouchEvent) => {
-        // FIX: Prevent ghost clicks on touch devices by preventing the default behavior
-        // which generates mousedown/mouseup/click events after touchend.
         if (event.type === 'touchend' && event.cancelable) {
             event.preventDefault();
         }
@@ -94,7 +90,7 @@ export const useLongPress = ({ onLongPress, onClick, delay = 400, isOneClickMode
             const dx = Math.abs(movePoint.clientX - pressStartPos.current.x);
             const dy = Math.abs(movePoint.clientY - pressStartPos.current.y);
 
-            if (dx > 10 || dy > 10) {
+            if (dx > 15 || dy > 15) {
                 isDrag.current = true;
                 if (timeout.current) clearTimeout(timeout.current);
             }

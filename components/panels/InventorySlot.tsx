@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { InventorySlot, PlayerSkill, Item, Spell, Equipment } from '../../types';
 import { ITEMS, INVENTORY_CAPACITY, getIconClassName } from '../../constants';
 import { ContextMenuOption } from '../common/ContextMenu';
-import { ConfirmationPrompt, ContextMenuState, MakeXPrompt } from '../../hooks/useUIState';
+import { ConfirmationPrompt, ContextMenuState, MakeXPrompt, useUIState } from '../../hooks/useUIState';
 import { useLongPress } from '../../hooks/useLongPress';
 import { useIsTouchDevice } from '../../hooks/useIsTouchDevice';
 
@@ -89,10 +88,11 @@ interface InventorySlotProps {
     isOneClickMode: boolean;
     onReadMap: (item: Item) => void;
     onTeleport: (itemSlot: InventorySlot, slotIdentifier: number | keyof Equipment, from: 'inventory' | keyof Equipment, poiId: string) => void;
+    ui: ReturnType<typeof useUIState>;
 }
 
 const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
-    const { index, slot, inventory, skills, onEquip, onConsume, onDropItem, onBury, onEmpty, setTooltip, setContextMenu, addLog, isBankOpen = false, onDeposit = () => {}, itemToUse, setItemToUse, onUseItemOn, isBusy = false, setConfirmationPrompt, onExamine, draggingIndex, setDraggingIndex, dragOverIndex, setDragOverIndex, onDrop, isTouchSimulationEnabled, onDivine, onReadMap, isShopOpen = false, onSell = () => {}, spellToCast, onSpellOnItem, confirmValuableDrops, valuableDropThreshold, isOneClickMode, onTeleport } = props;
+    const { index, slot, inventory, skills, onEquip, onConsume, onDropItem, onBury, onEmpty, setTooltip, setContextMenu, addLog, isBankOpen = false, onDeposit = () => {}, itemToUse, setItemToUse, onUseItemOn, isBusy = false, setConfirmationPrompt, onExamine, draggingIndex, setDraggingIndex, dragOverIndex, setDragOverIndex, onDrop, isTouchSimulationEnabled, onDivine, onReadMap, isShopOpen = false, onSell = () => {}, spellToCast, onSpellOnItem, confirmValuableDrops, valuableDropThreshold, isOneClickMode, onTeleport, ui } = props;
 
     const isTouchDevice = useIsTouchDevice(isTouchSimulationEnabled);
 
@@ -259,6 +259,40 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
         const item = ITEMS[slot.itemId];
         if (!item) return;
 
+        if (isBankOpen) {
+            if ('shiftKey' in e && e.shiftKey) {
+                performAction(() => onDeposit(index, 'all'));
+            } else {
+                const { activeWithdrawMode, customWithdrawAmount, setMakeXPrompt, setCustomWithdrawAmount } = ui;
+                let quantityToDeposit: number | 'all' = 1;
+                if (activeWithdrawMode === 'all') {
+                    quantityToDeposit = 'all';
+                } else if (activeWithdrawMode === 'x') {
+                    if (customWithdrawAmount !== null) {
+                        quantityToDeposit = customWithdrawAmount;
+                    } else {
+                        const maxQty = (item.stackable || slot.noted) 
+                            ? slot.quantity 
+                            : inventory.filter(s => s?.itemId === item.id && !s.noted).length;
+                        
+                        setMakeXPrompt({
+                            title: `Deposit ${item.name}`,
+                            max: maxQty,
+                            onConfirm: (val) => {
+                                setCustomWithdrawAmount(val);
+                                onDeposit(index, val);
+                            }
+                        });
+                        return;
+                    }
+                } else {
+                    quantityToDeposit = activeWithdrawMode;
+                }
+                performAction(() => onDeposit(index, quantityToDeposit));
+            }
+            return;
+        }
+
         if (isShopOpen) {
             setTooltip(null);
             const sellPrice = Math.floor(item.value * 0.2);
@@ -288,18 +322,7 @@ const InventorySlotDisplay: React.FC<InventorySlotProps> = (props) => {
         }
 
         if ('shiftKey' in e && e.shiftKey) {
-            if (isBankOpen) {
-                performAction(() => onDeposit(index, 'all'));
-            } else if (isShopOpen) {
-                performAction(() => onSell(slot.itemId, 'all', index));
-            } else {
-                handleDropClick();
-            }
-            return;
-        }
-
-        if (isBankOpen) {
-            performAction(() => onDeposit(index, 1));
+            handleDropClick();
             return;
         }
         

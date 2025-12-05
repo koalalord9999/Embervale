@@ -3,7 +3,7 @@ import { InventorySlot, Item, BankTab } from '../../types';
 import { ITEMS, BANK_CAPACITY, getIconClassName, MAX_BANK_TABS } from '../../constants';
 import Button from '../common/Button';
 import { ContextMenuOption } from '../common/ContextMenu';
-import { MakeXPrompt, TooltipState, ContextMenuState, useUIState } from '../../hooks/useUIState';
+import { MakeXPrompt, TooltipState, ContextMenuState, useUIState, WithdrawMode } from '../../hooks/useUIState';
 import { useLongPress } from '../../hooks/useLongPress';
 import { useIsTouchDevice } from '../../hooks/useIsTouchDevice';
 import { getDisplayName } from '../panels/InventorySlot';
@@ -26,8 +26,8 @@ interface BankSlotProps {
     index: number;
     asNote: boolean;
     activeTabId: number;
-    onWithdraw: (bankIndex: number, quantity: number | 'all' | 'all-but-1', asNote: boolean, activeTabId: number) => void;
-    onPrimaryAction: (index: number) => void; // New prop for handling the click logic from parent
+    onWithdraw: (bankIndex: number, quantity: number | 'all' | 'all-but-1', asNote: boolean) => void;
+    onPrimaryAction: () => void; // New prop for handling the click logic from parent
     setContextMenu: (menu: ContextMenuState | null) => void;
     setMakeXPrompt: (prompt: MakeXPrompt | null) => void;
     setTooltip: (tooltip: TooltipState | null) => void;
@@ -43,7 +43,7 @@ const BankSlot: React.FC<BankSlotProps> = (props) => {
 
     const performWithdrawAction = (quantity: number | 'all' | 'all-but-1') => {
         if (isPlaceholder) return;
-        onWithdraw(index, quantity, asNote, activeTabId);
+        onWithdraw(index, quantity, asNote);
         setTooltip(null);
     };
 
@@ -62,11 +62,7 @@ const BankSlot: React.FC<BankSlotProps> = (props) => {
         const item = slot ? ITEMS[slot.itemId] : null;
         if (!slot || !item) return;
         
-        const performActionAndClose = (action: () => void) => {
-            action();
-            setTooltip(null);
-            setContextMenu(null);
-        };
+        const performActionAndClose = (action: () => void) => { action(); setTooltip(null); setContextMenu(null); };
 
         if (isPlaceholder) {
             setContextMenu({
@@ -111,8 +107,7 @@ const BankSlot: React.FC<BankSlotProps> = (props) => {
             if ('shiftKey' in e && e.shiftKey) {
                 performWithdrawAction('all');
             } else {
-                // Use the new primary action prop which respects the quantity toggles
-                onPrimaryAction(index);
+                onPrimaryAction();
             }
         }
     };
@@ -151,8 +146,6 @@ const BankSlot: React.FC<BankSlotProps> = (props) => {
     );
 };
 
-type WithdrawMode = 1 | 5 | 10 | 'x' | 'all';
-
 interface BankViewProps {
     bank: BankTab[];
     onClose: () => void;
@@ -177,15 +170,11 @@ interface BankViewProps {
 const BankView: React.FC<BankViewProps> = (props) => {
     const { bank, onClose, onWithdraw, onDepositBackpack, onDepositEquipment, onMoveItem, onAddTab, onRemoveTab, onMoveItemToTab, onRenameTab, setContextMenu, setMakeXPrompt, setTooltip, bankPlaceholders, handleToggleBankPlaceholders, ui, isOneClickMode, onClearPlaceholder } = props;
     
-    const { activeBankTabId, setActiveBankTabId } = ui;
+    const { activeBankTabId, setActiveBankTabId, activeWithdrawMode, setActiveWithdrawMode, customWithdrawAmount, setCustomWithdrawAmount } = ui;
     const [draggingIndex, setDraggingIndex] = useState<{ tabId: number; index: number } | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
     const [dragOverTabId, setDragOverTabId] = useState<number | null>(null);
     const [withdrawAsNote, setWithdrawAsNote] = useState(false);
-    
-    // New state for withdrawal quantity toggles
-    const [withdrawMode, setWithdrawMode] = useState<WithdrawMode>(1);
-    const [customXAmount, setCustomXAmount] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
 
     const isTouchDevice = useIsTouchDevice(false);
@@ -194,7 +183,6 @@ const BankView: React.FC<BankViewProps> = (props) => {
     const activeTab = bank.find(t => t.id === activeBankTabId) ?? bank[0];
 
     const itemsToDisplay = useMemo(() => {
-        // If no search term, just return the items from the active tab with metadata
         if (!searchTerm) {
             return (activeTab?.items ?? []).map((slot, index) => ({
                 slot,
@@ -202,13 +190,11 @@ const BankView: React.FC<BankViewProps> = (props) => {
                 index
             }));
         }
-
-        // If searching, aggregate items from ALL tabs
         const results: { slot: InventorySlot | null; tabId: number; index: number }[] = [];
         
         bank.forEach(tab => {
             tab.items.forEach((slot, index) => {
-                if (!slot) return; // Skip empty slots during search to show a compacted list
+                if (!slot) return;
                 const itemData = ITEMS[slot.itemId];
                 if (!itemData) return;
                 
@@ -224,64 +210,60 @@ const BankView: React.FC<BankViewProps> = (props) => {
 
     const totalBankedItems = bank.reduce((total, tab) => total + tab.items.filter(item => item !== null && item.quantity > 0).length, 0);
 
-    // --- Toggle Handlers ---
     const handleToggleClick = (mode: WithdrawMode) => {
-        setWithdrawMode(mode);
+        setActiveWithdrawMode(mode);
         if (mode !== 'x') {
-            setCustomXAmount(null); // Reset X when switching away
+            setCustomWithdrawAmount(null);
         }
     };
 
-    // --- Slot Interaction Handlers ---
     const handleSlotPrimaryAction = (itemInfo: { slot: InventorySlot | null, tabId: number, index: number }) => {
         const { slot, tabId, index: realIndex } = itemInfo;
         
-        if (!slot || slot.quantity === 0) return; // Ignore placeholders
+        if (!slot || slot.quantity === 0) return;
 
         let quantityToWithdraw: number | 'all' = 1;
 
-        if (withdrawMode === 'all') {
+        if (activeWithdrawMode === 'all') {
             quantityToWithdraw = 'all';
-        } else if (withdrawMode === 'x') {
-            if (customXAmount !== null) {
-                quantityToWithdraw = customXAmount;
+        } else if (activeWithdrawMode === 'x') {
+            if (customWithdrawAmount !== null) {
+                quantityToWithdraw = customWithdrawAmount;
             } else {
-                // Prompt for X
                 const item = ITEMS[slot.itemId];
                 setMakeXPrompt({
                     title: `Withdraw ${item.name}`,
                     max: slot.quantity,
                     onConfirm: (val) => {
-                        setCustomXAmount(val);
+                        setCustomWithdrawAmount(val);
                         onWithdraw(realIndex, val, withdrawAsNote, tabId);
                     }
                 });
-                return; // Exit, withdrawal happens in onConfirm
+                return;
             }
         } else {
-            quantityToWithdraw = withdrawMode;
+            quantityToWithdraw = activeWithdrawMode;
         }
 
         onWithdraw(realIndex, quantityToWithdraw, withdrawAsNote, tabId);
         setTooltip(null);
     };
 
-    // --- Mouse Drag Handlers ---
     const handleDragStart = (e: React.DragEvent, displayIndex: number, tabId: number) => {
         setTooltip(null);
-        // Dragging is disabled while searching to avoid index confusion
         if (searchTerm) {
             e.preventDefault();
             return;
         }
         e.dataTransfer.setData('application/json', JSON.stringify({ index: displayIndex, tabId }));
+        e.dataTransfer.effectAllowed = 'move';
         setTimeout(() => setDraggingIndex({ index: displayIndex, tabId }), 0);
     };
 
     const handleDrop = (e: React.DragEvent, toDisplayIndex: number) => {
         e.preventDefault();
         setTooltip(null);
-        if (searchTerm) return; // Disable drop while searching
+        if (searchTerm) return;
 
         try {
             const data = JSON.parse(e.dataTransfer.getData('application/json'));
@@ -302,7 +284,7 @@ const BankView: React.FC<BankViewProps> = (props) => {
 
         try {
             const data = JSON.parse(e.dataTransfer.getData('application/json'));
-            if (!data) return; // Prevent error on failed drag
+            if (!data) return;
             const fromIndex = data.index;
             const fromTabId = data.tabId;
             if (fromTabId !== toTabId) {
@@ -311,17 +293,12 @@ const BankView: React.FC<BankViewProps> = (props) => {
         } catch (error) { console.error("Tab drop failed:", error); }
     };
     
-    // --- Touch Drag Handlers ---
     const handleTouchStart = (e: React.TouchEvent) => {
         if (draggingIndex !== null || searchTerm) return;
-
         const touch = e.touches[0];
         const target = document.elementFromPoint(touch.clientX, touch.clientY);
-        
-        // Find the bank slot element
         let currentElement = target;
         let index = -1;
-
         while (currentElement) {
             const indexStr = currentElement.getAttribute('data-bank-index');
             if (indexStr) {
@@ -330,7 +307,6 @@ const BankView: React.FC<BankViewProps> = (props) => {
             }
             currentElement = currentElement.parentElement;
         }
-
         if (index > -1 && itemsToDisplay[index]) {
             holdTimer.current = setTimeout(() => {
                 setDraggingIndex({ index, tabId: activeBankTabId });
@@ -346,13 +322,9 @@ const BankView: React.FC<BankViewProps> = (props) => {
             }
             return;
         }
-        
-        // Prevent scrolling while dragging an item
         if (e.cancelable) e.preventDefault();
-        
         const touch = e.touches[0];
         const overElement = document.elementFromPoint(touch.clientX, touch.clientY);
-        
         let targetIndex: number | null = null;
         let currentElement = overElement;
         while (currentElement) {
@@ -363,7 +335,6 @@ const BankView: React.FC<BankViewProps> = (props) => {
             }
             currentElement = currentElement.parentElement;
         }
-        
         setDragOverIndex(targetIndex);
     };
 
@@ -372,7 +343,6 @@ const BankView: React.FC<BankViewProps> = (props) => {
             clearTimeout(holdTimer.current);
             holdTimer.current = null;
         }
-
         if (draggingIndex && dragOverIndex !== null && draggingIndex.index !== dragOverIndex && draggingIndex.tabId === activeBankTabId) {
              onMoveItem(draggingIndex.index, dragOverIndex, activeBankTabId);
         }
@@ -468,7 +438,6 @@ const BankView: React.FC<BankViewProps> = (props) => {
                     {itemsToDisplay.map((displayItem, displayIndex) => {
                         const { slot, tabId, index: realIndex } = displayItem;
                         let slotClasses = '';
-                        // D&D is disabled during search, so this dragging index logic works fine for non-search mode
                         const isDraggingThis = draggingIndex?.tabId === activeBankTabId && draggingIndex?.index === realIndex;
                         
                         if (isDraggingThis) slotClasses = 'opacity-25';
@@ -488,10 +457,10 @@ const BankView: React.FC<BankViewProps> = (props) => {
                         return <BankSlot 
                             key={`${tabId}-${realIndex}`}
                             slot={slot} 
-                            index={realIndex} // Pass the real index for context menu withdrawals
+                            index={realIndex}
                             asNote={withdrawAsNote} 
-                            activeTabId={tabId} // Pass the source tab ID for context menu withdrawals
-                            onWithdraw={() => {}} // Passed but overridden by PrimaryAction logic
+                            activeTabId={tabId}
+                            onWithdraw={(idx, qty, asNote) => onWithdraw(idx, qty, asNote, tabId)}
                             onPrimaryAction={() => handleSlotPrimaryAction(displayItem)}
                             setContextMenu={setContextMenu} 
                             setMakeXPrompt={setMakeXPrompt} 
@@ -524,20 +493,20 @@ const BankView: React.FC<BankViewProps> = (props) => {
                         <button
                             key={qty}
                             onClick={() => handleToggleClick(qty as WithdrawMode)}
-                            className={`h-10 px-3 rounded font-bold text-sm transition-colors ${withdrawMode === qty ? 'bg-yellow-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                            className={`h-10 px-3 rounded font-bold text-sm transition-colors ${activeWithdrawMode === qty ? 'bg-yellow-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
                         >
                             {qty}
                         </button>
                     ))}
                     <button
                         onClick={() => handleToggleClick('x')}
-                        className={`h-10 px-3 rounded font-bold text-sm transition-colors ${withdrawMode === 'x' ? 'bg-yellow-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                        className={`h-10 px-3 rounded font-bold text-sm transition-colors ${activeWithdrawMode === 'x' ? 'bg-yellow-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
                     >
-                        {customXAmount ? `X: ${customXAmount}` : 'X'}
+                        {customWithdrawAmount ? `X: ${customWithdrawAmount}` : 'X'}
                     </button>
                     <button
                         onClick={() => handleToggleClick('all')}
-                        className={`h-10 px-3 rounded font-bold text-sm transition-colors ${withdrawMode === 'all' ? 'bg-yellow-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                        className={`h-10 px-3 rounded font-bold text-sm transition-colors ${activeWithdrawMode === 'all' ? 'bg-yellow-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
                     >
                         All
                     </button>

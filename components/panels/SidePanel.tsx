@@ -35,7 +35,7 @@ interface SidePanelProps {
     onToggleTouchSimulation: () => void;
     itemActions: ReturnType<typeof useItemActions>;
     isBusy: boolean;
-    handleExamine: (item: any) => void;
+    handleExamine: (item: Item) => void;
     session: ReturnType<typeof useGameSession>;
     addLog: (message: string) => void;
     activeCombatStyleHighlight?: CombatStance | null;
@@ -58,6 +58,7 @@ interface SidePanelProps {
     onTogglePermAggro?: () => void;
     isGodModeOn?: boolean;
     onToggleGodMode?: () => void;
+    isOneClickMode?: boolean;
 }
 
 const PanelIcon: React.FC<{
@@ -135,6 +136,7 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
         valuableDropThreshold: ui.valuableDropThreshold,
         isOneClickMode: ui.isOneClickMode,
         onTeleport: itemActions.handleTeleport,
+        ui: ui,
     };
 
     const renderActivePanel = () => {
@@ -158,7 +160,7 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     onTeleport={itemActions.handleTeleport}
                 />;
             case 'skills':
-                return <SkillsPanel skills={char.skills} setTooltip={ui.setTooltip} onOpenGuide={ui.setActiveSkillGuide} isTouchSimulationEnabled={isTouchSimulationEnabled} />;
+                return <SkillsPanel skills={char.skills} setTooltip={ui.setTooltip} setContextMenu={ui.setContextMenu} onOpenGuide={ui.setActiveSkillGuide} isTouchSimulationEnabled={isTouchSimulationEnabled} isOneClickMode={ui.isOneClickMode} />;
             case 'quests':
                  return <QuestsPanel playerQuests={quests.playerQuests} activeRepeatableQuest={repeatableQuests.activePlayerQuest} inventory={inv.inventory} slayerTask={slayer.slayerTask} onSelectQuest={(questId) => ui.setActiveQuestDetail({ questId: questId, playerQuests: quests.playerQuests })} />;
             case 'prayer':
