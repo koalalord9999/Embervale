@@ -128,7 +128,7 @@ export const fouthiaPois: Record<string, POI> = {
         id: 'fouthia_back_alleys',
         name: 'Back Alleys',
         description: 'A maze of narrow, sandy alleys. A good place to find trouble, or avoid it.',
-        connections: ['fouthia_square', 'fouthia_west_gate', 'fouthia_armorer', 'fouthia_alchemist'],
+        connections: ['fouthia_square', 'fouthia_west_gate', 'fouthia_armorer', 'fouthia_alchemist', 'fouthia_rooftop_access'],
         activities: [
             { type: 'thieving_pilfer', id: 'fouthia_house_1', name: 'Locked House' },
             { type: 'thieving_pilfer', id: 'fouthia_house_2', name: 'Locked House' },
@@ -216,5 +216,17 @@ export const fouthiaPois: Record<string, POI> = {
         ],
         regionId: 'fouthia',
         x: 100, y: 300, type: 'internal',
+    },
+    fouthia_rooftop_access: {
+        id: 'fouthia_rooftop_access',
+        name: 'Rooftop Access',
+        description: 'A rickety ladder leans against a sandstone wall, leading up to the sun-baked rooftops.',
+        connections: ['fouthia_back_alleys'],
+        activities: [
+            { type: 'start_agility_course', name: 'Start Fouthia Rooftop Run (Lvl 35)', courseId: 'fouthia_rooftop_run' },
+        ],
+        regionId: 'fouthia',
+        x: 160, y: 230,
+        type: 'internal',
     },
 };

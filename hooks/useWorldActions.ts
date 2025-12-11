@@ -1,4 +1,3 @@
-
 import React, { useCallback } from 'react';
 import { POIActivity, SkillName, InventorySlot, PlayerSkill, SkillRequirement, PlayerQuestState, ActiveCraftingAction, WorldState, WeaponType, Equipment } from '../types';
 import { ITEMS, INVENTORY_CAPACITY, rollOnLootTable, LootRollResult, FIREMAKING_RECIPES } from '../constants';
@@ -21,12 +20,16 @@ interface UseWorldActionsProps {
     setActiveCraftingAction: (action: ActiveCraftingAction | null) => void;
     setInventory: React.Dispatch<React.SetStateAction<(InventorySlot | null)[]>>;
     equipment: Equipment;
+    // FIX: Add setIsResting to dependencies
+    setIsResting: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const useWorldActions = (props: UseWorldActionsProps) => {
-    const { hasItems, inventory, modifyItem, addLog, coins, skills, addXp, setClearedSkillObstacles, playerQuests, setMakeXPrompt, windmillFlour, setWindmillFlour, setActiveCraftingAction, setInventory, equipment } = props;
+    // FIX: Destructure setIsResting from props
+    const { hasItems, inventory, modifyItem, addLog, coins, skills, addXp, setClearedSkillObstacles, playerQuests, setMakeXPrompt, windmillFlour, setWindmillFlour, setActiveCraftingAction, setInventory, equipment, setIsResting } = props;
 
     const handleMilking = useCallback(() => {
+        setIsResting(false);
         if (!hasItems([{ itemId: 'bucket', quantity: 1 }])) {
             addLog("You need an empty bucket to milk a cow.");
             return;
@@ -34,9 +37,10 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
         modifyItem('bucket', -1, true);
         modifyItem('bucket_of_milk', 1, false, { bypassAutoBank: true });
         addLog("You milk the cow and fill your bucket.");
-    }, [hasItems, modifyItem, addLog]);
+    }, [hasItems, modifyItem, addLog, setIsResting]);
 
     const handleTanning = useCallback((inputId: string, outputId: string, cost: number, quantity: number) => {
+        setIsResting(false);
         if (quantity <= 0) return;
         const totalCost = quantity * cost;
         const inputItemName = ITEMS[inputId]?.name ?? 'hides';
@@ -55,9 +59,10 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
         modifyItem(inputId, -quantity);
         modifyItem(outputId, quantity, false, { bypassAutoBank: true });
         addLog(`You pay the tanner ${totalCost} coins to turn ${quantity} ${inputItemName} into ${outputItemName}.`);
-    }, [coins, hasItems, modifyItem, addLog]);
+    }, [coins, hasItems, modifyItem, addLog, setIsResting]);
 
     const handleWishingWell = useCallback(() => {
+        setIsResting(false);
         if (coins < 1) { addLog("You need a coin to toss into the well."); return; }
         modifyItem('coins', -1);
         addLog("You toss a coin into the well and make a wish.");
@@ -71,9 +76,10 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
         } else {
             addLog("The coin disappears into the depths with a faint splash.");
         }
-    }, [hasItems, modifyItem, addLog, playerQuests, coins]);
+    }, [hasItems, modifyItem, addLog, playerQuests, coins, setIsResting]);
 
     const handleClearObstacle = useCallback((fromPoiId: string, toPoiId: string, requirement: SkillRequirement) => {
+        setIsResting(false);
         const skill = skills.find(s => s.name === requirement.skill);
         if (!skill || skill.currentLevel < requirement.level) {
             addLog(`You need a ${requirement.skill} level of ${requirement.level} to clear this.`);
@@ -94,9 +100,10 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
         const obstacleId = `${fromPoiId}-${toPoiId}`;
         setClearedSkillObstacles(prev => [...prev, obstacleId]);
 
-    }, [skills, addXp, setClearedSkillObstacles, addLog, hasItems, modifyItem]);
+    }, [skills, addXp, setClearedSkillObstacles, addLog, hasItems, modifyItem, setIsResting]);
 
     const handleCollectWater = useCallback((activity: Extract<POIActivity, { type: 'water_source' }>) => {
+        setIsResting(false);
         const isHoly = (activity as any).isHoly === true;
 
         const vialCount = inventory.reduce((total, slot) => slot?.itemId === 'vial' ? total + slot.quantity : total, 0);
@@ -184,9 +191,10 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
                 });
             }
         }
-    }, [inventory, addLog, modifyItem, setMakeXPrompt, setInventory]);
+    }, [inventory, addLog, modifyItem, setMakeXPrompt, setInventory, setIsResting]);
     
     const handleCutCactus = useCallback(() => {
+        setIsResting(false);
         const slashWeapons = [WeaponType.Sword, WeaponType.Scimitar, WeaponType.Dagger, WeaponType.Axe, WeaponType.Battleaxe];
         const equippedWeapon = equipment.weapon ? ITEMS[equipment.weapon.itemId] : null;
         const hasSlashWeapon = (equippedWeapon && equippedWeapon.equipment?.weaponType && slashWeapons.includes(equippedWeapon.equipment.weaponType)) || hasItems([{ itemId: 'knife', quantity: 1 }]);
@@ -220,9 +228,10 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
 
         addLog("You skillfully slice the cactus and fill your waterskin.");
         addXp(SkillName.Woodcutting, 15);
-    }, [equipment.weapon, hasItems, inventory, addLog, setInventory, addXp]);
+    }, [equipment.weapon, hasItems, inventory, addLog, setInventory, addXp, setIsResting]);
 
     const handleCollectFlour = useCallback(() => {
+        setIsResting(false);
         if (windmillFlour <= 0) {
             addLog("The windmill's hopper is empty. You need to mill some wheat first.");
             return;
@@ -230,9 +239,10 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
         setWindmillFlour(f => f - 1);
         modifyItem('flour', 1, false, { bypassAutoBank: true });
         addLog("You collect some flour from the hopper.");
-    }, [windmillFlour, addLog, hasItems, setWindmillFlour, modifyItem]);
+    }, [windmillFlour, addLog, hasItems, setWindmillFlour, modifyItem, setIsResting]);
 
     const handleMillWheat = useCallback(() => {
+        setIsResting(false);
         const wheatCount = inventory.reduce((total, slot) => slot?.itemId === 'wheat' ? total + slot.quantity : total, 0);
         if (wheatCount === 0) {
             addLog("You have no wheat to mill.");
@@ -263,9 +273,10 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
                 onConfirm
             });
         }
-    }, [inventory, addLog, setMakeXPrompt, setActiveCraftingAction]);
+    }, [inventory, addLog, setMakeXPrompt, setActiveCraftingAction, setIsResting]);
 
     const handleChurn = useCallback(() => {
+        setIsResting(false);
         const milkCount = inventory.filter(s => s?.itemId === 'bucket_of_milk').length;
         if (milkCount === 0) {
             addLog("You don't have any buckets of milk.");
@@ -303,9 +314,10 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
                 onConfirm
             });
         }
-    }, [inventory, skills, addLog, setActiveCraftingAction, setMakeXPrompt]);
+    }, [inventory, skills, addLog, setActiveCraftingAction, setMakeXPrompt, setIsResting]);
 
     const handleOpenAncientChest = useCallback(() => {
+        setIsResting(false);
         if (!hasItems([{ itemId: 'strange_key', quantity: 1 }])) {
             addLog("The chest is locked. It seems to require a strange, ornate key.");
             return;
@@ -348,7 +360,7 @@ export const useWorldActions = (props: UseWorldActionsProps) => {
         }
         addLog(`You find a pile of loot inside the chest!`);
 
-    }, [hasItems, modifyItem, addLog, inventory]);
+    }, [hasItems, modifyItem, addLog, inventory, setIsResting]);
 
     return {
         handleMilking,

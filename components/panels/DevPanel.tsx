@@ -1,11 +1,11 @@
-
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Button from '../common/Button';
 import { useInventory } from '../../hooks/useInventory';
 import { Item, SkillName, ToolType } from '../../types';
-import { ITEMS, INVENTORY_CAPACITY, getIconClassName, REGIONS, ALL_SKILLS, QUESTS, LOG_HARDNESS } from '../../constants';
+import { ITEMS, INVENTORY_CAPACITY, getIconClassName, REGIONS, ALL_SKILLS, QUESTS, LOG_HARDNESS, AGILITY_COURSES } from '../../constants';
 import { POIS } from '../../data/pois';
 import { TooltipState, useUIState } from '../../hooks/useUIState';
+import { useAgility } from '../../hooks/useAgility';
 
 interface GameManagerProps {
     onResetQuest: (questId: string) => void;
@@ -358,10 +358,47 @@ const TeleportComponent: React.FC<{
     );
 };
 
+const AgilityManagerComponent: React.FC<{ agility: ReturnType<typeof useAgility> }> = ({ agility }) => {
+    const { agilityState, startCourse, stopCourse, attemptObstacle } = agility;
+    const [selectedCourseId, setSelectedCourseId] = useState(Object.keys(AGILITY_COURSES)[0] || '');
+
+    if (agilityState.activeCourseId) {
+        const course = AGILITY_COURSES[agilityState.activeCourseId];
+        const currentObstacle = course.obstacles[agilityState.currentObstacleIndex];
+        const laps = agilityState.lapsCompleted[agilityState.activeCourseId] || 0;
+        return (
+            <div className="p-2 space-y-3">
+                <h3 className="font-bold text-yellow-300">{course.name}</h3>
+                <p>Progress: Obstacle {agilityState.currentObstacleIndex + 1} / {course.obstacles.length}</p>
+                <p>Laps Completed: {laps}</p>
+                <Button size="sm" onClick={attemptObstacle} className="w-full">Attempt: {currentObstacle.name}</Button>
+                <Button size="sm" onClick={stopCourse} variant="secondary" className="w-full">Stop Course</Button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="p-2 space-y-4">
+            <div>
+                <label className="block text-sm font-semibold mb-1">Select Agility Course</label>
+                <select value={selectedCourseId} onChange={e => setSelectedCourseId(e.target.value)} className="w-full p-1 text-base bg-gray-800 border border-gray-600 rounded">
+                    {Object.values(AGILITY_COURSES).map(c => (
+                        <option key={c.id} value={c.id}>{c.name} (Lvl {c.level})</option>
+                    ))}
+                </select>
+            </div>
+            <Button onClick={() => startCourse(selectedCourseId)} disabled={!selectedCourseId} className="w-full">
+                Start Course
+            </Button>
+        </div>
+    );
+};
+
+
 interface DevPanelProps {
     inv: ReturnType<typeof useInventory>;
     devPanelState: {
-        activeTab: 'cheats' | 'items' | 'teleport' | 'game-manager' | 'monsters';
+        activeTab: 'cheats' | 'items' | 'teleport' | 'game-manager' | 'monsters' | 'agility';
         itemSearchTerm: string;
         selectedItemId: string | null;
         spawnQuantity: number;
@@ -371,6 +408,7 @@ interface DevPanelProps {
     updateDevPanelState: (updates: Partial<DevPanelProps['devPanelState']>) => void;
     onClose: () => void;
     ui: ReturnType<typeof useUIState>;
+    agility: ReturnType<typeof useAgility>;
     
     // Cheats Props
     combatSpeedMultiplier: number;
@@ -414,10 +452,10 @@ interface DevPanelProps {
 }
 
 const DevPanel: React.FC<DevPanelProps> = (props) => {
-    const { inv, setTooltip, devPanelState, updateDevPanelState, onClose, ui, ...otherProps } = props;
+    const { inv, setTooltip, devPanelState, updateDevPanelState, onClose, ui, agility, ...otherProps } = props;
     const { activeTab, itemSearchTerm, selectedItemId, spawnQuantity, teleportRegionId, teleportPoiId } = devPanelState;
 
-    const setActiveTab = (tab: 'cheats' | 'items' | 'teleport' | 'game-manager' | 'monsters') => updateDevPanelState({ activeTab: tab });
+    const setActiveTab = (tab: DevPanelProps['devPanelState']['activeTab']) => updateDevPanelState({ activeTab: tab });
 
     const selectedItem = useMemo(() => selectedItemId ? ITEMS[selectedItemId] : null, [selectedItemId]);
 
@@ -435,8 +473,9 @@ const DevPanel: React.FC<DevPanelProps> = (props) => {
             <div className="flex border-b-2 border-gray-700 mb-2 flex-shrink-0">
                 <button onClick={() => setActiveTab('cheats')} className={`flex-1 py-1 text-sm font-semibold rounded-t-md transition-colors ${activeTab === 'cheats' ? 'bg-gray-700 text-yellow-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Cheats</button>
                 <button onClick={() => setActiveTab('items')} className={`flex-1 py-1 text-sm font-semibold rounded-t-md transition-colors ${activeTab === 'items' ? 'bg-gray-700 text-yellow-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Items</button>
-                <button onClick={() => setActiveTab('game-manager')} className={`flex-1 py-1 text-sm font-semibold rounded-t-md transition-colors ${activeTab === 'game-manager' ? 'bg-gray-700 text-yellow-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Game Manager</button>
+                <button onClick={() => setActiveTab('game-manager')} className={`flex-1 py-1 text-sm font-semibold rounded-t-md transition-colors ${activeTab === 'game-manager' ? 'bg-gray-700 text-yellow-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Game</button>
                 <button onClick={() => setActiveTab('teleport')} className={`flex-1 py-1 text-sm font-semibold rounded-t-md transition-colors ${activeTab === 'teleport' ? 'bg-gray-700 text-yellow-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Teleport</button>
+                <button onClick={() => setActiveTab('agility')} className={`flex-1 py-1 text-sm font-semibold rounded-t-md transition-colors ${activeTab === 'agility' ? 'bg-gray-700 text-yellow-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Agility</button>
             </div>
             <div className="flex-grow min-h-0 overflow-y-auto">
                 {activeTab === 'cheats' && <CheatsComponent {...otherProps} />}
@@ -458,6 +497,7 @@ const DevPanel: React.FC<DevPanelProps> = (props) => {
                     selectedPoiId={teleportPoiId}
                     setSelectedPoiId={(id) => updateDevPanelState({ teleportPoiId: id })}
                 />}
+                {activeTab === 'agility' && <AgilityManagerComponent agility={agility} />}
             </div>
         </div>
     );

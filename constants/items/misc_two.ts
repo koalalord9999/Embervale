@@ -1,4 +1,3 @@
-
 import { Item } from '../../types';
 
 export const misc_two: Item[] = [
@@ -32,4 +31,15 @@ export const misc_two: Item[] = [
     { id: 'dryad_branch', name: 'Dryad Branch', description: 'A small, living branch that hums with the life of the forest.', stackable: false, value: 250, iconUrl: 'https://api.iconify.design/game-icons:birch-trees.svg', material: 'wood-willow' },
     { id: 'arachnid_chitin', name: 'Arachnid Chitin', description: 'A hard piece of chitin from a large spider or scorpion.', stackable: false, value: 180, iconUrl: 'https://api.iconify.design/game-icons:insect-jaws.svg', material: 'bronze' },
     { id: 'spider_eye', name: 'Spider Eye', description: 'A glistening, multi-faceted eye from a large spider.', stackable: false, value: 50, iconUrl: 'https://api.iconify.design/game-icons:eye-target.svg', material: 'uncut-ruby' },
+
+    // Slayer Misc Drops
+    { id: 'severed_zombie_hand', name: 'Severed Zombie Hand', description: 'A gruesome trophy. It still twitches occasionally.', stackable: false, value: 100, iconUrl: 'https://api.iconify.design/game-icons:zombie-hand.svg' },
+    { id: 'salt_crusted_hide', name: 'Salt-Crusted Hide', description: 'A tough, slimy hide covered in abrasive salt crystals.', stackable: false, value: 250, iconUrl: 'https://api.iconify.design/game-icons:animal-hide.svg', material: 'leather' },
+    { id: 'basilisk_scale', name: 'Basilisk Scale', description: 'A stone-like scale from a basilisk. Surprisingly heavy.', stackable: false, value: 400, iconUrl: 'https://api.iconify.design/game-icons:scaly-skin.svg' },
+    { id: 'petrifying_eye', name: 'Petrifying Eye', description: 'The eye of a Gaze Fiend. Even severed, its gaze is unsettling.', stackable: false, value: 1000, iconUrl: 'https://api.iconify.design/game-icons:eye-shield.svg' },
+    { id: 'infernal_key_fragment', name: 'Infernal Key Fragment', description: 'A piece of a key that radiates a malevolent heat.', stackable: false, value: 0, iconUrl: 'https://api.iconify.design/game-icons:key.svg', material: 'rune-ember' },
+    { id: 'wraith_talons', name: 'Wraith Talons', description: 'Sharp, ethereal talons that feel cold to the touch.', stackable: false, value: 300, iconUrl: 'https://api.iconify.design/game-icons:bird-claw.svg' },
+    { id: 'ailment_echo', name: 'Ailment Echo', description: 'A crystallized echo of a creature\'s dying scream.', stackable: false, value: 750, iconUrl: 'https://api.iconify.design/game-icons:sound-waves.svg' },
+    { id: 'viscous_orb', name: 'Viscous Orb', description: 'A pulsating orb of thick, gelatinous matter.', stackable: false, value: 600, iconUrl: 'https://api.iconify.design/game-icons:gooey-molecule.svg' },
+    { id: 'flaming_gullet', name: 'Flaming Gullet', description: "The petrified, still-smouldering gullet of an ancient dragon. Can be combined with a Fire-Resistant Shield at level 75 Smithing to create a Dragonfire Shield, or taken to Borin for a fee.", stackable: false, value: 800000, iconUrl: 'https://api.iconify.design/game-icons:beastial-fangs.svg', material: 'rune-ember' },
 ];

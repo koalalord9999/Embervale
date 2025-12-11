@@ -1,5 +1,3 @@
-
-
 import { SkillName, Item } from '../types';
 
 export const SKILL_ICONS: Record<SkillName, string> = {
@@ -108,6 +106,9 @@ export const getIconClassName = (item?: Item | null): string => {
         case 'potion-poison': return 'item-icon-potion-poison';
         case 'potion-restore': return 'item-icon-potion-restore';
         case 'potion-prayer': return 'item-icon-potion-prayer';
+        case 'potion-energy': return 'item-icon-potion-energy';
+        case 'potion-super-energy': return 'item-icon-potion-super-energy';
+        case 'potion-stamina': return 'item-icon-potion-stamina';
         case 'potion-combo': return 'item-icon-potion-combo';
         case 'potion-weak-mining': return 'item-icon-potion-weak-mining';
         case 'potion-mining': return 'item-icon-potion-mining';

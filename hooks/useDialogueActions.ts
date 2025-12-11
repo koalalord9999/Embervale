@@ -39,6 +39,7 @@ interface DialogueActionDependencies {
     ui: ReturnType<typeof useUIState>;
     setWorldState: React.Dispatch<React.SetStateAction<WorldState>>;
     session: ReturnType<typeof useGameSession>;
+    setIsResting: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const useDialogueActions = (deps: DialogueActionDependencies) => {
@@ -165,6 +166,7 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                         { id: 'bronze_arrow', qty: 50 },
                         { id: 'gust_rune', qty: 50 },
                         { id: 'binding_rune', qty: 50 },
+                        { id: 'coins', qty: 250},
                     ];
                     starterItems.forEach(item => inv.modifyItem(item.id, item.qty, true, { bypassAutoBank: true }));
                     addLog("You have completed your training and received a starter pack!");

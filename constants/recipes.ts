@@ -111,6 +111,18 @@ export const SMELTING_RECIPES = [
     { barType: 'runic_bar', level: 80, xp: 50, ingredients: [{ itemId: 'titanium_ore', quantity: 1 }, { itemId: 'coal', quantity: 8 }] },
 ] as const;
 
+export const SPECIAL_SMITHING_RECIPES = [
+    { 
+        itemId: 'dragonfire_shield', 
+        level: 75, 
+        xp: 1800, 
+        ingredients: [
+            { itemId: 'fire_resistant_shield', quantity: 1 }, 
+            { itemId: 'flaming_gullet', quantity: 1 }
+        ] 
+    },
+];
+
 export const COOKING_RECIPES: CookingRecipe[] = [
     // Basic
     { itemId: 'bread', level: 1, xp: 30, ingredients: [{ itemId: 'bread_dough', quantity: 1 }], burntItemId: 'burnt_food',},

@@ -33,6 +33,7 @@ import { frostfangPeaksPois } from './frostfang_peaks';
 import { sunscorchedWastesPois } from './sunscorched_wastes';
 import { barrowOfTheRevenantPois } from './dungeon_barrow';
 import { sunbrightUndergroundCavePois } from './sunbright_underground_cave';
+import { agilityCoursePois } from './agility_courses';
 
 export const POIS: Record<string, POI> = {
     ...tutorialZonePois,
@@ -68,4 +69,5 @@ export const POIS: Record<string, POI> = {
     ...frostfangPeaksPois,
     ...sunscorchedWastesPois,
     ...barrowOfTheRevenantPois,
+    ...agilityCoursePois,
 };

@@ -62,7 +62,6 @@ export type POIActivity =
   | { type: 'spinning_wheel' }
   | { type: 'blimp_travel'; requiredSlayerLevel: number; name: string; }
   | { type: 'slayer_master'; name: string; icon: string; }
-  // FIX: Added optional 'isHoly' property to support special water sources like the one in Sanctity.
   | { type: 'water_source', name: string, isHoly?: boolean }
   | { type: 'milking' }
   | { type: 'windmill' }
@@ -87,6 +86,19 @@ export type POIActivity =
       id: string; // Unique ID for this door, e.g., "meadowdale_house_1"
       name: string; // e.g., "Locked House"
     }
+  | {
+      type: 'agility_shortcut';
+      id: string;
+      name: string;
+      toPoiId: string;
+      level: number;
+      xp: number;
+      baseFailChance: number;
+      failDamage?: { min: number; max: number };
+      failMessage?: string;
+      successMessage?: string;
+    }
+  | { type: 'start_agility_course'; courseId: string; name: string; }
   | BonfireActivity;
 
 export interface POI {

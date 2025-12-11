@@ -1,4 +1,3 @@
-
 import React, { useCallback } from 'react';
 // FIX: Import Equipment type.
 import { InventorySlot, PlayerSkill, SkillName, ActiveCraftingAction, Item, CraftingContext, POIActivity, EquipmentSlot, PlayerQuestState, Spell, Equipment, ActiveBuff, DialogueResponse, DialogueCheckRequirement, WeaponType, EquipmentStats, BonfireActivity } from '../types';
@@ -25,6 +24,7 @@ interface UseItemActionsProps {
     currentPrayer: number;
     maxPrayer: number;
     setCurrentPrayer: (updater: React.SetStateAction<number>) => void;
+    setRunEnergy: React.Dispatch<React.SetStateAction<number>>;
     applyStatModifier: (skill: SkillName, value: number, baseLevelOnConsumption: number) => void;
     addBuff: (buff: Omit<ActiveBuff, 'id' | 'durationRemaining'>) => void;
     curePoison: () => void;
@@ -54,7 +54,6 @@ interface UseItemActionsProps {
     onResponse: (response: DialogueResponse) => void;
     handleDialogueCheck: (requirements: DialogueCheckRequirement[]) => boolean;
     crafting: CraftingHandlers;
-    // FIX: Add missing setEquipment prop to allow modification of equipped items.
     setEquipment: React.Dispatch<React.SetStateAction<Equipment>>;
     navigation: ReturnType<typeof useNavigation>;
 }
@@ -73,8 +72,7 @@ const MULTI_BITE_FOODS: Record<string, string> = {
 };
 
 export const useItemActions = (props: UseItemActionsProps) => {
-    // FIX: Added setEquipment to destructuring.
-    const { addLog, currentHp, maxHp, setCurrentHp, currentPrayer, maxPrayer, setCurrentPrayer, applyStatModifier, setInventory, setEquipment, skills, inventory, activeCraftingAction, setActiveCraftingAction, hasItems, modifyItem, addXp, openCraftingView, itemToUse, setItemToUse, addBuff, curePoison, setMakeXPrompt, startQuest, currentPoiId, playerQuests, isStunned, setActiveDungeonMap, confirmValuableDrops, valuableDropThreshold, ui, equipment, onResponse, handleDialogueCheck, crafting, isBusy, navigation } = props;
+    const { addLog, currentHp, maxHp, setCurrentHp, currentPrayer, maxPrayer, setCurrentPrayer, setRunEnergy, applyStatModifier, setInventory, setEquipment, skills, inventory, activeCraftingAction, setActiveCraftingAction, hasItems, modifyItem, addXp, openCraftingView, itemToUse, setItemToUse, addBuff, curePoison, setMakeXPrompt, startQuest, currentPoiId, playerQuests, isStunned, setActiveDungeonMap, confirmValuableDrops, valuableDropThreshold, ui, equipment, onResponse, handleDialogueCheck, crafting, isBusy, navigation } = props;
     const { setActiveDialogue, setContextMenu } = ui;
     const handleTeleport = useCallback((
         itemSlot: InventorySlot,
@@ -243,7 +241,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
             addLog(`You eat the ${itemData.name}.`);
         }
         if (itemData.consumable.potionEffect) {
-            if (itemId === 'prayer_potion') {
+            if (itemId.startsWith('prayer_potion')) {
                 const prayerSkill = skills.find(s => s.name === SkillName.Prayer);
                 if (prayerSkill) {
                     const prayerLevel = prayerSkill.level;
@@ -259,6 +257,25 @@ export const useItemActions = (props: UseItemActionsProps) => {
                         return newPrayer;
                     });
                 }
+            }
+            const energyPotionMatch = itemId.match(/^energy_potion/);
+            const superEnergyPotionMatch = itemId.match(/^super_energy_potion/);
+            const staminaPotionMatch = itemId.match(/^stamina_potion/);
+
+            if (energyPotionMatch) {
+                setRunEnergy(prev => Math.min(100, prev + 20));
+                addLog('You drink some of the potion and restore 20 run energy.');
+            } else if (superEnergyPotionMatch) {
+                setRunEnergy(prev => Math.min(100, prev + 40));
+                addLog('You drink some of the potion and restore 40 run energy.');
+            } else if (staminaPotionMatch) {
+                setRunEnergy(prev => Math.min(100, prev + 40));
+                addBuff({
+                    type: 'stamina',
+                    value: 0, // value is not used, effect is handled by hooks
+                    duration: 420000, // 7 minutes
+                });
+                addLog('You drink some of the potion, restoring 40 run energy and boosting your stamina for 7 minutes.');
             }
         }
         if (itemData.consumable.statModifiers) {
@@ -318,14 +335,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
             const nextBiteItem = MULTI_BITE_FOODS[itemId];
             
             if (nextBiteItem) {
-                 // If it's a multi-bite item, replace it regardless of stack size (these are typically unstackable)
                  newInv[inventoryIndex] = { itemId: nextBiteItem, quantity: 1 };
-                 if (itemSlot.quantity > 1) {
-                     // Edge case handling: if they somehow have a stack of eatable pies, eject the rest?
-                     // For now, assume non-stackable or consume 1 from stack and replace current slot with bitten version
-                     // This might overwrite the stack if not careful.
-                     // Since pies/cakes are unstackable, this is safe.
-                 }
             } else if (itemData.stackable && itemSlot.quantity > 1) {
                 newInv[inventoryIndex] = { ...itemSlot, quantity: itemSlot.quantity - 1 };
             } else {
@@ -351,7 +361,6 @@ export const useItemActions = (props: UseItemActionsProps) => {
                 } else {
                     const emptySlotIndex = newInv[inventoryIndex] === null ? inventoryIndex : newInv.findIndex(slot => slot === null);
                     if (emptySlotIndex > -1) {
-                         // If we just ate the last bite, replace it with the container
                         newInv[emptySlotIndex] = { itemId: emptyItemId, quantity: 1 };
                     } else {
                         addLog("You drop the empty container as your inventory is full.");
@@ -361,10 +370,10 @@ export const useItemActions = (props: UseItemActionsProps) => {
             return newInv;
         });
 
-    }, [skills, currentHp, maxHp, setCurrentHp, setInventory, addLog, applyStatModifier, modifyItem, addXp, addBuff, inventory, isStunned, curePoison, currentPrayer, maxPrayer, setCurrentPrayer]);
+    }, [skills, currentHp, maxHp, setCurrentHp, setInventory, addLog, applyStatModifier, modifyItem, addXp, addBuff, inventory, isStunned, curePoison, currentPrayer, maxPrayer, setCurrentPrayer, setRunEnergy]);
 
     const handleCurePoisonFromOrb = useCallback(() => {
-        const antiPoisonPotions = ['antipoison_potion', 'super_antipoison'];
+        const antiPoisonPotions = ['antipoison_potion_3', 'antipoison_potion_2', 'antipoison_potion_1', 'super_antipoison_3', 'super_antipoison_2', 'super_antipoison_1'];
         let potionToUse: { itemId: string, index: number } | null = null;
 
         for (const potionId of antiPoisonPotions) {
@@ -485,8 +494,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
             addLog("You can only read this map while inside the dungeon it depicts.");
         }
     }, [currentPoiId, setActiveDungeonMap, addLog]);
-
-    // FIX: Add function definition for handleUseItemOnActivity
+    
     const handleUseItemOnActivity = useCallback((used: { item: InventorySlot; index: number }, activity: POIActivity) => {
         const { item: usedItem } = used;
         const usedItemData = ITEMS[usedItem.itemId];
@@ -595,10 +603,10 @@ export const useItemActions = (props: UseItemActionsProps) => {
         }
 
         if (activity.type === 'npc' && activity.name === 'Reliquary Grinder') {
-            const grindableMap: Record<string, { dustAmount: number, xp: number }> = {
-                'consecrated_bones': { dustAmount: 5, xp: 5 },
-                'consecrated_big_bones': { dustAmount: 20, xp: 20 },
-                'consecrated_dragon_bones': { dustAmount: 100, xp: 100 },
+            const grindableMap: Record<string, { dust: string }> = {
+                'consecrated_bones': { dust: 'sacred_dust' },
+                'consecrated_big_bones': { dust: 'sacred_dust' },
+                'consecrated_dragon_bones': { dust: 'sacred_dust' },
             };
             
             const boneInfo = grindableMap[usedItem.itemId];
@@ -695,6 +703,20 @@ export const useItemActions = (props: UseItemActionsProps) => {
             const targetId = target.item.itemId;
             const usedItemData = ITEMS[usedId];
             const targetItem = ITEMS[targetId];
+
+            const isStaminaCrafting = (usedId === 'agility_paste' && targetId === 'super_energy_potion_3') || (targetId === 'agility_paste' && usedId === 'super_energy_potion_3');
+            if (isStaminaCrafting) {
+                if (herbloreLevel < 51) {
+                    addLog("You need a Herblore level of 51 to make this potion.");
+                    return;
+                }
+                modifyItem('agility_paste', -1, true);
+                modifyItem('super_energy_potion_3', -1, true);
+                modifyItem('stamina_potion_4', 1, false, { bypassAutoBank: true });
+                addXp(SkillName.Herblore, 115);
+                addLog("You mix the agility paste into the super energy potion to create a stamina potion.");
+                return;
+            }
 
             const validMeats: Record<string, number> = {
                 'cooked_crab_meat': 5,
@@ -826,7 +848,6 @@ export const useItemActions = (props: UseItemActionsProps) => {
                 'cooked_tuna': 'uncooked_fish_pie'
             };
             
-            // FIX: Check if one of the items is actually a pie shell before proceeding
             const isPieShellPresent = usedId === 'pie_shell' || targetId === 'pie_shell';
 
             if (isPieShellPresent) {
@@ -1400,7 +1421,7 @@ export const useItemActions = (props: UseItemActionsProps) => {
         } finally {
             setItemToUse(null);
         }
-    }, [skills, inventory, addLog, setActiveCraftingAction, hasItems, modifyItem, addXp, setMakeXPrompt, activeCraftingAction, currentPoiId, openCraftingView, setInventory, setItemToUse, itemToUse, playerQuests, startQuest, equipment, onResponse, handleDialogueCheck, ui, crafting, isBusy, isStunned]);
+    }, [skills, inventory, addLog, setActiveCraftingAction, hasItems, modifyItem, addXp, setMakeXPrompt, activeCraftingAction, currentPoiId, openCraftingView, setInventory, setItemToUse, itemToUse, playerQuests, startQuest, equipment, onResponse, handleDialogueCheck, ui, crafting, isBusy, isStunned, setRunEnergy]);
     
     const handleExamine = useCallback((item: Item) => {
         addLog(`${item.description}`);
@@ -1411,7 +1432,6 @@ export const useItemActions = (props: UseItemActionsProps) => {
         handleBuryBones,
         handleEmptyItem,
         handleUseItemOn,
-        // FIX: Add handleUseItemOnActivity to the returned object
         handleUseItemOnActivity,
         handleDivine,
         handleExamine,

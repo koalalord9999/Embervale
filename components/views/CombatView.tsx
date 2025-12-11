@@ -3,7 +3,6 @@ import { Monster, PlayerSkill, SkillName, Equipment, CombatStance, WeaponType, M
 import { MONSTERS, ITEMS, rollOnLootTable, REGIONS, LootRollResult, getIconClassName, AMMO_TIER_LEVELS, QUESTS, POIS } from '../../constants';
 import Button from '../common/Button';
 import ProgressBar from '../common/ProgressBar';
-// FIX: Changed the import source for `ActiveBuff` from `../../hooks/useCharacter` to `../../types` as it is not exported from the hook.
 import { ActiveBuff } from '../../types';
 import AttackAnimationEngine from '../game/AttackAnimationEngine';
 import { useInventory } from '../../hooks/useInventory';
@@ -20,9 +19,8 @@ interface CombatViewProps {
     setCombatStance: (stance: CombatStance) => void;
     setPlayerHp: React.Dispatch<React.SetStateAction<number>>;
     onCombatEnd: () => void;
-    onFlee: (defeatedIds: string[]) => void;
+    onFleeSuccess: (defeatedIds: string[]) => void;
     addXp: (skill: SkillName, amount: number) => void;
-    // FIX: Standardize addLoot signature to use slotOverrides object.
     addLoot: (itemId: string, quantity: number, quiet?: boolean, slotOverrides?: Partial<Omit<InventorySlot, 'itemId' | 'quantity'>> & { bypassAutoBank?: boolean }) => void;
     onDropLoot: (item: InventorySlot, overridePoiId?: string) => void; // For ground drops
     isAutoBankOn: boolean;
@@ -47,8 +45,10 @@ interface CombatViewProps {
     activePrayers: string[];
     poisonEvent: { damage: number, timestamp: number } | null;
     getEffectiveLevel: (skill: SkillName) => number;
-    // FIX: Explicitly type playerQuests here as it is passed from MainViewController
-    playerQuests?: any[]; 
+    playerQuests?: any[];
+    runEnergy: number;
+    setRunEnergy: React.Dispatch<React.SetStateAction<number>>;
+    playerCombatLevel: number;
 }
 
 interface MonsterStatusEffect {
@@ -330,7 +330,7 @@ const playerAttack = (
     }
 };
 
-const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, playerSkills, playerHp, equipment, combatStance, setCombatStance, setPlayerHp, onCombatEnd, onFlee, addXp, addLoot, onDropLoot, isAutoBankOn, addLog, onPlayerDeath, onKill, onEncounterWin, onConsumeAmmo, activeBuffs, combatSpeedMultiplier, advanceTutorial, autocastSpell, inv, ui, killTrigger, applyStatModifier, isStunned, addBuff, showPlayerHealthNumbers, showEnemyHealthNumbers, showHitsplats, activePrayers, poisonEvent, getEffectiveLevel, playerQuests = [] }) => {
+const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, playerSkills, playerHp, equipment, combatStance, setCombatStance, setPlayerHp, onCombatEnd, onFleeSuccess, addXp, addLoot, onDropLoot, isAutoBankOn, addLog, onPlayerDeath, onKill, onEncounterWin, onConsumeAmmo, activeBuffs, combatSpeedMultiplier, advanceTutorial, autocastSpell, inv, ui, killTrigger, applyStatModifier, isStunned, addBuff, showPlayerHealthNumbers, showEnemyHealthNumbers, showHitsplats, activePrayers, poisonEvent, getEffectiveLevel, playerQuests = [], runEnergy, setRunEnergy, playerCombatLevel }) => {
     const [currentMonsterIndex, setCurrentMonsterIndex] = useState(0);
     const currentInstanceId = monsterQueue[currentMonsterIndex];
     const monsterId = currentInstanceId.split(':')[1];
@@ -791,7 +791,6 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
         
         let playerDamage = Math.min(potentialPlayerDamage, monsterHp);
         
-        // FIX: Clamp magic damage to monster HP to prevent overkill (e.g. from buffs)
         playerDamage = Math.min(playerDamage, monsterHp);
         
         const magicBuff = activeBuffs.find(b => b.type === 'magic_damage_boost');
@@ -944,7 +943,6 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
 
                             let playerDamage = Math.min(potentialDamage, monsterHp);
                             
-                            // FIX: Clamp autocast magic damage to monster HP to prevent overkill
                             playerDamage = Math.min(playerDamage, monsterHp);
 
                             const baseMaxHit = spell.maxHit ?? 0;
@@ -1082,7 +1080,6 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                                 break;
                             case 'magic_bypass_defence':
                                 isMagicAttack = true;
-                                // Use EFFECTIVE defence for resistance
                                 const effectiveDefence = getEffectiveLevel(SkillName.Magic);
                                 const monsterAttackStat = monster.magic ?? monster.attack;
                                 const monsterAccuracy = calculateAccuracy(monsterAttackStat, effectiveDefence);
@@ -1139,7 +1136,6 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                             monsterDamage = Math.floor(Math.random() * (dragonfireMaxHit + 1));
                             addLog(`The ${monster.name} unleashes a blast of dragonfire!`);
                             
-                            // Check for antifire potion buff specifically
                             const antiFireBuff = activeBuffs.find(b => b.type === 'antifire');
                             const dragonfireResistance = equipment.shield ? ITEMS[equipment.shield.itemId]?.equipment?.resistsDragonfire : undefined;
 
@@ -1148,12 +1144,9 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                                 reductionPercentage += (antiFireBuff.value / 100);
                             }
                             if (dragonfireResistance) {
-                                // dragonfireResistance is damage multiplier (e.g., 0.2 means take 20% damage, resist 80%)
-                                // Convert to reduction percentage: 1 - 0.2 = 0.8 (80% reduction)
                                 reductionPercentage += (1 - dragonfireResistance);
                             }
                             
-                            // Cap reduction at 100%
                             reductionPercentage = Math.min(1, reductionPercentage);
                             
                             if (reductionPercentage >= 1) {
@@ -1314,7 +1307,6 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
             const damageToDeal = poison.damagePerTick;
             if (damageToDeal <= 0) return;
     
-            // Apply damage
             setMonsterHp(currentHp => {
                 if (currentHp <= 0) return 0;
                 const newHp = Math.max(0, currentHp - damageToDeal);
@@ -1329,7 +1321,6 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
                 return newHp;
             });
     
-            // Update status for next tick
             setMonsterStatus(prevStatus => {
                 const currentPoison = prevStatus.find(s => s.type === 'poison');
                 if (!currentPoison) return prevStatus;
@@ -1371,10 +1362,37 @@ const CombatView: React.FC<CombatViewProps> = ({ monsterQueue, isMandatory, play
 
     const handleFlee = useCallback(() => {
         if (isStunned) { addLog("You are stunned and cannot flee."); return; }
-        setQueuedSpell(null);
-        setLastSpellCast(null);
-        onFlee(defeatedInThisEncounter);
-    }, [onFlee, isStunned, defeatedInThisEncounter]);
+        if (runEnergy < 10) {
+            addLog("You don't have enough run energy to flee.");
+            return;
+        }
+    
+        setRunEnergy(re => re - 10);
+    
+        const agilityLevel = playerSkills.find(s => s.name === SkillName.Agility)?.level ?? 1;
+        const monsterCombatLevel = monster?.level ?? 1;
+    
+        let successChance = 40 + ((agilityLevel - monsterCombatLevel / 2) * 0.75);
+        successChance = Math.max(10, Math.min(95, successChance));
+    
+        if (Math.random() * 100 < successChance) {
+            // Success
+            const successXp = Math.min(20, Math.floor(5 + (monsterCombatLevel / playerCombatLevel) * 4));
+            addXp(SkillName.Agility, successXp);
+            addLog(`You successfully escape! (+${successXp} Agility XP)`);
+            setQueuedSpell(null);
+            setLastSpellCast(null);
+            onFleeSuccess(defeatedInThisEncounter);
+        } else {
+            // Failure
+            addXp(SkillName.Agility, 2);
+            addLog("You fail to escape! (+2 Agility XP)");
+            const gameTickMs = 600 / combatSpeedMultiplier;
+            // Stun for one attack turn
+            const stunDuration = playerWeapon.speed * gameTickMs;
+            addBuff({ type: 'stun', value: 0, duration: stunDuration });
+        }
+    }, [isStunned, runEnergy, setRunEnergy, playerSkills, monster, addLog, addXp, playerCombatLevel, onFleeSuccess, defeatedInThisEncounter, combatSpeedMultiplier, playerWeapon.speed, addBuff]);
 
     const monsterIconClass = useMemo(() => {
         if (monster?.id === 'arcane_wyvern' && currentElementalWeakness) {

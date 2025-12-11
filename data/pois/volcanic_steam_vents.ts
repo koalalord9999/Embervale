@@ -1,3 +1,4 @@
+
 import { POI, SkillName, ToolType } from '../../types';
 
 export const volcanicSteamVentsPois: Record<string, POI> = {
@@ -23,7 +24,9 @@ export const volcanicSteamVentsPois: Record<string, POI> = {
         name: 'Fissure Crossing',
         description: 'A deep fissure cuts through the plains, bridged by a natural formation of obsidian. Hot steam rises from the depths.',
         connections: ['vsv_ashfall_plains', 'vsv_obsidian_fields'],
-        activities: [],
+        activities: [
+            { type: 'start_agility_course', name: 'Start Brimstone Run (Lvl 90)', courseId: 'volcanic_brimstone_run' }
+        ],
         regionId: 'volcanic_steam_vents', x: -42, y: 1100
     },
     vsv_obsidian_fields: {

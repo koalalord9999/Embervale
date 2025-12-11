@@ -1,4 +1,3 @@
-
 import { POI, SkillName, ToolType } from '../../types';
 
 export const theVerdantFieldsPois: Record<string, POI> = {
@@ -48,6 +47,7 @@ export const theVerdantFieldsPois: Record<string, POI> = {
         activities: [
             { type: 'spinning_wheel' },
             { type: 'thieving_lockpick', id: 'tvf_barn_chest_1', targetName: 'Old Hay-Filled Chest', lootTableId: 'thieving_house_chest_dusty' },
+            { type: 'start_agility_course', name: 'Start Verdant Fields Traverse (Lvl 25)', courseId: 'verdant_fields_traverse' },
         ],
         regionId: 'the_verdant_fields',
         x: 800, y: 1140

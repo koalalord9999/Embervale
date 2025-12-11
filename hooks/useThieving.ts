@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Monster, SkillName, PlayerSkill, InventorySlot, Equipment, Item, POIActivity, ActiveBuff, ThievingContainerState, WorldState } from '../types';
 import { ITEMS, rollOnLootTable, LootRollResult, THIEVING_POCKET_TARGETS, THIEVING_CONTAINER_TARGETS, THIEVING_STALL_TARGETS } from '../constants';
@@ -28,6 +27,7 @@ interface ThievingDependencies {
     navigation: ReturnType<typeof useNavigation>;
     worldState: WorldState;
     onItemDropped: (item: InventorySlot, overridePoiId?: string) => void;
+    setIsResting: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const useThieving = (
@@ -65,7 +65,8 @@ export const useThieving = (
     
 
     const handlePickpocket = useCallback((target: { name: string; pickpocket: PickpocketData }, targetInstanceId: string) => {
-        const { isStunned, addLog, skills, inventory, modifyItem, addXp, addBuff, setPlayerHp, currentHp, onPlayerDeath, isInCombat } = depsRef.current;
+        const { isStunned, addLog, skills, inventory, modifyItem, addXp, addBuff, setPlayerHp, currentHp, onPlayerDeath, isInCombat, setIsResting } = depsRef.current;
+        setIsResting(false);
         if (isStunned || activeTimeoutRef.current || isInCombat) return;
 
         const targetData = THIEVING_POCKET_TARGETS[target.pickpocket.lootTableId];
@@ -108,7 +109,8 @@ export const useThieving = (
     }, []);
 
     const handleLockpick = useCallback((activity: LockpickActivity) => {
-        const { isStunned, addLog, skills, inventory, modifyItem, addXp, isInCombat, worldState, setWorldState } = depsRef.current;
+        const { isStunned, addLog, skills, inventory, modifyItem, addXp, isInCombat, setIsResting } = depsRef.current;
+        setIsResting(false);
         if (isStunned || activeTimeoutRef.current || isInCombat) return;
     
         const containerData = THIEVING_CONTAINER_TARGETS[activity.lootTableId];
@@ -123,13 +125,19 @@ export const useThieving = (
             return;
         }
     
-        const bestLockpick = inventory.map(s => s ? ITEMS[s.itemId] : null).filter((item): item is Item => !!(item && item.lockpick)).sort((a, b) => (b.lockpick!.power) - (a.lockpick!.power))[0];
-        
-        // Only check for lockpick if the container is NOT unlocked and NOT a "dusty" tier (level <= 12)
-        // The 'unlocked' flag is used for things like Coin Purses.
-        if (!containerData.unlocked && !bestLockpick && !activity.lootTableId.includes('_dusty')) {
-            addLog("You need a lockpick to attempt this.");
-            return;
+        let bestLockpick: Item | undefined = undefined;
+        const isLockpickRequired = !containerData.unlocked;
+
+        if (isLockpickRequired) {
+            bestLockpick = inventory
+                .filter((slot): slot is InventorySlot => !!(slot && ITEMS[slot.itemId]?.lockpick && !slot.noted))
+                .map(slot => ITEMS[slot.itemId])
+                .sort((a, b) => (b.lockpick!.power) - (a.lockpick!.power))[0];
+            
+            if (!bestLockpick) {
+                addLog("You need a lockpick to attempt this.");
+                return;
+            }
         }
     
         if (containerData.unlocked) {
@@ -163,7 +171,6 @@ export const useThieving = (
                 } else {
                     const isPilfering = worldState.activePilferingSession && activity.id.startsWith('pilfer_');
                     
-                    // Strongboxes get 5 rolls
                     const isStrongbox = activity.lootTableId.includes('_strongbox_');
                     const isCabinet = activity.lootTableId.includes('_cabinet_');
                     const isMedicine = activity.lootTableId.includes('_medicine_');
@@ -195,23 +202,17 @@ export const useThieving = (
                                 canAdd = currentInv.some(slot => slot?.itemId === loot.itemId && !!slot.noted === !!loot.noted) || currentInv.some(slot => slot === null);
                             } else {
                                 const freeSlots = currentInv.filter(slot => slot === null).length;
-                                // Since we are processing loots one by one, this check is approximate for the batch
-                                // But modifyItem handles adding. If it fails, it fails silently. 
-                                // So we check first.
-                                canAdd = freeSlots > 0; // Simple check, not perfect for multiple unstackables in one go
+                                canAdd = freeSlots > 0;
                             }
 
-                            // Try to add to inventory
                             if (canAdd) {
                                 modifyItem(loot.itemId, loot.quantity, false, { bypassAutoBank: true, noted: loot.noted });
                             } else {
-                                // Drop on ground if inventory full
                                 onItemDropped({ itemId: loot.itemId, quantity: loot.quantity, noted: loot.noted }, currentPoiId);
                                 log(`Your inventory is full. The ${itemData.name} falls to the floor.`);
                             }
                         });
                     } else if (isPilfering) {
-                        // Fallback coins logic (simplified for brevity, covers main types)
                          const fallbackCoins: Record<string, number> = {
                             'thieving_house_cabinet_dusty': 5, 'thieving_house_chest_dusty': 20,
                             'thieving_house_cabinet_locked': 30, 'thieving_house_chest_locked': 100,
@@ -220,7 +221,6 @@ export const useThieving = (
                             'thieving_house_cabinet_gilded': 400, 'thieving_house_chest_gilded': 1000,
                             'thieving_house_cabinet_royal': 800, 'thieving_house_chest_royal': 2000,
                         };
-                        // Add strongbox fallback logic if needed, but loot tables should handle it.
                         
                         const coinAmount = fallbackCoins[activity.lootTableId];
                         if (coinAmount) {
@@ -286,7 +286,8 @@ export const useThieving = (
     }, []);
 
     const handleStealFromStall = useCallback((activity: StallActivity) => {
-        const { isStunned, addLog, skills, inventory, modifyItem, addXp, addBuff, setPlayerHp, currentHp, onPlayerDeath, isInCombat } = depsRef.current;
+        const { isStunned, addLog, skills, inventory, modifyItem, addXp, addBuff, setPlayerHp, currentHp, onPlayerDeath, isInCombat, setIsResting } = depsRef.current;
+        setIsResting(false);
         if (isStunned || activeTimeoutRef.current || isInCombat) return;
 
         const stallData = THIEVING_STALL_TARGETS[activity.lootTableId];

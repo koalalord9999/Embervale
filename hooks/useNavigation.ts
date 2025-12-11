@@ -1,10 +1,13 @@
 import { useMemo, useCallback } from 'react';
-import { REGIONS } from '../constants';
+import { REGIONS, ITEMS } from '../constants';
 import { POIS } from '../data/pois';
 import { useUIState } from './useUIState';
 import { useSkilling } from './useSkilling';
 import { useInteractQuest } from './useInteractQuest';
 import { useGameSession } from './useGameSession';
+import { ActiveBuff, Equipment, Item } from '../types';
+// FIX: Import SKILL_ICONS to resolve reference error.
+import { SKILL_ICONS } from '../constants';
 
 interface NavigationDependencies {
     session: ReturnType<typeof useGameSession>;
@@ -17,10 +20,29 @@ interface NavigationDependencies {
     skilling: ReturnType<typeof useSkilling>;
     interactQuest: ReturnType<typeof useInteractQuest>;
     isStunned: boolean;
+    isRunToggled: boolean;
+    runEnergy: number;
+    setRunEnergy: React.Dispatch<React.SetStateAction<number>>;
+    setIsTraveling: React.Dispatch<React.SetStateAction<boolean>>;
+    setIsResting: React.Dispatch<React.SetStateAction<boolean>>;
+    activeBuffs: ActiveBuff[];
+    equipment: Equipment;
 }
 
 export const useNavigation = (deps: NavigationDependencies) => {
-    const { session, lockedPois, clearedSkillObstacles, addLog, isBusy, isInCombat, ui, skilling, interactQuest, isStunned } = deps;
+    const { session, lockedPois, clearedSkillObstacles, addLog, isBusy, isInCombat, ui, skilling, interactQuest, isStunned, isRunToggled, runEnergy, setRunEnergy, setIsTraveling, setIsResting, activeBuffs, equipment } = deps;
+
+    const isAgilitySetEffectActive = useMemo(() => {
+        const requiredItems = ['weightless_hood', 'weightless_tunic', 'weightless_trousers', 'weightless_gloves', 'weightless_boots'];
+        const isSetEquipped = requiredItems.every(itemId => {
+            const itemData = ITEMS[itemId] as Item | undefined;
+            if (!itemData?.equipment) return false;
+            const slotKey = itemData.equipment.slot.toLowerCase() as keyof Equipment;
+            return equipment[slotKey]?.itemId === itemId;
+        });
+        const isStaminaActive = activeBuffs.some(b => b.type === 'stamina');
+        return isSetEquipped || isStaminaActive;
+    }, [equipment, activeBuffs]);
 
     const reachablePois = useMemo(() => {
         const queue: string[] = [];
@@ -70,6 +92,7 @@ export const useNavigation = (deps: NavigationDependencies) => {
     }, [ui, skilling, interactQuest, session]);
 
     const handleNavigate = useCallback((poiId: string) => {
+        setIsResting(false);
         if (isStunned) {
             addLog("You are stunned and cannot move.");
             return;
@@ -86,7 +109,21 @@ export const useNavigation = (deps: NavigationDependencies) => {
         const isAdjacent = POIS[session.currentPoiId]?.connections.includes(poiId);
 
         if (isAdjacent) {
-            navigateToPoi(poiId);
+            const cost = isAgilitySetEffectActive ? 1 : 5;
+            if (isRunToggled && runEnergy >= cost) {
+                setRunEnergy(re => re - cost);
+                navigateToPoi(poiId);
+            } else {
+                if (isRunToggled && runEnergy < cost) {
+                    addLog("You don't have enough run energy.");
+                }
+                setIsTraveling(true);
+                addLog("You begin walking to the next area...");
+                setTimeout(() => {
+                    navigateToPoi(poiId);
+                    setIsTraveling(false);
+                }, 1800);
+            }
         } else if (poiId !== session.currentPoiId) {
             if (reachablePois.includes(poiId)) {
                 addLog("You can't get there from here. You must travel to an adjacent location first.");
@@ -94,7 +131,7 @@ export const useNavigation = (deps: NavigationDependencies) => {
                 addLog("You can't get there from here.");
             }
         }
-    }, [addLog, isInCombat, isBusy, reachablePois, navigateToPoi, session.currentPoiId, isStunned]);
+    }, [addLog, isInCombat, isBusy, reachablePois, navigateToPoi, session.currentPoiId, isStunned, isRunToggled, runEnergy, setRunEnergy, setIsTraveling, setIsResting, isAgilitySetEffectActive]);
 
     const handleForcedNavigate = useCallback((poiId: string) => {
         if (isStunned) {
@@ -113,9 +150,77 @@ export const useNavigation = (deps: NavigationDependencies) => {
         navigateToPoi(poiId);
     }, [isInCombat, isBusy, addLog, navigateToPoi, ui, isStunned]);
 
+    const findShortestPath = useCallback((startId: string, endId: string): string[] | null => {
+        if (startId === endId) return [startId];
+    
+        const queue: { id: string; path: string[] }[] = [{ id: startId, path: [startId] }];
+        const visited = new Set<string>([startId]);
+    
+        while (queue.length > 0) {
+            const { id: currentId, path: currentPath } = queue.shift()!;
+            const currentPoi = POIS[currentId];
+    
+            if (!currentPoi) continue;
+    
+            for (const neighborId of currentPoi.connections) {
+                if (neighborId === endId) {
+                    return [...currentPath, neighborId];
+                }
+    
+                if (!visited.has(neighborId)) {
+                    visited.add(neighborId);
+                    queue.push({ id: neighborId, path: [...currentPath, neighborId] });
+                }
+            }
+        }
+    
+        return null; // No path found
+    }, []);
+
+    const handleFastTravel = useCallback((destinationPoiId: string) => {
+        // FIX: Replaced undefined `char.isStunned` with `isStunned` from destructured dependencies.
+        if (isBusy || isInCombat || isStunned) {
+            addLog("You can't travel right now.");
+            return;
+        }
+
+        const path = findShortestPath(session.currentPoiId, destinationPoiId);
+
+        if (!path || path.length <= 1) {
+            return; // No travel needed or no path found
+        }
+
+        const hops = path.length - 1;
+        const costPerHop = isAgilitySetEffectActive ? 5 : 20;
+        const energyCost = hops * costPerHop;
+        const travelTime = hops * 200; // in ms
+
+        if (runEnergy < energyCost) {
+            addLog(`You don't have enough run energy to travel that far (Cost: ${energyCost}).`);
+            return;
+        }
+
+        ui.closeAllModals();
+
+        ui.setActiveSingleAction({
+            title: "Fast Traveling...",
+            iconUrl: SKILL_ICONS.Agility,
+            iconClassName: 'filter invert',
+            startTime: Date.now(),
+            duration: travelTime,
+            onComplete: () => {
+                setRunEnergy(re => re - energyCost);
+                handleForcedNavigate(destinationPoiId);
+            }
+        });
+
+    }, [isBusy, isInCombat, isStunned, runEnergy, findShortestPath, session.currentPoiId, addLog, ui, isAgilitySetEffectActive, setRunEnergy, handleForcedNavigate]);
+
     return {
         reachablePois,
         handleNavigate,
         handleForcedNavigate,
+        findShortestPath,
+        handleFastTravel,
     };
 };

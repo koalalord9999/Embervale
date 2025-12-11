@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { Spell, SkillName, InventorySlot, WeaponType } from '../types';
 import { useCharacter } from './useCharacter';
@@ -15,6 +14,8 @@ interface SpellcastingDependencies {
     ui: ReturnType<typeof useUIState>;
     isStunned: boolean;
     combatSpeedMultiplier: number;
+    // FIX: Add setIsResting to dependencies
+    setIsResting: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const ENCHANTMENT_MAP: Record<string, string> = {
@@ -36,7 +37,8 @@ const ENCHANTMENT_MAP: Record<string, string> = {
 };
 
 export const useSpellcasting = (deps: SpellcastingDependencies) => {
-    const { char, inv, addLog, navigation, ui, isStunned, combatSpeedMultiplier } = deps;
+    // FIX: Destructure setIsResting from dependencies
+    const { char, inv, addLog, navigation, ui, isStunned, combatSpeedMultiplier, setIsResting } = deps;
 
     const getRunesNeeded = useCallback((spell: Spell): {itemId: string, quantity: number}[] => {
         const equippedStaff = inv.equipment.weapon ? ITEMS[inv.equipment.weapon.itemId] : null;
@@ -47,6 +49,7 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
     // Note: This function is primarily handled by useSpellActions for inventory interactions.
     // We keep it here for completeness if called directly, but ensure it respects cooldowns if used.
     const onSpellOnItem = useCallback((spell: Spell, target: { item: InventorySlot, index: number }) => {
+        setIsResting(false);
         if (Date.now() < char.globalActionCooldown) {
              return;
         }
@@ -100,7 +103,7 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
             char.setGlobalActionCooldown(Date.now() + cooldownMs);
         }
 
-    }, [char, inv, addLog, ui, getRunesNeeded]);
+    }, [char, inv, addLog, ui, getRunesNeeded, setIsResting]);
 
     const onCastSpell = useCallback((spell: Spell) => {
         if (isStunned) {
@@ -111,6 +114,10 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
         // Check global cooldown
         if (Date.now() < char.globalActionCooldown) {
              return;
+        }
+
+        if (!ui.isSelectingAutocastSpell) {
+            setIsResting(false);
         }
 
         // Check if enhancement buff is already active
@@ -181,7 +188,7 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
         runesNeeded.forEach(rune => inv.modifyItem(rune.itemId, -rune.quantity, true));
         char.addXp(SkillName.Magic, spell.xp);
     
-        // Set Cooldown using fixed tick time
+        // Set Cooldown using fixed tick time (600ms)
         const tickMs = 600;
         const cooldownMs = (spell.castTime ?? 5) * tickMs;
         char.setGlobalActionCooldown(Date.now() + cooldownMs);
@@ -251,7 +258,7 @@ export const useSpellcasting = (deps: SpellcastingDependencies) => {
             addLog(`You cast ${spell.name}.`);
         }
     
-    }, [char, addLog, inv, navigation, ui, isStunned, getRunesNeeded]);
+    }, [char, addLog, inv, navigation, ui, isStunned, getRunesNeeded, setIsResting]);
 
     return { onCastSpell, onSpellOnItem };
 };

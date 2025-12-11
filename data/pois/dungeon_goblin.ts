@@ -1,4 +1,3 @@
-
 import { POI, SkillName } from '../../types';
 
 export const goblinDungeonPois: Record<string, POI> = {
@@ -63,9 +62,22 @@ export const goblinDungeonPois: Record<string, POI> = {
     warrens_pitfall_chamber: {
         id: 'warrens_pitfall_chamber',
         name: "The Rickety Bridge",
-        description: "A crude wooden plank bridges a dark, seemingly bottomless pit. Cold air rises from the depths.",
+        description: "A crude wooden plank bridges a dark, seemingly bottomless pit. Cold air rises from the depths. A sturdy-looking rope hangs nearby.",
         connections: ['warrens_tunnel_A', 'warrens_tunnel_C', 'warrens_loop_passage'],
-        activities: [],
+        activities: [
+            {
+                type: 'agility_shortcut',
+                id: 'warrens_rope_swing',
+                name: 'Swing Across on Rope (Lvl 15)',
+                toPoiId: 'warrens_tunnel_C',
+                level: 15,
+                xp: 20,
+                baseFailChance: 40,
+                failDamage: { min: 1, max: 2 },
+                failMessage: "Your grip slips and you slam into the rock wall.",
+                successMessage: "You swing across the chasm like a seasoned adventurer."
+            }
+        ],
         regionId: 'goblin_dungeon',
         x: 1740, y: 940
     },

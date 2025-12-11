@@ -77,8 +77,8 @@ export const meadowdalePois: Record<string, POI> = {
     east_meadow_street: {
         id: 'east_meadow_street',
         name: 'East Meadow Street',
-        description: 'The eastern road of Meadowdale, leading past the smithy and the local inn.',
-        connections: ['meadowdale_east_gate', 'meadowdale_square', 'meadowdale_smithy', 'the_rusty_flagon'],
+        description: 'The eastern road of Meadowdale, leading past the smithy and the local inn. A small alley leads to a rooftop access point.',
+        connections: ['meadowdale_east_gate', 'meadowdale_square', 'meadowdale_smithy', 'the_rusty_flagon', 'meadowdale_rooftop_access'],
         activities: [
             { type: 'npc', name: 'Man', icon: 'https://api.iconify.design/game-icons:person.svg', dialogue: { start: { npcName: 'Man', npcIcon: 'https://api.iconify.design/game-icons:person.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man', pickpocket: { lootTableId: 'pickpocket_man_woman_table' } },
         ],

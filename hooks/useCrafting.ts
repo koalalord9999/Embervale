@@ -1,7 +1,7 @@
 
 import React, { useCallback, useEffect, useRef } from 'react';
 import { PlayerSkill, SkillName, InventorySlot, ActiveCraftingAction, Equipment, WorldState } from '../types';
-import { ITEMS, SMITHING_RECIPES, COOKING_RECIPES, INVENTORY_CAPACITY, CRAFTING_RECIPES, FLETCHING_RECIPES, GEM_CUTTING_RECIPES, SPINNING_RECIPES, HERBLORE_RECIPES, JEWELRY_CRAFTING_RECIPES, DOUGH_RECIPES, RUNECRAFTING_RECIPES, FIREMAKING_RECIPES } from '../constants';
+import { ITEMS, SMITHING_RECIPES, COOKING_RECIPES, INVENTORY_CAPACITY, CRAFTING_RECIPES, FLETCHING_RECIPES, GEM_CUTTING_RECIPES, SPINNING_RECIPES, HERBLORE_RECIPES, JEWELRY_CRAFTING_RECIPES, DOUGH_RECIPES, RUNECRAFTING_RECIPES, FIREMAKING_RECIPES, SPECIAL_SMITHING_RECIPES } from '../constants';
 import { POIS } from '../data/pois';
 
 interface UseCraftingProps {
@@ -28,12 +28,13 @@ interface UseCraftingProps {
     isInCombat: boolean;
     currentPrayer: number;
     setCurrentPrayer: (updater: React.SetStateAction<number>) => void;
+    setIsResting: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 type BarType = 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'silver_bar' | 'gold_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar';
 
 export const useCrafting = (props: UseCraftingProps) => {
-    const { skills, hasItems, addLog, setActiveCraftingAction, inventory, modifyItem, addXp, checkQuestProgressOnSpin, checkQuestProgressOnSmith, checkQuestProgressOnOffer, activeCraftingAction, advanceTutorial, closeCraftingView, setWindmillFlour, equipment, setEquipment, worldState, setWorldState, onCreateBonfire, onRefreshBonfire, isInCombat, currentPrayer, setCurrentPrayer } = props;
+    const { skills, hasItems, addLog, setActiveCraftingAction, inventory, modifyItem, addXp, checkQuestProgressOnSpin, checkQuestProgressOnSmith, checkQuestProgressOnOffer, activeCraftingAction, advanceTutorial, closeCraftingView, setWindmillFlour, equipment, setEquipment, worldState, setWorldState, onCreateBonfire, onRefreshBonfire, isInCombat, currentPrayer, setCurrentPrayer, setIsResting } = props;
 
     const completeCraftingItem = useCallback((action: ActiveCraftingAction): { success: boolean; wasItemMade: boolean; logMessage?: string } => {
         let recipe: any;
@@ -70,6 +71,17 @@ export const useCrafting = (props: UseCraftingProps) => {
         }
 
         switch(action.recipeType) {
+            case 'smithing-special':
+                recipe = SPECIAL_SMITHING_RECIPES.find(r => r.itemId === action.recipeId);
+                if (recipe) {
+                    if (!inventory.some(i => i && i.itemId === 'hammer')) {
+                        return { success: false, wasItemMade: false, logMessage: "You need a hammer to continue smithing." };
+                    }
+                    ingredients = recipe.ingredients;
+                    xp = { skill: SkillName.Smithing, amount: recipe.xp };
+                    levelReq = { skill: SkillName.Smithing, level: recipe.level };
+                }
+                break;
             case 'paste-making': {
                 if (!hasItems([{ itemId: 'anointing_oil', quantity: 1 }, { itemId: 'sacred_dust', quantity: 1 }])) {
                     return { success: false, wasItemMade: false, logMessage: "You ran out of ingredients." };
@@ -113,8 +125,6 @@ export const useCrafting = (props: UseCraftingProps) => {
                 if (prayerCost === undefined) {
                     return { success: false, wasItemMade: false, logMessage: "Error: Prayer cost not defined for consecration." };
                 }
-                // The check for total prayer points happens in useItemActions before the loop starts.
-                // We re-check here on each iteration in case of other drains.
                 if (currentPrayer < prayerCost) {
                     return { success: false, wasItemMade: false, logMessage: "You don't have enough prayer points to continue." };
                 }
@@ -160,7 +170,6 @@ export const useCrafting = (props: UseCraftingProps) => {
                  recipe = DOUGH_RECIPES.find(r => r.itemId === action.recipeId);
                  if (recipe) {
                      ingredients = recipe.ingredients;
-                     // Dough making doesn't usually give XP in this game's config, but we follow the recipe.
                      xp = { skill: SkillName.Cooking, amount: recipe.xp ?? 0 };
                      levelReq = { skill: SkillName.Cooking, level: recipe.level ?? 1 };
                  }
@@ -237,7 +246,9 @@ export const useCrafting = (props: UseCraftingProps) => {
                     ingredients = [{itemId: recipe.barType, quantity: recipe.barsRequired}];
                     xp = { skill: SkillName.Smithing, amount: recipe.xp };
                     levelReq = { skill: SkillName.Smithing, level: recipe.level };
-                    if (ITEMS[action.recipeId].stackable) {
+                    if (action.recipeId.includes('arrowtips')) {
+                        product.quantity = 15;
+                    } else if (action.recipeId.includes('bolts')) {
                         product.quantity = 10;
                     }
                 }
@@ -399,17 +410,14 @@ export const useCrafting = (props: UseCraftingProps) => {
                     modifyItem(recipe.itemId, 1, true, { bypassAutoBank: true });
                     addXp(SkillName.Cooking, recipe.xp);
                     
-                    // --- ADD CONTAINER RETURN LOGIC ---
                     if (recipe.itemId === 'cake') {
                         modifyItem('cake_tin', 1, false, { bypassAutoBank: true });
                     } else if (['berry_pie', 'apple_pie', 'meat_pie', 'fish_pie'].includes(recipe.itemId)) {
                         modifyItem('pie_dish', 1, false, { bypassAutoBank: true });
                     }
-                    // ----------------------------------
 
                 } else {
                     modifyItem(recipe.burntItemId, 1, true, { bypassAutoBank: true });
-                    // No xp for burning.
                 }
                 return { success: true, wasItemMade: true };
             }
@@ -454,7 +462,6 @@ export const useCrafting = (props: UseCraftingProps) => {
             slotsGained = product.quantity;
         }
 
-        // Account for empty containers being returned
         for (const ing of ingredients) {
             const itemData = ITEMS[ing.itemId];
             if (itemData?.emptyable && !productData.id.includes('potion')) {
@@ -497,7 +504,6 @@ export const useCrafting = (props: UseCraftingProps) => {
                     modifyItem(ing.itemId, -ing.quantity, true);
         
                     const productData = ITEMS[action.recipeId];
-                    // Don't return an empty container if the product is a potion.
                     if (itemData?.emptyable && !productData.id.includes('potion')) {
                         modifyItem(itemData.emptyable.emptyItemId, ing.quantity, true, { bypassAutoBank: true });
                     }
@@ -589,12 +595,10 @@ export const useCrafting = (props: UseCraftingProps) => {
                 nextAction.successfulQuantity = (nextAction.successfulQuantity ?? 0) + 1;
             } else {
                 if (activeCraftingAction.recipeType === 'firemaking-light') {
-                    // This was a failure to light, so we just try again
                     nextAction.startTime = Date.now();
                     setActiveCraftingAction(nextAction);
-                    return; // Return to re-trigger the effect with the new startTime
+                    return;
                 } else {
-                    // Other actions that "fail" but still consume items (like burning food or failing to smelt iron) still count as a completed attempt.
                     nextAction.completedQuantity++;
                 }
             }
@@ -606,7 +610,7 @@ export const useCrafting = (props: UseCraftingProps) => {
                         addLog(`You milled ${successfulCount} wheat and added it to the hopper.`);
                     }
                     setActiveCraftingAction(null);
-                    return; // Early return for special case
+                    return;
                 }
 
                 if (activeCraftingAction.recipeType === 'paste-making') {
@@ -629,7 +633,6 @@ export const useCrafting = (props: UseCraftingProps) => {
                         let totalItemsMade = successfulCount;
                         const action = activeCraftingAction;
 
-                        // Check for recipes that produce items in batches
                         const batchRecipes = [
                             'fletching-carve', 'fletching-headless', 'fletching-tip', 'fletching-feather',
                             'smithing-item'
@@ -649,7 +652,7 @@ export const useCrafting = (props: UseCraftingProps) => {
                         const quantityText = (finalItem.doseable && finalItem.initialDoses && finalItem.initialDoses > 1) ? "" : `${totalItemsMade.toLocaleString()}x `;
                         const logMessageText = (finalItem.doseable && finalItem.initialDoses && finalItem.initialDoses > 1 && successfulCount === 1) ? `You finished making a ${finalItem.name}.` : `You finished making ${quantityText}${finalItem.name}.`;
                         addLog(logMessageText);
-                    } else if (activeCraftingAction.recipeType !== 'dough-making' && activeCraftingAction.recipeType !== 'firemaking-stoke') { // Don't log failure for instant/continuous actions
+                    } else if (activeCraftingAction.recipeType !== 'dough-making' && activeCraftingAction.recipeType !== 'firemaking-stoke') {
                         addLog(`You failed to make any ${finalItem.name}.`);
                     }
                 }
@@ -672,6 +675,7 @@ export const useCrafting = (props: UseCraftingProps) => {
         duration: number,
         payload?: ActiveCraftingAction['payload']
     ) => {
+        setIsResting(false);
         if (isInCombat) {
             addLog("You cannot do that while in combat.");
             return;
@@ -686,7 +690,7 @@ export const useCrafting = (props: UseCraftingProps) => {
             duration,
             payload,
         });
-    }, [isInCombat, addLog, setActiveCraftingAction]);
+    }, [isInCombat, addLog, setActiveCraftingAction, setIsResting]);
 
     const handleCrafting = useCallback((itemId: string, quantity: number) => {
         createTimedAction(itemId, 'crafting', quantity, 1800);
@@ -714,7 +718,9 @@ export const useCrafting = (props: UseCraftingProps) => {
     }, [createTimedAction]);
 
     const handleSmithItem = useCallback((itemId: string, quantity: number) => {
-        createTimedAction(itemId, 'smithing-item', quantity, 1800);
+        const isSpecial = SPECIAL_SMITHING_RECIPES.some(r => r.itemId === itemId);
+        const recipeType = isSpecial ? 'smithing-special' : 'smithing-item';
+        createTimedAction(itemId, recipeType, quantity, 1800);
     }, [createTimedAction]);
 
     const handleGemCutting = useCallback((cutId: string, quantity: number) => {
@@ -758,6 +764,7 @@ export const useCrafting = (props: UseCraftingProps) => {
     }, [skills, hasItems, addLog, createTimedAction, isInCombat]);
     
     const handleInstantRunecrafting = useCallback((runeId: string) => {
+        setIsResting(false);
         if (isInCombat) {
             addLog("You cannot do that while in combat.");
             return;
@@ -801,7 +808,7 @@ export const useCrafting = (props: UseCraftingProps) => {
         addXp(SkillName.Runecrafting, totalXp);
         addLog(`You craft ${runesCrafted} ${ITEMS[recipe.runeId].name}s and gain ${totalXp} XP.`);
 
-    }, [isInCombat, addLog, skills, hasItems, inventory, modifyItem, addXp, equipment]);
+    }, [isInCombat, addLog, skills, hasItems, inventory, modifyItem, addXp, equipment, setIsResting]);
 
 
     return {

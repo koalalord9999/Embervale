@@ -1,4 +1,3 @@
-
 import { POI, SkillName } from '../../types';
 import { CIVILLIAN_DIALOGUE } from '../../constants/dialogue';
 
@@ -92,10 +91,9 @@ export const silverhavenPois: Record<string, POI> = {
         id: 'silverhaven_trade_district',
         name: 'Trade District',
         description: 'A wide avenue lined with opulent shops and the imposing structure of the Grand Bank of Embrune.',
-        connections: ['silverhaven_square', 'silverhaven_bank'],
+        connections: ['silverhaven_square', 'silverhaven_bank', 'silverhaven_general_store'],
         activities: [
             { type: 'thieving_stall', id: 'silverhaven_trade_district_gem_stall', name: 'Steal from Gem Stall', lootTableId: 'thieving_stall_gem' },
-            { type: 'shop', shopId: 'silverhaven_general' },
             { type: 'npc', name: 'Man', icon: 'https://api.iconify.design/game-icons:person.svg', dialogue: { start: { npcName: 'Man', npcIcon: 'https://api.iconify.design/game-icons:person.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'man', pickpocket: { lootTableId: 'pickpocket_silverhaven_citizen' } },
             { type: 'npc', name: 'Woman', icon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', dialogue: { start: { npcName: 'Woman', npcIcon: 'https://api.iconify.design/game-icons:woman-elf-face.svg', text: CIVILLIAN_DIALOGUE.general.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random', attackableMonsterId: 'woman', pickpocket: { lootTableId: 'pickpocket_silverhaven_citizen' } },
             {
@@ -142,6 +140,18 @@ export const silverhavenPois: Record<string, POI> = {
         ],
         regionId: 'silverhaven',
         x: 310, y: 320,
+        type: 'internal',
+    },
+    silverhaven_general_store: {
+        id: 'silverhaven_general_store',
+        name: 'Silverhaven General Store',
+        description: 'A well-stocked store with a variety of goods for the aspiring adventurer.',
+        connections: ['silverhaven_trade_district'],
+        activities: [
+            { type: 'shop', shopId: 'silverhaven_general' },
+        ],
+        regionId: 'silverhaven',
+        x: 350, y: 340,
         type: 'internal',
     },
     silverhaven_bank: {
@@ -491,7 +501,7 @@ export const silverhavenPois: Record<string, POI> = {
         id: 'silverhaven_castle_approach',
         name: 'Castle Approach',
         description: 'A grand, tree-lined avenue leading north towards the Royal Castle. A tall, slender tower stands to the east.',
-        connections: ['silverhaven_square', 'silverhaven_slayers_spire', 'silverhaven_castle_grounds'],
+        connections: ['silverhaven_square', 'silverhaven_slayers_spire', 'silverhaven_castle_grounds', 'silverhaven_rooftop_access'],
         activities: [],
         regionId: 'silverhaven',
         x: 150, y: 340,
@@ -525,6 +535,18 @@ export const silverhavenPois: Record<string, POI> = {
         ],
         regionId: 'silverhaven',
         x: 100, y: 340,
+        type: 'internal',
+    },
+    silverhaven_rooftop_access: {
+        id: 'silverhaven_rooftop_access',
+        name: 'Rooftop Access',
+        description: 'A discreet ladder behind a statue leads up to the city\'s rooftops.',
+        connections: ['silverhaven_castle_approach'],
+        activities: [
+            { type: 'start_agility_course', name: 'Start Castle Run (Lvl 70)', courseId: 'silverhaven_castle_run' },
+        ],
+        regionId: 'silverhaven',
+        x: 160, y: 320,
         type: 'internal',
     },
 };

@@ -1,9 +1,10 @@
-
 import { Item, EquipmentSlot, WeaponType } from '../../types';
 
 export const misc: Item[] = [
     // Currency
     { id: 'coins', name: 'Coins', description: 'Shiny gold coins.', stackable: true, value: 1, iconUrl: 'https://api.iconify.design/game-icons:coins.svg', material: 'gold'},
+    { id: 'agility_voucher', name: 'Agility Voucher', description: 'A voucher proving your agility. Can be traded for pieces of the Weightless outfit.', stackable: true, value: 0, iconUrl: 'https://api.iconify.design/game-icons:angel-wings.svg', material: 'gold' },
+    { id: 'agility_paste', name: 'Agility Paste', description: 'A thick paste made from a secret formula. Used in creating Stamina potions.', stackable: true, value: 120, iconUrl: 'https://api.iconify.design/game-icons:goo-spurt.svg' },
     { id: 'beer_glass', name: 'Beer Glass', description: 'An empty beer glass.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:beer-stein.svg' },
     { id: 'ashes', name: 'Ashes', description: 'A pile of ashes.', stackable: false, value: 1, iconUrl: 'https://api.iconify.design/game-icons:powder.svg' },
     { id: 'fishing_bait', name: 'Fishing Bait', description: 'A wriggling worm, perfect for catching fish.', stackable: true, value: 1, iconUrl: 'https://api.iconify.design/game-icons:worms.svg' },
@@ -75,7 +76,7 @@ export const misc: Item[] = [
     { id: 'spider_eggs', name: 'Spider Eggs', description: 'A clutch of spider eggs.', stackable: false, value: 5, iconUrl: 'https://api.iconify.design/game-icons:spider-alt.svg' },
     { id: 'boar_tusk', name: 'Boar Tusk', description: 'A sharp tusk from a wild boar.', stackable: false, value: 15, iconUrl: 'https://api.iconify.design/game-icons:ivory-tusks.svg' },
     { id: 'golem_core_shard', name: 'Golem Core Shard', description: 'A glowing shard from a golem. Can be created by smashing a Golem Core.', stackable: true, value: 50, iconUrl: 'https://api.iconify.design/game-icons:crystal-shard.svg' },
-    { id: 'redwater_kelp', name: 'Redwater Kelp', description: 'A strange, magical kelp that grows in reddish water.', stackable: false, value: 20, iconUrl: 'https://api.iconify.design/game-icons:seaweed.svg' },
+    { id: 'redwater_kelp', name: 'Redwater Kelp', description: 'A strange, magical kelp that grows in reddish water.', stackable: false, value: 20, iconUrl: 'https://api.iconify.design/game-icons:algae.svg' },
     { id: 'consecrated_dust', name: 'Consecrated Dust', description: 'A pinch of shimmering, holy dust.', stackable: false, value: 80, iconUrl: 'https://api.iconify.design/game-icons:powder.svg' },
     { id: 'glimmerhorn_dust', name: 'Glimmerhorn Dust', description: 'The ground-up antler of a mystical beast.', stackable: false, value: 30, iconUrl: 'https://api.iconify.design/game-icons:powder.svg' },
     { id: 'cave_slime_globule', name: 'Cave Slime Globule', description: 'A viscous globule from a cave slime.', stackable: false, value: 10, iconUrl: 'https://api.iconify.design/game-icons:gooey-molecule.svg' },

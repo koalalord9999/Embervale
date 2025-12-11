@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { saveSlotState, loadAllSlots, deleteSlot, loadSlotState } from '../db';
 import { ALL_SKILLS, REPEATABLE_QUEST_POOL, ITEMS, MONSTERS, SPELLS, BANK_CAPACITY, QUESTS } from '../constants';
 import { POIS } from '../data/pois';
-import { CombatStance, PlayerSlayerTask, GeneratedRepeatableQuest, InventorySlot, WorldState, Spell, BankTab, ActiveStatModifier, ActiveBuff, PlayerType, Slot } from '../types';
+import { CombatStance, PlayerSlayerTask, GeneratedRepeatableQuest, InventorySlot, WorldState, Spell, BankTab, ActiveStatModifier, ActiveBuff, PlayerType, Slot, AgilityState } from '../types';
 import { useUIState } from './useUIState';
 
 type GameState = typeof defaultState;
@@ -37,6 +37,11 @@ const defaultState = {
     combatStance: CombatStance.Accurate,
     currentHp: 10,
     currentPrayer: 1,
+    runEnergy: 100,
+    isRunToggled: false,
+    // FIX: Add isResting to default state
+    isResting: false,
+    agilityState: { activeCourseId: null, currentObstacleIndex: 0, lapsCompleted: {} } as AgilityState,
     activePrayers: [] as string[],
     currentPoiId: 'tutorial_entrance',
     playerQuests: [{ questId: 'embrune_101', currentStage: 0, progress: 0, isComplete: false }],
@@ -122,6 +127,13 @@ const hydrateGameState = (loadedState: any): GameState => {
     hydrated.worldState = { ...defaultState.worldState, ...(loadedState.worldState || {}) };
     hydrated.repeatableQuestsState = { ...defaultState.repeatableQuestsState, ...(loadedState.repeatableQuestsState || {}) };
     hydrated.equipment = typeof loadedState.equipment === 'object' && loadedState.equipment !== null ? { ...defaultState.equipment, ...loadedState.equipment } : defaultState.equipment;
+    hydrated.agilityState = { ...defaultState.agilityState, ...(loadedState.agilityState || {}) };
+
+    // Migration for agilityState lapsCompleted
+    if (typeof hydrated.agilityState.lapsCompleted === 'number') {
+        hydrated.agilityState.lapsCompleted = {};
+    }
+
 
     // Detect and reset corrupted repeatable quest board data from old saves.
     if (hydrated.repeatableQuestsState.boards) {
@@ -248,9 +260,9 @@ export const useSaveSlotManager = (ui: ReturnType<typeof useUIState>) => {
     const importToSlot = useCallback((slotId: number, data: string): boolean => {
         const parsedData = parseAndValidateSave(data);
         if (parsedData) {
-            // Check if the user is trying to import a Normal or Hardcore character.
-            // This is to prevent cheating by exporting a Cheats character, editing the save, and re-importing.
-            if (parsedData.playerType === PlayerType.Normal || parsedData.playerType === PlayerType.Hardcore) {
+            // FIX: Allow importing any character type in dev mode, but prevent Normal/Hardcore imports in production builds.
+            const isProduction = process.env.NODE_ENV === 'production';
+            if (isProduction && (parsedData.playerType === PlayerType.Normal || parsedData.playerType === PlayerType.Hardcore)) {
                 alert("What's this? A wolf in sheep's clothing! Messing with save files to bypass Normal or Hardcore restrictions is strictly forbidden. Only 'Cheats' mode characters can be imported. Your import has been denied, you cheeky adventurer!");
                 return false; // Indicate failure
             }

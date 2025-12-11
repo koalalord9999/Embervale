@@ -1,4 +1,3 @@
-
 import { Item, SkillName } from '../../types';
 import { HERBS, HERBLORE_RECIPES } from '../herblore';
 
@@ -113,7 +112,11 @@ const getPotionEffect = (potionId: string): Item['consumable'] | undefined => {
         case 'combo_brew':
              return { healAmount: 5, statModifiers: [ { skill: SkillName.Attack, percent: 0.05, base: 1, duration: 60000 }, { skill: SkillName.Strength, percent: 0.05, base: 1, duration: 60000 }, { skill: SkillName.Defence, percent: -0.05, base: -1, duration: 60000 } ] };
         case 'stamina_potion':
-            return { potionEffect: { description: 'Restores run energy and reduces drain.'} };
+            return { potionEffect: { description: 'Restores run energy and reduces drain.' } };
+        case 'energy_potion':
+            return { potionEffect: { description: 'Restores 20 run energy.' } };
+        case 'super_energy_potion':
+            return { potionEffect: { description: 'Restores 40 run energy.' } };
         case 'hunters_brew':
              return { statModifiers: [{ skill: SkillName.Ranged, percent: 0.05, base: 1, duration: 180000 }, { skill: SkillName.Slayer, percent: 0.05, base: 1, duration: 180000 }] };
         case 'antifire_potion_weak':
@@ -223,6 +226,9 @@ const finishedPotions: Item[] = HERBLORE_RECIPES.finished
         emptyable: { emptyItemId: 'vial' },
     }
 });
+
+
+
 
 export const herbloreItems: Item[] = [
     ...grimyHerbs,

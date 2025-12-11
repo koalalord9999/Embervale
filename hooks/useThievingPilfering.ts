@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback, useRef } from 'react';
 import { WorldState, PlayerSkill, SkillName, POIActivity, ActivePilferingSession, InventorySlot, Item } from '../types';
 import { THIEVING_CONTAINER_TARGETS, HOUSE_TIERS, PILFERING_DURATION, ITEMS } from '../constants';
@@ -19,6 +18,7 @@ interface PilferingDependencies {
     modifyItem: (itemId: string, quantity: number, quiet?: boolean, slotOverrides?: Partial<Omit<InventorySlot, 'itemId' | 'quantity'>> & { bypassAutoBank?: boolean; }) => void;
     isInCombat: boolean;
     moveItems: (fromPoiId: string, toPoiId: string) => void;
+    setIsResting: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const HOUSE_RESET_INTERVAL = 30 * 60 * 1000; // 30 minutes
@@ -34,7 +34,8 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
     });
 
     const handlePilfer = useCallback((activity: Extract<POIActivity, { type: 'thieving_pilfer' }>) => {
-        const { char, inventory, modifyItem, isInCombat, worldState, setWorldState, session, addLog } = depsRef.current;
+        const { char, inventory, modifyItem, isInCombat, worldState, setWorldState, session, addLog, setIsResting } = depsRef.current;
+        setIsResting(false);
         if (char.isStunned || activeTimeoutRef.current || isInCombat) return;
 
         const houseInfo = worldState.generatedHouses?.[activity.id];
@@ -48,19 +49,27 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
             addLog(`You need a Thieving level of ${containerData.level}.`);
             return;
         }
-        const bestLockpick = inventory.map(s => s ? ITEMS[s.itemId] : null).filter((item): item is Item => !!(item && item.lockpick)).sort((a, b) => (b.lockpick!.power) - (a.lockpick!.power))[0];
-        
-        // Only require a lockpick for houses above the 'Dusty' tier (level 12).
-        if (!bestLockpick && containerData.level > 12) {
-            addLog("You need a lockpick for a lock this difficult.");
-            return;
-        }
 
+        let bestLockpick: Item | undefined = undefined;
+        const isLockpickRequired = containerData.level > 12; // 'Dusty' tier is level 12
+
+        if (isLockpickRequired) {
+            bestLockpick = inventory
+                .filter((slot): slot is InventorySlot => !!(slot && ITEMS[slot.itemId]?.lockpick && !slot.noted))
+                .map(slot => ITEMS[slot.itemId])
+                .sort((a, b) => (b.lockpick!.power) - (a.lockpick!.power))[0];
+            
+            if (!bestLockpick) {
+                addLog("You need a lockpick for a lock this difficult.");
+                return;
+            }
+        }
+    
         addLog(`You attempt to pick the lock on the ${activity.name}...`);
         activeTimeoutRef.current = window.setTimeout(() => {
             const { char: currentChar, inventory: currentInventory, modifyItem, addLog: log, setWorldState, session: currentSession, worldState: currentWorldState } = depsRef.current;
 
-            const lockpickPower = bestLockpick?.lockpick?.power ?? 0; // Power is 0 if no lockpick.
+            const lockpickPower = bestLockpick?.lockpick?.power ?? 0;
             const successChance = Math.max(5, Math.min(95, 30 + (currentChar.skills.find(s => s.name === SkillName.Thieving)!.currentLevel - containerData.level) * 1.5 + lockpickPower));
 
             if (Math.random() * 100 < successChance) {
@@ -80,13 +89,16 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
                 setWorldState(ws => ({ ...ws, activePilferingSession: newSession }));
             } else {
                 log("You fail to pick the lock.");
+                
                 if (bestLockpick && !bestLockpick.lockpick!.unbreakable && Math.random() < bestLockpick.lockpick!.breakChance) {
                     modifyItem(bestLockpick.id, -1, false);
                     log(`Your ${bestLockpick.name} breaks.`);
                 }
             }
+    
             activeTimeoutRef.current = null;
         }, 1200);
+    
     }, []);
 
     const leaveHouse = useCallback(() => {
@@ -94,10 +106,7 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
         const session = worldState.activePilferingSession;
 
         if (session) {
-            // Move any dropped items from the house to the street
             moveItems('pilfering_house_instance', session.entryPoiId);
-
-            // Perform cleanup first, then navigate. This makes the action atomic.
             setWorldState(ws => ({
                 ...ws,
                 activePilferingSession: null,
@@ -106,7 +115,6 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
             setDynamicActivities(null);
             navigation.handleForcedNavigate(session.entryPoiId);
         } else {
-            // Fallback, should not happen if user is in the house instance.
             addLog("You feel disoriented and find yourself back in Meadowdale.");
             navigation.handleForcedNavigate('meadowdale_square');
         }
@@ -121,10 +129,8 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
         
         let targetTier = HOUSE_TIERS.slice().reverse().find(tier => thievingLevel >= tier.level);
         
-        // If the player's level is too low to meet any requirement,
-        // default to weighting the lowest tier ('Dusty') to give new players a chance.
         if (!targetTier && thievingLevel < 12) {
-            targetTier = HOUSE_TIERS[0]; // This is the 'Dusty' tier.
+            targetTier = HOUSE_TIERS[0];
         }
         
         const weightedTiers: { tierId: string, level: number, weight: number }[] = HOUSE_TIERS.map(tier => ({
@@ -141,20 +147,11 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
             for (const tier of weightedTiers) {
                 roll -= tier.weight;
                 if (roll <= 0) {
-                    // Increased spawn count: 3 to 7
                     const numContainers = Math.floor(Math.random() * 5) + 3; 
                     const newActivities: POIActivity[] = [];
                     const baseTierId = tier.tierId.replace('thieving_house_drawer_', '');
 
                     for (let i = 0; i < numContainers; i++) {
-                        // Expanded logic for new container types including Medicine Cabinet
-                        // Coin purse = 10%
-                        // Drawer = 30%
-                        // Nightstand = 25%
-                        // Medicine Cabinet = 15%
-                        // Vanity = 10%
-                        // Chest = 6%
-                        // Strongbox = 4%
                         const containerRoll = Math.random() * 1000;
                         let containerType: 'coin_purse' | 'drawer' | 'nightstand' | 'medicine_cabinet' | 'vanity' | 'chest' | 'strongbox';
 
@@ -191,7 +188,6 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
     const resetPilferingTimers = useCallback(() => {
         const { setWorldState, addLog, char } = depsRef.current;
         
-        // Clear all generated houses so they will be re-rolled on next visit to any street.
         setWorldState(ws => ({
             ...ws,
             depletedHouses: [],
@@ -202,7 +198,6 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
         addLog("System: All pilfering timers and house tiers have been reset. They will regenerate upon visiting a street.");
     }, []);
 
-    // EFFECT 1: Navigation Manager - If a session exists but we aren't in the house, go there.
     useEffect(() => {
         const isInHouse = session.currentPoiId === 'pilfering_house_instance';
         if (worldState.activePilferingSession && !isInHouse) {
@@ -210,7 +205,6 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
         }
     }, [worldState.activePilferingSession, session.currentPoiId, navigation]);
 
-    // EFFECT 2: House Interior Manager - If we are in the house, set up the activities.
     useEffect(() => {
         const isInHouse = session.currentPoiId === 'pilfering_house_instance';
         if (isInHouse) {
@@ -228,14 +222,12 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
         }
     }, [session.currentPoiId, worldState.activePilferingSession, worldState.generatedHouses, setDynamicActivities, navigation, addLog]);
 
-    // EFFECT 3: Automatic Cleanup Manager - If we leave the house via non-standard means (teleport, etc.), clear the session.
     useEffect(() => {
         const wasInHouse = prevPoiIdRef.current === 'pilfering_house_instance';
         const isNowInHouse = session.currentPoiId === 'pilfering_house_instance';
     
         if (wasInHouse && !isNowInHouse) {
             if (depsRef.current.worldState.activePilferingSession) {
-                // Move items when leaving via teleport/etc as well
                 depsRef.current.moveItems('pilfering_house_instance', depsRef.current.worldState.activePilferingSession.entryPoiId);
 
                 depsRef.current.setWorldState(ws => {
@@ -256,8 +248,6 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
         prevPoiIdRef.current = session.currentPoiId;
     }, [session.currentPoiId]);
 
-
-    // EFFECT 4: Timer Manager - Handles the countdown AND cleanup for an active session.
     useEffect(() => {
         const pilferingSession = deps.worldState.activePilferingSession;
         if (!pilferingSession) return;
@@ -269,7 +259,6 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
             const { worldState: currentWorldState, addLog, char, navigation, setWorldState, setDynamicActivities, moveItems } = depsRef.current;
             const session = currentWorldState.activePilferingSession;
             
-            // Check if the session is still the same one this timer was set for.
             if (session && session.startTime === pilferingSession.startTime) {
                 addLog("The owners have returned! You're thrown out!");
                 const damage = session.tierLevel * 4;
@@ -278,10 +267,7 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
                 addLog(`You take ${damage} damage in the commotion.`);
     
                 if (newHp > 0) {
-                    // Move items before leaving
                     moveItems('pilfering_house_instance', session.entryPoiId);
-
-                    // Perform the same atomic cleanup-then-navigate logic as the manual "Leave House" button.
                     const entryPoiId = session.entryPoiId;
                     setWorldState(ws => ({
                         ...ws,
@@ -291,16 +277,12 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
                     setDynamicActivities(null);
                     navigation.handleForcedNavigate(entryPoiId);
                 }
-                // If newHp <= 0, the global death handler will take over. The activePilferingSession is still
-                // set at this point, so the death handler can correctly identify the drop location.
             }
         }, timeLeft);
     
         return () => clearTimeout(timer);
     }, [deps.worldState.activePilferingSession]);
 
-
-    // EFFECT 5: House Generation Manager - Pre-generates houses for streets.
     useEffect(() => {
         const poi = POIS[session.currentPoiId];
         if (poi && poi.activities.some(a => a.type === 'thieving_pilfer')) {
@@ -314,7 +296,6 @@ export const useThievingPilfering = (deps: PilferingDependencies) => {
         }
     }, [session.currentPoiId, char.skills, worldState.generatedHouses, generateHousesForPoi]);
     
-    // EFFECT 6: House Respawn Timer Manager
     useEffect(() => {
         const checkAndReset = () => {
             const nextReset = worldState.nextHouseResetTimestamp ?? 0;

@@ -16,8 +16,10 @@ export const crystallineIslesPois: Record<string, POI> = {
                 conditionalGreetings: [
                     { text: "The skies feel... calm. You did it, didn't you? Need a lift back to Silverhaven to report to the Archmage?", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 9 }] } },
                     { text: "Back from the Spire's peak? The turbulence is wild up there. Need to head back?", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 8 }] } },
+                    { text: "Back from the Isles? The magical storms are still raging. Need passage back?", check: { requirements: [{ type: 'quest', questId: 'the_arcane_awakening', status: 'in_progress', stage: 7 }] } },
                 ],
-            }
+            },
+            { type: 'start_agility_course', name: 'Start Isles Traverse (Lvl 65)', courseId: 'crystalline_isles_traverse' }
         ],
         regionId: 'crystalline_isles',
         x: 1869, y: 1030
@@ -188,7 +190,7 @@ export const crystallineIslesPois: Record<string, POI> = {
         connections: ['crystalline_path_7', 'inner_path_C2'],
         activities: [],
         regionId: 'crystalline_isles',
-        x: 1888, y: 615
+        x: 1888, y: 645
     },
     inner_path_C2: {
         id: 'inner_path_C2',

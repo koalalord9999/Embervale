@@ -205,6 +205,7 @@ export const isleOfWhispersPois: Record<string, POI> = {
             { type: 'combat', monsterId: 'shipwreck_specter' },
             { type: 'thieving_lockpick', id: 'iow_shipwreck_chest_1', targetName: 'Waterlogged Chest', lootTableId: 'thieving_dungeon_chest_mid' },
             { type: 'ground_item', id: 'shipwreck_graveyard_logs', itemId: 'driftwood_logs', resourceCount: 1, respawnTimer: 120000 },
+            { type: 'start_agility_course', name: 'Start Shipwreck Leap (Lvl 55)', courseId: 'shipwreck_graveyard_leap' }
         ],
         regionId: 'isle_of_whispers',
         x: 550, y: 2450,

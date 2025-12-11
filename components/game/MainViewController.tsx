@@ -1,4 +1,3 @@
-
 import React, { useCallback, useMemo } from 'react';
 import { useUIState } from '../../hooks/useUIState';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -16,19 +15,26 @@ import { useSkilling } from '../../hooks/useSkilling';
 import { useInteractQuest } from '../../hooks/useInteractQuest';
 import { useGameSession } from '../../hooks/useGameSession';
 import { useItemActions } from '../../hooks/useItemActions';
+import { useAgility } from '../../hooks/useAgility';
 import { SkillName, InventorySlot, CombatStance, POIActivity, GroundItem, Spell, BonfireActivity, DialogueCheckRequirement, DialogueAction, BankTab, WorldState, PlayerRepeatableQuest, ActiveBuff, DialogueResponse, Monster, MonsterType, SpellElement, PlayerType, POI, Equipment } from '../../types';
-import { POIS } from '../../data/pois';
+// FIX: Import SHOPS from the main constants barrel file instead of the POIs file.
+import { POIS, SHOPS } from '../../constants';
 import CraftingProgressView from '../views/crafting/CraftingProgressView';
 import CombatView from '../views/CombatView';
 import BankView from '../views/BankView';
 import ShopView from '../views/ShopView';
+import AgilityShopView from '../views/AgilityShopView';
 import CraftingView from '../views/crafting/CraftingView';
 import QuestBoardView from '../views/QuestBoardView';
 import SceneView from './SceneView';
 import TeleportView from '../views/TeleportView';
+// FIX: Add missing imports for ExpandedMapView and AgilityCourseView.
+import ExpandedMapView from '../views/ExpandedMapView';
+import AgilityCourseView from '../views/AgilityCourseView.tsx'
 import LootView from '../views/LootView';
 import EquipmentStatsView from '../views/overlays/EquipmentStatsView';
 import SettingsPanel from '../panels/SettingsPanel';
+import SingleActionProgressView from './SingleActionProgressView';
 import { ThievingContainerState } from '../../types/world';
 import { PILFERING_DURATION, FIREMAKING_RECIPES, QUESTS, MONSTERS } from '../../constants';
 import PilferingTimer from './PilferingTimer';
@@ -43,7 +49,8 @@ type GroundItemActivity = Extract<POIActivity, { type: 'ground_item' }>;
 interface MainViewControllerProps {
     ui: ReturnType<typeof useUIState>;
     addLog: (message: string) => void;
-    char: ReturnType<typeof useCharacter>;
+    // FIX: char prop type now includes setCombatStance to match what's passed from Game.tsx
+    char: ReturnType<typeof useCharacter> & { setCombatStance: React.Dispatch<React.SetStateAction<CombatStance>> };
     inv: ReturnType<typeof useInventory>;
     quests: ReturnType<typeof useQuests>;
     bank: BankTab[];
@@ -63,27 +70,23 @@ interface MainViewControllerProps {
     handlePlayerDeath: () => void;
     handleKill: (uniqueInstanceId: string, attackStyle?: 'melee' | 'ranged' | 'magic') => void;
     onWinCombat: () => void;
-    onFleeFromCombat: (defeatedIds: string[]) => void;
+    onFleeSuccess: (defeatedIds: string[]) => void;
     onResponse: (response: DialogueResponse) => void;
     handleDialogueCheck: (requirements: DialogueCheckRequirement[]) => boolean;
     combatSpeedMultiplier: number;
     activeCombatStyleHighlight?: CombatStance | null;
     isTouchSimulationEnabled: boolean;
-    // Map Manager props
     isMapManagerEnabled?: boolean;
     poiCoordinates?: Record<string, { x: number; y: number }>;
     regionCoordinates?: Record<string, { x: number; y: number }>;
     onUpdatePoiCoordinate?: (id: string, x: number, y: number, isRegion: boolean) => void;
     poiConnections?: Record<string, string[]>;
-    onUpdatePoiConnections?: (poiId: string, newConnections: string[]) => void;
-    // Props from Game that were passed down
     initialState: any;
     onActivity: (activity: POIActivity) => void;
     onExportGame: () => void;
     onImportGame: () => void;
     onResetGame: () => void;
     showAllPois: boolean;
-    // New props for dropped items
     groundItemsForCurrentPoi: GroundItem[];
     onPickUpItem: (uniqueId: number) => void;
     onTakeAllLoot: () => void;
@@ -118,11 +121,17 @@ interface MainViewControllerProps {
     onJewelryCraft: (itemId: string, quantity: number) => void;
     setEquipment: React.Dispatch<React.SetStateAction<Equipment>>;
     poisonEvent: { damage: number, timestamp: number } | null;
+    runEnergy: number;
+    setRunEnergy: React.Dispatch<React.SetStateAction<number>>;
+    playerCombatLevel: number;
+    agility: ReturnType<typeof useAgility>;
+    onFastTravel: (destinationPoiId: string) => void;
+    onCommitMapChanges: () => void;
 }
 
 const MainViewController: React.FC<MainViewControllerProps> = (props) => {
     const {
-        ui, addLog, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, onWinCombat, onFleeFromCombat, onResponse, handleDialogueCheck, combatSpeedMultiplier, activeCombatStyleHighlight, isTouchSimulationEnabled, showAllPois,
+        ui, addLog, char, inv, quests, bank, bankLogic, shops, crafting, repeatableQuests, navigation, worldActions, slayer, questLogic, skilling, interactQuest, session, clearedSkillObstacles, monsterRespawnTimers, handlePlayerDeath, handleKill, onWinCombat, onFleeSuccess, onResponse, handleDialogueCheck, combatSpeedMultiplier, activeCombatStyleHighlight, isTouchSimulationEnabled, showAllPois,
         groundItemsForCurrentPoi, onPickUpItem, onTakeAllLoot, onItemDropped, isAutoBankOn, handleCombatXpGain, poiImmunityTimeLeft, killTrigger,
         bankPlaceholders, handleToggleBankPlaceholders, bonfires, onStokeBonfire, isStunned, addBuff, onExportGame, onImportGame, onResetGame,
         itemActions,
@@ -132,7 +141,6 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
         onDepositEquipment,
         deathMarker,
         activeRepeatableQuest,
-        onActivity,
         onEncounterWin,
         thievingContainerStates,
         onPickpocket,
@@ -141,10 +149,17 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
         onStealFromStall,
         worldState,
         onStartCombat,
+        onActivity,
         poi,
         activePrayers,
         onJewelryCraft,
-        poisonEvent
+        poisonEvent,
+        runEnergy,
+        setRunEnergy,
+        playerCombatLevel,
+        agility,
+        onFastTravel,
+        onCommitMapChanges,
     } = props;
 
     const handleTeleport = useCallback((toBoardId: string) => {
@@ -155,6 +170,25 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
     }, [addLog, navigation, ui, isStunned]);
 
     const mainContent = (() => {
+        if (ui.isExpandedMapViewOpen) {
+            return <ExpandedMapView
+                currentPoiId={session.currentPoiId}
+                unlockedPois={navigation.reachablePois}
+                onNavigate={navigation.handleNavigate}
+                onFastTravel={onFastTravel}
+                onClose={() => ui.setIsExpandedMapViewOpen(false)}
+                setTooltip={ui.setTooltip}
+                addLog={addLog}
+                showAllPois={showAllPois}
+                activeMapRegionId={ui.activeMapRegionId}
+                setActiveMapRegionId={ui.setActiveMapRegionId}
+                deathMarker={deathMarker}
+                onCommitMapChanges={onCommitMapChanges}
+            />
+        }
+        if (agility.agilityState.activeCourseId) {
+            return <AgilityCourseView agility={agility} />;
+        }
         if (ui.activeCraftingAction && ui.activeCraftingAction.recipeType !== 'firemaking-stoke') {
             return <CraftingProgressView
                 action={ui.activeCraftingAction}
@@ -175,7 +209,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 setCombatStance={char.setCombatStance} 
                 setPlayerHp={char.setCurrentHp} 
                 onCombatEnd={onWinCombat}
-                onFlee={onFleeFromCombat}
+                onFleeSuccess={onFleeSuccess}
                 addXp={handleCombatXpGain} 
                 addLoot={inv.modifyItem}
                 onDropLoot={onItemDropped}
@@ -201,6 +235,9 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 activePrayers={activePrayers}
                 poisonEvent={poisonEvent}
                 getEffectiveLevel={char.getEffectiveLevel}
+                runEnergy={runEnergy}
+                setRunEnergy={setRunEnergy}
+                playerCombatLevel={playerCombatLevel}
             />;
         }
         if (ui.activeTeleportBoardId) {
@@ -231,18 +268,35 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
             ui={ui}
             isOneClickMode={ui.isOneClickMode}
         />;
-        if (ui.activeShopId) return <ShopView 
-            shopId={ui.activeShopId}
-            playerCoins={inv.coins}
-            shopStates={shops.shopStates} 
-            onBuy={shops.handleBuy}
-            addLog={addLog} 
-            onExit={() => ui.setActiveShopId(null)} 
-            setContextMenu={ui.setContextMenu} 
-            setMakeXPrompt={ui.setMakeXPrompt} 
-            setTooltip={ui.setTooltip}
-            isOneClickMode={ui.isOneClickMode}
-        />;
+        if (ui.activeShopId) {
+            const shopData = SHOPS[ui.activeShopId];
+            if (shopData?.currency === 'agility_voucher') {
+                return <AgilityShopView 
+                    shopId={ui.activeShopId}
+                    inventory={inv.inventory}
+                    onExit={() => ui.setActiveShopId(null)}
+                    addLog={addLog}
+                    modifyItem={inv.modifyItem}
+                    setContextMenu={ui.setContextMenu}
+                    setMakeXPrompt={ui.setMakeXPrompt}
+                    setTooltip={ui.setTooltip}
+                    isOneClickMode={ui.isOneClickMode}
+                />;
+            } else {
+                return <ShopView 
+                    shopId={ui.activeShopId}
+                    playerCoins={inv.coins}
+                    shopStates={shops.shopStates} 
+                    onBuy={shops.handleBuy}
+                    addLog={addLog} 
+                    onExit={() => ui.setActiveShopId(null)} 
+                    setContextMenu={ui.setContextMenu} 
+                    setMakeXPrompt={ui.setMakeXPrompt} 
+                    setTooltip={ui.setTooltip}
+                    isOneClickMode={ui.isOneClickMode}
+                />;
+            }
+        }
         
         if (ui.activeCraftingContext) return <CraftingView
             context={ui.activeCraftingContext}
@@ -297,7 +351,7 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 setMakeXPrompt={ui.setMakeXPrompt}
                 setTooltip={ui.setTooltip}
                 addLog={addLog}
-                startQuest={quests.startQuest}
+                startQuest={(questId) => quests.startQuest(questId, addLog)}
                 hasItems={inv.hasItems}
                 resourceNodeStates={skilling.resourceNodeStates}
                 activeSkillingNodeId={skilling.activeSkillingNodeId}
@@ -334,6 +388,9 @@ const MainViewController: React.FC<MainViewControllerProps> = (props) => {
                 groundItemsForCurrentPoi={groundItemsForCurrentPoi}
                 handleCutCactus={worldActions.handleCutCactus}
                 equipment={inv.equipment}
+                addXp={char.addXp}
+                setCurrentHp={char.setCurrentHp}
+                agility={agility}
             />
         );
     })();

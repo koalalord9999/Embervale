@@ -45,6 +45,7 @@ export const HERBLORE_RECIPES = {
         { unfinishedPotionId: 'swiftthistle_potion_unf', secondaryId: 'boar_tusk', finishedPotionId: 'weak_strength_potion', level: 11, xp: 50 },
         { unfinishedPotionId: 'swiftthistle_potion_unf', secondaryId: 'raw_sardine', finishedPotionId: 'weak_fishing_potion', level: 13, xp: 52 },
         { unfinishedPotionId: 'swiftthistle_potion_unf', secondaryId: 'iron_ore', finishedPotionId: 'weak_smithing_potion', level: 15, xp: 55 },
+        { unfinishedPotionId: 'swiftthistle_potion_unf', secondaryId: 'redwater_kelp', finishedPotionId: 'energy_potion', level: 17, xp: 58 },
         { unfinishedPotionId: 'swiftthistle_potion_unf', secondaryId: 'spider_eggs', finishedPotionId: 'attack_potion', level: 22, xp: 60 },
         { unfinishedPotionId: 'swiftthistle_potion_unf', secondaryId: 'harpy_feather', finishedPotionId: 'hunters_brew', level: 22, xp: 68 },
 
@@ -70,9 +71,9 @@ export const HERBLORE_RECIPES = {
 
         // --- Gloom Moss Potions (Lvl 40 Herb) ---
         { unfinishedPotionId: 'gloom_moss_potion_unf', secondaryId: 'bloodroot_tendril', finishedPotionId: 'super_attack_potion', level: 40, xp: 100 },
+        { unfinishedPotionId: 'gloom_moss_potion_unf', secondaryId: 'frost_berries', finishedPotionId: 'super_energy_potion', level: 45, xp: 120 },
         { unfinishedPotionId: 'gloom_moss_potion_unf', secondaryId: 'cowhide', finishedPotionId: 'crafting_potion', level: 43, xp: 102 },
         { unfinishedPotionId: 'gloom_moss_potion_unf', secondaryId: 'iron_ore', finishedPotionId: 'smithing_potion', level: 45, xp: 105 },
-        { unfinishedPotionId: 'gloom_moss_potion_unf', secondaryId: 'harpy_feather', finishedPotionId: 'stamina_potion', level: 51, xp: 115 },
         
         // --- Windwhisper Bud Potions (Lvl 48 Herb) ---
         { unfinishedPotionId: 'windwhisper_bud_potion_unf', secondaryId: 'harpy_feather', finishedPotionId: 'ranged_potion', level: 48, xp: 110 },
@@ -104,5 +105,6 @@ export const HERBLORE_RECIPES = {
 
         // --- Special ---
         { unfinishedPotionId: 'holy_water', secondaryId: 'clean_marleaf', finishedPotionId: 'anointing_oil', level: 5, xp: 20 },
+        { unfinishedPotionId: 'super_energy_potion', secondaryId: 'agility_paste', finishedPotionId: 'stamina_potion', level: 72, xp: 180}
     ],
 };

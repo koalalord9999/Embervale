@@ -122,6 +122,20 @@ export const SHOPS: Record<string, Shop> = {
             { itemId: 'rope', quantity: 100, priceModifier: 1.0 },
         ]
     },
+    graces_garments: {
+        id: 'graces_garments',
+        name: "Grace's Garments",
+        inventory: [
+            { itemId: 'weightless_hood', quantity: 10, priceModifier: 48 },
+            { itemId: 'weightless_tunic', quantity: 10, priceModifier: 96 },
+            { itemId: 'weightless_trousers', quantity: 10, priceModifier: 64 },
+            { itemId: 'weightless_gloves', quantity: 10, priceModifier: 32 },
+            { itemId: 'weightless_boots', quantity: 10, priceModifier: 32 },
+            { itemId: 'agility_paste', quantity: 1000, priceModifier: 5 },
+        ],
+        currency: 'agility_voucher',
+        sellingDisabled: true,
+    },
     silverhaven_crafting: {
         id: 'silverhaven_crafting',
         name: "Artisan's Wares",

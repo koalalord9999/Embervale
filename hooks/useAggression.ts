@@ -9,6 +9,7 @@ export const useAggression = (
     isGameLoaded: boolean,
     isBusy: boolean,
     isInCombat: boolean,
+    isTraveling: boolean,
     playerCombatLevel: number,
     startCombat: (monsterIds: string[]) => void,
     addLog: (message: string) => void,
@@ -35,7 +36,7 @@ export const useAggression = (
                 return;
             }
             
-            if (!isGameLoaded || isBusy || isInCombat || isPlayerInvisible || isPlayerImmune || isPoiImmune) return;
+            if (!isGameLoaded || isBusy || isInCombat || isTraveling || isPlayerInvisible || isPlayerImmune || isPoiImmune) return;
     
             const combatActivities = currentPoi.activities
                 .map((act, index) => ({ act, index }))
@@ -94,5 +95,5 @@ export const useAggression = (
 
         return () => clearInterval(interval);
         
-    }, [currentPoi, isGameLoaded, isBusy, isInCombat, playerCombatLevel, startCombat, addLog, monsterRespawnTimers, isPermAggroOn, isPlayerInvisible, isPlayerImmune, equipment, setEquipment, worldState, activeRepeatableQuest]);
+    }, [currentPoi, isGameLoaded, isBusy, isInCombat, isTraveling, playerCombatLevel, startCombat, addLog, monsterRespawnTimers, isPermAggroOn, isPlayerInvisible, isPlayerImmune, equipment, setEquipment, worldState, activeRepeatableQuest]);
 };

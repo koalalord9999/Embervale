@@ -1,3 +1,4 @@
+
 import { Monster, MonsterType, SkillName, SpellElement } from '@/types';
 
 export const dragons: Monster[] = [
@@ -42,6 +43,7 @@ export const dragons: Monster[] = [
             { itemId: 'runic_kiteshield', chance: "1/128", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'runic_warhammer', chance: "1/128", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'dragonfire_shield', chance: "1/512", minQuantity: 1, maxQuantity: 1 },
+            // { itemId: 'flaming_gullet', chance: '1/10000' },
             { itemId: 'verdant_rune', chance: "1/6", minQuantity: 50, maxQuantity: 70 },
             { itemId: 'passage_rune', chance: "1/6", minQuantity: 25, maxQuantity: 35 },
             { itemId: 'anima_rune', chance: "1/10", minQuantity: 15, maxQuantity: 25 },
@@ -69,6 +71,7 @@ export const dragons: Monster[] = [
             { itemId: 'runic_scimitar', chance: "1/128", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'adamantite_warhammer', chance: "1/64", minQuantity: 1, maxQuantity: 1 },
             { itemId: 'runic_battleaxe', chance: "1/256", minQuantity: 1, maxQuantity: 1 },
+            // { itemId: 'flaming_gullet', chance: '1/10000' },
             { itemId: 'verdant_rune', chance: "1/8", minQuantity: 30, maxQuantity: 40 },
             { itemId: 'passage_rune', chance: "1/8", minQuantity: 15, maxQuantity: 20 },
             { itemId: 'nexus_rune', chance: "1/15", minQuantity: 10, maxQuantity: 15 },

@@ -1,5 +1,3 @@
-
-
 import React, { useCallback } from 'react';
 import { POIActivity, PlayerQuestState, DialogueNode, Quest, DialogueResponse, DialogueCheckRequirement, DialogueAction, InventorySlot } from '../types';
 import { QUESTS } from '../constants';
@@ -12,12 +10,14 @@ interface SceneInteractionDependencies {
     onResponse: (response: DialogueResponse) => void;
     addLog: (message: string) => void;
     inventory: (InventorySlot | null)[];
+    setIsResting: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const useSceneInteractions = (poiId: string, deps: SceneInteractionDependencies) => {
-    const { playerQuests, setActiveDialogue, handleDialogueCheck, onResponse, addLog, inventory } = deps;
+    const { playerQuests, setActiveDialogue, handleDialogueCheck, onResponse, addLog, inventory, setIsResting } = deps;
 
     const handleActivityClick = useCallback((activity: POIActivity) => {
+        setIsResting(false);
         if (activity.type !== 'npc' || !activity.startNode) {
             return; // Not a dialogue NPC or no entry point defined
         }
@@ -93,7 +93,7 @@ export const useSceneInteractions = (poiId: string, deps: SceneInteractionDepend
             handleDialogueCheck: handleDialogueCheck,
         });
 
-    }, [playerQuests, setActiveDialogue, handleDialogueCheck, onResponse]);
+    }, [playerQuests, setActiveDialogue, handleDialogueCheck, onResponse, addLog, inventory, setIsResting]);
 
     return { handleActivityClick };
 };

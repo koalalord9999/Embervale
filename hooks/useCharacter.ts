@@ -1,7 +1,6 @@
-
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { PlayerSkill, SkillName, CombatStance, Spell, WorldState, Prayer, PrayerType, ActiveStatModifier, ActiveBuff } from '../types';
-import { XP_TABLE, PRAYERS } from '../constants';
+import { PlayerSkill, SkillName, CombatStance, Spell, WorldState, Prayer, PrayerType, ActiveStatModifier, ActiveBuff, Equipment, Item } from '../types';
+import { XP_TABLE, PRAYERS, ITEMS } from '../constants';
 
 const getLevelForXp = (xp: number): number => {
     const level = XP_TABLE.findIndex(xpVal => xpVal > xp);
@@ -16,7 +15,7 @@ interface CharacterCallbacks {
 }
 
 export const useCharacter = (
-    initialData: { skills: PlayerSkill[], combatStance: CombatStance, currentHp: number, currentPrayer: number, autocastSpell: Spell | null, statModifiers: ActiveStatModifier[], activeBuffs: ActiveBuff[] }, 
+    initialData: { skills: PlayerSkill[], combatStance: CombatStance, currentHp: number, currentPrayer: number, autocastSpell: Spell | null, statModifiers: ActiveStatModifier[], activeBuffs: ActiveBuff[], runEnergy: number, isRunToggled: boolean, isResting: boolean }, 
     callbacks: CharacterCallbacks, 
     worldState: WorldState,
     setWorldState: React.Dispatch<React.SetStateAction<WorldState>>,
@@ -25,11 +24,12 @@ export const useCharacter = (
     xpMultiplier: number = 1,
     isGodModeOn: boolean = false,
     activePrayers: string[],
-    onPrayerDepleted: () => void
+    onPrayerDepleted: () => void,
+    equipment: Equipment
 ) => {
     const { addLog, onXpGain, onLevelUp, onPoisonDamage } = callbacks;
     const [skills, setSkills] = useState<PlayerSkill[]>(initialData.skills);
-    const [combatStance, setCombatStance] = useState<CombatStance>(initialData.combatStance);
+    const combatStance = initialData.combatStance;
     const [currentHp, _setCurrentHp] = useState<number>(initialData.currentHp);
     const [statModifiers, setStatModifiers] = useState<ActiveStatModifier[]>(initialData.statModifiers ?? []);
     const [activeBuffs, setActiveBuffs] = useState<ActiveBuff[]>(initialData.activeBuffs ?? []);
@@ -37,6 +37,10 @@ export const useCharacter = (
     
     const [rawCurrentPrayer, _setRawCurrentPrayer] = useState<number>(initialData.currentPrayer);
     const [globalActionCooldown, setGlobalActionCooldown] = useState<number>(0);
+    
+    const [runEnergy, setRunEnergy] = useState<number>(initialData.runEnergy ?? 100);
+    const [isRunToggled, setIsRunToggled] = useState<boolean>(initialData.isRunToggled ?? false);
+    const [isResting, setIsResting] = useState<boolean>(initialData.isResting ?? false);
 
     const [godModeHp, setGodModeHp] = useState(999); // Invisible HP
     const [godModePrayer, setGodModePrayer] = useState(999); // Invisible Prayer
@@ -48,6 +52,18 @@ export const useCharacter = (
     
     const isStunned = useMemo(() => activeBuffs.some(b => b.type === 'stun'), [activeBuffs]);
     const isPoisoned = useMemo(() => activeBuffs.some(b => b.type === 'poison'), [activeBuffs]);
+    
+    const isAgilitySetEffectActive = useMemo(() => {
+        const requiredItems = ['weightless_hood', 'weightless_tunic', 'weightless_trousers', 'weightless_gloves', 'weightless_boots'];
+        const isSetEquipped = requiredItems.every(itemId => {
+            const itemData = ITEMS[itemId] as Item | undefined;
+            if (!itemData?.equipment) return false;
+            const slotKey = itemData.equipment.slot.toLowerCase() as keyof Equipment;
+            return equipment[slotKey]?.itemId === itemId;
+        });
+        const isStaminaActive = activeBuffs.some(b => b.type === 'stamina');
+        return isSetEquipped || isStaminaActive;
+    }, [equipment, activeBuffs]);
 
     const prevActivePrayersLength = useRef(activePrayers.length);
     const rawPrayerRef = useRef(rawCurrentPrayer);
@@ -68,6 +84,34 @@ export const useCharacter = (
             return Math.min(maxPrayer, newValue);
         });
     }, [isGodModeOn, maxPrayer]);
+
+    const agilityLevel = skills.find(s => s.name === SkillName.Agility)?.level ?? 1;
+
+    // Run Energy Regeneration
+    useEffect(() => {
+        if (isResting) {
+            const regenAmount = isAgilitySetEffectActive ? 2 : 1;
+            const timer = setInterval(() => {
+                setRunEnergy(prev => Math.min(100, prev + regenAmount));
+            }, 1000);
+            return () => clearInterval(timer);
+        } else {
+            const getRegenTicks = () => {
+                if (agilityLevel >= 99) return 6;
+                const reductions = Math.floor(agilityLevel / 15);
+                return 13 - reductions;
+            };
+    
+            const regenInterval = getRegenTicks() * 600; // 1 tick = 600ms
+            const regenAmount = isAgilitySetEffectActive ? 2 : 1;
+    
+            const timer = setInterval(() => {
+                setRunEnergy(prev => Math.min(100, prev + regenAmount));
+            }, regenInterval);
+    
+            return () => clearInterval(timer);
+        }
+    }, [agilityLevel, isResting, isAgilitySetEffectActive]);
 
     // Prayer flicking restoration effect
     useEffect(() => {
@@ -318,6 +362,8 @@ export const useCharacter = (
                 if (expiredBuffIds.includes(buff.id)) {
                     if (buff.type === 'stat_boost' && buff.statBoost) {
                         addLog(`Your magical ${buff.statBoost.skill} boost has worn off.`);
+                    } else if (buff.type === 'stamina') {
+                        addLog("You feel your legs grow heavy again.");
                     } else if (buff.type !== 'stun') {
                          addLog("A magical effect has worn off.");
                     }
@@ -524,9 +570,7 @@ export const useCharacter = (
         if (buff.type === 'damage_reduction') buffMessage = "Your skin feels as hard as stone.";
         if (buff.type === 'antifire') buffMessage = "You feel a sudden coolness, resisting extreme heat.";
         if (buff.type === 'stun') buffMessage = "You have been stunned!";
-        if (buff.type === 'poison') {
-             buffMessage = "You have been poisoned!";
-        }
+        if (buff.type === 'poison') buffMessage = "You have been poisoned!";
         addLog(buffMessage);
 
     }, [addLog, activeBuffs]);
@@ -620,9 +664,8 @@ export const useCharacter = (
     return {
         skills: skillsWithCurrentLevels, 
         getEffectiveLevel,
-        setSkills, 
+        setSkills,
         combatStance, 
-        setCombatStance, 
         currentHp, 
         setCurrentHp, 
         maxHp,
@@ -630,6 +673,12 @@ export const useCharacter = (
         rawCurrentPrayer: rawCurrentPrayer,
         setCurrentPrayer,
         maxPrayer,
+        runEnergy,
+        setRunEnergy,
+        isRunToggled,
+        setIsRunToggled,
+        isResting,
+        setIsResting,
         combatLevel, 
         addXp, 
         applyStatModifier,

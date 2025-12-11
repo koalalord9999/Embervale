@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useUIState, TooltipState } from '../../hooks/useUIState';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -24,7 +23,8 @@ import { ActivePanel, CombatStance, Spell, InventorySlot, SkillName, Item, Equip
 interface SidePanelProps {
     ui: ReturnType<typeof useUIState>;
     initialState: any;
-    char: ReturnType<typeof useCharacter>;
+    // FIX: char prop type now includes setCombatStance to match what's passed from Game.tsx
+    char: ReturnType<typeof useCharacter> & { setCombatStance: React.Dispatch<React.SetStateAction<CombatStance>> };
     inv: ReturnType<typeof useInventory>;
     quests: ReturnType<typeof useQuests>;
     repeatableQuests: ReturnType<typeof useRepeatableQuests>;
@@ -191,6 +191,11 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     maxHp={char.maxHp}
                     currentPrayer={char.currentPrayer}
                     maxPrayer={char.maxPrayer}
+                    runEnergy={char.runEnergy}
+                    isRunToggled={char.isRunToggled}
+                    setIsRunToggled={char.setIsRunToggled}
+                    isResting={char.isResting}
+                    setIsResting={char.setIsResting}
                     ui={ui}
                     isTouchSimulationEnabled={isTouchSimulationEnabled}
                     onNavigate={onNavigate}

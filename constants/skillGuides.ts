@@ -1,4 +1,3 @@
-
 import { SkillName, SkillGuideEntry } from '../types';
 import { HOUSE_TIERS, THIEVING_CONTAINER_TARGETS, THIEVING_POCKET_TARGETS, THIEVING_STALL_TARGETS } from './';
 
@@ -325,6 +324,17 @@ export const SKILL_GUIDES: Record<SkillName, SkillGuideEntry[]> = {
     ],
     [SkillName.Thieving]: [],
     [SkillName.Agility]: [
-        { level: 1, description: 'This skill is in progress of being made.' },
+        { level: 1, description: 'Start the Meadowdale Rooftop Course.' },
+        { level: 12, description: "Start the Oakhaven Artisan's Run." },
+        { level: 25, description: 'Start the Verdant Fields Traverse.' },
+        { level: 30, description: 'Start the Salt Flats Skeleton Run.' },
+        { level: 35, description: 'Start the Fouthia Rooftop Run.' },
+        { level: 46, description: 'Start the Sanctity Cathedral Climb.' },
+        { level: 55, description: 'Start the Shipwreck Graveyard Leap.' },
+        { level: 65, description: 'Start the Crystalline Isles Traverse.' },
+        { level: 70, description: 'Start the Silverhaven Castle Run.' },
+        { level: 75, description: 'Start the Wyrmwood Treetop Run.' },
+        { level: 80, description: 'Start the Gale-Swept Peaks Ridge Walk.' },
+        { level: 90, description: 'Start the Volcanic Brimstone Run.' },
     ],
 };

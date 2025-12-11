@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 
 export const saltFlatsPois: Record<string, POI> = {
@@ -206,19 +207,20 @@ export const saltFlatsPois: Record<string, POI> = {
     y: 1793
 },
     skeletal_remains: {
-    id: 'skeletal_remains',
-    name: 'Skeletal Remains',
-    description: 'The perfectly preserved skeleton of some enormous, unknown beast lies half-buried in the salt.',
-    connections: ['bleached_expanse', 'wind-scoured_mesa'],
-    activities: [
-        { type: 'combat', monsterId: 'salt_leaper' },
-        { type: 'combat', monsterId: 'salt_preserved_vulture' },
-        { type: 'thieving_lockpick', id: 'sf_chest_1', targetName: 'Weathered Pack', lootTableId: 'thieving_dungeon_chest_mid' }
-    ],
-    regionId: 'salt_flats',
-    x: 273,
-    y: 1757
-},
+        id: 'skeletal_remains',
+        name: 'Skeletal Remains',
+        description: 'The perfectly preserved skeleton of some enormous, unknown beast lies half-buried in the salt.',
+        connections: ['bleached_expanse', 'wind-scoured_mesa'],
+        activities: [
+            { type: 'combat', monsterId: 'salt_leaper' },
+            { type: 'combat', monsterId: 'salt_preserved_vulture' },
+            { type: 'thieving_lockpick', id: 'sf_chest_1', targetName: 'Weathered Pack', lootTableId: 'thieving_dungeon_chest_mid' },
+            { type: 'start_agility_course', name: 'Start Skeleton Run (Lvl 30)', courseId: 'salt_flats_skeleton_run' }
+        ],
+        regionId: 'salt_flats',
+        x: 273,
+        y: 1757
+    },
     sunken_shipwreck: {
     id: 'sunken_shipwreck',
     name: 'Sunken Shipwreck',

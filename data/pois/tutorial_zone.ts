@@ -67,7 +67,24 @@ export const tutorialZonePois: Record<string, POI> = {
                 startNode: 'survival_default',
                 questTopics: ['embrune_101'],
                 conditionalGreetings: [
-                    { text: "Remember, chop a tree for logs, and catch a shrimp from the fishing spot. Simple as that.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 1 }] } },
+                    { 
+                        text: "Remember, chop a tree for logs, and catch a shrimp from the fishing spot. Simple as that.", 
+                        check: { 
+                            requirements: [
+                                { type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 1 },
+                                { type: 'items', items: [{ itemId: 'bronze_axe', quantity: 1, operator: 'gte' }] }
+                            ] 
+                        } 
+                    },
+                    { 
+                        text: "Welcome adventurer! The wild is an unforgiving place. If you wish to survive out here, you'll need to learn how to live off the land. I can teach you, if you're willing to learn.", 
+                        check: { 
+                            requirements: [
+                                { type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 1 },
+                                { type: 'items', items: [{ itemId: 'bronze_axe', quantity: 0, operator: 'eq' }] }
+                            ] 
+                        } 
+                    },
                 ],
                 dialogue: {
                     survival_default: {
@@ -130,13 +147,13 @@ export const tutorialZonePois: Record<string, POI> = {
                 startNode: 'info_default',
                 questTopics: ['embrune_101'],
                 conditionalGreetings: [
-                    { text: "Pay attention to your interface. Knowing where your skills and quests are is half the battle. Once you're ready, head down the ladder to the mine.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 6 }] } },
+                    { text: "Knowledge is the sharpest weapon in any adventurer's arsenal.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 6 }] } },
                 ],
                 dialogue: {
                     info_default: {
                         npcName: 'Information Guide',
                         npcIcon: '/assets/npcChatHeads/information_guide.png',
-                        text: "Knowledge is the sharpest weapon in any adventurer's arsenal.",
+                        text: "Pay attention to your interface. Knowing where your skills and quests are is half the battle. Once you're ready, head down the ladder to the mine.",
                         responses: []
                     }
                 }
@@ -209,7 +226,7 @@ export const tutorialZonePois: Record<string, POI> = {
                     { text: "You know the stances. Now put them to the test. Defeat one of those rats with your dagger.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 11 }] } },
                     { text: "Good. Now for ranged combat. Equip this bow and arrows and take down the other rat.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 12 }] } },
                     { text: "Don't just stand there, let the arrows fly!", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 13 }] } },
-                    { text: "You've mastered the basics. Your training is complete. Head north to learn about banking.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 14 }] } },
+                    { text: "You're getting good at this! You should report your success to the Weapon Guide.", check: { requirements: [{ type: 'quest', questId: 'embrune_101', status: 'in_progress', stage: 14 }] } },
                 ],
                 dialogue: {
                     weapon_default: {
@@ -351,7 +368,7 @@ export const tutorialZonePois: Record<string, POI> = {
             },
             { 
                 type: 'quest_board',
-                questCondition: { questId: 'embrune_101', stages: [19] },
+                questCondition: { questId: 'embrune_101', stages: [19, 20, 21] },
             },
             { type: 'combat', monsterId: 'tutorial_rat' },
         ],

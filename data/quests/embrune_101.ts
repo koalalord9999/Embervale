@@ -24,7 +24,7 @@ export const embrune101: Quest = {
         "I've practiced ranged combat. I should speak to the Weapon Guide one last time.", // 14
         "I've finished my combat training. The Weapon Guide sent me to the Banker to learn about item storage.", // 15
         "The Banker explained how the bank works. Now I must speak to the Money Guide.", // 16
-        "The Money Guide explained how currency works. Now I must speak to the Prayer Guide.", // 17
+        "The chapel is a peaceful place. The Prayer Guide will teach you about powers beyond the physical.", // 17
         "The Prayer Guide told me to bury some bones, and then head to the Tavern.", // 18
         "The Tavern Manager directed me to the Quest Board. I should accept the 'Magical Pest Control' task.", // 19
         "I've accepted the task. Now I must speak with the Magic Guide.", // 20
@@ -217,11 +217,11 @@ export const embrune101: Quest = {
         in_progress_embrune_101_1: {
             npcName: 'Survival Guide',
             npcIcon: '/assets/npcChatHeads/survival_guide.png',
-            text: "Leo sent you, right? Good. An adventurer who can't feed themselves is a dead adventurer. Your first task: chop a tree for logs, and catch a raw shrimp from the fishing spot. Come back to me when you have both.",
+            text: "An adventurer who can't feed themselves is a dead adventurer. Your first task: chop a tree for logs, and catch a raw shrimp from the fishing spot. Come back to me when you have both.",
             responses: [],
             conditionalResponses: [
                 { text: "I have the logs and the shrimp. What now?", check: { requirements: [{ type: 'items', items: [{ itemId: 'logs', quantity: 1 }, { itemId: 'raw_shrimp', quantity: 1 }] }], successNode: 'survival_guide_cook', failureNode: 'survival_guide_fail_both' } },
-                { text: "I have the logs. What's next?", check: { requirements: [{ type: 'items', items: [{ itemId: 'logs', quantity: 1 }] }], successNode: 'survival_guide_fish', failureNode: 'survival_guide_fail_logs' } },
+                { text: "I have the logs. What's next?", check: { requirements: [{ type: 'items', items: [{ itemId: 'logs', quantity: 1 }, {itemId: 'raw_shrimp', quantity: 0, operator: 'eq'}] }], successNode: 'survival_guide_fish', failureNode: 'survival_guide_fail_logs' } },
                 { text: "I don't have the tools for that.", check: { requirements: [{ type: 'items', items: [{ itemId: 'bronze_axe', quantity: 0, operator: 'eq' }] }], successNode: 'survival_guide_give_tools', failureNode: 'survival_guide_has_tools' } }
             ]
         },
@@ -363,7 +363,7 @@ export const embrune101: Quest = {
         in_progress_embrune_101_6: {
             npcName: 'Information Guide',
             npcIcon: '/assets/npcChatHeads/information_guide.png',
-            text: "Greetings. The Baker sent you? Good. Knowing skills is one thing, but knowing your purpose is another. This is your Quest Journal. It will help you track your progress.",
+            text: "Oh did he now? Good. Knowing skills is one thing, but knowing your purpose is another. This is your Quest Journal. It will help you track your progress.",
             highlight: 'side-panel-button-quests',
             responses: [{ text: "Okay, that seems useful.", next: 'info_guide_skills' }]
         },
@@ -377,8 +377,36 @@ export const embrune101: Quest = {
         info_guide_equipment: {
             npcName: 'Information Guide',
             npcIcon: '/assets/npcChatHeads/information_guide.png',
-            text: "This is your Equipment panel. Here you can see your combat stats. Attack affects accuracy, Strength affects damage, and Defence helps you evade. Now, take the ladder down into the mine and find the Mining Guide.",
+            text: "This is your Equipment panel. Here you can see your combat stats and equip items to make yourself stronger.",
             highlight: 'side-panel-button-equipment',
+            responses: [{ text: "What's that other orb on the minimap?", next: 'info_guide_run_energy' }]
+        },
+        info_guide_run_energy: {
+            npcName: 'Information Guide',
+            npcIcon: '/assets/npcChatHeads/information_guide.png',
+            text: "An observant one! That's your Run Energy, represented by the boot icon. It's tied to a new skill you've just unlocked: Agility. Run energy allows you to travel faster between locations.",
+            highlight: 'run-energy-orb',
+            responses: [{ text: "How does it work?", next: 'info_guide_run_energy_2' }]
+        },
+        info_guide_run_energy_2: {
+            npcName: 'Information Guide',
+            npcIcon: '/assets/npcChatHeads/information_guide.png',
+            text: "When run is toggled on, you move instantly, but it consumes energy. When you run out, you'll walk until it recharges. Your Agility level determines how quickly it recharges. You can toggle it by clicking the orb.",
+            highlight: 'run-energy-orb',
+            responses: [{ text: 'Are there other ways to restore the energy faster?', next: 'info_guide_run_energy_3' }]
+        },
+        info_guide_run_energy_3: {
+            npcName: 'Information Guide',
+            npcIcon: '/assets/npcChatHeads/information_guide.png',
+            text: "Of course! There are a few distinct ways to restore the energy. You can drink an energy potion crafted with Herblore, or you can 'right-click' the run orb and select Rest.",
+            highlight: 'run-energy-orb',
+            responses: [{ text: "I understand. Now, where to next?", next: 'info_guide_to_mine' }]
+        },
+        info_guide_to_mine: {
+            npcName: 'Information Guide',
+            npcIcon: '/assets/npcChatHeads/information_guide.png',
+            text: "You've learned a lot! Now, take the ladder down into the mine and find the Mining Guide. He'll teach you about smithing.",
+            highlight: 'activity-button-1',
             responses: [{ text: "Down I go!", actions: [{ type: 'advance_quest', questId: 'embrune_101' }] }]
         },
         in_progress_embrune_101_7: {
@@ -463,22 +491,83 @@ export const embrune101: Quest = {
         in_progress_embrune_101_16: {
             npcName: 'Money Guide',
             npcIcon: '/assets/npcChatHeads/money_guide.png',
-            text: "Finished with the banker? Good. Coins are the lifeblood of trade. You can get them from quests or by selling resources. A good way to earn your first hundred is to sell things like cowhides from the ranch, or even just the fish you catch. Every little bit helps! Now, head east to the chapel to learn of other powers.",
+            text: "Money you say? You've come to right person! Coins are the lifeblood of trade. You can get them from quests or by selling resources. A good way to earn your first hundred is to sell things like cowhides from the ranch, or even just the fish you catch. Every little bit helps! Now, head east to the chapel to learn of other powers.",
             responses: [{ text: "Will do.", actions: [{ type: 'advance_quest', questId: 'embrune_101' }] }]
         },
         in_progress_embrune_101_17: {
             npcName: 'Prayer Guide',
             npcIcon: '/assets/npcChatHeads/prayer_guide.png',
-            text: "Welcome, child. The other guides have taught you of the body and the mind. I am here to teach you of the spirit. Prayer is a skill that can protect you. After defeating an enemy, you can bury their bones to gain Prayer experience. Bury the rat bones you collected, then head north to the tavern.",
+            text: "Welcome, child. The other guides have taught you of the body. I am here to teach you of the spirit. Prayer is your connection to the divine, allowing you to invoke powerful auras to aid you.",
+            responses: [
+                { text: "How do I train it?", next: 'prayer_guide_train' }
+            ]
+        },
+        prayer_guide_train: {
+            npcName: 'Prayer Guide',
+            npcIcon: '/assets/npcChatHeads/prayer_guide.png',
+            text: "The simplest way to train is to honor the dead by burying their bones. Here, I have some from the rats you defeated. Bury them now by clicking on them in your inventory, then speak to me again.",
+            responses: [],
+            conditionalResponses: [
+                { text: "I've buried the bones.", check: { requirements: [{ type: 'items', items: [{ itemId: 'bones', quantity: 0, operator: 'eq' }] }], successNode: 'prayer_guide_explain_2', failureNode: 'prayer_guide_bury_reminder' } }
+            ]
+        },
+        prayer_guide_bury_reminder: {
+            npcName: 'Prayer Guide',
+            npcIcon: '/assets/npcChatHeads/prayer_guide.png',
+            text: "You still have bones to bury. Open your inventory and click on them to pay your respects.",
             highlight: 'inventory-slot-bones',
-            responses: [{ text: "Okay, I understand.", actions: [{ type: 'advance_quest', questId: 'embrune_101' }] }]
+            responses: []
+        },
+        prayer_guide_explain_2: {
+            npcName: 'Prayer Guide',
+            npcIcon: '/assets/npcChatHeads/prayer_guide.png',
+            text: "You feel the connection, yes? Good. Now, open your Prayer Panel. You'll see the auras you've unlocked. Activating one, like 'Iron Will', will grant you a benefit, but be warned: active prayers drain your Prayer Points, shown by the blue orb on your minimap. When it's empty, your prayers will cease.",
+            highlight: ['side-panel-button-prayer', 'prayer-prayer-iron_will', 'run-energy-orb'],
+            responses: [
+                { text: "I understand. What's next?", next: 'prayer_guide_final' }
+            ]
+        },
+        prayer_guide_final: {
+            npcName: 'Prayer Guide',
+            npcIcon: '/assets/npcChatHeads/prayer_guide.png',
+            text: "You learn quickly. Your training here is done. Head north to the tavern; the manager there has work for you.",
+            responses: [
+                { text: "Thank you for the lesson.", actions: [{ type: 'advance_quest', questId: 'embrune_101' }] }
+            ]
         },
         in_progress_embrune_101_18: {
             npcName: 'Tavern Manager',
             npcIcon: '/assets/npcChatHeads/barkeep_grimley.png',
-            text: "The Prayer Guide sent you? Bless his heart. Welcome to the tavern, the heart of any adventurer's career! This is where you'll find work. See that board? That's a Quest Board. There's a special task just for you. Go on, check the board.",
+            text: "The Prayer Guide sent you? Bless his heart. Welcome to the tavern, the heart of any adventurer's career! A place for rest, refreshment, and most importantly, work.",
+            responses: [
+                { text: "Tell me about 'rest'.", next: 'tavern_manager_explain_rest' },
+                { text: "Tell me about 'work'.", next: 'tavern_manager_explain_work', actions: [{ type: 'advance_quest', questId: 'embrune_101'}]}
+            ]
+        },
+        tavern_manager_explain_rest: {
+            npcName: 'Tavern Manager',
+            npcIcon: '/assets/npcChatHeads/barkeep_grimley.png',
+            text: "Aye. Most inns, including this one, offer a bed for the night for a small fee. A good night's sleep will restore your health completely. A lifesaver after a tough battle, eh?",
+            responses: [
+                { text: "Good to know. What about work?", next: 'tavern_manager_explain_work', actions: [{ type: 'advance_quest', questId: 'embrune_101'}] }
+            ]
+        },
+        tavern_manager_explain_work: {
+            npcName: 'Tavern Manager',
+            npcIcon: '/assets/npcChatHeads/barkeep_grimley.png',
+            text: "That's the spirit! See that board? That's a Quest Board. Adventurers like yourself can take on tasks posted by the locals. The tasks here are simple, fit for a beginner. But remember, each town's board is unique, offering different challenges and rewards. It's always worth checking.",
             highlight: 'activity-button-2',
-            responses: [{ text: "I'll check it out.", actions: [{ type: 'advance_quest', questId: 'embrune_101' }] }]
+            responses: [
+                { text: "I see. I'll check the board now.", next: 'tavern_manager_final' }
+            ]
+        },
+        tavern_manager_final: {
+            npcName: 'Tavern Manager',
+            npcIcon: '/assets/npcChatHeads/barkeep_grimley.png',
+            text: "There's a special task just for you. Go on, take a look.",
+            responses: [
+                { text: "I'll go take a look." }
+            ]
         },
         in_progress_embrune_101_19: {
             npcName: 'Tavern Manager',
@@ -490,9 +579,37 @@ export const embrune101: Quest = {
         in_progress_embrune_101_20: {
             npcName: 'Magic Guide',
             npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
-            text: "Ah, so you've accepted the pest control task. Good. Magic is a powerful art, fueled by runes. I will give you what you need. Take these runes and use our most basic combat spell, Gust Dart, to defeat the rat in the corner.",
+            text: "Ah, so you've accepted the task. Good. Magic is a powerful art, fueled by consumable stones called runes. Each spell requires a specific combination.",
+            responses: [
+                { text: "Where do I get more runes?", next: 'magic_guide_explain_runes_1' },
+                { text: "How do I complete this task?", next: 'magic_guide_task' }
+            ]
+        },
+        magic_guide_explain_runes_1: {
+            npcName: 'Magic Guide',
+            npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+            text: "An excellent question! Most adventurers acquire them from the creatures they defeat. Many beasts and monsters across the world seem to be drawn to their energy and carry them. You can also purchase basic runes from magic shops, like the one in Meadowdale.",
+            responses: [
+                { text: "Can't I just make them myself?", next: 'magic_guide_explain_runes_2' },
+                { text: "I understand. Now, about this task...", next: 'magic_guide_task' }
+            ]
+        },
+        magic_guide_explain_runes_2: {
+            npcName: 'Magic Guide',
+            npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+            text: "Alas, the art of creating runes from raw essence—Runecrafting, as it was called—was lost to history centuries ago. A great tragedy. Perhaps one day, under the right circumstances, it could be rediscovered... but that is a tale for another time.",
+            responses: [
+                { text: "I understand. Let's focus on the task at hand.", next: 'magic_guide_task' }
+            ]
+        },
+        magic_guide_task: {
+            npcName: 'Magic Guide',
+            npcIcon: '/assets/npcChatHeads/wizard_elmsworth.png',
+            text: "For now, I will provide what you need. Your task is to defeat the rat in the tavern using our most basic combat spell, 'Gust Dart'. I will give you the runes for it. Open your spellbook to see the spells you know.",
             highlight: ['side-panel-button-spellbook', 'activity-button-3'],
-            responses: [{ text: "Time to cast some spells.", actions: [{ type: 'give_item', itemId: 'gust_rune', quantity: 40 }, { type: 'give_item', itemId: 'binding_rune', quantity: 40 }, { type: 'advance_quest', questId: 'embrune_101' }] }]
+            responses: [
+                { text: "Time to cast some spells.", actions: [{ type: 'give_item', itemId: 'gust_rune', quantity: 40 }, { type: 'give_item', itemId: 'binding_rune', quantity: 40 }, { type: 'advance_quest', questId: 'embrune_101' }] }
+            ]
         },
         in_progress_embrune_101_22: {
             npcName: 'Tavern Manager',

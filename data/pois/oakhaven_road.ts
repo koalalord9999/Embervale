@@ -1,4 +1,3 @@
-
 import { POI, SkillName, ToolType } from '../../types';
 
 export const oakhavenRoadPois: Record<string, POI> = {
@@ -58,6 +57,18 @@ export const oakhavenRoadPois: Record<string, POI> = {
                 icon: 'https://api.iconify.design/game-icons:magnifying-glass.svg',
                 questCondition: { questId: 'capitals_call', stages: [0] },
                 startNode: 'investigate_debris_start'
+            },
+            {
+                type: 'agility_shortcut',
+                id: 'broken_bridge_leap',
+                name: 'Leap Across Gap (Lvl 35)',
+                toPoiId: 'kings_road_west_2',
+                level: 35,
+                xp: 40,
+                baseFailChance: 80,
+                failDamage: { min: 1, max: 5 },
+                failMessage: 'You misjudge the jump and tumble down the edge, taking some damage.',
+                successMessage: 'You leap across the chasm with surprising grace.'
             }
         ],
         connectionRequirements: {
@@ -104,6 +115,6 @@ export const oakhavenRoadPois: Record<string, POI> = {
         ],
         regionId: 'wilderness',
         x: 567,
-        y: 1793
+        y: 1700
     },
 };

@@ -1,4 +1,3 @@
-
 import React, { useMemo, useEffect, useState, useCallback } from 'react';
 import { POI, POIActivity, PlayerQuestState, SkillName, InventorySlot, ResourceNodeState, PlayerRepeatableQuest, SkillRequirement, PlayerSkill, DialogueNode, GroundItem, DialogueResponse, Quest, BonfireActivity, DialogueAction, DialogueCheckRequirement, ThievingContainerState, Monster, WorldState, WeaponType, Equipment } from '../../types';
 import { MONSTERS, QUESTS, SHOPS, ITEMS, REGIONS, FIREMAKING_RECIPES, SKILL_ICONS, THIEVING_CONTAINER_TARGETS, THIEVING_STALL_TARGETS } from '../../constants';
@@ -11,6 +10,7 @@ import { useSkillingAnimations } from '../../hooks/useSkillingAnimations';
 import { useIsTouchDevice } from '../../hooks/useIsTouchDevice';
 import { useLongPress } from '../../hooks/useLongPress';
 import { useWorldActions } from '../../hooks/useWorldActions';
+import { useAgility } from '../../hooks/useAgility';
 
 type SkillingActivity = Extract<POIActivity, { type: 'skilling' }>;
 type GroundItemActivity = Extract<POIActivity, { type: 'ground_item' }>;
@@ -69,6 +69,9 @@ interface SceneViewProps {
     groundItemsForCurrentPoi: GroundItem[];
     handleCutCactus: () => void;
     equipment: Equipment;
+    addXp: (skill: SkillName, amount: number) => void;
+    setCurrentHp: React.Dispatch<React.SetStateAction<number>>;
+    agility: ReturnType<typeof useAgility>;
 }
 
 const PilferButton: React.FC<{
@@ -420,7 +423,7 @@ const BonfireButton: React.FC<{
 
 
 const SceneView: React.FC<SceneViewProps> = (props) => {
-    const { poi, unlockedPois, onNavigate, onActivity, onStartCombat, playerQuests, inventory, setContextMenu, setMakeXPrompt, setTooltip, addLog, startQuest, hasItems, resourceNodeStates, activeSkillingNodeId, onToggleSkilling, onPickupGroundItem, initializeNodeState, skillingTick, getSuccessChance, activeRepeatableQuest, activeCleanup, onStartInteractQuest, onCancelInteractQuest, clearedSkillObstacles, onClearObstacle, skills, monsterRespawnTimers, setActiveDialogue, handleDialogueCheck, onResponse, onDepositBackpack, onDepositEquipment, ui, isTouchSimulationEnabled, worldActions, bonfires, onStokeBonfire, isOneClickMode, onPickpocket, onLockpick, onPilfer, thievingContainerStates, onStealFromStall, worldState, groundItemsForCurrentPoi, handleCutCactus, equipment } = props;
+    const { poi, unlockedPois, onNavigate, onActivity, onStartCombat, playerQuests, inventory, setContextMenu, setMakeXPrompt, setTooltip, addLog, startQuest, hasItems, resourceNodeStates, activeSkillingNodeId, onToggleSkilling, onPickupGroundItem, initializeNodeState, skillingTick, getSuccessChance, activeRepeatableQuest, activeCleanup, onStartInteractQuest, onCancelInteractQuest, clearedSkillObstacles, onClearObstacle, skills, monsterRespawnTimers, setActiveDialogue, handleDialogueCheck, onResponse, onDepositBackpack, onDepositEquipment, ui, isTouchSimulationEnabled, worldActions, bonfires, onStokeBonfire, isOneClickMode, onPickpocket, onLockpick, onPilfer, thievingContainerStates, onStealFromStall, worldState, groundItemsForCurrentPoi, handleCutCactus, equipment, addXp, setCurrentHp, agility } = props;
     const { depletedNodesAnimating } = useSkillingAnimations(resourceNodeStates, poi.activities);
     const [countdown, setCountdown] = useState<Record<string, number>>({});
     const [shakingNodeId, setShakingNodeId] = useState<string | null>(null);
@@ -558,6 +561,53 @@ const SceneView: React.FC<SceneViewProps> = (props) => {
             }
         }
         
+        if (activity.type === 'start_agility_course') {
+            return (
+                <Button key={activity.courseId} onClick={() => agility.startCourse(activity.courseId)}>
+                    {activity.name}
+                </Button>
+            );
+        }
+
+        if (activity.type === 'agility_shortcut') {
+            const { level, xp, baseFailChance, failDamage, failMessage, successMessage, name, toPoiId, id } = activity;
+            const agilitySkill = skills.find(s => s.name === SkillName.Agility);
+            const playerAgility = agilitySkill?.currentLevel ?? 1;
+
+            const handleShortcut = () => {
+                if (playerAgility < level) {
+                    addLog(`You need an Agility level of ${level} to use this shortcut.`);
+                    return;
+                }
+
+                const levelDifference = playerAgility - level;
+                const failChanceReduction = levelDifference * 2;
+                const finalFailChance = Math.max(5, baseFailChance - failChanceReduction);
+
+                if (Math.random() * 100 < finalFailChance) {
+                    // Failure
+                    addLog(failMessage ?? "You slip and fail to use the shortcut.");
+                    addXp(SkillName.Agility, 2);
+                    if (failDamage) {
+                        const damage = Math.floor(Math.random() * (failDamage.max - failDamage.min + 1)) + failDamage.min;
+                        setCurrentHp((hp: number) => Math.max(0, hp - damage));
+                        addLog(`You take ${damage} damage.`);
+                    }
+                } else {
+                    // Success
+                    addLog(successMessage ?? `You successfully use the shortcut. (+${xp} Agility XP)`);
+                    addXp(SkillName.Agility, xp);
+                    onNavigate(toPoiId);
+                }
+            };
+
+            return (
+                <Button key={id} onClick={handleShortcut}>
+                    {name}
+                </Button>
+            );
+        }
+
         if (activity.type === 'cut_cactus') {
             const slashWeapons = [WeaponType.Sword, WeaponType.Scimitar, WeaponType.Dagger, WeaponType.Axe, WeaponType.Battleaxe];
             const equippedWeapon = equipment.weapon ? ITEMS[equipment.weapon.itemId] : null;

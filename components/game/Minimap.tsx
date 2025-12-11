@@ -1,7 +1,5 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { POIS, REGIONS } from '../../constants';
-// FIX: Import 'ContextMenuOption' from its source file to resolve export issue.
 import { ContextMenuState, useUIState } from '../../hooks/useUIState';
 import { ContextMenuOption } from '../common/ContextMenu';
 import { useLongPress } from '../../hooks/useLongPress';
@@ -14,6 +12,11 @@ interface MinimapProps {
     maxHp: number;
     currentPrayer: number;
     maxPrayer: number;
+    runEnergy: number;
+    isRunToggled: boolean;
+    setIsRunToggled: React.Dispatch<React.SetStateAction<boolean>>;
+    isResting: boolean;
+    setIsResting: React.Dispatch<React.SetStateAction<boolean>>;
     ui: ReturnType<typeof useUIState>;
     isTouchSimulationEnabled: boolean;
     onNavigate: (poiId: string) => void;
@@ -26,7 +29,6 @@ interface MinimapProps {
     onCurePoison: () => void;
     isInCombat: boolean;
     poisonEvent: { damage: number, timestamp: number } | null;
-    // New Dev Props
     isPermAggroOn?: boolean;
     onTogglePermAggro?: () => void;
     isGodModeOn?: boolean;
@@ -129,8 +131,103 @@ const PrayerOrb: React.FC<{ currentPrayer: number, maxPrayer: number }> = ({ cur
     );
 };
 
+const RunEnergyOrb: React.FC<{
+    currentEnergy: number;
+    isToggled: boolean;
+    onToggle: () => void;
+    isResting: boolean;
+    onToggleRest: () => void;
+    setContextMenu: (menu: ContextMenuState | null) => void;
+    isTouchDevice: boolean;
+    isOneClickMode: boolean;
+}> = ({ currentEnergy, isToggled, onToggle, isResting, onToggleRest, setContextMenu, isTouchDevice, isOneClickMode }) => {
+    const percentage = (currentEnergy / 100) * 100;
 
-const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, currentPrayer, maxPrayer, ui, isTouchSimulationEnabled, onNavigate, unlockedPois, addLog, isDevMode, onToggleDevPanel, showMinimapHealth, isPoisoned, onCurePoison, isInCombat, poisonEvent, isPermAggroOn, onTogglePermAggro, isGodModeOn, onToggleGodMode }) => {
+    const { orbColor, iconColor, iconUrl } = useMemo(() => {
+        if (isResting) {
+            return {
+                orbColor: 'bg-blue-400',
+                iconColor: 'white',
+                iconUrl: 'https://api.iconify.design/game-icons:meditation.svg'
+            };
+        }
+        if (isToggled) {
+            return {
+                orbColor: 'bg-yellow-400',
+                iconColor: '#A16207',
+                iconUrl: 'https://api.iconify.design/game-icons:wingfoot.svg'
+            };
+        }
+        return {
+            orbColor: 'bg-gray-700',
+            iconColor: '#D2B48C',
+            iconUrl: 'https://api.iconify.design/game-icons:wingfoot.svg'
+        };
+    }, [isResting, isToggled]);
+    
+    const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
+        e.preventDefault();
+        
+        let eventForMenu: React.MouseEvent | React.Touch;
+        if ('touches' in e) {
+            eventForMenu = e.touches[0] || e.changedTouches[0];
+        } else {
+            eventForMenu = e as React.MouseEvent;
+        }
+
+        const options: ContextMenuOption[] = [
+            { label: isResting ? 'Stop Resting' : 'Rest', onClick: () => { onToggleRest(); setContextMenu(null); } },
+            { label: isToggled ? 'Toggle Walk' : 'Toggle Run', onClick: () => { onToggle(); setContextMenu(null); } }
+        ];
+        setContextMenu({ options, triggerEvent: eventForMenu, isTouchInteraction: isTouchDevice, title: "Run Energy" });
+    };
+
+    const longPressHandlers = useLongPress({
+        onLongPress: handleLongPress,
+        onClick: onToggle,
+        isOneClickMode: isOneClickMode
+    });
+
+    return (
+        <button
+            {...longPressHandlers}
+            data-tutorial-id="run-energy-orb"
+            className={`relative w-11 h-11 rounded-full border-2 border-gray-500 bg-gray-800 overflow-hidden shadow-lg cursor-pointer`}
+            aria-label={isToggled ? 'Toggle Run Off' : 'Toggle Run On'}
+            title="Run Energy (Click to toggle run, Right-click/Long-press for more options)"
+        >
+            <div 
+              className={`absolute bottom-0 left-0 w-full ${orbColor} transition-colors duration-300 ease-in-out`} 
+              style={{ height: `${percentage}%` }}
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+                <div
+                    className="w-8 h-8 transition-all duration-300"
+                    style={{
+                        backgroundColor: iconColor,
+                        maskImage: `url(${iconUrl})`,
+                        maskSize: 'contain',
+                        maskRepeat: 'no-repeat',
+                        maskPosition: 'center',
+                        WebkitMaskImage: `url(${iconUrl})`,
+                        WebkitMaskSize: 'contain',
+                        WebkitMaskRepeat: 'no-repeat',
+                        WebkitMaskPosition: 'center',
+                    }}
+                />
+            </div>
+            <div className="absolute top-1 left-1 w-8 h-8 rounded-full bg-white/20 blur-sm" />
+            <div className="absolute inset-0 flex items-center justify-center z-10">
+                <span className="font-bold text-lg text-white" style={{ textShadow: '1px 1px 3px black' }}>
+                    {Math.floor(currentEnergy)}
+                </span>
+            </div>
+        </button>
+    );
+};
+
+
+const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, currentPrayer, maxPrayer, runEnergy, isRunToggled, setIsRunToggled, isResting, setIsResting, ui, isTouchSimulationEnabled, onNavigate, unlockedPois, addLog, isDevMode, onToggleDevPanel, showMinimapHealth, isPoisoned, onCurePoison, isInCombat, poisonEvent, isPermAggroOn, onTogglePermAggro, isGodModeOn, onToggleGodMode }) => {
     const currentPoi = POIS[currentPoiId];
     const isTouchDevice = useIsTouchDevice(isTouchSimulationEnabled);
     const [hitSplats, setHitSplats] = useState<{ id: number; damage: number }[]>([]);
@@ -281,9 +378,9 @@ const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, curre
                     })}
                 </div>
 
-                {/* HP Orb Overlay - Placed in the top-left corner of the panel */}
-                <div className="absolute z-10 top-px left-px pointer-events-none">
-                    <div className="pointer-events-auto">
+                {/* HP & Run Orb Overlay - Placed in the top-left corner of the panel */}
+                <div className="absolute z-10 top-px left-px flex flex-col gap-1 pointer-events-none">
+                    <div className="pointer-events-auto relative">
                         <HpOrb
                             currentHp={currentHp}
                             maxHp={maxHp}
@@ -293,11 +390,22 @@ const Minimap: React.FC<MinimapProps> = ({ currentPoiId, currentHp, maxHp, curre
                             setContextMenu={ui.setContextMenu}
                             isTouchDevice={isTouchDevice}
                         />
+                        {hitSplats.map(splat => (
+                            <HitSplat key={splat.id} damage={splat.damage} isPoison={true} />
+                        ))}
                     </div>
-                    {/* Hitsplats over HP Orb */}
-                    {hitSplats.map(splat => (
-                        <HitSplat key={splat.id} damage={splat.damage} isPoison={true} />
-                    ))}
+                    <div className="pointer-events-auto">
+                        <RunEnergyOrb
+                            currentEnergy={runEnergy}
+                            isToggled={isRunToggled}
+                            onToggle={() => setIsRunToggled(t => !t)}
+                            isResting={isResting}
+                            onToggleRest={() => setIsResting(r => !r)}
+                            setContextMenu={ui.setContextMenu}
+                            isTouchDevice={isTouchDevice}
+                            isOneClickMode={ui.isOneClickMode}
+                        />
+                    </div>
                 </div>
 
                  {/* Prayer Orb Overlay */}

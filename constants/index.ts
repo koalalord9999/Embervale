@@ -26,3 +26,4 @@ export * from './loot/thievingTables';
 export * from './loot/thievingStalls';
 export * from './pilfering';
 export * from '../data/pois/pilfering';
+export * from '../data/agility_courses';

@@ -124,8 +124,8 @@ export const wyrmwoodMonsters: Monster[] = [
         stabDefence: 85, slashDefence: 85, crushDefence: 85, rangedDefence: 95, magicDefence: 100,
         iconUrl: 'https://api.iconify.design/game-icons:unicorn.svg',
         types: [MonsterType.Demon, MonsterType.Beast], attackSpeed: 4, respawnTime: 150000, aggressive: true, attackStyle: 'magic', customMaxHit: 21,
-        mainDrops: [{ itemId: 'unicorn_horn', chance: '1/1' }, { itemId: 'nexus_rune', chance: '1/4', minQuantity: 10, maxQuantity: 20 }],
-        guaranteedDrops: [{ itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 }],
+        mainDrops: [{ itemId: 'unicorn_horn', chance: '1/4', minQuantity: 1, maxQuantity: 6, noted: true }, { itemId: 'nexus_rune', chance: '1/4', minQuantity: 10, maxQuantity: 20 }],
+        guaranteedDrops: [{ itemId: 'big_bones', minQuantity: 1, maxQuantity: 1 }, { itemId: 'unicorn_horn', minQuantity: 1, maxQuantity: 1}],
     },
     {
         id: 'corrupted_grove_dragon', name: 'Corrupted Grove Dragon', level: 110, maxHp: 180, attack: 105, strength: 110, defence: 120,
@@ -140,6 +140,7 @@ export const wyrmwoodMonsters: Monster[] = [
             { itemId: 'yew_logs', chance: '1/4', minQuantity: 50, maxQuantity: 100, noted: true },
             { itemId: 'anima_rune', chance: '1/8', minQuantity: 15, maxQuantity: 30 },
             { itemId: 'cooked_shark', chance: '1/5', minQuantity: 2, maxQuantity: 4, noted: true },
+            // { itemId: 'flaming_gullet', chance: '1/10000' },
         ],
         specialAttacks: [{ name: 'Grove Breath', chance: 0.25, effect: 'damage_multiplier', value: 1.5 }],
     },

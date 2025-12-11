@@ -1,3 +1,4 @@
+
 import { POI, SkillName } from '../../types';
 
 export const galeSweptPeaksPois: Record<string, POI> = {
@@ -12,6 +13,7 @@ export const galeSweptPeaksPois: Record<string, POI> = {
             { type: 'skilling', id: 'ancient_pass_silver_1', name: 'Mine Silver Rock', skill: SkillName.Mining, requiredLevel: 20, loot: [{ itemId: 'silver_ore', chance: 1, xp: 40 }], resourceCount: { min: 1, max: 2 }, respawnTime: 18000, gatherTime: 4000 },
             { type: 'skilling', id: 'ancient_pass_silver_2', name: 'Mine Silver Rock', skill: SkillName.Mining, requiredLevel: 20, loot: [{ itemId: 'silver_ore', chance: 1, xp: 40 }], resourceCount: { min: 1, max: 2 }, respawnTime: 18000, gatherTime: 4000 },
             { type: 'skilling', id: 'ancient_pass_mithril_1', name: 'Mine Mithril Rock', skill: SkillName.Mining, requiredLevel: 50, loot: [{ itemId: 'mithril_ore', chance: 1, xp: 80 }], resourceCount: { min: 1, max: 2 }, respawnTime: 20000, gatherTime: 4000 },
+            { type: 'start_agility_course', name: 'Start Ridge Walk (Lvl 80)', courseId: 'gale_swept_peaks_ridge_walk' }
         ],
         regionId: 'gale_swept_peaks',
         x: 900, y: 500
@@ -96,13 +98,66 @@ export const galeSweptPeaksPois: Record<string, POI> = {
         description: "A small, secluded cave, surprisingly warm inside. A makeshift forge and anvil stand in the corner, along with a comfortable-looking cot.",
         connections: ['goat_trail'],
         activities: [
-            { type: 'npc', name: 'Borin Stonehand', icon: '/assets/npcChatHeads/prospector_gudrun.png', 
+             {
+                type: 'npc',
+                name: 'Borin Stonehand',
+                icon: '/assets/npcChatHeads/prospector_gudrun.png',
                 pickpocket: { lootTableId: 'pickpocket_dwarf_table' },
                 dialogue: {
                     start: {
                         npcName: 'Borin Stonehand',
                         npcIcon: '/assets/npcChatHeads/prospector_gudrun.png',
                         text: "What do you want? Can't you see I'm busy?",
+                        responses: [],
+                        conditionalResponses: [
+                            {
+                                text: "I have some... unusual items. I heard you might be able to help.",
+                                check: {
+                                    requirements: [
+                                        { type: 'items', items: [{ itemId: 'fire_resistant_shield', quantity: 1 }] },
+                                        { type: 'items', items: [{ itemId: 'flaming_gullet', quantity: 1 }] }
+                                    ],
+                                    successNode: 'craft_shield_intro',
+                                    failureNode: ''
+                                }
+                            }
+                        ]
+                    },
+                    craft_shield_intro: {
+                        npcName: 'Borin Stonehand',
+                        npcIcon: '/assets/npcChatHeads/prospector_gudrun.png',
+                        text: "What's this? A Flaming Gullet... and a Fire-Resistant Shield? By my beard, you've found the components for a Dragonfire Shield! I haven't seen one of these in ages. I can combine them for you, but my expertise doesn't come cheap. It'll cost you 800,000 coins.",
+                        responses: [
+                            {
+                                text: "That's a steep price, but do it.",
+                                check: {
+                                    requirements: [{ type: 'coins', amount: 800000 }],
+                                    successNode: 'craft_shield_success',
+                                    failureNode: 'craft_shield_fail'
+                                }
+                            },
+                            { text: "800,000 coins?! I'll have to think about it." }
+                        ]
+                    },
+                    craft_shield_success: {
+                        npcName: 'Borin Stonehand',
+                        npcIcon: '/assets/npcChatHeads/prospector_gudrun.png',
+                        text: "Wise choice. *Borin takes the components and works them with masterful skill, his hammer ringing like a bell. The heat from the gullet seems to flow into the shield, which glows with an inner fire.* There. A true Dragonfire Shield. May it serve you well.",
+                        responses: [
+                            {
+                                text: "Thank you, master smith.", actions: [
+                                    { type: 'take_item', itemId: 'fire_resistant_shield', quantity: 1 },
+                                    { type: 'take_item', itemId: 'flaming_gullet', quantity: 1 },
+                                    { type: 'take_coins', amount: 800000 },
+                                    { type: 'give_item', itemId: 'dragonfire_shield', quantity: 1 }
+                                ]
+                            }
+                        ]
+                    },
+                    craft_shield_fail: {
+                        npcName: 'Borin Stonehand',
+                        npcIcon: '/assets/npcChatHeads/prospector_gudrun.png',
+                        text: "Don't waste my time. Come back when you have the coin. I'm a busy dwarf.",
                         responses: []
                     }
                 },

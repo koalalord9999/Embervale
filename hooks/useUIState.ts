@@ -1,5 +1,3 @@
-
-
 // FIX: Added useState, useMemo, and useCallback to the import from 'react'.
 import React, { useState, useMemo, useCallback } from 'react';
 import { ActivePanel, SkillName, InventorySlot, ActiveCraftingAction, DialogueNode, CraftingContext, Equipment, PlayerQuestState, Spell, Item, DialogueResponse, DialogueCheckRequirement } from '../types';
@@ -61,6 +59,15 @@ export interface ItemsOnDeathData {
     coins: number;
 }
 
+export interface ActiveSingleAction {
+    title: string;
+    iconUrl: string;
+    iconClassName: string;
+    startTime: number;
+    duration: number; // in ms
+    onComplete: () => void;
+}
+
 export type WithdrawMode = 1 | 5 | 10 | 'x' | 'all';
 
 export const useUIState = () => {
@@ -82,6 +89,7 @@ export const useUIState = () => {
     const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
     const [activeSkillGuide, setActiveSkillGuide] = useState<SkillName | null>(null);
     const [activeCraftingAction, setActiveCraftingAction] = useState<ActiveCraftingAction | null>(null);
+    const [activeSingleAction, setActiveSingleAction] = useState<ActiveSingleAction | null>(null);
     const [activeQuestDetail, setActiveQuestDetail] = useState<QuestDetailState | null>(null);
     const [isSelectingAutocastSpell, setIsSelectingAutocastSpell] = useState<boolean>(false);
     const [manualCastTrigger, setManualCastTrigger] = useState<Spell | null>(null);
@@ -135,12 +143,12 @@ export const useUIState = () => {
         isImportModalOpen ||
         activeSkillGuide ||
         activeCraftingAction ||
+        activeSingleAction ||
         activeQuestDetail ||
         isEquipmentStatsViewOpen ||
         itemsOnDeathData ||
         priceCheckerInventory ||
         isAtlasViewOpen ||
-        isExpandedMapViewOpen ||
         isLootViewOpen ||
         activeDungeonMap ||
         isMonsterDBOpen
@@ -155,11 +163,11 @@ export const useUIState = () => {
         isImportModalOpen,
         activeSkillGuide,
         activeCraftingAction,
+        activeSingleAction,
         activeQuestDetail,
         itemsOnDeathData,
         priceCheckerInventory,
         isAtlasViewOpen,
-        isExpandedMapViewOpen,
         isLootViewOpen,
         activeDungeonMap,
         isMonsterDBOpen
@@ -191,6 +199,7 @@ export const useUIState = () => {
         setIsImportModalOpen(false);
         setActiveSkillGuide(null);
         setActiveCraftingAction(null);
+        setActiveSingleAction(null);
         setActiveQuestDetail(null);
         setIsEquipmentStatsViewOpen(false);
         setItemsOnDeathData(null);
@@ -226,6 +235,7 @@ export const useUIState = () => {
         isImportModalOpen, setIsImportModalOpen,
         activeSkillGuide, setActiveSkillGuide,
         activeCraftingAction, setActiveCraftingAction,
+        activeSingleAction, setActiveSingleAction,
         activeQuestDetail, setActiveQuestDetail,
         isEquipmentStatsViewOpen, setIsEquipmentStatsViewOpen,
         itemsOnDeathData, setItemsOnDeathData,

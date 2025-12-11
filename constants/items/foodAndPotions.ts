@@ -1,4 +1,3 @@
-
 import { Item, SkillName } from '../../types';
 
 export const foodAndPotions: Item[] = [

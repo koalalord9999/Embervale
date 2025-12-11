@@ -1,0 +1,12 @@
+import { Item, EquipmentSlot, SkillName, WeaponType } from '../../types';
+
+// These items are required to fight specific Slayer monsters.
+export const slayerGear: Item[] = [
+    { id: 'bag_of_salt', name: 'Bag of Salt', description: 'A bag of coarse salt, effective against certain slimy creatures.', stackable: true, value: 5, iconUrl: 'https://api.iconify.design/game-icons:salt-shaker.svg' },
+    { id: 'reflective_shield', name: 'Reflective Shield', description: 'A highly polished shield that can reflect a monster\'s gaze.', stackable: false, value: 2500, iconUrl: 'https://api.iconify.design/game-icons:shield-reflect.svg', material: 'steel', equipment: { slot: EquipmentSlot.Shield, stabDefence: 15, slashDefence: 20, crushDefence: 18, rangedDefence: 15, magicDefence: 5, requiredLevels: [{ skill: SkillName.Defence, level: 20 }], } },
+    { id: 'broad_bladed_sword', name: 'Broad-bladed Sword', description: 'A sword with an unusually wide blade, specifically designed for harming tough-skinned beasts.', stackable: false, value: 15000, iconUrl: 'https://api.iconify.design/game-icons:broadsword.svg', material: 'steel', equipment: { slot: EquipmentSlot.Weapon, weaponType: WeaponType.Sword, speed: 4, stabAttack: 20, slashAttack: 35, crushAttack: -2, strengthBonus: 32, requiredLevels: [{ skill: SkillName.Attack, level: 40 }, { skill: SkillName.Slayer, level: 55}], } },
+    { id: 'earthen_charm', name: 'Earthen Charm', description: 'A simple clay charm that seems to absorb sound.', stackable: false, value: 150, iconUrl: 'https://api.iconify.design/game-icons:clay-embrace.svg', equipment: { slot: EquipmentSlot.Necklace, magicDefence: 2 } },
+    { id: 'filtered_mask', name: 'Filtered Mask', description: 'A mask with a thick filter, designed to protect the wearer from noxious dust and spores.', stackable: false, value: 80, iconUrl: 'https://api.iconify.design/game-icons:gas-mask.svg', equipment: { slot: EquipmentSlot.Head, stabDefence: 1, slashDefence: 1, crushDefence: 1 } },
+    { id: 'nose_clamp', name: 'Nose Clamp', description: 'A simple clamp worn on the nose to block out foul smells.', stackable: false, value: 2, iconUrl: 'https://api.iconify.design/game-icons:nose-front.svg', equipment: { slot: EquipmentSlot.Head } },
+    { id: 'stonecracker_hammer', name: 'Stonecracker Hammer', description: 'A heavy hammer specially designed to shatter the tough hides of rock-like creatures.', stackable: false, value: 3000, iconUrl: 'https://api.iconify.design/game-icons:stone-hammer.svg', material: 'adamantite' },
+];

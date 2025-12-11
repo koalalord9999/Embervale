@@ -117,7 +117,7 @@ export const oakhavenPois: Record<string, POI> = {
         id: 'oakhaven_crafting_district',
         name: 'Crafting District',
         description: 'The sound of work fills the air here. Tanning racks and workbenches line the street, leading to various artisan shops.',
-        connections: ['oakhaven_square', 'oakhaven_crafting_supplies', 'tanner_svens_shop', 'oakhaven_west_gate', 'oakhaven_herblore_shop', 'oakhaven_artisans_quarter'],
+        connections: ['oakhaven_square', 'oakhaven_crafting_supplies', 'tanner_svens_shop', 'oakhaven_west_gate', 'oakhaven_herblore_shop', 'oakhaven_artisans_quarter', 'oakhaven_rooftop_access'],
         activities: [],
         regionId: 'oakhaven',
         x: 190, y: 160,
@@ -392,6 +392,18 @@ export const oakhavenPois: Record<string, POI> = {
         ],
         regionId: 'oakhaven',
         x: 190, y: 220,
+        type: 'internal',
+    },
+    oakhaven_rooftop_access: {
+        id: 'oakhaven_rooftop_access',
+        name: 'Rooftop Access',
+        description: 'A stack of lumber and discarded barrels provides a convenient way up to the rooftops of the crafting district.',
+        connections: ['oakhaven_crafting_district'],
+        activities: [
+            { type: 'start_agility_course', name: "Start Artisan's Run (Lvl 12)", courseId: 'oakhaven_artisans_run' },
+        ],
+        regionId: 'oakhaven',
+        x: 180, y: 180,
         type: 'internal',
     },
 };

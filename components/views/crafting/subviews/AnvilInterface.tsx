@@ -1,13 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
 import { InventorySlot, PlayerSkill, PlayerQuestState, SkillName, WeaponType } from '../../../../types';
-import { SMITHING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
+import { SMITHING_RECIPES, SPECIAL_SMITHING_RECIPES, ITEMS, getIconClassName } from '../../../../constants';
 import Button from '../../../common/Button';
 import { CraftingViewProps } from '../CraftingView';
 import { useLongPress } from '../../../../hooks/useLongPress';
 import { useIsTouchDevice } from '../../../../hooks/useIsTouchDevice';
 
 type BarType = 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'mithril_bar' | 'adamantite_bar' | 'runic_bar' | 'gold_bar' | 'silver_bar';
+type SmithingTab = BarType | 'special';
 
 const AnvilSlot: React.FC<{
     recipe: typeof SMITHING_RECIPES[0];
@@ -113,9 +113,75 @@ const AnvilSlot: React.FC<{
     );
 };
 
-const AnvilInterface: React.FC<CraftingViewProps> = ({ inventory, skills, playerQuests, onSmithItem, setContextMenu, setMakeXPrompt, setTooltip, context }) => {
+const SpecialAnvilSlot: React.FC<{
+    recipe: typeof SPECIAL_SMITHING_RECIPES[0];
+    smithingLevel: number;
+    getItemCount: (itemId: string) => number;
+    onSmithItem: (itemId: string, quantity: number) => void;
+    setContextMenu: CraftingViewProps['setContextMenu'];
+    setMakeXPrompt: CraftingViewProps['setMakeXPrompt'];
+    setTooltip: CraftingViewProps['setTooltip'];
+    isTouchDevice: boolean;
+}> = ({ recipe, smithingLevel, getItemCount, onSmithItem, setContextMenu, setMakeXPrompt, setTooltip, isTouchDevice }) => {
+    const item = ITEMS[recipe.itemId];
+    if (!item) return null;
+
+    const hasLevel = smithingLevel >= recipe.level;
+    const hasIngredients = recipe.ingredients.every(ing => getItemCount(ing.itemId) >= ing.quantity);
+    const canSmith = hasLevel && hasIngredients;
+
+    const handleSingleTap = () => { if(canSmith) { onSmithItem(recipe.itemId, 1); setTooltip(null); } };
+
+    const handleMouseEnter = (e: React.MouseEvent) => {
+        const hasHammer = getItemCount('hammer') > 0;
+        const tooltipContent = (
+            <div className="text-sm text-left w-48">
+                <p className="font-bold text-yellow-300 mb-2 pb-1 border-b border-gray-600">{item.name}</p>
+                <p className="font-semibold text-gray-400 uppercase text-xs mb-1">Materials</p>
+                <ul className="list-disc list-inside mb-2">
+                    {recipe.ingredients.map(ing => (
+                        <li key={ing.itemId} className={getItemCount(ing.itemId) >= ing.quantity ? 'text-green-400' : 'text-red-400'}>
+                            {ITEMS[ing.itemId].name} x{ing.quantity}
+                        </li>
+                    ))}
+                    <li className={hasHammer ? 'text-green-400' : 'text-red-400'}>Hammer</li>
+                </ul>
+                <div className="grid grid-cols-2 gap-x-4 text-xs">
+                    <span className="text-gray-400">{SkillName.Smithing} XP:</span>
+                    <span className="font-semibold text-right">{recipe.xp.toLocaleString()}</span>
+                </div>
+            </div>
+        );
+        setTooltip({ content: tooltipContent, position: { x: e.clientX, y: e.clientY } });
+    };
+
+    return (
+        <div 
+            className={`crafting-slot ${!canSmith ? 'disabled' : ''}`} 
+            onClick={handleSingleTap}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={() => setTooltip(null)}
+        >
+            <div className={`crafting-slot-level ${hasLevel ? 'met' : 'unmet'}`}>
+                Lvl {recipe.level}
+            </div>
+            <img src={item.iconUrl} alt={item.name} className={`crafting-slot-icon ${getIconClassName(item)}`} />
+            <div className="crafting-slot-ingredients">
+                {recipe.ingredients.map(ing => (
+                    <div key={ing.itemId} className="ingredient-icon">
+                        <img src={ITEMS[ing.itemId].iconUrl} alt={ITEMS[ing.itemId].name} className={getIconClassName(ITEMS[ing.itemId])} />
+                        {ing.quantity > 1 && <span className="ingredient-quantity">{ing.quantity}</span>}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+const AnvilInterface: React.FC<CraftingViewProps> = ({ inventory, skills, playerQuests, onSmithItem, setContextMenu, setMakeXPrompt, setTooltip }) => {
     const smithingLevel = skills.find(s => s.name === SkillName.Smithing)?.currentLevel ?? 1;
-    const [selectedBar, setSelectedBar] = useState<BarType | null>(null);
+    // FIX: Corrected the initial state to use a valid SmithingTab type.
+    const [selectedTab, setSelectedTab] = useState<SmithingTab>('bronze_bar');
     const isTouchDevice = useIsTouchDevice(false);
 
     const getItemCount = (itemId: string): number => {
@@ -127,6 +193,10 @@ const AnvilInterface: React.FC<CraftingViewProps> = ({ inventory, skills, player
         }, 0);
     };
 
+    const hasSpecialItems = getItemCount('flaming_gullet') > 0 && getItemCount('fire_resistant_shield') > 0;
+
+    const barTiers: BarType[] = ['runic_bar', 'adamantite_bar', 'mithril_bar', 'steel_bar', 'iron_bar', 'bronze_bar'];
+    
     const barCounts: Record<BarType, number> = {
         bronze_bar: getItemCount('bronze_bar'),
         iron_bar: getItemCount('iron_bar'),
@@ -134,55 +204,58 @@ const AnvilInterface: React.FC<CraftingViewProps> = ({ inventory, skills, player
         mithril_bar: getItemCount('mithril_bar'),
         adamantite_bar: getItemCount('adamantite_bar'),
         runic_bar: getItemCount('runic_bar'),
-        gold_bar: getItemCount('gold_bar'),
-        silver_bar: getItemCount('silver_bar'),
+        gold_bar: getItemCount('gold_bar'), // Not a primary tier for weapons/armor
+        silver_bar: getItemCount('silver_bar'), // Not a primary tier
     };
+    
+    const hasAnyBars = barTiers.some(bar => barCounts[bar] > 0);
 
     useEffect(() => {
-        // If a default bar is provided by context and the player has it, select it.
-        if (context.type === 'anvil' && context.defaultBarType) {
-            const barCount = getItemCount(context.defaultBarType);
-            if (barCount > 0) {
-                setSelectedBar(context.defaultBarType as BarType);
-                return; // Exit early
+        if (hasSpecialItems) {
+            setSelectedTab('special');
+        } else {
+            const firstAvailableBar = barTiers.find(bar => barCounts[bar] > 0);
+            if (firstAvailableBar) {
+                setSelectedTab(firstAvailableBar);
+            } else {
+                // FIX: Corrected the fallback state to use a valid SmithingTab type.
+                setSelectedTab('bronze_bar');
             }
         }
-    
-        // Otherwise, fall back to the highest tier available bar.
-        const availableBars: BarType[] = ['runic_bar', 'adamantite_bar', 'mithril_bar', 'steel_bar', 'iron_bar', 'bronze_bar'];
-        const firstAvailable = availableBars.find(bar => barCounts[bar] > 0);
-        setSelectedBar(firstAvailable || null);
-    }, [context, inventory]); // Using inventory to trigger re-evaluation when bar counts change
-    
+    }, [inventory]); // Rerun when inventory changes
+
     const visibleRecipes = SMITHING_RECIPES;
+
+    const allTabs: { id: SmithingTab; name: string; disabled: boolean; count?: number }[] = [
+        ...barTiers.map(bar => ({ id: bar, name: ITEMS[bar].name.replace(' Bar', ''), disabled: barCounts[bar] === 0, count: barCounts[bar] })),
+        { id: 'special', name: 'Special', disabled: !hasSpecialItems }
+    ];
 
     return (
         <div className="flex flex-col flex-grow min-h-0">
             <div className="flex gap-2 mb-4 flex-wrap flex-shrink-0">
-                {Object.entries(barCounts).filter(([barType, count]) => count > 0 && barType !== 'gold_bar' && barType !== 'silver_bar').map(([barType, count]) => (
+                {allTabs.map(tab => (
                     <Button 
-                        key={barType}
-                        onClick={() => setSelectedBar(barType as BarType)} 
-                        disabled={count === 0} 
-                        variant={selectedBar === barType ? 'primary' : 'secondary'} 
+                        key={tab.id}
+                        onClick={() => setSelectedTab(tab.id)} 
+                        disabled={tab.disabled}
+                        variant={selectedTab === tab.id ? 'primary' : 'secondary'} 
                         size="sm"
                     >
-                        {ITEMS[barType as BarType].name.replace(' Bar', '')} ({count})
+                        {tab.name} {tab.count !== undefined ? `(${tab.count})` : ''}
                     </Button>
                 ))}
             </div>
 
-            {selectedBar ? (
-                <div className="flex-grow overflow-y-auto pr-2">
-                    <div className="crafting-grid">
-                        {visibleRecipes
-                            .filter(recipe => recipe.barType === selectedBar)
-                            .map((recipe) => (
-                                <AnvilSlot
+            {selectedTab ? (
+                selectedTab === 'special' ? (
+                    <div className="flex-grow overflow-y-auto pr-2">
+                        <div className="crafting-grid">
+                            {SPECIAL_SMITHING_RECIPES.map(recipe => (
+                                <SpecialAnvilSlot
                                     key={recipe.itemId}
                                     recipe={recipe}
                                     smithingLevel={smithingLevel}
-                                    inventory={inventory}
                                     getItemCount={getItemCount}
                                     onSmithItem={onSmithItem}
                                     setContextMenu={setContextMenu}
@@ -191,8 +264,30 @@ const AnvilInterface: React.FC<CraftingViewProps> = ({ inventory, skills, player
                                     isTouchDevice={isTouchDevice}
                                 />
                             ))}
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <div className="flex-grow overflow-y-auto pr-2">
+                        <div className="crafting-grid">
+                            {visibleRecipes
+                                .filter(recipe => recipe.barType === selectedTab)
+                                .map((recipe) => (
+                                    <AnvilSlot
+                                        key={recipe.itemId}
+                                        recipe={recipe}
+                                        smithingLevel={smithingLevel}
+                                        inventory={inventory}
+                                        getItemCount={getItemCount}
+                                        onSmithItem={onSmithItem}
+                                        setContextMenu={setContextMenu}
+                                        setMakeXPrompt={setMakeXPrompt}
+                                        setTooltip={setTooltip}
+                                        isTouchDevice={isTouchDevice}
+                                    />
+                                ))}
+                        </div>
+                    </div>
+                )
             ) : (
                 <p className="text-center text-gray-400 italic mt-8">You don't have any bars to smith with. Use a furnace to smelt ore into bars.</p>
             )}

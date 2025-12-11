@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { POI, Region, WorldState } from '../../types';
 import { REGIONS, MAP_FEATURES } from '../../constants';
@@ -10,6 +9,7 @@ import Button from '../common/Button';
 interface ExpandedMapViewProps {
     currentPoiId: string;
     unlockedPois: string[];
+    onFastTravel: (poiId: string) => void;
     onNavigate: (poiId: string) => void;
     onClose: () => void;
     setTooltip: (tooltip: TooltipState | null) => void;
@@ -34,7 +34,7 @@ const formatTime = (ms: number) => {
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 };
 
-const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlockedPois, onNavigate, onClose, setTooltip, addLog, isMapManagerEnabled = false, poiCoordinates, regionCoordinates, onUpdatePoiCoordinate, poiConnections, onUpdatePoiConnections, showAllPois, onCommitMapChanges, activeMapRegionId, setActiveMapRegionId, deathMarker }) => {
+const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlockedPois, onFastTravel, onNavigate, onClose, setTooltip, addLog, isMapManagerEnabled = false, poiCoordinates, regionCoordinates, onUpdatePoiCoordinate, poiConnections, onUpdatePoiConnections, showAllPois, onCommitMapChanges, activeMapRegionId, setActiveMapRegionId, deathMarker }) => {
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const [view, setView] = useState({ x: 0, y: 0, zoom: 1 });
     const [isDragging, setIsDragging] = useState(false);
@@ -373,7 +373,7 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                 className="bg-gray-800 border-4 border-gray-600 rounded-lg shadow-xl w-full max-w-6xl h-full max-h-[90vh] flex flex-col"
                 onClick={e => e.stopPropagation()}
             >
-                <div className="flex justify-between items-center p-4 bg-gray-900/50 border-b-2 border-gray-700">
+                <div className="flex justify-between items-center p-4 bg-gray-900/50 border-b-2 border-gray-600">
                     <h1 className="text-3xl font-bold text-yellow-400">{mapTitle}</h1>
                     <div>
                         {!isWorldView && <Button onClick={() => setActiveMapRegionId('world')} size="sm" className="mr-4">World Map</Button>}
@@ -545,7 +545,7 @@ const ExpandedMapView: React.FC<ExpandedMapViewProps> = ({ currentPoiId, unlocke
                             const canClick = isUnlocked && !isMapManagerEnabled;
                             return (
                                 <div key={poi.id} className="absolute transform -translate-x-1/2 -translate-y-1/2" style={{ top: `${coords.y}px`, left: `${coords.x}px` }} >
-                                    <div data-draggable={isMapManagerEnabled} className={`relative rounded-full hover:scale-150 ${isMapManagerEnabled ? 'cursor-move' : ''} ${canClick ? 'cursor-pointer' : ''} transition-transform duration-200`} style={{ width: `${12 / view.zoom}px`, height: `${12 / view.zoom}px` }} onMouseDown={(e) => handleNodeMouseDown(e, poi.id, false)} onClick={() => {if (canClick) { onNavigate(poi.id); setTooltip(null); }}} onMouseEnter={(e) => handleMouseEnter(e, poi)} onMouseLeave={() => setTooltip(null)} >
+                                    <div data-draggable={isMapManagerEnabled} className={`relative rounded-full hover:scale-150 ${isMapManagerEnabled ? 'cursor-move' : ''} ${canClick ? 'cursor-pointer' : ''} transition-transform duration-200`} style={{ width: `${12 / view.zoom}px`, height: `${12 / view.zoom}px` }} onMouseDown={(e) => handleNodeMouseDown(e, poi.id, false)} onClick={() => {if (canClick) { onFastTravel(poi.id); setTooltip(null); }}} onMouseEnter={(e) => handleMouseEnter(e, poi)} onMouseLeave={() => setTooltip(null)} >
                                         <div className={`w-full h-full rounded-full ${dotColorClass}`}></div>
                                         {isCurrent && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full rounded-full border-2 border-yellow-400 animate-pulse" style={{width: `${20/view.zoom}px`, height: `${20/view.zoom}px`}}></div>}
                                     </div>

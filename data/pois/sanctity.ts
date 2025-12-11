@@ -118,7 +118,7 @@ export const sanctityPois: Record<string, POI> = {
         id: 'sanctity_east_district',
         name: 'Pilgrim\'s Path',
         description: 'A grassy path leads east towards the inn and the town gate. There is a sense of foreboding in the air.',
-        connections: ['sanctity_square', 'sanctity_inn', 'sanctity_east_gate'],
+        connections: ['sanctity_square', 'sanctity_inn', 'sanctity_east_gate', 'graces_agility_shop'],
         activities: [
             { type: 'npc', name: 'Concerned Citizen', icon: 'https://api.iconify.design/game-icons:person.svg', dialogue: { start: { npcName: 'Concerned Citizen', npcIcon: 'https://api.iconify.design/game-icons:person.svg', text: CIVILLIAN_DIALOGUE.sanctity.join('\n\n'), responses: [] } }, startNode: 'start', dialogueType: 'random' }
         ],
@@ -217,11 +217,23 @@ export const sanctityPois: Record<string, POI> = {
         regionId: 'sanctity',
         x: 400, y: 200, type: 'internal',
     },
+    graces_agility_shop: {
+        id: 'graces_agility_shop',
+        name: "Grace's Garments",
+        description: 'A specialty shop selling lightweight gear for the nimble adventurer. They only accept Agility Vouchers.',
+        connections: ['sanctity_east_district'],
+        activities: [
+            { type: 'shop', shopId: 'graces_garments' },
+        ],
+        regionId: 'sanctity',
+        x: 350, y: 300,
+        type: 'internal',
+    },
     sanctity_artisans_quarter: {
         id: 'sanctity_artisans_quarter',
         name: 'Artisan\'s Quarter',
         description: 'An advanced workshop where technology and faith intersect. Various crafting stations are available.',
-        connections: ['sanctity_south_district'],
+        connections: ['sanctity_south_district', 'sanctity_rooftop_access'],
         activities: [
             { type: 'anvil' },
             { type: 'furnace' },
@@ -231,4 +243,16 @@ export const sanctityPois: Record<string, POI> = {
         regionId: 'sanctity',
         x: 200, y: 400, type: 'internal',
     },
+    sanctity_rooftop_access: {
+        id: 'sanctity_rooftop_access',
+        name: 'Rooftop Access',
+        description: 'A set of scaffolding provides access to the rooftops, offering a breathtaking view of the chapel.',
+        connections: ['sanctity_artisans_quarter'],
+        activities: [
+            { type: 'start_agility_course', name: 'Start Cathedral Climb (Lvl 46)', courseId: 'sanctity_cathedral_climb' },
+        ],
+        regionId: 'sanctity',
+        x: 220, y: 380,
+        type: 'internal',
+    }
 };

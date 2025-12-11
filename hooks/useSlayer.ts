@@ -1,12 +1,11 @@
-
 import { useState, useCallback } from 'react';
-import { PlayerSlayerTask, SkillName, PlayerQuestState, QuestId } from '../types';
+import { PlayerSlayerTask, SkillName, PlayerQuestState, QuestId, InventorySlot } from '../types';
 import { MONSTERS } from '../constants';
 
 interface SlayerDependencies {
     addLog: (message: string) => void;
     addXp: (skill: SkillName, amount: number) => void;
-    modifyItem: (itemId: string, quantity: number) => void;
+    modifyItem: (itemId: string, quantity: number, quiet?: boolean, slotOverrides?: Partial<Omit<InventorySlot, 'itemId' | 'quantity'>> & { bypassAutoBank?: boolean; }) => void;
     combatLevel: number;
 }
 
