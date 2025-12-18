@@ -41,15 +41,16 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
         interactQuest.handleCancelInteractQuest();
         ui.setCombatQueue([]);
         ui.setIsMandatoryCombat(false);
-    
+
         const tutorialQuest = playerQuests.find(q => q.questId === 'embrune_101');
         const isTutorialActive = tutorialQuest && !tutorialQuest.isComplete;
-        
+
         if (isTutorialActive) {
             const respawnPoi = 'tutorial_entrance';
             session.setCurrentPoiId(respawnPoi);
             char.setCurrentHp(char.maxHp);
             char.setCurrentPrayer(char.maxPrayer);
+            char.setRunEnergy(100);
             setActivePrayers([]);
             addLog("You have been defeated! Don't worry, you've been safely returned. In the main world, death is more costly.");
             return;
@@ -80,7 +81,7 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
             const entryPoiId = worldState.activePilferingSession.entryPoiId;
             dropPoiId = entryPoiId;
             // respawnPoiId remains 'meadowdale_square'
-            
+
             setWorldState(ws => {
                 if (!ws.activePilferingSession) return ws;
                 const houseId = ws.activePilferingSession.housePoiId;
@@ -150,11 +151,11 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
 
         let invIndex = 0;
         const equipmentSlotsFilled: Set<keyof Equipment> = new Set();
-        
+
         keptSingleItems.forEach(singleItem => {
             const { item, from } = singleItem;
             const itemData = ITEMS[item.itemId];
-        
+
             if (from !== 'inventory' && !equipmentSlotsFilled.has(from as keyof Equipment)) {
                 const slotKey = from as keyof Equipment;
                 if (newEquipment[slotKey] === null) {
@@ -163,9 +164,9 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
                     return;
                 }
             }
-            
+
             if (itemData.stackable || item.noted) {
-                const existingStack = newInventory.find(i => 
+                const existingStack = newInventory.find(i =>
                     i?.itemId === item.itemId &&
                     !!i.noted === !!item.noted &&
                     i.nameOverride === item.nameOverride &&
@@ -226,6 +227,7 @@ export const usePlayerDeath = (deps: PlayerDeathDependencies) => {
         session.setCurrentPoiId(respawnPoiId);
         char.setCurrentHp(char.maxHp);
         char.setCurrentPrayer(char.maxPrayer);
+        char.setRunEnergy(100);
         addLog(`You have died! Your 3 most valuable items have been kept. The rest, including ${lostCoins.toLocaleString()} coins, have been dropped at ${POIS[dropPoiId].name}. You have 10 minutes of in-game time to retrieve them.`);
 
     }, [skilling, interactQuest, ui, session, char, inv, addLog, playerQuests, onItemDropped, setWorldState, playerType, slotId, onReturnToMenu, repeatableQuests, setDynamicActivities, worldState, onResetGame, setActivePrayers]);

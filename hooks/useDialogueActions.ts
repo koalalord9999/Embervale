@@ -90,9 +90,11 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
     const handleDialogueAction = useCallback((actions: DialogueAction[]) => {
         for (const action of actions) {
             switch (action.type) {
-                case 'give_item':
-                    inv.modifyItem(action.itemId, action.quantity, false, { bypassAutoBank: true, noted: action.noted });
+                case 'give_item': {
+                    const success = inv.modifyItem(action.itemId, action.quantity, false, { bypassAutoBank: true, noted: action.noted });
+                    if (!success) return; // Stop processing further actions if giving item fails
                     break;
+                }
                 case 'take_item':
                     inv.modifyItem(action.itemId, -action.quantity, true);
                     break;
@@ -119,6 +121,7 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                     break;
                 case 'heal':
                     char.setCurrentHp(hp => action.amount === 'full' ? char.maxHp : Math.min(char.maxHp, hp + action.amount));
+                    char.setRunEnergy(100);
                     if (action.amount === 'full') {
                         addLog("You feel fully rested.");
                     }
@@ -138,17 +141,18 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                     ui.setActivePanel('bank');
                     break;
                 case 'complete_tutorial': {
+
+                    // Wipe everything
+                    inv.setInventory(new Array(INVENTORY_CAPACITY).fill(null));
+                    inv.setEquipment({ weapon: null, shield: null, head: null, body: null, legs: null, ammo: null, gloves: null, boots: null, cape: null, necklace: null, ring: null });
+                    setBank([{ id: 0, name: 'Main', icon: null, items: [] }]);
+                    setActivityLog([]);
+
                     // Automatically turn in the tutorial repeatable quest if it's active.
                     if (repeatableQuests.activePlayerQuest?.questId === 'tutorial_magic_rat') {
                         repeatableQuests.handleTurnInRepeatableQuest();
                         addLog("Your 'Magical Pest Control' task was automatically turned in.");
                     }
-                    
-                    // Wipe everything
-                    inv.setInventory(new Array(INVENTORY_CAPACITY).fill(null));
-                    setBank([{ id: 0, name: 'Main', icon: null, items: [] }]);
-                    inv.setCoins(0);
-                    setActivityLog([]);
 
                     // Give starter pack
                     const starterItems = [
@@ -166,7 +170,6 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                         { id: 'bronze_arrow', qty: 50 },
                         { id: 'gust_rune', qty: 50 },
                         { id: 'binding_rune', qty: 50 },
-                        { id: 'coins', qty: 250},
                     ];
                     starterItems.forEach(item => inv.modifyItem(item.id, item.qty, true, { bypassAutoBank: true }));
                     addLog("You have completed your training and received a starter pack!");
@@ -190,7 +193,7 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                     const hidesToTan: { hideId: string; quantity: number; leatherId: string }[] = [];
 
                     for (const hideId in TANNING_RECIPES) {
-                        const count = inv.inventory.reduce((acc, slot) => 
+                        const count = inv.inventory.reduce((acc, slot) =>
                             (slot && slot.itemId === hideId && !slot.noted) ? acc + slot.quantity : acc, 0);
                         if (count > 0) {
                             const recipe = TANNING_RECIPES[hideId];
@@ -198,12 +201,12 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                             hidesToTan.push({ hideId, quantity: count, ...recipe });
                         }
                     }
-                    
+
                     if (inv.coins < totalCost) {
                         // This case is handled by the failureNode in the dialogue, but as a safeguard:
                         addLog("You can't afford to tan all your hides.");
                         break;
-                    } 
+                    }
 
                     inv.modifyItem('coins', -totalCost, true);
                     let totalTanned = 0;
@@ -217,10 +220,10 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                     if (totalTanned > 0) {
                         addLog(`You pay Sven ${totalCost} coins to tan ${totalTanned} hides.`);
                     }
-                    
+
                     break;
                 }
-                 case 'open_make_x_for_grinding': {
+                case 'open_make_x_for_grinding': {
                     const { itemId } = action;
                     const count = inv.inventory.filter(slot => slot?.itemId === itemId).length;
                     if (count > 0) {
