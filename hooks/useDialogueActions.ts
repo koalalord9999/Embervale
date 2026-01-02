@@ -91,8 +91,7 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
         for (const action of actions) {
             switch (action.type) {
                 case 'give_item': {
-                    const success = inv.modifyItem(action.itemId, action.quantity, false, { bypassAutoBank: true, noted: action.noted });
-                    if (!success) return; // Stop processing further actions if giving item fails
+                    inv.modifyItem(action.itemId, action.quantity, false, { bypassAutoBank: true, noted: action.noted });
                     break;
                 }
                 case 'take_item':
