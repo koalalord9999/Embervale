@@ -105,7 +105,7 @@ export const useSoundEngine = (volume: number = 0.5, isMuted: boolean = false) =
 
         let recipeString = recipe;
         let timeOffsetMs = 0;
-        if (recipe.match(/^d+:/)) {
+        if (recipe.match(/^\d+:/)) {
             const parts = recipe.split(/:(.+)/);
             timeOffsetMs = parseInt(parts[0], 10);
             recipeString = parts[1];
