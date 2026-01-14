@@ -1,8 +1,10 @@
-
 import React, { useCallback, useEffect, useRef } from 'react';
 import { PlayerSkill, SkillName, InventorySlot, ActiveCraftingAction, Equipment, WorldState } from '../types';
 import { ITEMS, SMITHING_RECIPES, COOKING_RECIPES, INVENTORY_CAPACITY, CRAFTING_RECIPES, FLETCHING_RECIPES, GEM_CUTTING_RECIPES, SPINNING_RECIPES, HERBLORE_RECIPES, JEWELRY_CRAFTING_RECIPES, DOUGH_RECIPES, RUNECRAFTING_RECIPES, FIREMAKING_RECIPES, SPECIAL_SMITHING_RECIPES } from '../constants';
 import { POIS } from '../data/pois';
+import { useSoundEngine } from './useSoundEngine';
+import { useUIState } from './useUIState';
+import { SoundID } from '../constants/audioManifest';
 
 interface UseCraftingProps {
     skills: (PlayerSkill & { currentLevel: number; })[];
@@ -35,6 +37,8 @@ type BarType = 'bronze_bar' | 'iron_bar' | 'steel_bar' | 'silver_bar' | 'gold_ba
 
 export const useCrafting = (props: UseCraftingProps) => {
     const { skills, hasItems, addLog, setActiveCraftingAction, inventory, modifyItem, addXp, checkQuestProgressOnSpin, checkQuestProgressOnSmith, checkQuestProgressOnOffer, activeCraftingAction, advanceTutorial, closeCraftingView, setWindmillFlour, equipment, setEquipment, worldState, setWorldState, onCreateBonfire, onRefreshBonfire, isInCombat, currentPrayer, setCurrentPrayer, setIsResting } = props;
+    const ui = useUIState();
+    const { play } = useSoundEngine(ui.masterVolume, ui.isMuted);
 
     const completeCraftingItem = useCallback((action: ActiveCraftingAction): { success: boolean; wasItemMade: boolean; logMessage?: string } => {
         let recipe: any;
@@ -566,7 +570,7 @@ export const useCrafting = (props: UseCraftingProps) => {
         }
 
         return { success: true, wasItemMade: true };
-    }, [hasItems, modifyItem, addXp, inventory, checkQuestProgressOnSpin, checkQuestProgressOnSmith, advanceTutorial, closeCraftingView, setWindmillFlour, equipment, skills, setEquipment, setWorldState, onCreateBonfire, onRefreshBonfire, checkQuestProgressOnOffer, currentPrayer, setCurrentPrayer]);
+    }, [hasItems, modifyItem, addXp, inventory, checkQuestProgressOnSpin, checkQuestProgressOnSmith, advanceTutorial, closeCraftingView, setWindmillFlour, equipment, skills, setEquipment, setWorldState, onCreateBonfire, onRefreshBonfire, checkQuestProgressOnOffer, currentPrayer, setCurrentPrayer, play]);
 
     const completeCraftingItemRef = useRef(completeCraftingItem);
     useEffect(() => {
@@ -575,6 +579,14 @@ export const useCrafting = (props: UseCraftingProps) => {
 
     useEffect(() => {
         if (!activeCraftingAction) return;
+
+        if (['smithing-item', 'smithing-bar', 'smithing-special'].includes(activeCraftingAction.recipeType)) {
+             const playRandomSound = (baseId: string, count: number) => {
+                const randomIndex = Math.floor(Math.random() * count) + 1;
+                play(`${baseId}_${randomIndex}` as SoundID);
+            };
+            playRandomSound('SMITHING_HAMMER', 3);
+        }
     
         const handle = setTimeout(() => {
             const { success, wasItemMade, logMessage } = completeCraftingItemRef.current(activeCraftingAction);
@@ -666,7 +678,7 @@ export const useCrafting = (props: UseCraftingProps) => {
         }, activeCraftingAction.duration);
     
         return () => clearTimeout(handle);
-    }, [activeCraftingAction, addLog, setActiveCraftingAction, closeCraftingView]);
+    }, [activeCraftingAction, addLog, setActiveCraftingAction, closeCraftingView, play]);
 
     const createTimedAction = useCallback((
         recipeId: string,

@@ -1,8 +1,10 @@
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { POIActivity, ResourceNodeState, SkillName, PlayerSkill, InventorySlot, ToolType, Equipment, Item } from '../types';
 import { INVENTORY_CAPACITY, ITEMS, rollOnLootTable, LootRollResult, LOG_HARDNESS, ORE_HARDNESS } from '../constants';
 import { POIS } from '../data/pois';
+import { useSoundEngine } from './useSoundEngine';
+import { useUIState } from './useUIState';
+import { SoundID } from '../constants/audioManifest';
 
 type SkillingActivity = Extract<POIActivity, { type: 'skilling' }>;
 type GroundItemActivity = Extract<POIActivity, { type: 'ground_item' }>;
@@ -21,6 +23,8 @@ interface SkillingDependencies {
 
 export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>, deps: SkillingDependencies) => {
     const { addLog, skills, addXp, inventory, modifyItem, equipment, setEquipment, checkQuestProgressOnShear, hasItems } = deps;
+    const ui = useUIState();
+    const { play } = useSoundEngine(ui.masterVolume, ui.isMuted);
     
     const [resourceNodeStates, setResourceNodeStates] = useState<Record<string, ResourceNodeState>>(initialNodeStates);
     const [activeSkilling, setActiveSkilling] = useState<{ nodeId: string; activity: SkillingActivity } | null>(null);
@@ -39,6 +43,11 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
     }, [activeSkilling]);
 
     const skillingCallbackRef = useRef<(() => void) | null>(null);
+    
+    const playRandomSound = useCallback((baseId: string, count: number) => {
+        const randomIndex = Math.floor(Math.random() * count) + 1;
+        play(`${baseId}_${randomIndex}` as SoundID);
+    }, [play]);
 
     useEffect(() => {
         skillingCallbackRef.current = () => {
@@ -92,6 +101,11 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
             }
             
             setSkillingTick(t => t + 1);
+
+            // Play background skilling sound (swinging/attempt)
+            if (activity.skill === SkillName.Woodcutting) playRandomSound('WOODCUTTING_CHOP', 3);
+            if (activity.skill === SkillName.Mining) playRandomSound('MINING_TINK', 3);
+            if (activity.skill === SkillName.Fishing) playRandomSound('FISHING_SPLASH', 3);
             
             const successChance = getSuccessChance(activity);
             const roll = Math.random() * 100;
@@ -99,6 +113,9 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
             if (roll < successChance) {
                 const skill = skills.find(s => s.name === activity.skill);
                 if (!skill) return;
+
+                // Play success sound
+                play('ITEM_PICKUP');
 
                 // Consume Bait
                 if (activity.skill === SkillName.Fishing) {
@@ -175,6 +192,7 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
                             const roll2 = rollOnLootTable('gem_table');
                             
                             if (typeof roll1 === 'string' && typeof roll2 === 'string') {
+                                // FIX: Compare rank values instead of comparing string vs number directly.
                                 gemToAward = gemRank[roll2 as keyof typeof gemRank] > gemRank[roll1 as keyof typeof gemRank] ? roll2 : roll1;
                             } else {
                                 gemToAward = (typeof roll1 === 'string' ? roll1 : null) || (typeof roll2 === 'string' ? roll2 : null);
@@ -307,8 +325,9 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
             return;
         }
     
-        const skill = skills.find(s => s.name === activity.skill);
-        if (!skill || skill.currentLevel < activity.requiredLevel) {
+        const skill = skills.find(s => s.name === SkillName.Agility); // Intentional mismatch? No, should be current skill
+        const playerSkill = skills.find(s => s.name === activity.skill);
+        if (!playerSkill || playerSkill.currentLevel < activity.requiredLevel) {
             addLog(`You need a ${activity.skill} level of ${activity.requiredLevel} to do that.`);
             return;
         }
@@ -395,16 +414,23 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
             return;
         }
 
+        // Play pickup sound
+        play('ITEM_PICKUP');
+
         // Add item
         modifyItem(activity.itemId, activity.resourceCount);
-        addLog(`You pick up ${activity.resourceCount}x ${itemData.name}.`);
+        addLog(`You pick up ${activity.resourceCount > 1 ? `${activity.resourceCount}x ` : ''}${itemData.name}.`);
 
         // Set to depleted
         setResourceNodeStates(prev => ({
             ...prev,
             [activity.id]: { resources: 0, respawnTimer: activity.respawnTimer }
         }));
-    }, [inventory, resourceNodeStates, addLog, modifyItem]);
+    }, [inventory, resourceNodeStates, addLog, modifyItem, play]);
+
+    const handleTakeAllLoot = useCallback(() => {
+        // Obsolete, placeholder for satisfying props elsewhere if needed.
+    }, []);
 
     const getTickRate = useCallback((activity: SkillingActivity, currentDeps: SkillingDependencies): number => {
         const { inventory, equipment, skills } = currentDeps;
@@ -511,7 +537,7 @@ export const useSkilling = (initialNodeStates: Record<string, ResourceNodeState>
         activeSkillingNodeId: activeSkilling?.nodeId ?? null,
         skillingTick,
         handleToggleSkilling,
-        handlePickupGroundItem, // Export new function
+        handlePickupGroundItem, 
         initializeNodeState,
         stopSkilling,
         getSuccessChance,

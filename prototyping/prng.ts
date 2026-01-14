@@ -1,4 +1,3 @@
-
 // Mulberry32, a simple and fast PRNG
 export function mulberry32(a: number) {
     return function() {

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Button from '../common/Button';
 import { useUIState } from '../../hooks/useUIState';
@@ -130,16 +129,21 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onResetGame, onExportGame, 
             );
             case 'Audio': return (
                 <div>
-                    <SettingRow label="Master Volume">
-                        <input type="range" className="w-40" disabled />
+                    <SettingRow label="Master Mute" description="Mute all synthesized sound effects.">
+                        <ToggleButton enabled={ui.isMuted} onClick={() => ui.setIsMuted(!ui.isMuted)} />
                     </SettingRow>
-                    <SettingRow label="Music Volume">
-                        <input type="range" className="w-40" disabled />
+                    <SettingRow label="Master Volume" description="Adjust the volume of all sounds.">
+                        <div className="flex items-center gap-2">
+                             <input 
+                                type="range" 
+                                min="0" max="1" step="0.05"
+                                value={ui.masterVolume}
+                                onChange={(e) => ui.setMasterVolume(parseFloat(e.target.value))}
+                                className="w-40 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-600" 
+                            />
+                            <span className="text-xs font-mono w-8">{Math.round(ui.masterVolume * 100)}%</span>
+                        </div>
                     </SettingRow>
-                    <SettingRow label="Sound Effects Volume">
-                        <input type="range" className="w-40" disabled />
-                    </SettingRow>
-                    <p className="text-center text-gray-500 italic mt-4">Audio settings are coming soon.</p>
                 </div>
             );
             case 'Gameplay': return (

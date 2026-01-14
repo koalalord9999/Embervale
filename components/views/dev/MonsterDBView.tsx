@@ -155,11 +155,12 @@ const MonsterDBView: React.FC<MonsterDBViewProps> = ({ monsters, setMonsters, mo
                 case 'stun': newAttackObject = { ...base, effect: 'stun', duration: 2000 }; break;
                 case 'magic_bypass_defence': newAttackObject = { ...base, effect: 'magic_bypass_defence', maxHit: 10 }; break;
                 case 'elemental_shift': newAttackObject = { ...base, effect: 'elemental_shift' }; break;
+                case 'poison': newAttackObject = { ...base, effect: 'poison', damage: 5, poisonChance: 0.5 }; break;
                 default: newAttackObject = oldAttack; // Should not happen
             }
             newAttacks[index] = newAttackObject;
         } else {
-            // The cast is necessary because spreading a partial breaks the discriminated union type guarantee for the compiler.
+            // The cast is necessary because spreading a partial breaks the discriminated union type for the compiler.
             newAttacks[index] = { ...oldAttack, ...updates } as MonsterSpecialAttack;
         }
         updateMonster(monsterId, { specialAttacks: newAttacks });

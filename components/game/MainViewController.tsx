@@ -28,9 +28,8 @@ import CraftingView from '../views/crafting/CraftingView';
 import QuestBoardView from '../views/QuestBoardView';
 import SceneView from './SceneView';
 import TeleportView from '../views/TeleportView';
-// FIX: Add missing imports for ExpandedMapView and AgilityCourseView.
 import ExpandedMapView from '../views/ExpandedMapView';
-import AgilityCourseView from '../views/AgilityCourseView.tsx'
+import AgilityCourseView from '../views/AgilityCourseView';
 import LootView from '../views/LootView';
 import EquipmentStatsView from '../views/overlays/EquipmentStatsView';
 import SettingsPanel from '../panels/SettingsPanel';

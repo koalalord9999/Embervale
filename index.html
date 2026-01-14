@@ -469,7 +469,7 @@
         to { opacity: 1; }
       }
       .animate-fade-in {
-        animation: fadeIn 0.5s ease-in-out;
+        animation: fadeIn 0.5s ease-in-out forwards;
       }
       @keyframes pulse-bg {
         0%, 100% { background-color: rgba(202, 138, 4, 0.2); }
@@ -1212,6 +1212,11 @@
       .item-icon-rune-anima { filter: invert(25%) sepia(80%) saturate(2000%) hue-rotate(330deg) brightness(1.1) contrast(1.1); opacity: 0.9; }
       .item-icon-rune-astral { filter: invert(75%) sepia(80%) saturate(1500%) hue-rotate(10deg) brightness(0.9) contrast(1.0); opacity: 0.9; }
       .item-icon-rune-aether { filter: invert(80%) sepia(80%) saturate(1500%) hue-rotate(100deg) brightness(1.2) contrast(1.1); opacity: 0.9; }
+
+      @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+      }
 
     </style>
   <script type="importmap">

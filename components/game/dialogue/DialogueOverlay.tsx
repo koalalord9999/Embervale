@@ -159,8 +159,8 @@ const DialogueOverlay: React.FC<DialogueOverlayProps> = ({ dialogue, setActivePa
     const hasResponses = visibleResponses && visibleResponses.length > 0;
     
     const optionsPerPage = 4;
-    const hasMoreOptions = hasResponses && visibleResponses.length > (optionsPerPage - 1);
-    const numOptionPages = hasMoreOptions ? Math.ceil(visibleResponses.length / (optionsPerPage-1)) : 1;
+    const hasMoreOptions = hasResponses && visibleResponses.length > optionsPerPage;
+    const numOptionPages = hasMoreOptions ? Math.ceil(visibleResponses.length / (optionsPerPage - 1)) : 1;
     const optionSliceStart = hasMoreOptions ? optionPage * (optionsPerPage - 1) : 0;
     const optionSliceEnd = hasMoreOptions ? (optionPage + 1) * (optionsPerPage - 1) : optionsPerPage;
     const displayedResponses = hasResponses ? visibleResponses.slice(optionSliceStart, optionSliceEnd) : [];

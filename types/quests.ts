@@ -1,5 +1,3 @@
-
-
 import { SkillName } from './enums';
 import { InventorySlot } from './entities';
 import { QUESTS } from '../constants/quests';
@@ -22,8 +20,12 @@ export interface PlayerSlayerTask {
     isComplete: boolean;
 }
 
+// FIX: Added 'operator' to gather type QuestRequirement to support 'eq', 'lt', etc.
 export type QuestRequirement =
-  | ({ type: 'gather' } & ({ itemId: string; quantity: number } | { items: { itemId: string; quantity: number }[] }))
+  | ({ type: 'gather' } & (
+      | { itemId: string; quantity: number; operator?: 'gte' | 'lt' | 'eq' }
+      | { items: { itemId: string; quantity: number; operator?: 'gte' | 'lt' | 'eq' }[] }
+    ))
   | { type: 'kill'; monsterId: string; quantity: number; style?: 'melee' | 'ranged' | 'magic' }
   | { type: 'talk'; poiId: string; npcName: string }
   | { type: 'shear'; quantity: number }
@@ -45,6 +47,7 @@ export type DialogueAction =
   | { type: 'heal'; amount: 'full' | number }
   | { type: 'restore_stats' }
   | { type: 'open_bank' }
+  | { type: 'start_bank_tutorial' }
   | { type: 'complete_tutorial' }
   | { type: 'set_quest_combat_reward'; itemId: string; quantity: number }
   | { type: 'start_mandatory_combat'; monsterId: string }
@@ -58,12 +61,14 @@ export type DialogueCheckRequirement =
     | { type: 'coins'; amount: number }
     | { type: 'skill'; skill: SkillName; level: number }
     | { type: 'world_state'; property: 'windmillFlour'; value: number; operator?: 'gte' | 'eq' }
-    | { type: 'quest'; questId: QuestId; status: 'not_started' | 'in_progress' | 'completed'; stage?: number };
+    // --- FIX: Added 'operator' to quest check requirement to support flexible stage comparisons ---
+    | { type: 'quest'; questId: QuestId; status: 'not_started' | 'in_progress' | 'completed'; stage?: number; operator?: 'gte' | 'lt' | 'eq' };
 
 export interface DialogueCheck {
     requirements: DialogueCheckRequirement[];
-    successNode: string;
-    failureNode: string;
+    // --- FIX: Made successNode and failureNode optional to support simple conditional visibility for responses ---
+    successNode?: string;
+    failureNode?: string;
 }
 
 export interface DialogueResponse {
@@ -107,6 +112,7 @@ export interface Quest {
   isSuperHidden?: boolean;
   dialogue?: Record<string, DialogueNode>;
   dialogueEntryPoints?: DialogueEntryPoint[];
+  // FIX: Removed unused 'Terrell' property and added 'startDialogueNode'
   startDialogueNode?: string;
   startHint: string;
   playerStagePerspectives: string[];

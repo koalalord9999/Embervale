@@ -388,16 +388,16 @@ const BankView: React.FC<BankViewProps> = (props) => {
     };
 
     return (
-        <div className={`flex flex-col h-full animate-fade-in text-gray-200`} onClick={() => setTooltip(null)}>
+        <div data-tut="bank-container" className={`flex flex-col h-full animate-fade-in text-gray-200`} onClick={() => setTooltip(null)}>
             <div className="flex justify-between items-start mb-2 pb-2 border-b-2 border-gray-600">
                 <h1 className="text-3xl font-bold text-yellow-400">Bank of Embrune</h1>
                 <div className="text-right">
                     <p className="text-gray-400">{totalBankedItems} / {BANK_CAPACITY} Slots Used</p>
-                    <Button onClick={onClose} size="sm">Exit Bank</Button>
+                    <Button data-tut="bank-exit" onClick={onClose} size="sm">Exit Bank</Button>
                 </div>
             </div>
             
-            <div className="bank-tabs-container flex items-end -mb-px">
+            <div data-tut="bank-tabs" className="bank-tabs-container flex items-end -mb-px">
                 {bank.map(tab => {
                     let iconContent = null;
                     if (tab.id === 0) {
@@ -447,6 +447,7 @@ const BankView: React.FC<BankViewProps> = (props) => {
             </div>
 
             <div 
+                data-tut="bank-item-grid"
                 className="flex-grow min-h-[300px] max-h-[400px] bg-black/40 p-2 rounded-lg border-2 border-gray-600 border-t-0 rounded-t-none pr-1"
                 ref={panelRef}
                 onTouchStart={handleTouchStart}
@@ -499,15 +500,15 @@ const BankView: React.FC<BankViewProps> = (props) => {
 
             <div className="mt-2 pt-2 border-t-2 border-gray-600 flex flex-wrap justify-between items-center gap-2">
                 <div className="flex items-center gap-2">
-                    <button onClick={() => setWithdrawAsNote(prev => !prev)} className={`w-10 h-10 relative overflow-hidden rounded transition-colors ${withdrawAsNote ? 'bg-yellow-600 border-2 border-yellow-500' : 'bg-gray-700 border-2 border-gray-600 hover:bg-gray-600'}`} title="Toggle Withdraw as Note">
+                    <button data-tut="bank-withdraw-mode" onClick={() => setWithdrawAsNote(prev => !prev)} className={`w-10 h-10 relative overflow-hidden rounded transition-colors ${withdrawAsNote ? 'bg-yellow-600 border-2 border-yellow-500' : 'bg-gray-700 border-2 border-gray-600 hover:bg-gray-600'}`} title="Toggle Withdraw as Note">
                         <img src="https://api.iconify.design/game-icons:folded-paper.svg" alt="Note" className="item-note-paper" />
                     </button>
-                    <button onClick={handleToggleBankPlaceholders} className={`w-10 h-10 flex items-center justify-center rounded transition-colors ${bankPlaceholders ? 'bg-yellow-600 border-2 border-yellow-500' : 'bg-gray-700 border-2 border-gray-600 hover:bg-gray-600'}`} title="Toggle Bank Placeholders">
+                    <button data-tut="bank-placeholders" onClick={handleToggleBankPlaceholders} className={`w-10 h-10 flex items-center justify-center rounded transition-colors ${bankPlaceholders ? 'bg-yellow-600 border-2 border-yellow-500' : 'bg-gray-700 border-2 border-gray-600 hover:bg-gray-600'}`} title="Toggle Bank Placeholders">
                         <img src={bankPlaceholders ? "https://api.iconify.design/game-icons:padlock.svg" : "https://api.iconify.design/game-icons:padlock-open.svg"} alt="Placeholders" className="w-6 h-6 filter invert" />
                     </button>
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div data-tut="bank-quantity-toggles" className="flex items-center gap-1">
                      {[1, 5, 10].map(qty => (
                         <button
                             key={qty}
@@ -531,7 +532,7 @@ const BankView: React.FC<BankViewProps> = (props) => {
                     </button>
                 </div>
                 
-                <div className="flex-grow max-w-xs mx-2">
+                <div data-tut="bank-search" className="flex-grow max-w-xs mx-2">
                     <input 
                         type="text" 
                         placeholder="Search..." 
@@ -542,10 +543,10 @@ const BankView: React.FC<BankViewProps> = (props) => {
                 </div>
 
                 <div className="flex justify-center gap-2">
-                    <button onClick={() => onDepositBackpack()} className="w-10 h-10 flex items-center justify-center rounded bg-gray-700 border-2 border-gray-600 hover:bg-gray-600 transition-colors" title="Deposit Inventory">
+                    <button data-tut="bank-deposit-backpack" onClick={() => onDepositBackpack()} className="w-10 h-10 flex items-center justify-center rounded bg-gray-700 border-2 border-gray-600 hover:bg-gray-600 transition-colors" title="Deposit Inventory">
                         <img src="https://api.iconify.design/game-icons:profit.svg" alt="Deposit Inventory" className="w-6 h-6 filter invert" />
                     </button>
-                    <button onClick={() => onDepositEquipment()} className="w-10 h-10 relative flex items-center justify-center rounded bg-gray-700 border-2 border-gray-600 hover:bg-gray-600 transition-colors overflow-hidden" title="Deposit Equipment">
+                    <button data-tut="bank-deposit-equipment" onClick={() => onDepositEquipment()} className="w-10 h-10 relative flex items-center justify-center rounded bg-gray-700 border-2 border-gray-600 hover:bg-gray-600 transition-colors overflow-hidden" title="Deposit Equipment">
                         <img src="https://api.iconify.design/game-icons:contract.svg" alt="" className="bank-action-bg-icon" />
                         <img src="https://api.iconify.design/game-icons:battle-gear.svg" alt="Deposit Equipment" className="relative w-6 h-6 filter invert" />
                     </button>

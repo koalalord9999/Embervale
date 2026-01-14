@@ -1,5 +1,3 @@
-
-
 import React, { useCallback, useMemo } from 'react';
 import { InventorySlot, Equipment, CombatStance, BankTab, EquipmentStats } from '../types';
 import { ITEMS, BANK_CAPACITY, INVENTORY_CAPACITY, MAX_BANK_TABS } from '../constants';
@@ -10,7 +8,6 @@ interface BankDependencies {
     setInventory: React.Dispatch<React.SetStateAction<(InventorySlot | null)[]>>;
     equipment: Equipment;
     setEquipment: React.Dispatch<React.SetStateAction<Equipment>>;
-    // FIX: Standardize modifyItem signature to use a single options object.
     modifyItem: (itemId: string, quantity: number, quiet?: boolean, slotOverrides?: Partial<Omit<InventorySlot, 'itemId' | 'quantity'>> & { bypassAutoBank?: boolean }) => void;
     setCombatStance: (stance: CombatStance) => void;
     bankPlaceholders: boolean;
@@ -93,10 +90,8 @@ export const useBank = (bankState: BankState, deps: BankDependencies) => {
                     }
                 } else {
                     if (isSingleUnstackable) {
-                        // FIX: Remove from the specific index for single, unstackable items.
                         newInv[inventoryIndex] = null;
                     } else {
-                        // Original logic for 'all' or 'X'
                         let removedCount = 0;
                         for (let i = 0; i < newInv.length && removedCount < qtyToDeposit; i++) {
                             const s = newInv[i];
@@ -183,7 +178,6 @@ export const useBank = (bankState: BankState, deps: BankDependencies) => {
             addLog("You don't have enough inventory space to withdraw the full amount.");
         }
     
-        // FIX: The `modifyItem` function expects 4 arguments, with the last being an options object. This call was incorrect.
         modifyItem(itemId, actualQtyToWithdraw, true, { 
             doses: bankSlot.doses,
             noted: withdrawNoted, 

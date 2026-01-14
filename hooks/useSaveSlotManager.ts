@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { saveSlotState, loadAllSlots, deleteSlot, loadSlotState } from '../db';
 import { ALL_SKILLS, REPEATABLE_QUEST_POOL, ITEMS, MONSTERS, SPELLS, BANK_CAPACITY, QUESTS } from '../constants';
 import { POIS } from '../data/pois';
@@ -39,7 +39,6 @@ const defaultState = {
     currentPrayer: 1,
     runEnergy: 100,
     isRunToggled: false,
-    // FIX: Add isResting to default state
     isResting: false,
     agilityState: { activeCourseId: null, currentObstacleIndex: 0, lapsCompleted: {} } as AgilityState,
     activePrayers: [] as string[],
@@ -59,7 +58,7 @@ const defaultState = {
         boardCompletions: {},
     },
     slayerTask: null as PlayerSlayerTask | null,
-    worldState: { windmillFlour: 0, deathMarker: null, bankPlaceholders: false, hpBoost: null, recentlyKilled: [], depletedHouses: [], nextHouseResetTimestamp: 0, dehydrationLevel: 0 } as WorldState,
+    worldState: { windmillFlour: 0, deathMarker: null, bankPlaceholders: false, hpBoost: null, recentlyKilled: [], depletedHouses: [], nextHouseResetTimestamp: 0, dehydrationLevel: 0, unlockedMusicTracks: ['login', 'generated_track_1'] } as WorldState,
     autocastSpell: null as Spell | null,
     settings: defaultSettings,
     statModifiers: [] as ActiveStatModifier[],
@@ -182,6 +181,18 @@ const hydrateGameState = (loadedState: any): GameState => {
         console.log("Legacy save detected without playerType. Migrating to Cheats mode.");
     }
 
+    // Ensure all saves have the login music track unlocked.
+    if (Array.isArray(hydrated.worldState.unlockedMusicTracks)) {
+        if (!hydrated.worldState.unlockedMusicTracks.includes('login')) {
+            hydrated.worldState.unlockedMusicTracks.push('login');
+        }
+        if (!hydrated.worldState.unlockedMusicTracks.includes('generated_track_1')) {
+            hydrated.worldState.unlockedMusicTracks.push('generated_track_1');
+        }
+    } else {
+        hydrated.worldState.unlockedMusicTracks = ['login', 'generated_track_1'];
+    }
+
     return hydrated;
 };
 
@@ -260,7 +271,6 @@ export const useSaveSlotManager = (ui: ReturnType<typeof useUIState>) => {
     const importToSlot = useCallback((slotId: number, data: string): boolean => {
         const parsedData = parseAndValidateSave(data);
         if (parsedData) {
-            // FIX: Allow importing any character type in dev mode, but prevent Normal/Hardcore imports in production builds.
             const isProduction = process.env.NODE_ENV === 'production';
             if (isProduction && (parsedData.playerType === PlayerType.Normal || parsedData.playerType === PlayerType.Hardcore)) {
                 alert("What's this? A wolf in sheep's clothing! Messing with save files to bypass Normal or Hardcore restrictions is strictly forbidden. Only 'Cheats' mode characters can be imported. Your import has been denied, you cheeky adventurer!");

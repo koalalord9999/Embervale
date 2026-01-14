@@ -31,6 +31,7 @@ import { useThievingPilfering } from '../../hooks/useThievingPilfering';
 import { usePrayer } from '../../hooks/usePrayer';
 import { useDehydration } from '../../hooks/useDehydration';
 import { useAgility } from '../../hooks/useAgility';
+import { useMusicEngine } from '../../hooks/useMusicEngine';
 import { PRAYERS, ITEMS, SKILL_ICONS } from '../../constants';
 
 
@@ -59,6 +60,7 @@ import { humanoids } from '../../constants/monsters/humanoids';
 import { magicalAndUndead } from '../../constants/monsters/magicalAndUndead';
 import { dragons } from '../../constants/monsters/dragons';
 import BuffBar from './BuffBar';
+import { useSoundEngine } from '../../hooks/useSoundEngine';
 
 
 interface GameProps {
@@ -76,6 +78,7 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
     // Core State Hooks
     const session = useGameSession(initialState.currentPoiId);
     const { activityLog, addLog, setActivityLog } = useActivityLog(initialState.activityLog || []);
+    const { play } = useSoundEngine(ui.masterVolume, ui.isMuted);
     const [xpDrops, setXpDrops] = useState<XpDrop[]>([]);
     const [levelUpInfo, setLevelUpInfo] = useState<{ skill: SkillName; level: number } | null>(null);
     const [poiImmunityTimeLeft, setPoiImmunityTimeLeft] = useState(0);
@@ -88,7 +91,15 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
 
     const isBusy = ui.isBusy || isTraveling || !!ui.activeSingleAction;
 
+    const [worldState, setWorldState] = useState<WorldState>(initialState.worldState);
+
+    // Music System Integration
+    const currentRegionId = useMemo(() => {
+        const poi = POIS[session.currentPoiId];
+        return poi ? poi.regionId : undefined;
+    }, [session.currentPoiId]);
     
+    useMusicEngine(currentRegionId, ui.masterVolume, ui.isMuted, worldState, setWorldState);
     
     // DEV MODE STATE INITIALIZATION
     const handleTogglePermAggro = useCallback(() => {
@@ -148,11 +159,13 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
     }, []);
 
     const removeXpDrop = useCallback((id: number) => setXpDrops(prev => prev.filter(drop => drop.id !== id)), []);
+    
     const handleLevelUp = useCallback((skill: SkillName, level: number) => {
         setLevelUpInfo({ skill, level });
+        play('LEVEL_UP');
         const duration = level === 99 ? 8000 : 4000;
         setTimeout(() => setLevelUpInfo(null), duration);
-    }, []);
+    }, [play]);
 
     const handlePoisonDamage = useCallback((damage: number) => {
         setPoisonEvent({ damage, timestamp: Date.now() });
@@ -165,7 +178,6 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
         }
     }, [poisonEvent]);
 
-    const [worldState, setWorldState] = useState<WorldState>(initialState.worldState);
     const charInitialData = useMemo(() => ({ skills: initialState.skills, combatStance: combatStance, currentHp: initialState.currentHp, currentPrayer: initialState.currentPrayer, autocastSpell: initialState.autocastSpell, statModifiers: initialState.statModifiers, activeBuffs: initialState.activeBuffs, runEnergy: initialState.runEnergy, isRunToggled: initialState.isRunToggled, isResting: initialState.isResting ?? false }), [initialState, combatStance]);
     const charCallbacks = useMemo(() => ({ addLog, onXpGain: handleXpGain, onLevelUp: handleLevelUp, onPoisonDamage: handlePoisonDamage }), [addLog, handleXpGain, handleLevelUp, handlePoisonDamage]);
     
@@ -265,8 +277,6 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
         isInCombat,
     });
 
-    
-    
     const handleFastTravel = useCallback((destinationPoiId: string) => {
         if (isBusy || isInCombat || char.isStunned) {
             addLog("You can't travel right now.");
@@ -396,7 +406,10 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
         }
     }, [devMode, addLog]);
 
+    /* FIX: Moved playerDeath declaration above handlePlayerDeath to fix block-scoped variable usage error. */
     const playerDeath = usePlayerDeath({ skilling, interactQuest, ui, session, char, inv, addLog, playerQuests: quests.playerQuests, onItemDropped, setWorldState, playerType: initialState.playerType, slotId, onReturnToMenu, repeatableQuests, setDynamicActivities, worldState, onResetGame, setActivePrayers: prayer.setActivePrayers });
+
+    const handlePlayerDeath = useCallback((currentState: any) => { playerDeath.handlePlayerDeath(currentState); handleCombatFinish(); }, [playerDeath, handleCombatFinish]);
     
     const gameState = useMemo(() => ({
         username: initialState.username,
@@ -463,8 +476,6 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
         devMode.xpMultiplier, devMode.combatSpeedMultiplier, devMode.isPlayerInvisible, devMode.isAutoBankOn, devMode.isGodModeOn
     ]);
 
-    const handlePlayerDeath = useCallback((currentState: any) => { playerDeath.handlePlayerDeath(currentState); handleCombatFinish(); }, [playerDeath, handleCombatFinish]);
-    
     useEffect(() => {
         handlePlayerDeathRef.current = () => handlePlayerDeath(gameState);
     }, [gameState, handlePlayerDeath]);
@@ -506,7 +517,7 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
     const crafting = useCrafting({ skills: char.skills, hasItems: inv.hasItems, addLog, activeCraftingAction: ui.activeCraftingAction, setActiveCraftingAction: ui.setActiveCraftingAction, inventory: inv.inventory, modifyItem: inv.modifyItem, addXp: char.addXp, checkQuestProgressOnSpin: questLogic.checkQuestProgressOnSpin, checkQuestProgressOnSmith: questLogic.checkQuestProgressOnSmith, checkQuestProgressOnOffer: questLogic.checkQuestProgressOnOffer, advanceTutorial: (condition: string) => {}, closeCraftingView: ui.closeCraftingView, setWindmillFlour, equipment: inv.equipment, setEquipment: inv.setEquipment, worldState, setWorldState, onCreateBonfire, onRefreshBonfire, isInCombat, currentPrayer: char.currentPrayer, setCurrentPrayer: char.setCurrentPrayer, setIsResting: char.setIsResting });
     const worldActions = useWorldActions({ hasItems: inv.hasItems, inventory: inv.inventory, modifyItem: inv.modifyItem, addLog, coins: inv.coins, skills: char.skills, addXp: char.addXp, setClearedSkillObstacles, playerQuests: quests.playerQuests, setMakeXPrompt: ui.setMakeXPrompt, windmillFlour: worldState.windmillFlour, setWindmillFlour, setActiveCraftingAction: ui.setActiveCraftingAction, setInventory: inv.setInventory, equipment: inv.equipment, setIsResting: char.setIsResting });
     const dialogueActions = useDialogueActions({ quests, questLogic, navigation, inv, char, worldActions, addLog, worldState, setBank, setActivityLog, repeatableQuests, ui, setWorldState, session, setIsResting: char.setIsResting, });
-    const { handleDialogueCheck, onResponse } = dialogueActions;
+    const { handleDialogueCheck, onResponse, handleDialogueAction } = dialogueActions;
     
     const itemActions = useItemActions({ 
         crafting, addLog, currentHp: char.currentHp, maxHp: char.maxHp, setCurrentHp: char.setCurrentHp, 
@@ -677,8 +688,8 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
     useEffect(() => { deathMarkerCallbackRef.current = handleDeathMarkerTick; });
 
     useEffect(() => {
-        const timer = setInterval(() => deathMarkerCallbackRef.current(), 1000);
-        return () => clearInterval(timer);
+        const interval = setInterval(() => deathMarkerCallbackRef.current(), 1000);
+        return () => clearInterval(interval);
     }, []);
 
      // POI Immunity Timer UI Logic
@@ -771,7 +782,7 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
             thievingPilfering.leaveHouse();
             return;
         } else if (activity.type === 'npc' && activity.name === 'Altar') {
-            dialogueActions.handleDialogueAction([{ type: 'restore_prayer' }]);
+            handleDialogueAction([{ type: 'restore_prayer' }]);
             return;
         } else if (activity.type === 'start_agility_course') {
             agility.startCourse(activity.courseId);
@@ -914,7 +925,7 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
     }, [char.currentHp, gameState, handlePlayerDeath]);
 
     return (
-        <>
+        <div className="w-full h-full p-2 flex flex-col md:flex-row gap-2 relative overflow-y-auto md:overflow-hidden">
             <div className="w-full md:w-4/5 flex flex-col gap-2 relative">
                 <BuffBar statModifiers={char.statModifiers} activeBuffs={buffsForDisplay} />
                 <div className="bg-black/70 border-2 border-gray-600 rounded-lg p-4 flex-grow min-h-0 relative overflow-y-auto md:overflow-visible">
@@ -927,9 +938,7 @@ const Game: React.FC<GameProps> = ({ initialState, slotId, onReturnToMenu, ui, a
                     </div>
                 )}
                     <MainViewController onFastTravel={handleFastTravel} onCommitMapChanges={devMode.handleCommitMapChanges} {...{ 
-// FIX: Pass the char object combined with the setCombatStance function to satisfy the component's prop types.
 char: {...char, setCombatStance},
-// FIX: Pass the itemActions object to satisfy the component's prop types.
 itemActions, inv,quests,bank,bankLogic,shops,crafting,repeatableQuests,navigation,worldActions,slayer,questLogic,skilling,interactQuest,session,clearedSkillObstacles,monsterRespawnTimers,handlePlayerDeath: () => handlePlayerDeath(gameState),handleKill,onWinCombat,onFleeSuccess: onFleeFromCombat,onResponse,handleDialogueCheck,combatSpeedMultiplier: devMode.combatSpeedMultiplier,activeCombatStyleHighlight: null,isTouchSimulationEnabled: devMode.isTouchSimulationEnabled,isMapManagerEnabled: false,poiCoordinates: undefined,regionCoordinates: undefined,onUpdatePoiCoordinate: undefined,poiConnections: undefined,addLog,ui,initialState,showAllPois: devMode.showAllPois,groundItemsForCurrentPoi,onPickUpItem: handlePickUpItem,onTakeAllLoot: handleTakeAllLoot,onItemDropped,isAutoBankOn: devMode.isAutoBankOn,handleCombatXpGain: char.addXp,poiImmunityTimeLeft,killTrigger,bankPlaceholders: worldState.bankPlaceholders??false,handleToggleBankPlaceholders,bonfires: bonfires.filter(b => b.uniqueId.startsWith(session.currentPoiId)),onStokeBonfire: crafting.handleStokeBonfire,isStunned: char.isStunned,addBuff: char.addBuff,isDevMode: devMode.isDevMode,onToggleDevPanel: handleToggleDevPanel,onToggleTouchSimulation: devMode.onToggleTouchSimulation,onDepositEquipment: () => bankLogic.handleDepositEquipment(ui.activeBankTabId),deathMarker: worldState.deathMarker,activeRepeatableQuest: repeatableQuests.activePlayerQuest,onActivity: handleActivityClickWrapper,onResetGame,onImportGame,onExportGame,isOneClickMode: ui.isOneClickMode,poi,thievingContainerStates: thieving.containerStates,onPickpocket: thieving.handlePickpocket,onLockpick: thieving.handleLockpick,onPilfer: thievingPilfering.handlePilfer,onStealFromStall: thieving.handleStealFromStall,worldState,onStartCombat: onStartSingleCombat,onEncounterWin: handleEncounterWin,activePrayers: prayer.activePrayers,onJewelryCraft: crafting.handleJewelryCrafting,setEquipment: inv.setEquipment,poisonEvent,runEnergy: char.runEnergy,setRunEnergy: char.setRunEnergy,playerCombatLevel: char.combatLevel,addXp: char.addXp,setCurrentHp: char.setCurrentHp,agility }} />
                         {levelUpInfo && <LevelUpAnimation skill={levelUpInfo.skill} level={levelUpInfo.level} />}
                         <LootButtonOverlay groundItems={groundItemsForCurrentPoi} onOpenLootView={() => ui.setIsLootViewOpen(true)} />
@@ -972,7 +981,8 @@ itemActions, inv,quests,bank,bankLogic,shops,crafting,repeatableQuests,navigatio
                         isPoisoned: char.isPoisoned, 
                         onCurePoison: itemActions.handleCurePoisonFromOrb, 
                         poisonEvent, 
-                        onToggleDevPanel: handleToggleDevPanel
+                        onToggleDevPanel: handleToggleDevPanel,
+                        worldState,
                     }}
                     isPermAggroOn={ui.isPermAggroOn}
                     onTogglePermAggro={handleTogglePermAggro}
@@ -1051,8 +1061,7 @@ itemActions, inv,quests,bank,bankLogic,shops,crafting,repeatableQuests,navigatio
                 />
                 
             )}
-            
-        </>
+        </div>
     );
 };
 

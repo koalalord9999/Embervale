@@ -1,6 +1,5 @@
-
 import React, { useCallback } from 'react';
-import { DialogueAction, DialogueCheckRequirement, WorldState, InventorySlot, BankTab, ActivePanel, POIActivity, DialogueResponse, SkillName } from '../types';
+import { DialogueAction, DialogueCheckRequirement, WorldState, InventorySlot, BankTab, ActivePanel, POIActivity, DialogueResponse, SkillName, ActiveTutorialState } from '../types';
 import { INVENTORY_CAPACITY, QUESTS, ITEMS } from '../constants';
 import { useQuests } from './useQuests';
 import { useQuestLogic } from './useQuestLogic';
@@ -76,7 +75,12 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                         case 'in_progress':
                             let inProgressCheck = !!playerQuest && !playerQuest.isComplete;
                             if (req.stage !== undefined) {
-                                inProgressCheck = inProgressCheck && playerQuest.currentStage === req.stage;
+                                // --- FIX: Support gte/lt/eq operators for quest stage comparisons in dialogue ---
+                                const op = req.operator ?? 'eq';
+                                if (op === 'gte') inProgressCheck = inProgressCheck && playerQuest.currentStage >= req.stage;
+                                else if (op === 'lt') inProgressCheck = inProgressCheck && playerQuest.currentStage < req.stage;
+                                else if (op === 'eq') inProgressCheck = inProgressCheck && playerQuest.currentStage === req.stage;
+                                else inProgressCheck = inProgressCheck && playerQuest.currentStage === req.stage;
                             }
                             return inProgressCheck;
                         case 'completed':
@@ -118,8 +122,8 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                 case 'teleport':
                     navigation.handleForcedNavigate(action.poiId);
                     break;
-                case 'heal':
-                    char.setCurrentHp(hp => action.amount === 'full' ? char.maxHp : Math.min(char.maxHp, hp + action.amount));
+                case 'heal': //This runs when resting at an inn
+                    char.setCurrentHp(hp => action.amount === 'full' ? char.maxHp : Math.min(char.maxHp, hp + action.amount));                    
                     char.setRunEnergy(100);
                     if (action.amount === 'full') {
                         addLog("You feel fully rested.");
@@ -139,14 +143,35 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                 case 'open_bank':
                     ui.setActivePanel('bank');
                     break;
+                case 'start_bank_tutorial': {
+                    ui.setActivePanel('bank');
+                    // FIX: Using React.createElement instead of JSX in .ts file
+                    ui.setActiveTutorial({
+                        id: 'bank-tour',
+                        currentStepIndex: 0,
+                        steps: [
+                            { targetId: 'bank-container', description: React.createElement('p', null, "Welcome to the ", React.createElement('span', { className: "text-yellow-400 font-bold" }, "Bank of Embrune"), "! Here you can store your valuables safely. Even if you fall in battle, items kept here remain secure.") },
+                            { targetId: 'bank-tabs', description: React.createElement('p', null, "These are your ", React.createElement('span', { className: "text-yellow-300 font-bold" }, "Bank Tabs"), ". You can organize your items by dragging them into different tabs. You can have up to 6 tabs!") },
+                            { targetId: 'bank-item-grid', description: React.createElement('p', null, "This is the ", React.createElement('span', { className: "text-yellow-300 font-bold" }, "Main Vault"), ". It shows all the items in your current tab. Click an item to withdraw it, or drag to reorganize.") },
+                            { targetId: 'bank-quantity-toggles', description: React.createElement('p', null, "Choose ", React.createElement('span', { className: "text-yellow-300 font-bold" }, "how many"), " items you want to move at once. Select 1, 5, 10, or 'All'. Use 'X' to set a custom amount.") },
+                            { targetId: 'bank-withdraw-mode', description: React.createElement('p', null, "You can withdraw items as physical objects or as ", React.createElement('span', { className: "text-yellow-300 font-bold" }, "Bank Notes"), ". Notes stack in your bag, making them easier to carry in bulk!") },
+                            { targetId: 'bank-search', description: React.createElement('p', null, "Need to find something specific? Use the ", React.createElement('span', { className: "text-yellow-300 font-bold" }, "Search Bar"), " to filter items across all your tabs instantly.") },
+                            { targetId: 'bank-deposit-backpack', description: React.createElement('p', null, "Need space? Click this to ", React.createElement('span', { className: "text-yellow-300 font-bold" }, "deposit everything"), " currently in your inventory into the bank.") },
+                            { targetId: 'bank-deposit-equipment', description: React.createElement('p', null, "Use this to quickly ", React.createElement('span', { className: "text-yellow-300 font-bold" }, "deposit all equipped items"), ". Great for changing gear sets in a hurry!") },
+                            { targetId: 'bank-placeholders', description: React.createElement('p', null, "This padlock icon toggles ", React.createElement('span', { className: "text-yellow-300 font-bold" }, "Bank Placeholders"), ". When ON, withdrawing all of an item leaves a slot so your bank stays organized.") },
+                            { targetId: 'bank-exit', description: React.createElement('p', null, "That's the basics! Click ", React.createElement('span', { className: "text-yellow-300 font-bold" }, "Exit Bank"), " when you're finished to return to the world.") },
+                        ]
+                    });
+                    break;
+                }
                 case 'complete_tutorial': {
-
+                    
                     // Wipe everything
                     inv.setInventory(new Array(INVENTORY_CAPACITY).fill(null));
                     inv.setEquipment({ weapon: null, shield: null, head: null, body: null, legs: null, ammo: null, gloves: null, boots: null, cape: null, necklace: null, ring: null });
                     setBank([{ id: 0, name: 'Main', icon: null, items: [] }]);
                     setActivityLog([]);
-
+                    
                     // Automatically turn in the tutorial repeatable quest if it's active.
                     if (repeatableQuests.activePlayerQuest?.questId === 'tutorial_magic_rat') {
                         repeatableQuests.handleTurnInRepeatableQuest();
@@ -192,7 +217,7 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                     const hidesToTan: { hideId: string; quantity: number; leatherId: string }[] = [];
 
                     for (const hideId in TANNING_RECIPES) {
-                        const count = inv.inventory.reduce((acc, slot) =>
+                        const count = inv.inventory.reduce((acc, slot) => 
                             (slot && slot.itemId === hideId && !slot.noted) ? acc + slot.quantity : acc, 0);
                         if (count > 0) {
                             const recipe = TANNING_RECIPES[hideId];
@@ -200,12 +225,12 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                             hidesToTan.push({ hideId, quantity: count, ...recipe });
                         }
                     }
-
+                    
                     if (inv.coins < totalCost) {
                         // This case is handled by the failureNode in the dialogue, but as a safeguard:
                         addLog("You can't afford to tan all your hides.");
                         break;
-                    }
+                    } 
 
                     inv.modifyItem('coins', -totalCost, true);
                     let totalTanned = 0;
@@ -219,10 +244,10 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
                     if (totalTanned > 0) {
                         addLog(`You pay Sven ${totalCost} coins to tan ${totalTanned} hides.`);
                     }
-
+                    
                     break;
                 }
-                case 'open_make_x_for_grinding': {
+                 case 'open_make_x_for_grinding': {
                     const { itemId } = action;
                     const count = inv.inventory.filter(slot => slot?.itemId === itemId).length;
                     if (count > 0) {
@@ -257,13 +282,20 @@ export const useDialogueActions = (deps: DialogueActionDependencies) => {
     const onResponse = useCallback((response: DialogueResponse) => {
         if (response.check) {
             const checkResult = handleDialogueCheck(response.check.requirements);
+            // --- FIX: Handle optional branching nodes in check result ---
+            const nextNodeKey = checkResult ? response.check.successNode : response.check.failureNode;
+            
             if (checkResult) {
                 if (response.actions) {
                     handleDialogueAction(response.actions);
                 }
-                setActiveDialogue(prev => prev ? { ...prev, currentNodeKey: response.check!.successNode } : null);
+            }
+
+            if (nextNodeKey !== undefined) {
+                setActiveDialogue(prev => prev ? { ...prev, currentNodeKey: nextNodeKey } : null);
             } else {
-                setActiveDialogue(prev => prev ? { ...prev, currentNodeKey: response.check!.failureNode } : null);
+                // Default to closing dialogue if no specific branch is provided (e.g. simple visibility gating)
+                setActiveDialogue(null);
             }
         } else {
             if (response.actions) {

@@ -6,7 +6,6 @@ import { useSkilling } from './useSkilling';
 import { useInteractQuest } from './useInteractQuest';
 import { useGameSession } from './useGameSession';
 import { ActiveBuff, Equipment, Item } from '../types';
-// FIX: Import SKILL_ICONS to resolve reference error.
 import { SKILL_ICONS } from '../constants';
 
 interface NavigationDependencies {
@@ -178,7 +177,6 @@ export const useNavigation = (deps: NavigationDependencies) => {
     }, []);
 
     const handleFastTravel = useCallback((destinationPoiId: string) => {
-        // FIX: Replaced undefined `char.isStunned` with `isStunned` from destructured dependencies.
         if (isBusy || isInCombat || isStunned) {
             addLog("You can't travel right now.");
             return;

@@ -1,4 +1,6 @@
 import React from 'react';
+import { useSoundEngine } from '../../hooks/useSoundEngine';
+import { useUIState } from '../../hooks/useUIState';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     children: React.ReactNode;
@@ -6,7 +8,10 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     size?: 'sm' | 'md';
 }
 
-const Button: React.FC<ButtonProps> = ({ children, variant = 'primary', size = 'md', className, ...props }) => {
+const Button: React.FC<ButtonProps> = ({ children, variant = 'primary', size = 'md', className, onClick, ...props }) => {
+    const ui = useUIState();
+    const { play, initContext } = useSoundEngine(ui.masterVolume, ui.isMuted);
+
     const baseClasses = 'font-bold rounded-md shadow-md transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800';
     
     const variantClasses = {
@@ -23,9 +28,16 @@ const Button: React.FC<ButtonProps> = ({ children, variant = 'primary', size = '
     
     const disabledClasses = 'disabled:bg-gray-800 disabled:text-gray-500 disabled:border-gray-700 disabled:cursor-not-allowed';
 
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+        initContext();
+        play('UI_CLICK');
+        if (onClick) onClick(e);
+    };
+
     return (
         <button
             className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${disabledClasses} ${className ?? ''}`}
+            onClick={handleClick}
             {...props}
         >
             {children}

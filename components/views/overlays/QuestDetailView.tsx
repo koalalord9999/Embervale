@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { PlayerQuestState } from '../../../types';
 import { QUESTS } from '../../../constants';
@@ -48,32 +47,40 @@ const QuestDetailView: React.FC<QuestDetailViewProps> = ({ questId, playerQuests
                     <p className="mb-4 text-gray-400 italic">{questData.description}</p>
                     <div className="space-y-2 mb-4">
                         {questData.playerStagePerspectives.map((perspective, index) => (
-                            <p key={index} className="text-gray-500 line-through">
+                            <p key={index} className="text-gray-500 line-through text-sm">
                                 {perspective}
                             </p>
                         ))}
                     </div>
                     <div className="bg-black/40 p-3 rounded-lg border border-gray-600">
-                         <p className="italic">"{questData.completionSummary}"</p>
+                         <p className="italic text-yellow-100">"{questData.completionSummary}"</p>
                     </div>
                 </>
             );
         }
 
         // In Progress
+        const currentStageDescription = questData.stages[playerQuest.currentStage]?.description || "Objective unknown.";
+        const historyPerspectives = questData.playerStagePerspectives.slice(0, playerQuest.currentStage);
+
         return (
             <>
                 <p className="mb-4 text-gray-400 italic">{questData.description}</p>
                 <div className="space-y-2">
-                    {questData.playerStagePerspectives
-                        .filter((_, index) => index <= playerQuest.currentStage)
-                        .map((perspective, index) => {
-                            if (index < playerQuest.currentStage) {
-                                return <p key={index} className="text-gray-500 line-through">{perspective}</p>;
-                            }
-                            // This will now only ever be the current stage
-                            return <p key={index} className="font-semibold text-yellow-300 animate-pulse">{perspective}</p>;
-                        })}
+                    {/* Render past completed stages as narrative history */}
+                    {historyPerspectives.map((perspective, index) => (
+                        <p key={index} className="text-gray-500 line-through text-sm">
+                            {perspective}
+                        </p>
+                    ))}
+                    
+                    {/* Render current active objective as the instructional description */}
+                    <div className="mt-4 pt-4 border-t border-gray-700">
+                        <h3 className="text-xs font-bold uppercase text-gray-500 mb-1">Current Objective:</h3>
+                        <p className="font-bold text-yellow-400 animate-pulse text-lg">
+                            {currentStageDescription}
+                        </p>
+                    </div>
                 </div>
             </>
         );

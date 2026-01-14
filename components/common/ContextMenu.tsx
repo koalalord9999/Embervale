@@ -101,7 +101,6 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ options, triggerEvent, onClos
                                 disabled={option.disabled}
                                 className={`w-full text-left px-4 py-2 text-sm text-gray-200 transition-colors hover:bg-yellow-700 disabled:text-gray-500 disabled:cursor-not-allowed flex items-center`}
                             >
-                                {/*<span className="text-gray-500 w-6 text-left">{index + 1}.</span> (This is for displaying numbers next to the entries, letting the player know what number coresponds to which entry.*/}
                                 <span>{option.label}</span>
                             </button>
                         </li>

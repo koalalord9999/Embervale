@@ -1,6 +1,5 @@
-// FIX: Added useState, useMemo, and useCallback to the import from 'react'.
 import React, { useState, useMemo, useCallback } from 'react';
-import { ActivePanel, SkillName, InventorySlot, ActiveCraftingAction, DialogueNode, CraftingContext, Equipment, PlayerQuestState, Spell, Item, DialogueResponse, DialogueCheckRequirement } from '../types';
+import { ActivePanel, SkillName, InventorySlot, ActiveCraftingAction, DialogueNode, CraftingContext, Equipment, PlayerQuestState, Spell, Item, DialogueResponse, DialogueCheckRequirement, ActiveTutorialState } from '../types';
 import { ContextMenuOption } from '../components/common/ContextMenu';
 
 export interface DialogueState {
@@ -94,6 +93,9 @@ export const useUIState = () => {
     const [isSelectingAutocastSpell, setIsSelectingAutocastSpell] = useState<boolean>(false);
     const [manualCastTrigger, setManualCastTrigger] = useState<Spell | null>(null);
 
+    // New state for guided tutorials
+    const [activeTutorial, setActiveTutorial] = useState<ActiveTutorialState | null>(null);
+
 
     // New state for equipment overlays
     const [isEquipmentStatsViewOpen, setIsEquipmentStatsViewOpen] = useState<boolean>(false);
@@ -105,6 +107,7 @@ export const useUIState = () => {
     const [isDevPanelOpen, setIsDevPanelOpen] = useState<boolean>(false);
     const [isMonsterDBOpen, setIsMonsterDBOpen] = useState<boolean>(false);
     const [isSettingsViewOpen, setIsSettingsViewOpen] = useState<boolean>(false);
+    const [isSoundCreatorOpen, setIsSoundCreatorOpen] = useState<boolean>(false);
     const [activeMapRegionId, setActiveMapRegionId] = useState<string>('world');
     const [activeBankTabId, setActiveBankTabId] = useState<number>(0);
     const [activeDungeonMap, setActiveDungeonMap] = useState<{ regionId: string; mapTitle: string } | null>(null);
@@ -119,6 +122,10 @@ export const useUIState = () => {
     const [showCombatEnemyHealth, setShowCombatEnemyHealth] = useState<boolean>(false);
     const [showHitsplats, setShowHitsplats] = useState<boolean>(true);
     const [isOneClickMode, setIsOneClickMode] = useState<boolean>(false);
+
+    // Audio Settings
+    const [masterVolume, setMasterVolume] = useState<number>(0.5);
+    const [isMuted, setIsMuted] = useState<boolean>(false);
 
     // New state for bank quantity toggles (session-wide)
     const [activeWithdrawMode, setActiveWithdrawMode] = useState<WithdrawMode>(1);
@@ -151,7 +158,8 @@ export const useUIState = () => {
         isAtlasViewOpen ||
         isLootViewOpen ||
         activeDungeonMap ||
-        isMonsterDBOpen
+        isMonsterDBOpen ||
+        activeTutorial
     ), [
         activeShopId,
         activeCraftingContext,
@@ -170,7 +178,8 @@ export const useUIState = () => {
         isAtlasViewOpen,
         isLootViewOpen,
         activeDungeonMap,
-        isMonsterDBOpen
+        isMonsterDBOpen,
+        activeTutorial
     ]);
 
 
@@ -214,6 +223,8 @@ export const useUIState = () => {
         setIsDevPanelOpen(false);
         setIsSettingsViewOpen(false);
         setIsMonsterDBOpen(false);
+        setActiveTutorial(null);
+        setIsSoundCreatorOpen(false);
     }, []);
 
     return {
@@ -250,7 +261,9 @@ export const useUIState = () => {
         isMonsterDBOpen, setIsMonsterDBOpen,
         activeDungeonMap, setActiveDungeonMap,
         isSettingsViewOpen, setIsSettingsViewOpen,
+        isSoundCreatorOpen, setIsSoundCreatorOpen,
         activeBankTabId, setActiveBankTabId,
+        activeTutorial, setActiveTutorial,
         isBusy,
         showTooltips, setShowTooltips,
         showXpDrops, setShowXpDrops,
@@ -261,6 +274,8 @@ export const useUIState = () => {
         showCombatEnemyHealth, setShowCombatEnemyHealth,
         showHitsplats, setShowHitsplats,
         isOneClickMode, setIsOneClickMode,
+        masterVolume, setMasterVolume,
+        isMuted, setIsMuted,
         activeWithdrawMode, setActiveWithdrawMode,
         customWithdrawAmount, setCustomWithdrawAmount,
         xpMultiplier, setXpMultiplier,

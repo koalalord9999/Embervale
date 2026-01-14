@@ -16,6 +16,7 @@ import SkillsPanel from '../panels/SkillsPanel';
 import QuestsPanel from '../panels/QuestsPanel';
 import PrayerPanel from '../panels/PrayerPanel';
 import SpellbookPanel from '../panels/SpellbookPanel';
+import SoundPanel from '../panels/SoundPanel';
 import SettingsPanel from '../panels/SettingsPanel';
 import DevPanel from '../panels/DevPanel';
 import { ActivePanel, CombatStance, Spell, InventorySlot, SkillName, Item, Equipment } from '../../types';
@@ -23,7 +24,7 @@ import { ActivePanel, CombatStance, Spell, InventorySlot, SkillName, Item, Equip
 interface SidePanelProps {
     ui: ReturnType<typeof useUIState>;
     initialState: any;
-    // FIX: char prop type now includes setCombatStance to match what's passed from Game.tsx
+    // char prop type now includes setCombatStance to match what's passed from Game.tsx
     char: ReturnType<typeof useCharacter> & { setCombatStance: React.Dispatch<React.SetStateAction<CombatStance>> };
     inv: ReturnType<typeof useInventory>;
     quests: ReturnType<typeof useQuests>;
@@ -59,6 +60,7 @@ interface SidePanelProps {
     isGodModeOn?: boolean;
     onToggleGodMode?: () => void;
     isOneClickMode?: boolean;
+    worldState: any;
 }
 
 const PanelIcon: React.FC<{
@@ -92,7 +94,7 @@ const PanelIcon: React.FC<{
         <button 
             data-tutorial-id={tutorialId}
             onClick={handleClick} 
-            onMouseEnter={handleMouseEnter}
+            onMouseEnter={handleMouseEnter} 
             onMouseLeave={handleMouseLeave}
             onContextMenu={onContextMenu}
             className={`p-2 rounded-md transition-colors ${isActive ? 'bg-yellow-700' : 'bg-gray-800 hover:bg-gray-700'}`}
@@ -115,11 +117,12 @@ const PlaceholderIcon: React.FC = () => (
 
 
 const SidePanel: React.FC<SidePanelProps> = (props) => {
-    const { ui, char, inv, quests, repeatableQuests, slayer, onReturnToMenu, isDevMode, isTouchSimulationEnabled, onToggleTouchSimulation, itemActions, isBusy, handleExamine, session, addLog, activeCombatStyleHighlight, isBankOpen, isShopOpen, onDeposit, onNavigate, unlockedPois, onCastSpell, onSpellOnItem, isEquipmentStatsOpen = false, initialState, activePrayers, onTogglePrayer, isPoisoned, onCurePoison, poisonEvent, onToggleDevPanel, isPermAggroOn, onTogglePermAggro, isGodModeOn, onToggleGodMode } = props;
+    const { ui, char, inv, quests, repeatableQuests, slayer, onReturnToMenu, isDevMode, isTouchSimulationEnabled, onToggleTouchSimulation, itemActions, isBusy, handleExamine, session, addLog, activeCombatStyleHighlight, isBankOpen, isShopOpen, onDeposit, onNavigate, unlockedPois, onCastSpell, onSpellOnItem, isEquipmentStatsOpen = false, initialState, activePrayers, onTogglePrayer, isPoisoned, onCurePoison, poisonEvent, onToggleDevPanel, isPermAggroOn, onTogglePermAggro, isGodModeOn, onToggleGodMode, worldState } = props;
     const { activePanel, setActivePanel } = ui;
 
     const inventoryPanelProps = {
-        inventory: inv.inventory, coins: inv.coins, skills: char.skills, onEquip:(item, idx) => inv.handleEquip(item, idx, char.skills, char.combatStance), onConsume: itemActions.handleConsume, onDropItem: inv.handleDropItem, onBury: itemActions.handleBuryBones, onEmpty: itemActions.handleEmptyItem, setTooltip: ui.setTooltip, setContextMenu: ui.setContextMenu, addLog, itemToUse: ui.itemToUse, setItemToUse: ui.setItemToUse, 
+        inventory: inv.inventory, coins: inv.coins, skills: char.skills, onEquip:(item, idx) => inv.handleEquip(item, idx, char.skills, char.combatStance), onConsume: itemActions.handleConsume, onDropItem: inv.handleDropItem, 
+        onBury: itemActions.handleBuryBones, onEmpty: itemActions.handleEmptyItem, setTooltip: ui.setTooltip, setContextMenu: ui.setContextMenu, addLog, itemToUse: ui.itemToUse, setItemToUse: ui.setItemToUse, 
         onUseItemOn: itemActions.handleUseItemOn, isBusy, onMoveItem: inv.moveItem, setConfirmationPrompt: ui.setConfirmationPrompt,
         onExamine: handleExamine, isTouchSimulationEnabled,
         onDivine: itemActions.handleDivine,
@@ -132,7 +135,7 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
         spellToCast: ui.spellToCast,
         onSpellOnItem: onSpellOnItem,
         isEquipmentStatsOpen,
-        confirmValuableDrops: ui.confirmValuableDrops,
+        confirmValuableDrops: ui.showTooltips,
         valuableDropThreshold: ui.valuableDropThreshold,
         isOneClickMode: ui.isOneClickMode,
         onTeleport: itemActions.handleTeleport,
@@ -175,6 +178,8 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
                     autocastSpell={char.autocastSpell}
                     ui={ui}
                 />;
+            case 'sound':
+                return <SoundPanel ui={ui} addLog={addLog} worldState={worldState} />;
             case 'settings':
                 return null;
             default:
@@ -230,7 +235,21 @@ const SidePanel: React.FC<SidePanelProps> = (props) => {
             <div className="flex-shrink-0">
                 {/* Bottom row */}
                 <div className="grid grid-cols-7 gap-1 p-1 bg-black/30 border-t-2 border-gray-600">
-                    <PlaceholderIcon />
+                    <PanelIcon 
+                        setTooltip={ui.setTooltip} 
+                        icon="speaker" 
+                        label="Sound Library" 
+                        ariaLabel="Sound Library" 
+                        isActive={activePanel==='sound'} 
+                        onClick={(e) => {
+                            // Changed to ALT+Click as per request
+                            if (e.altKey) {
+                                console.log('Alt pressed');
+                                ui.setIsSoundCreatorOpen(true);
+                            }
+                            setActivePanel('sound');
+                        }} 
+                    />
                     <PlaceholderIcon />
                     <PlaceholderIcon />
                     <PanelIcon setTooltip={ui.setTooltip} icon="exit-door" label="Logout" ariaLabel="Logout" isActive={false} onClick={onReturnToMenu} />

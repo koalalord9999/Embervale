@@ -175,4 +175,6 @@ export interface WorldState {
     depletedHouses?: string[];
     nextHouseResetTimestamp?: number;
     dehydrationLevel: number;
+    // FIX: Add unlockedMusicTracks to WorldState
+    unlockedMusicTracks: string[];
 }
